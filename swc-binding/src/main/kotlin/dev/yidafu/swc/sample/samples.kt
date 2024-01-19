@@ -1,8 +1,8 @@
 package dev.yidafu.swc.sample // ktlint-disable filename
 
-import dev.yidafu.swc.SwcNative
-import dev.yidafu.swc.esParseOptions
-import dev.yidafu.swc.tsParseOptions
+import dev.yidafu.swc.*
+import dev.yidafu.swc.dsl.*
+import dev.yidafu.swc.types.TsKeywordTypeKind
 
 fun parseSyncBasicUsage() {
     SwcNative().parseSync(
@@ -49,6 +49,7 @@ fun parseSyncJsxSample() {
         "temp.js"
     )
 }
+
 fun parseSyncTsSample() {
     SwcNative().parseSync(
         """
@@ -69,4 +70,45 @@ fun parseFileSyncEsSample() {
             target = "es5"
         }
     )
+}
+
+fun createExampleDsl() {
+    module {
+        body = arrayOf(
+            importDeclaration {
+                specifiers = arrayOf(
+                    importDefaultSpecifier {
+                        local = createIdentifier {
+                            span = emptySpan()
+                            value = "x"
+                        }
+                    }
+                )
+                source = stringLiteral {
+                    value = "./test.js"
+                    raw = "./test.js"
+                    span = emptySpan()
+                }
+                typeOnly = false
+                span = emptySpan()
+            },
+
+            classDeclaration {
+                identifier = createIdentifier { }
+                span = emptySpan()
+                body = arrayOf(
+                    classProperty {
+                        span = emptySpan()
+                        typeAnnotation = tsTypeAnnotation {
+                            span = emptySpan()
+                            typeAnnotation = tsKeywordType {
+                                span = emptySpan()
+                                kind = TsKeywordTypeKind.STRING
+                            }
+                        }
+                    }
+                )
+            }
+        )
+    }
 }

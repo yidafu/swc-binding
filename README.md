@@ -177,7 +177,8 @@ module {
         importDeclaration {
             specifiers = arrayOf(
                 importDefaultSpecifier {
-                    local = Identifier().apply {
+                    local = createIdentifier {
+                        span = emptySpan()
                         value = "x"
                     }
                 }
@@ -185,22 +186,22 @@ module {
             source = stringLiteral {
                 value=  "./test.js"
                 raw =  "./test.js"
-                span = Span(..)
+                span = emptySpan()
             }
             typeOnly = false
-            span = Span(..)
+            span = emptySpan()
         },
 
         classDeclaration {
-            identifier = Identifier()
-            span = Span(..)
+            identifier = createIdentifier {  }
+            span = emptySpan()
             body = arrayOf(
                 classProperty {
-                    span = Span(..)
+                    span = emptySpan()
                     typeAnnotation = tsTypeAnnotation {
-                        span = Span(..)
+                        span = emptySpan()
                         typeAnnotation = tsKeywordType {
-                            span = Span(..)
+                            span = emptySpan()
                             kind = TsKeywordTypeKind.STRING
                         }
                     }

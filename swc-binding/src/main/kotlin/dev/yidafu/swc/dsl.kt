@@ -2,6 +2,9 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.types.*
 
+/**
+ * @sample dev.yidafu.swc.sample.createExampleDsl
+ */
 fun module(block: Module.() -> Unit): Module {
     return ModuleImpl().apply(block)
 }
