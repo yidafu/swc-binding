@@ -1,5 +1,9 @@
-# Created by https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,node
-# Edit at https://www.toptal.com/developers/gitignore?templates=kotlin,gradle,rust,node
+# Created by https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,cargo,javascript,node
+# Edit at https://www.toptal.com/developers/gitignore?templates=kotlin,gradle,rust,cargo,javascript,node
+
+#!! ERROR: cargo is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: javascript is undefined. Use list command to see defined gitignore types !!#
 
 ### Kotlin ###
 # Compiled class file
@@ -209,5 +213,9 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-# End of https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,node
+# End of https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,cargo,javascript,node
 
+test.ts
+dsl.kt
+ouptput.kt
+serializer.kt
