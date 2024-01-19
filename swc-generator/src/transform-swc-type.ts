@@ -477,7 +477,7 @@ function createInterface(iDeclaration: InterfaceDeclaration) {
         )
     } else if (ToKotlinClass.includes(interfaceName)) {
         kotlinClass.modifier = 'class'
-        
+
         kotlinClass.annotations.push(
             '@SwcDslMarker',
             '@Serializable',
@@ -547,9 +547,14 @@ getAllKotlinClasses()
         generatedKotlinClassList.push(k)
     })
 
-generatedKotlinClassList.forEach(k => {
-    kotlinTypes.push(k.toString())
-})
+generatedKotlinClassList
+    // 特殊处理
+    .filter(k => ['TsTemplateLiteralType', 'TemplateLiteral'].every(t => !k.klassName.startsWith(t)))
+    .forEach(k => {
+        kotlinTypes.push(k.toString())
+    })
+
+
 
 fs.writeFileSync(InputPath[1], kotlinTypes.join('\n\n'));
 
@@ -565,27 +570,6 @@ astNodeList
             polymorphicMap.set(key, ps)
         }
     })
-
-// object NodeSerializer: JsonContentPolymorphicSerializer<Node>(Node:: class) {
-//     override fun selectDeserializer(element: JsonElement): DeserializationStrategy < Node > {
-//         return when {
-//         "type" in element.jsonObject -> {
-//             val nodeType = element.jsonObject["type"]?.jsonPrimitive?.contentOrNull
-//                 when(nodeType) {
-//                   ${
-//                     classNameList.map(c =>
-//                         `\n\t\t\t\t\t"${c.replace('Impl', '')}" -> ${c}.serializer()`
-//                     ).join('\n')
-//                 }
-//                     else -> throw SerializationException("$nodeType Not Ast Node Type")
-//         }
-//     }
-//             else -> {
-//         throw SerializationException("Not Valid Tree Node")
-//     }
-// }
-//     }
-// }
 
 const NodeNodeSerializer = `
 package dev.yidafu.swc.types
@@ -618,7 +602,7 @@ const needGenerateDslClassList = generatedKotlinClassList
 
 function addExtensionFunWrapper(extFun: KotlinExtensionFun) {
     if (['HasSpan', 'HasDecorator'].includes(extFun.receiver)) return;
-    
+
     if (extFun.receiver === extFun.funName.replace('Impl', '')) return
 
     if (extFun.funName.endsWith('Impl')) {
@@ -680,7 +664,7 @@ needGenerateDslClassList
 //     .forEach(extFun => {
 //         kotlinDsl.push(extFun.toString())
 //     })
-const groups =  _.groupBy(getAllExtensionFun(), 'receiver')
+const groups = _.groupBy(getAllExtensionFun(), 'receiver')
 
 if (fs.existsSync(InputPath[3])) {
     fs.rmdirSync(InputPath[3], { recursive: true })
@@ -692,5 +676,16 @@ Object.entries(groups).forEach(([receiver, list]) => {
     fs.writeFileSync(`${InputPath[3]}/${receiver}.kt`, kotlinDsl.join('\n\n'));
 })
 
+const createDsl = generatedKotlinClassList
+    .filter(k => k.klassName.endsWith('Impl'))
+    .map(k => {
+        const kName = k.klassName.replace('Impl', '')
+        return `fun create${kName}(block: ${kName}.() -> Unit): ${kName} {
+    return ${k.klassName}().apply(block)
+}`
+    })
+createDsl.unshift('import dev.yidafu.swc.types.*')
+createDsl.unshift('package dev.yidafu.swc.dsl')
+fs.writeFileSync(`${InputPath[3]}/create.kt`, createDsl.join('\n\n'))
 /* ======================= 处理 生成 dsl 结束 ======================= */
 
