@@ -1,15 +1,18 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.types.Module
+import dev.yidafu.swc.types.*
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 class SwcNativeTest {
     private val swcNative = SwcNative()
-
+    private fun getResource(filename: String): String {
+        return SwcNativeTest::class.java.classLoader.getResource(filename)!!.file!!
+    }
     @Test
     fun `parse js code to ast str`() {
         val ast =
@@ -31,7 +34,7 @@ class SwcNativeTest {
     fun `parse js file to ast str`() {
         val ast =
             swcNative.parseFileSync(
-                SwcNativeTest::class.java.classLoader.getResource("test.js")!!.file,
+                getResource("test.js"),
                 tsParseOptions { }
             )
         assertNotNull(ast) { "ast string can't be null " }
@@ -65,7 +68,7 @@ class SwcNativeTest {
     fun `transform js file to ast str`() {
         val ast =
             swcNative.transformFileSync(
-                SwcNativeTest::class.java.classLoader.getResource("test.js").file,
+                getResource("test.js"),
                 false,
                 options {
                     jsc =
@@ -81,12 +84,12 @@ class SwcNativeTest {
     fun `transform ts file to ast str`() {
         val ast =
             swcNative.transformFileSync(
-                SwcNativeTest::class.java.classLoader.getResource("test.ts").file,
+               getResource("test.ts"),
                 false,
                 options {
                     jsc =
                         jscConfig {
-                            parser = esParserConfig { }
+                            parser = tsParserConfig { }
                         }
                 }
             )
@@ -352,5 +355,33 @@ class SwcNativeTest {
             add(1, 2);
             """.trimIndent()
         )
+    }
+    
+    @Test
+    fun `template literal`() {
+
+        val output = swcNative.parseSync(
+            "var a = `string text \${expression} string text`;\ntype T = `Ts\${type}`",
+            tsParseOptions {  },
+            "test.ts"
+        )
+        assertIs<Module>(output)
+        output.body?.let {
+            val d = it[0]
+            assertIs<VariableDeclaration>(d)
+            val d1 = d.declarations?.get(0)
+            assertIs<VariableDeclarator>(d1)
+            val d2 = d1.init
+            assertIs<TemplateLiteral>(d2)
+            assertNotNull(d2.expressions)
+
+            val t = it[1]
+            assertIs<TsTypeAliasDeclaration>(t)
+            val t1 = t.typeAnnotation
+            assertIs<TsLiteralType>(t1)
+            val t2 = t1.literal
+            assertIs<TsTemplateLiteralType>(t2)
+            assertNotNull(t2.types)
+        }
     }
 }

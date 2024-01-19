@@ -14,19 +14,6 @@ interface TemplateLiteral : ExpressionBase, Expression {
     override var span: Span?
 }
 
-@OptIn(ExperimentalSerializationApi::class)
-@SwcDslMarker
-@Serializable
-@JsonClassDiscriminator("type")
-@SerialName("TemplateLiteral")
-class TemplateLiteralImpl : TemplateLiteral {
-    // conflict with @SerialName
-    //  override var type : String? = "TemplateLiteral"
-    override var expressions: Array<Expression>? = null
-    override var quasis: Array<TemplateElement>? = null
-    override var span: Span? = null
-}
-
 @SwcDslMarker
 interface TsTemplateLiteralType : Node, HasSpan, TsLiteral {
     // conflict with @SerialName
@@ -41,10 +28,13 @@ interface TsTemplateLiteralType : Node, HasSpan, TsLiteral {
 @Serializable
 @JsonClassDiscriminator("type")
 @SerialName("TemplateLiteral")
-class TsTemplateLiteralTypeImpl : TsTemplateLiteralType {
+class TemplateLiteralImpl : TemplateLiteral, TsTemplateLiteralType {
     // conflict with @SerialName
     //  override var type : String? = "TemplateLiteral"
     override var types: Array<TsType>? = null
+    override var expressions: Array<Expression>? = null
     override var quasis: Array<TemplateElement>? = null
     override var span: Span? = null
 }
+
+typealias TsTemplateLiteralTypeImpl = TemplateLiteralImpl
