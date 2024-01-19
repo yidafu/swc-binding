@@ -47,7 +47,7 @@ class LibraryPlugin : Plugin<Project> {
                 }
         }
         project.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-            disabledRules.set(setOf("no-wildcard-imports", "filename"))
+            disabledRules.set(setOf("final-newline", "no-wildcard-imports", "filename"))
         }
         project.extensions.create("publishMan", PublishManExtension::class)
 
