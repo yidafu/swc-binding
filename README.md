@@ -5,7 +5,7 @@
 ## Installtion
 
 ```kts
-implementation("dev.yidafu.swc:swc-binding:0.4.2")
+implementation("dev.yidafu.swc:swc-binding:0.5.0")
 ```
 
 ## Usage
@@ -85,7 +85,6 @@ Native method
 fun parseFileSync(filepath: String, options: String): String
 ```
 
-
 ### transformSync
 
 [swc#transformSync](https://swc.rs/docs/usage/core#transformsync)
@@ -104,7 +103,6 @@ Native method
 fun transformSync(code: String, isModule: Boolean, options: String): String
 ```
 
-
 ### transformFileSync
 
 [swc#transformFileSync](https://swc.rs/docs/usage/core#transformfilesync)
@@ -122,7 +120,6 @@ Native method
 @Throws(RuntimeException::class)
 fun transformFileSync(filepath: String, isModule: Boolean, options: String): String
 ```
-
 
 ### printSync
 
@@ -211,3 +208,69 @@ module {
     )
 }
 ```
+
+### build ast segment
+
+If you want create ast segment, call `createXxx` function to create segment.
+
+```kotlin
+createVariableDeclaration  {
+    span = span(0, 17, 0)
+    kind = 'const'
+    declare = false
+    declarations = arrayOf(
+        variableDeclaratorImpl {
+            span = span(6, 17, 0)
+            id = identifier {
+                span = span(5, 9, 0)
+                value = "foo"
+            }
+            init = stringLiteral {
+                span = span(12,17, 0)
+                value = "bar"
+                raw = "'bar'"
+            }
+        }
+    )
+}
+```
+
+### Booleanable
+
+SWC configuration maybe `boolean | T`.
+
+Such as
+
+```ts
+export interface Config {
+    // ...
+    sourceMaps?: boolean | "inline";
+    // ...
+}
+```
+
+So, you should using `Booleanable<T>`
+
+```kotlin
+options {
+    // ...
+    sourceMaps = BooleanableString.ofValue("inline")
+    // or
+    sourceMaps = BooleanableString.ofFalse()
+
+}
+```
+
+Booleanable typealias
+
++ BooleanableString
++ BooleanableFloat
++ BooleanableInt
++ BooleanableArrayString
++ BooleanableTerserCompressOptions
++ BooleanableTerserMangleOptions
++ BooleanableArrayMatchPattern
+
+## Article
+
+[How to implement SWC JVM binding -- English translation](docs/how-to-implement-swc-jvm-binding.md) -- [中文原文](docs/how-to-implement-swc-jvm-binding.zh-CN.md)
