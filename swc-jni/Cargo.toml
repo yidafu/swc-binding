@@ -2,6 +2,14 @@
 name = "swc_jni"
 version = "0.1.0"
 edition = "2021"
+authore = ["yidafu"]
+categories = ["swc", "jni"]
+license = "Apache-2.0"
+description = "swc jni binding"
+homepage = "https://github.com/yidafu/swc-binding"
+documentation = "https://github.com/yidafu/swc-binding"
+repository = "https://github.com/yidafu/swc-binding"
+readme = "README.md"
 
 [features]
 # default = ["serde-impl"]
