@@ -270,3 +270,7 @@ Booleanable typealias
 + BooleanableTerserCompressOptions
 + BooleanableTerserMangleOptions
 + BooleanableArrayMatchPattern
+
+## Article
+
+[How to implement SWC JVM binding -- English translation](docs/how-to-implement-swc-jvm-binding.md) -- [中文原文](docs/how-to-implement-swc-jvm-binding.zh-CN.md)
