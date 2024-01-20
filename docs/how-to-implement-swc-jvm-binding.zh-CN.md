@@ -2,9 +2,9 @@
 
 ## 背景
 
-在使用 Kotlin Jupiter Kennel 的过程中发现没有3D绘制库，只能使用 JS 来绘制数据。只能通过`HTML(...)`函数来写 JS，非常不方便。所以，我写了 [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) 插件来支持`%js` line magics。核心的问题就是在 JVM 支持编译 JS 代码，得到AST进行修改。为此需要一个工具将 JS 代码转换成 AST，最好还能支持 TS 和 JSX。
+在使用 Kotlin Jupiter Kennel 的过程中发现没有3D绘制库，只能使用 JS 来绘制数据。只能通过`HTML(...)`函数来写 JS，非常不方便。所以，我写了 [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) 插件来支持`%js` line magics。`kotlin-jupyter-js`插件的核心问题是：在 JVM 支持编译 JS 代码成 AST。为此需要一个工具将 JS 代码转换成 AST，最好还能支持 TS 和 JSX。
 
-社区没有现成的库，需要实现了 swc 的 JVM binding 来解决这个问题。
+我的想法是实现 SWC 的 JVM binding 来解决这个问题。SWC 本身提供 Node 的 binding，所以 JVM binding 实现难度没有那么大。而且，SWC 支持 TS/JSX 编译，可以让`kotlin-jupyter-js`支持`typescript`和`React`。
 
 ## 实现思路
 
@@ -22,7 +22,7 @@ SWC Node binding 暴露的 API 出参、入参都是 JSON 字符串，在 Node �
 
 将 Rust 编译成 JNI 动态库，需要 Rust 的 JNI FFI。直接使用 [jni](https://crates.io/crates/jni) 即可支持。
 
-这个库提供可以很方便的桥接 Rust 和 Java。可以看一下 `jni` 的官方例子。
+这个库提供可以很方便地桥接 Rust 和 Java。可以看一下 `jni` 的官方例子。
 
 在 JVM 侧代码。
 
@@ -44,6 +44,7 @@ pub extern "system" fn Java_HelloWorld_hello<'local>(mut env: JNIEnv<'local>, cl
     let input: String =
         env.get_string(&input).expect("Couldn't get java string!").into();
 
+    // your business logic
     let output = env.new_string(format!("Hello, {}!", input))
         .expect("Couldn't create java string!");
 
@@ -51,9 +52,9 @@ pub extern "system" fn Java_HelloWorld_hello<'local>(mut env: JNIEnv<'local>, cl
 }
 ```
 
-调用`HelloWorld().hello("JNI")`，通过 JNI 会调用Rust 代码返回`Hello, JIN!`.
+调用`HelloWorld().hello("JNI")`，通过 JNI 会调用Rust 代码返回`Hello, JNI!`.
 
-上面 Rust 代码里桥接函数的申明比较长，可以使用 [jni_fn](https://crates.io/crates/jni_fn) 通过宏自动生成桥接函数声明。
+上面 Rust 代码里桥接函数的申明比较长，可以使用 [jni_fn](https://crates.io/crates/jni_fn) 通过宏自动生成桥接函数声明，简化声明。
 
 ```rust
 #[jni_fn("HelloWorld")]
@@ -83,7 +84,7 @@ SWC Node binding 提供了以下方法
   + print
   + printSync
 
-SWC Node binding 通过 [napi](https://crates.io/crates/napi) 提供同步和异步方法。但是 JVM 的 FFI `jni` 并不只支持异步，所以我们只实现同步的API：`transformSync`,`transformFileSync`,`parseSync`,`parseFileSync`,`minifySync`,`printSync`。
+SWC Node binding 通过 [napi](https://crates.io/crates/napi) 提供同步和异步方法。但是 JVM 的 FFI `jni` 并不只支持异步，所以我们只实现同步 API：`transformSync`,`transformFileSync`,`parseSync`,`parseFileSync`,`minifySync`,`printSync`。
 
 ### pase_sync
 
@@ -126,9 +127,9 @@ swc_ecma_codegen = "0.146.39"
 
 #### 出入参
 
-理论上，需要做的工作很简单：将所有 `napi` 相关逻辑替换成`jni`即可。如何调用内部 SWC 内部 API 来实现，我们都不需要改动。
+理论上，需要做的工作很简单：将所有 `napi` 相关逻辑替换成`jni`即可。如何 SWC 如何实现具体功能，我们都不需要改动。
 
-参考 [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) 的 `pase_sync` 实现 [binding_core_node/src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168), [parseSync] 大部分逻辑都直接复制，但需要修改入参、出参的处理。
+参考 [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) 的 `pase_sync` 实现 [binding_core_node/src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168), `parseSync` 大部分逻辑都直接复制，但需要修改入参、出参的处理。
 
 `binding_core_node` 的 `pase_sync` 实现：
 
@@ -146,13 +147,8 @@ pub fn parse_sync(src: String, opts: Buffer, filename: Option<String>) -> napi::
 
 ```rust
 #[jni_fn("dev.yidafu.swc.SwcNative")]
-pub fn parseSync(
-    mut env: JNIEnv,
-    _: JClass,
-    code: JString,
-    options: JString,
-    filename: JString,
-) -> jstring {
+pub fn parseSync(mut env: JNIEnv, _: JClass, code: JString, options: JString, filename: JString) -> jstring {
+    // process parameter
     let src: String = env
         .get_string(&code)
         .expect("Couldn't get java string!")
@@ -168,7 +164,7 @@ pub fn parseSync(
 
     // ...
 
-
+    // process return value
     let output = env
         .new_string(ast_json)
         .expect("Couldn't create java string!");
@@ -177,7 +173,9 @@ pub fn parseSync(
 }
 ```
 
-获取 JVM 传过来的字符串，需要调用`JNIEnv`的`get_string`。将 Rust 字符串转为Java字符串也需要调用 `JNIEnv`的`new_string`在转为`jstring`类型。
+获取 JVM 传过来的字符串，需要调用`JNIEnv`的`get_string`。
+
+将 Rust 字符串转为Java字符串也需要调用 `JNIEnv`的`new_string`在转为`jstring`类型。
 
 #### 异常处理
 
@@ -195,7 +193,7 @@ let program = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
 }).convert_err()?;
 ```
 
-我们需要抛出 JVM 的异常，所以要实现 JVM 的 `MapErr<T>` trait，将Rust异常由 `jni`。
+我们需要抛出 JVM 的异常，所以要实现 JVM 的 `MapErr<T>` trait，将Rust异常转为 `jni`的异常，让`jni`抛出到 JVM。
 
 抄一下 SWC 的 `MapErr<T>` trait。
 
@@ -243,7 +241,7 @@ match result {
 
 ### SwcNative
 
-实现Rust编译成动态库，下一步就需要实现 JVM 侧胶水代码，下面的是 Kotlin。
+实现Rust编译成动态库，下一步就需要实现 JVM 侧胶水代码，下面是 Kotlin 实现。
 
 ```kotlin
 class SwcNative {
@@ -256,9 +254,9 @@ class SwcNative {
 }
 ```
 
-JVM 加载`swc_jni`时，会按照规则从文件系统寻找动态库，但是不会从 jar 的 `resources`目录寻找。所以，通过` System.loadLibrary("swc_jni")`如果本地没有`swc_jni`动态库，就会加载失败，其他用户从 maven 安装，本地肯定没有`swc_jni`。
+JVM 加载`swc_jni`时，会按照规则从文件系统寻找动态库，但是不会从 jar 的 `resources`目录寻找。所以，通过` System.loadLibrary("swc_jni")`如果本地没有`swc_jni`动态库，就会加载失败。用户从 maven 安装，本地肯定没有`swc_jni`。
 
-解决方案，参考这个问题 [Load Native Library from Class path](https://stackoverflow.com/questions/23189776/load-native-library-from-class-path)，如果`System.loadLibrary("swc_jni")` 加载失败就将 jar 的动态库复制到临时目录再加载。
+解决方案，参考这个回答 [Load Native Library from Class path](https://stackoverflow.com/questions/23189776/load-native-library-from-class-path)，如果`System.loadLibrary("swc_jni")` 加载失败就将 jar 的动态库复制到临时目录再加载。
 
 ```kotlin
     init {
@@ -369,13 +367,13 @@ SwcNative().parseSync(
 
 打开 `@swc/types` 的声明文件，里面都是 `type` 和 `interface` 声明，结构非常简单。
 
-主要可以分为一下情况:
+可以分为一下情况:
 
 1. type alias
-   1. literal union type `type T = 'foo' | 'bar'`
-   2. primary union type `type T = string | number`
-   3. type alias and object literal type `type T = S & { foo: string }`
-   4. type alias union type `type T = S | E`
+   1. literal union type: `type T = 'foo' | 'bar'`
+   2. primary union type: `type T = string | number`
+   3. type alias and object literal type: `type T = S & { foo: string }`
+   4. type alias union type: `type T = S | E`
 2. interface
 
 Type alias 的情况相对复杂，主要还是因为 JS 的灵活性。
@@ -477,7 +475,7 @@ export interface ArrayExpression extends ExpressionBase  {
 
 这里 Expression 是所有 `XxxExpression` 的父类型。这样`variableDeclarator.init = thisExpression` 或者 `variableDeclarator.init = arrayExpression` 赋值才合法。
 
-因为 TS 里 `Expression` 是 type alias 转换 kotlin 要编程一个空接口。 转换成 Kotlin 结果像这样
+因为 TS 里 `Expression` 是 type alias 转换 kotlin 要变成一个空接口。 转换成 Kotlin 结果像这样
 
 ```kotlin
 interface Expression {}
@@ -492,13 +490,13 @@ class ArrayExpression : ExpressionBase, Expression {
 }
 ```
 
-所以，对于 `type T = S | E`，`T` 是 `S` 和 `E`的父类，需要将 `T` 加入 `KotlinClass.parents` 数组。
+所以，对于 `type T = S | E`，`T` 是 `S` 和 `E`的父类，需要将 `T` 加入`S`,`E` 的 `KotlinClass.parents` 数组。
 
 #### 序列化
 
-对于下面的例子，就会遇到多态序列化的问题。
+AST 节点序列化时，会遇到多态序列化的问题。
 
-序列化`Expression`，而`Expression`是空接口，这时`toJson`就不知道如何处理`ThisExpression`和`ArrayExpression`的属性，这时可以抛出异常或者输出空对象，都不会符合我们的期望。
+比如，序列化`Expression`，而`Expression`是空接口，这时`toJson`就不知道如何处理`ThisExpression`和`ArrayExpression`的属性，这时只能抛出异常或者输出空对象，都不符合我们的期望。
 
 ```kotlin
 val thisExpression: ThisExpression = ThisExpression()
@@ -511,7 +509,7 @@ expression = arrayExpression
 toJson(expression)
 ```
 
-返回反序列化也是一样的。`parseJson` 也不知道将字符串转为`ThisExpression`还是`ArrayExpression`。
+反序列化也是一样的。`parseJson` 也不知道将字符串转为`ThisExpression`还是`ArrayExpression`。
 
 ```kotlin
 val thisExpression = """ {"type":"ThisExpression", "props": "any value" } """
@@ -521,9 +519,9 @@ var expression: Expression = parseJson(thisExpression)
 var expression: Expression = parseJson(arrayExpression)
 ```
 
-我使用的使用 kotlinx serialization 来序列化。它支持[多态序列化](https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md),需要将改造kotlin带代码。
+使用 kotlinx serialization 来序列化，它支持[多态序列化](https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md)，需要将改造kotlin代码。
 
-需要在通过注解`JsonClassDiscriminator`标明通过哪个字段来区分类型，`SerialName`这个注解这个标明序列后类型的名称。反序列化是就可以根据这个类型名称找到具体类型。
+在类上注解`JsonClassDiscriminator`标明通过哪个字段来区分类型，`SerialName`注解标明序列后类型的名称。反序列化时可以根据这个类型名称找到具体类型。
 
 ```kotlin
 interface ArrayExpression : ExpressionBase, Expression {
@@ -550,7 +548,7 @@ class ThisExpressionImpl : ThisExpression {
 
 ```
 
-为了序列化和反序列化是能够正确找到具体类型,还需要定义`SerializersModule`。
+为了序列化和反序列化是能够正确找到具体类型，还需要定义`SerializersModule`。
 
 ```kotlin
 val swcSerializersModule = SerializersModule {
@@ -668,7 +666,7 @@ VariableDeclarationImpl().apply {
 }
 ```
 
-通过`apply`来调用简化的属性设置。相对面条式代码，通过`apply`已经比较简洁。希望还能简洁一点。
+通过`apply`来调用简化的属性设置。相对面条式代码，通过`apply`已经比较简洁。还能简洁一点。
 
 ```kotlin
 variableDeclaration  {
@@ -694,7 +692,7 @@ variableDeclaration  {
 
 现在的 DSL 已经很像输出 AST JSON，写起来也非常简单直白。
 
-这里举个例子，需要DSL写法的类，都需要`SwcDslMarker`注解标记。`SwcDslMarker`主要是为了限制作用域，避免访问外层作用域。
+需要DSL写法的类，都需要`SwcDslMarker`注解标记。`SwcDslMarker`主要是为了限制作用域，避免访问外层作用域。
 
 ```kotlin
 @DslMarker
@@ -728,7 +726,6 @@ variableDeclarator {
     init = arrayExpression { ... }
     // or
     init = thisExpression { ... }
-
 }
 ```
 
@@ -746,7 +743,7 @@ fun VariableDeclarator.arrayExpression(block: ArrayExpression.() -> Unit): Array
 
 #### `TemplateLiteral` vs `TsTemplateLiteralType`
 
-这里还有个特殊情况需要处理。`TemplateLiteral`跟`TsTemplateLiteralType`冲突了，他们的`type`都是`"TemplateLiteral"`。这会使得无法序列化。参见 rust 的结构体定义。
+这里还有个特殊情况需要处理。`TemplateLiteral`跟`TsTemplateLiteralType`冲突了，他们的`type`都是`"TemplateLiteral"`。这使得 DSL 构建的 AST 无法序列化。参见 rust 的结构体定义。
 
 ```rust
 // https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/crates/swc_ecma_ast/src/typescript.rs#L823
