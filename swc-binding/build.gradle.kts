@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.yidafu.swc"
-version = "0.4.2"
+version = "0.5.0"
 
 dependencies {
     testImplementation(kotlin("test"))
