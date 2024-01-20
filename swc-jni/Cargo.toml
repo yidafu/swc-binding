@@ -23,7 +23,6 @@ readme = "README.md"
 anyhow = "1.0.75"
 jni = "0.21.1"
 jni_fn = "0.1.2"
-swc_core = "0.87.27"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["unbounded_depth"] }
 swc = "0.270.25"
