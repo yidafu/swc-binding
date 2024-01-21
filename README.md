@@ -4,15 +4,15 @@
 
 ## Installtion
 
-```kts
-implementation("dev.yidafu.swc:swc-binding:0.5.0")
+```kotlin
+implementation("dev.yidafu.swc:swc-binding:0.6.0")
 ```
 
 ## Usage
 
 ### transform code
 
-```kt
+```kotlin
 val swc = SwcNative()
 val res = swc.transformSync(
     """
