@@ -673,7 +673,7 @@ interface Declaration : Statement
  * subtypes: [JSXExpression], [Pattern]
  */
 @SwcDslMarker
-interface Expression : JSXExpression, Pattern
+interface Expression : JSXExpression, Pattern, AssignmentExpressionLeft, CallExpressionCallee, ArrowFunctionExpressionBody, ForStatementInit
 
 /**
  * subtypes: []
@@ -769,7 +769,7 @@ interface ModuleItem
  * subtypes: []
  */
 @SwcDslMarker
-interface Pattern
+interface Pattern : AssignmentExpressionLeft, ForInStatementLeft, ForOfStatementLeft
 
 /**
  * subtypes: []
@@ -879,17 +879,53 @@ interface TsModuleName
 @SwcDslMarker
 interface TsModuleReference
 
+@SwcDslMarker
+@Serializable
+sealed interface OptionalChainingExpressionBase
+
+@SwcDslMarker
+@Serializable
+sealed interface AssignmentExpressionLeft
+
+@SwcDslMarker
+@Serializable
+sealed interface MemberExpressionProperty
+
+@SwcDslMarker
+@Serializable
+sealed interface SuperPropExpressionProperty
+
+@SwcDslMarker
+@Serializable
+sealed interface CallExpressionCallee
+
+@SwcDslMarker
+@Serializable
+sealed interface ArrowFunctionExpressionBody
+
+@SwcDslMarker
+@Serializable
+sealed interface ForStatementInit
+
+@SwcDslMarker
+@Serializable
+sealed interface ForInStatementLeft
+
+@SwcDslMarker
+@Serializable
+sealed interface ForOfStatementLeft
+
 /**
  * .swcrc
  */
 @SwcDslMarker
 interface Config {
-    /**
+/**
      * Note: The type is string because it follows rust's regex syntax.
      */
     var test: Array<String>?
 
-    /**
+/**
      * Note: The type is string because it follows rust's regex syntax.
      */
     var exclude: Array<String>?
@@ -898,7 +934,7 @@ interface Config {
     var module: ModuleConfig?
     var minify: Boolean?
 
-    /**
+/**
      * - true to generate a sourcemap for the code and include it in the result object.
      * - "inline" to generate a sourcemap and append it as a data URL to the end of the code, but not include it in the result object.
      *
@@ -937,7 +973,7 @@ class ConfigImpl : Config {
 
 @SwcDslMarker
 interface BaseModuleConfig {
-    /**
+/**
      * By default, when using exports with babel a non-enumerable `__esModule`
      * property is exported. In some cases this property is used to determine
      * if the import is the default export or if it contains the default export.
@@ -949,14 +985,14 @@ interface BaseModuleConfig {
      */
     var strict: Boolean?
 
-    /**
+/**
      * Emits 'use strict' directive.
      *
      * Defaults to `true`.
      */
     var strictMode: Boolean?
 
-    /**
+/**
      * Changes Babel's compiled import statements to be lazily evaluated when their imported bindings are used for the first time.
      *
      * This can improve initial load time of your module because evaluating dependencies up
@@ -993,7 +1029,7 @@ interface BaseModuleConfig {
     @Serializable(BooleanableArrayStringSerializer::class)
     var lazy: BooleanableArrayString?
 
-    /**
+/**
      * @deprecated Use the `importInterop` option instead.
      *
      * By default, when using exports with swc a non-enumerable __esModule property is exported.
@@ -1007,7 +1043,7 @@ interface BaseModuleConfig {
      */
     var noInterop: Boolean?
 
-    /**
+/**
      * Defaults to `swc`.
      *
      * CommonJS modules and ECMAScript modules are not fully compatible.
@@ -1095,7 +1131,7 @@ interface BaseModuleConfig {
      */
     var importInterop: String?
 
-    /**
+/**
      * Emits `cjs-module-lexer` annotation
      * `cjs-module-lexer` is used in Node.js core for detecting the named exports available when importing a CJS module into ESM.
      * swc will emit `cjs-module-lexer` detectable annotation with this option enabled.
@@ -1104,7 +1140,7 @@ interface BaseModuleConfig {
      */
     var exportInteropAnnotation: Boolean?
 
-    /**
+/**
      * If set to true, dynamic imports will be preserved.
      */
     var ignoreDynamic: Boolean?
@@ -1499,7 +1535,7 @@ class ClassDeclarationImpl : ClassDeclaration {
 }
 
 @SwcDslMarker
-interface VariableDeclaration : Node, HasSpan, Declaration {
+interface VariableDeclaration : Node, HasSpan, Declaration, ForStatementInit, ForInStatementLeft, ForOfStatementLeft {
     // conflict with @SerialName
     //  var type: String?
     var kind: String?
@@ -1554,19 +1590,7 @@ interface ExpressionBase : Node, HasSpan {
 }
 
 @SwcDslMarker
-interface Identifier :
-    ExpressionBase,
-    Expression,
-    JSXObject,
-    JSXElementName,
-    JSXAttributeName,
-    ModuleExportName,
-    Property,
-    PropertyName,
-    TsEntityName,
-    TsThisTypeOrIdent,
-    TsEnumMemberId,
-    TsModuleName {
+interface Identifier : ExpressionBase, Expression, JSXObject, JSXElementName, JSXAttributeName, ModuleExportName, Property, PropertyName, TsEntityName, TsThisTypeOrIdent, TsEnumMemberId, TsModuleName, MemberExpressionProperty, SuperPropExpressionProperty {
     // conflict with @SerialName
     //  var type: String?
     var value: String?
@@ -1593,10 +1617,10 @@ interface OptionalChainingExpression : ExpressionBase, Expression {
     //  var type: String?
     var questionDotToken: Span?
 
-    /**
+/**
      * Call expression or member expression.
      */
-    var base: Expression?
+    var base: OptionalChainingExpressionBase?
     override var span: Span?
 }
 
@@ -1609,12 +1633,12 @@ class OptionalChainingExpressionImpl : OptionalChainingExpression {
     // conflict with @SerialName
     //  override var type : String? = "OptionalChainingExpression"
     override var questionDotToken: Span? = null
-    override var base: Expression? = null
+    override var base: OptionalChainingExpressionBase? = null
     override var span: Span? = null
 }
 
 @SwcDslMarker
-interface OptionalChainingCall : ExpressionBase {
+interface OptionalChainingCall : ExpressionBase, OptionalChainingExpressionBase {
     // conflict with @SerialName
     //  var type: String?
     var callee: Expression?
@@ -1858,7 +1882,7 @@ interface AssignmentExpression : ExpressionBase, Expression {
     // conflict with @SerialName
     //  var type: String?
     var operator: String?
-    var left: Pattern?
+    var left: AssignmentExpressionLeft?
     var right: Expression?
     override var span: Span?
 }
@@ -1872,18 +1896,18 @@ class AssignmentExpressionImpl : AssignmentExpression {
     // conflict with @SerialName
     //  override var type : String? = "AssignmentExpression"
     override var operator: String? = null
-    override var left: Pattern? = null
+    override var left: AssignmentExpressionLeft? = null
     override var right: Expression? = null
     override var span: Span? = null
 }
 
 @SwcDslMarker
-interface MemberExpression : ExpressionBase, Expression {
+interface MemberExpression : ExpressionBase, Expression, OptionalChainingExpressionBase {
     // conflict with @SerialName
     //  var type: String?
     @SerialName("object")
     var jsObject: Expression?
-    var property: TsModuleName?
+    var property: MemberExpressionProperty?
     override var span: Span?
 }
 
@@ -1897,7 +1921,7 @@ class MemberExpressionImpl : MemberExpression {
     //  override var type : String? = "MemberExpression"
     @SerialName("object")
     override var jsObject: Expression? = null
-    override var property: TsModuleName? = null
+    override var property: MemberExpressionProperty? = null
     override var span: Span? = null
 }
 
@@ -1906,7 +1930,7 @@ interface SuperPropExpression : ExpressionBase, Expression {
     // conflict with @SerialName
     //  var type: String?
     var obj: Super?
-    var property: TsModuleName?
+    var property: SuperPropExpressionProperty?
     override var span: Span?
 }
 
@@ -1919,7 +1943,7 @@ class SuperPropExpressionImpl : SuperPropExpression {
     // conflict with @SerialName
     //  override var type : String? = "SuperPropExpression"
     override var obj: Super? = null
-    override var property: TsModuleName? = null
+    override var property: SuperPropExpressionProperty? = null
     override var span: Span? = null
 }
 
@@ -1948,7 +1972,7 @@ class ConditionalExpressionImpl : ConditionalExpression {
 }
 
 @SwcDslMarker
-interface Super : Node, HasSpan {
+interface Super : Node, HasSpan, CallExpressionCallee {
     // conflict with @SerialName
     //  var type: String?
     override var span: Span?
@@ -1966,7 +1990,7 @@ class SuperImpl : Super {
 }
 
 @SwcDslMarker
-interface Import : Node, HasSpan {
+interface Import : Node, HasSpan, CallExpressionCallee {
     // conflict with @SerialName
     //  var type: String?
     override var span: Span?
@@ -1987,7 +2011,7 @@ class ImportImpl : Import {
 interface CallExpression : ExpressionBase, Expression {
     // conflict with @SerialName
     //  var type: String?
-    var callee: Pattern?
+    var callee: CallExpressionCallee?
     var arguments: Array<Argument>?
     var typeArguments: TsTypeParameterInstantiation?
     override var span: Span?
@@ -2001,7 +2025,7 @@ interface CallExpression : ExpressionBase, Expression {
 class CallExpressionImpl : CallExpression {
     // conflict with @SerialName
     //  override var type : String? = "CallExpression"
-    override var callee: Pattern? = null
+    override var callee: CallExpressionCallee? = null
     override var arguments: Array<Argument>? = null
     override var typeArguments: TsTypeParameterInstantiation? = null
     override var span: Span? = null
@@ -2056,7 +2080,7 @@ interface ArrowFunctionExpression : ExpressionBase, Expression {
     // conflict with @SerialName
     //  var type: String?
     var params: Array<Pattern>?
-    var body: Pattern?
+    var body: ArrowFunctionExpressionBody?
     var async: Boolean?
     var generator: Boolean?
     var typeParameters: TsTypeParameterDeclaration?
@@ -2073,7 +2097,7 @@ class ArrowFunctionExpressionImpl : ArrowFunctionExpression {
     // conflict with @SerialName
     //  override var type : String? = "ArrowFunctionExpression"
     override var params: Array<Pattern>? = null
-    override var body: Pattern? = null
+    override var body: ArrowFunctionExpressionBody? = null
     override var async: Boolean? = null
     override var generator: Boolean? = null
     override var typeParameters: TsTypeParameterDeclaration? = null
@@ -2233,7 +2257,7 @@ interface PatternBase : Node, HasSpan {
 }
 
 @SwcDslMarker
-interface PrivateName : ExpressionBase, Expression {
+interface PrivateName : ExpressionBase, Expression, MemberExpressionProperty {
     // conflict with @SerialName
     //  var type: String?
     var id: Identifier?
@@ -2533,15 +2557,7 @@ class JSXClosingFragmentImpl : JSXClosingFragment {
 }
 
 @SwcDslMarker
-interface StringLiteral :
-    Node,
-    HasSpan,
-    Literal,
-    ModuleExportName,
-    PropertyName,
-    TsLiteral,
-    TsEnumMemberId,
-    TsModuleName {
+interface StringLiteral : Node, HasSpan, Literal, ModuleExportName, PropertyName, TsLiteral, TsEnumMemberId, TsModuleName {
     // conflict with @SerialName
     //  var type: String?
     var value: String?
@@ -2954,7 +2970,7 @@ interface NamedExportSpecifier : Node, HasSpan, ExportSpecifier {
     //  var type: String?
     var orig: ModuleExportName?
 
-    /**
+/**
      * `Some(bar)` in `export { foo as bar }`
      */
     var exported: ModuleExportName?
@@ -2978,7 +2994,7 @@ class NamedExportSpecifierImpl : NamedExportSpecifier {
 
 @SwcDslMarker
 interface HasInterpreter {
-    /**
+/**
      * e.g. `/usr/bin/node` for `#!/usr/bin/node`
      */
     var interpreter: String?
@@ -3000,7 +3016,7 @@ interface Module : Node, HasSpan, HasInterpreter, Program {
     var body: Array<ModuleItem>?
     override var span: Span?
 
-    /**
+/**
      * e.g. `/usr/bin/node` for `#!/usr/bin/node`
      */
     override var interpreter: String?
@@ -3026,7 +3042,7 @@ interface Script : Node, HasSpan, HasInterpreter, Program {
     var body: Array<Statement>?
     override var span: Span?
 
-    /**
+/**
      * e.g. `/usr/bin/node` for `#!/usr/bin/node`
      */
     override var interpreter: String?
@@ -3349,7 +3365,7 @@ class MethodPropertyImpl : MethodProperty {
 }
 
 @SwcDslMarker
-interface ComputedPropName : Node, HasSpan, PropertyName {
+interface ComputedPropName : Node, HasSpan, PropertyName, MemberExpressionProperty, SuperPropExpressionProperty {
     // conflict with @SerialName
     //  var type: String?
     var expression: Expression?
@@ -3369,7 +3385,7 @@ class ComputedPropNameImpl : ComputedPropName {
 }
 
 @SwcDslMarker
-interface BlockStatement : Node, HasSpan, Statement {
+interface BlockStatement : Node, HasSpan, Statement, ArrowFunctionExpressionBody {
     // conflict with @SerialName
     //  var type: String?
     var stmts: Array<Statement>?
@@ -3389,7 +3405,6 @@ class BlockStatementImpl : BlockStatement {
 }
 
 @SwcDslMarker
-@JsonClassDiscriminator("type")
 interface ExpressionStatement : Node, HasSpan, Statement {
     // conflict with @SerialName
     //  var type: String?
@@ -3689,7 +3704,7 @@ class DoWhileStatementImpl : DoWhileStatement {
 interface ForStatement : Node, HasSpan, Statement {
     // conflict with @SerialName
     //  var type: String?
-    var init: Pattern?
+    var init: ForStatementInit?
     var test: Expression?
     var update: Expression?
     var body: Statement?
@@ -3704,7 +3719,7 @@ interface ForStatement : Node, HasSpan, Statement {
 class ForStatementImpl : ForStatement {
     // conflict with @SerialName
     //  override var type : String? = "ForStatement"
-    override var init: Pattern? = null
+    override var init: ForStatementInit? = null
     override var test: Expression? = null
     override var update: Expression? = null
     override var body: Statement? = null
@@ -3715,7 +3730,7 @@ class ForStatementImpl : ForStatement {
 interface ForInStatement : Node, HasSpan, Statement {
     // conflict with @SerialName
     //  var type: String?
-    var left: Pattern?
+    var left: ForOfStatementLeft?
     var right: Expression?
     var body: Statement?
     override var span: Span?
@@ -3729,7 +3744,7 @@ interface ForInStatement : Node, HasSpan, Statement {
 class ForInStatementImpl : ForInStatement {
     // conflict with @SerialName
     //  override var type : String? = "ForInStatement"
-    override var left: Pattern? = null
+    override var left: ForOfStatementLeft? = null
     override var right: Expression? = null
     override var body: Statement? = null
     override var span: Span? = null
@@ -3739,13 +3754,13 @@ class ForInStatementImpl : ForInStatement {
 interface ForOfStatement : Node, HasSpan, Statement {
     // conflict with @SerialName
     //  var type: String?
-    /**
+/**
      *  Span of the await token.
      *
      *  es2018 for-await-of statements, e.g., `for await (const x of xs) {`
      */
     var await: Span?
-    var left: Pattern?
+    var left: ForOfStatementLeft?
     var right: Expression?
     var body: Statement?
     override var span: Span?
@@ -3760,7 +3775,7 @@ class ForOfStatementImpl : ForOfStatement {
     // conflict with @SerialName
     //  override var type : String? = "ForOfStatement"
     override var await: Span? = null
-    override var left: Pattern? = null
+    override var left: ForOfStatementLeft? = null
     override var right: Expression? = null
     override var body: Statement? = null
     override var span: Span? = null
@@ -3770,7 +3785,7 @@ class ForOfStatementImpl : ForOfStatement {
 interface SwitchCase : Node, HasSpan {
     // conflict with @SerialName
     //  var type: String?
-    /**
+/**
      * Undefined for default case
      */
     var test: Expression?
@@ -3795,7 +3810,7 @@ class SwitchCaseImpl : SwitchCase {
 interface CatchClause : Node, HasSpan {
     // conflict with @SerialName
     //  var type: String?
-    /**
+/**
      * The param is `undefined` if the catch binding is omitted. E.g., `try { foo() } catch {}`
      */
     var param: Pattern?

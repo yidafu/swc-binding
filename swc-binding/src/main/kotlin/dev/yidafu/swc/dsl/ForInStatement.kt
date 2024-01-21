@@ -11,40 +11,40 @@ fun ForInStatement.variableDeclaration(block: VariableDeclaration.() -> Unit): V
 }
 
 /**
- * ForInStatement#left: Union.U2<VariableDeclaration, Pattern>
- * extension function for create Union.U2<VariableDeclaration, Pattern> -> BindingIdentifierImpl
+ * ForInStatement#left: ForOfStatementLeft
+ * extension function for create ForOfStatementLeft -> BindingIdentifierImpl
  */
 fun ForInStatement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier {
     return BindingIdentifierImpl().apply(block)
 }
 
 /**
- * ForInStatement#left: Union.U2<VariableDeclaration, Pattern>
- * extension function for create Union.U2<VariableDeclaration, Pattern> -> ArrayPatternImpl
+ * ForInStatement#left: ForOfStatementLeft
+ * extension function for create ForOfStatementLeft -> ArrayPatternImpl
  */
 fun ForInStatement.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern {
     return ArrayPatternImpl().apply(block)
 }
 
 /**
- * ForInStatement#left: Union.U2<VariableDeclaration, Pattern>
- * extension function for create Union.U2<VariableDeclaration, Pattern> -> RestElementImpl
+ * ForInStatement#left: ForOfStatementLeft
+ * extension function for create ForOfStatementLeft -> RestElementImpl
  */
 fun ForInStatement.restElement(block: RestElement.() -> Unit): RestElement {
     return RestElementImpl().apply(block)
 }
 
 /**
- * ForInStatement#left: Union.U2<VariableDeclaration, Pattern>
- * extension function for create Union.U2<VariableDeclaration, Pattern> -> ObjectPatternImpl
+ * ForInStatement#left: ForOfStatementLeft
+ * extension function for create ForOfStatementLeft -> ObjectPatternImpl
  */
 fun ForInStatement.objectPattern(block: ObjectPattern.() -> Unit): ObjectPattern {
     return ObjectPatternImpl().apply(block)
 }
 
 /**
- * ForInStatement#left: Union.U2<VariableDeclaration, Pattern>
- * extension function for create Union.U2<VariableDeclaration, Pattern> -> AssignmentPatternImpl
+ * ForInStatement#left: ForOfStatementLeft
+ * extension function for create ForOfStatementLeft -> AssignmentPatternImpl
  */
 fun ForInStatement.assignmentPattern(block: AssignmentPattern.() -> Unit): AssignmentPattern {
     return AssignmentPatternImpl().apply(block)

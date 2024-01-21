@@ -17,7 +17,7 @@ export const kotlinTypes = [
     'import kotlinx.serialization.*',
     'import kotlinx.serialization.json.JsonClassDiscriminator',
     '',
-    '@SwcDslMarker',
+    '@DslMarker',
     'annotation class SwcDslMarker',
     'typealias Record<T, S> = Map<T, String>',
     '',
