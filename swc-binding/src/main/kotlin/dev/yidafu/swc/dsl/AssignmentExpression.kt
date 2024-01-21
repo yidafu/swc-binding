@@ -347,40 +347,40 @@ fun AssignmentExpression.invalid(block: Invalid.() -> Unit): Invalid {
 }
 
 /**
- * AssignmentExpression#left: Union.U2<Expression, Pattern>
- * extension function for create Union.U2<Expression, Pattern> -> BindingIdentifierImpl
+ * AssignmentExpression#left: AssignmentExpressionLeft
+ * extension function for create AssignmentExpressionLeft -> BindingIdentifierImpl
  */
 fun AssignmentExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier {
     return BindingIdentifierImpl().apply(block)
 }
 
 /**
- * AssignmentExpression#left: Union.U2<Expression, Pattern>
- * extension function for create Union.U2<Expression, Pattern> -> ArrayPatternImpl
+ * AssignmentExpression#left: AssignmentExpressionLeft
+ * extension function for create AssignmentExpressionLeft -> ArrayPatternImpl
  */
 fun AssignmentExpression.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern {
     return ArrayPatternImpl().apply(block)
 }
 
 /**
- * AssignmentExpression#left: Union.U2<Expression, Pattern>
- * extension function for create Union.U2<Expression, Pattern> -> RestElementImpl
+ * AssignmentExpression#left: AssignmentExpressionLeft
+ * extension function for create AssignmentExpressionLeft -> RestElementImpl
  */
 fun AssignmentExpression.restElement(block: RestElement.() -> Unit): RestElement {
     return RestElementImpl().apply(block)
 }
 
 /**
- * AssignmentExpression#left: Union.U2<Expression, Pattern>
- * extension function for create Union.U2<Expression, Pattern> -> ObjectPatternImpl
+ * AssignmentExpression#left: AssignmentExpressionLeft
+ * extension function for create AssignmentExpressionLeft -> ObjectPatternImpl
  */
 fun AssignmentExpression.objectPattern(block: ObjectPattern.() -> Unit): ObjectPattern {
     return ObjectPatternImpl().apply(block)
 }
 
 /**
- * AssignmentExpression#left: Union.U2<Expression, Pattern>
- * extension function for create Union.U2<Expression, Pattern> -> AssignmentPatternImpl
+ * AssignmentExpression#left: AssignmentExpressionLeft
+ * extension function for create AssignmentExpressionLeft -> AssignmentPatternImpl
  */
 fun AssignmentExpression.assignmentPattern(block: AssignmentPattern.() -> Unit): AssignmentPattern {
     return AssignmentPatternImpl().apply(block)

@@ -3,6 +3,7 @@ package dev.yidafu.swc
 import dev.yidafu.swc.dsl.* // ktlint-disable no-wildcard-imports
 import dev.yidafu.swc.types.*
 import org.junit.jupiter.api.assertThrows
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -12,6 +13,10 @@ class SwcNativeTest {
     private val swcNative = SwcNative()
     private fun getResource(filename: String): String {
         return SwcNativeTest::class.java.classLoader.getResource(filename)!!.file!!
+    }
+
+    private fun getResourceContent(filename: String): String {
+        return File(getResource(filename)).readText()
     }
     @Test
     fun `parse js code to ast str`() {
@@ -84,7 +89,7 @@ class SwcNativeTest {
     fun `transform ts file to ast str`() {
         val ast =
             swcNative.transformFileSync(
-               getResource("test.ts"),
+                getResource("test.ts"),
                 false,
                 options {
                     jsc =
@@ -356,13 +361,12 @@ class SwcNativeTest {
             """.trimIndent()
         )
     }
-    
+
     @Test
     fun `template literal`() {
-
         val output = swcNative.parseSync(
             "var a = `string text \${expression} string text`;\ntype T = `Ts\${type}`",
-            tsParseOptions {  },
+            tsParseOptions { },
             "test.ts"
         )
         assertIs<Module>(output)
@@ -383,5 +387,25 @@ class SwcNativeTest {
             assertIs<TsTemplateLiteralType>(t2)
             assertNotNull(t2.types)
         }
+    }
+
+    @Test
+    fun `parse react source code`() {
+        val output1 = swcNative.parseSync(
+            getResourceContent("react.development.js"),
+            esParseOptions { },
+            "react.development.js"
+        )
+        
+        assertIs<Module>(output1)
+
+        val output2 = swcNative.parseSync(
+            getResourceContent("react-dom.development.js"),
+            esParseOptions { },
+            "react-dom.development.js"
+        )
+
+        assertIs<Module>(output2)
+        
     }
 }

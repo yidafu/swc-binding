@@ -11,16 +11,16 @@ fun SuperPropExpression.jsSuper(block: Super.() -> Unit): Super {
 }
 
 /**
- * SuperPropExpression#property: Union.U2<Identifier, ComputedPropName>
- * extension function for create Union.U2<Identifier, ComputedPropName> -> IdentifierImpl
+ * SuperPropExpression#property: SuperPropExpressionProperty
+ * extension function for create SuperPropExpressionProperty -> IdentifierImpl
  */
 fun SuperPropExpression.identifier(block: Identifier.() -> Unit): Identifier {
     return IdentifierImpl().apply(block)
 }
 
 /**
- * SuperPropExpression#property: Union.U2<Identifier, ComputedPropName>
- * extension function for create Union.U2<Identifier, ComputedPropName> -> ComputedPropNameImpl
+ * SuperPropExpression#property: SuperPropExpressionProperty
+ * extension function for create SuperPropExpressionProperty -> ComputedPropNameImpl
  */
 fun SuperPropExpression.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName {
     return ComputedPropNameImpl().apply(block)

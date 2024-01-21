@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "DEBUG=swc:typealias ts-node ./src/transform-swc-type.ts",
+    "dev": "DEBUG=swc:* ts-node ./src/transform-swc-type.ts",
     "trans": "ts-node ./transform-swc-type.ts"
   },
   "keywords": [],

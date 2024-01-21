@@ -99,6 +99,9 @@ function addKotlinClass(kotlinClass: KotlinClass) {
     k('add kotlin class %s', kotlinClass.klassName)
     kotlinClassMap.set(kotlinClass.klassName, kotlinClass)
 }
+function getKotlinClass(klassName: string) {
+    return kotlinClassMap.get(klassName)
+}
 function getAllKotlinClasses() {
     return Array.from(kotlinClassMap.values())
 }
@@ -353,6 +356,43 @@ getAll()
 
 // const skipInterfaces = Array.from(mergeTypeMap.values()).flat()
 
+// 先处理 interface { foo: T | E | S }
+const ClassPropUnionTypeMap = new Map<string, string>()
+for (const iDeclaration of swcTypeFile.getInterfaces()) {
+    const interfaceName = iDeclaration.getName();
+    iDeclaration.getProperties().forEach(prop => {
+        const propName = prop.getName()
+        const tNode = prop.getTypeNode()
+        const typeName = tNode?.getKindName()
+        if (typeName === 'UnionType') {
+            const isAllRefType = tNode?.forEachChildAsArray().every(t => {
+                return t.getKindName() === 'TypeReference'
+            })
+            if (isAllRefType) {
+                const newTypeName = `${interfaceName[0].toUpperCase()}${interfaceName.slice(1)
+                }${propName[0].toUpperCase()}${propName.slice(1)}`
+
+                tNode?.forEachChildAsArray().forEach(t => {
+                    const klassName = t.print()
+                    const kClass = getKotlinClass(klassName)
+                    if (kClass) {
+                        kClass.parents.push(newTypeName)
+                    }
+                    addRelation(newTypeName, t.print())
+                })
+                classAllPropertiesMap.set(newTypeName, [])
+                const key = `${propName}-${getType(tNode!!)}`
+                ClassPropUnionTypeMap.set(key, newTypeName)
+                const unionType = new KotlinClass()
+                unionType.klassName = newTypeName
+                unionType.modifier = 'sealed interface'
+                unionType.annotations.push('@SwcDslMarker', '@Serializable')
+                addKotlinClass(unionType)
+            }
+        }
+    })
+}
+
 
 function getClassOrInterfaceProps(typeName: string) {
     i('get cached type props %s', typeName)
@@ -370,7 +410,6 @@ function getClassOrInterfaceProps(typeName: string) {
         const kotlinProp = new KotlinClassProperty()
         const propName = p.getName()
         let kotlinType = getType(p.getTypeNode()!!)
-
         // remove comment
         if (kotlinType.match(/^\s*\/\*[^\/]+\*\//)) {
             Array.from(kotlinType.matchAll(/\/\*[^\/]+\*\//g)).forEach(m => {
@@ -382,6 +421,9 @@ function getClassOrInterfaceProps(typeName: string) {
         const typeName = kotlinKeywordMap.has(propName) ? kotlinKeywordMap.get(propName)! : propName
         if (propTypeRewrite.has(typeName)) {
             kotlinType = propTypeRewrite.get(typeName)!!
+        }
+        if (ClassPropUnionTypeMap.has(`${typeName}-${kotlinType}`)) {
+            kotlinType = ClassPropUnionTypeMap.get(`${typeName}-${kotlinType}`)!!
         }
 
         kotlinProp.name = propName
@@ -634,7 +676,6 @@ function createExtensionFunList(key: string) {
 needGenerateDslClassList.forEach((key) => {
     createExtensionFunList(key)
 })
-
 needGenerateDslClassList
     .map(klass => [klass, classAllPropertiesMap.get(klass)] as [string, KotlinClassProperty[]])
     // Array.from(classPropertiesMap)

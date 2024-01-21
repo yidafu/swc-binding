@@ -107,8 +107,8 @@ fun MemberExpression.sequenceExpression(block: SequenceExpression.() -> Unit): S
 }
 
 /**
- * MemberExpression#property: Union.U3<Identifier, PrivateName, ComputedPropName>
- * extension function for create Union.U3<Identifier, PrivateName, ComputedPropName> -> IdentifierImpl
+ * MemberExpression#property: MemberExpressionProperty
+ * extension function for create MemberExpressionProperty -> IdentifierImpl
  */
 fun MemberExpression.identifier(block: Identifier.() -> Unit): Identifier {
     return IdentifierImpl().apply(block)
@@ -323,8 +323,8 @@ fun MemberExpression.tsInstantiation(block: TsInstantiation.() -> Unit): TsInsta
 }
 
 /**
- * MemberExpression#property: Union.U3<Identifier, PrivateName, ComputedPropName>
- * extension function for create Union.U3<Identifier, PrivateName, ComputedPropName> -> PrivateNameImpl
+ * MemberExpression#property: MemberExpressionProperty
+ * extension function for create MemberExpressionProperty -> PrivateNameImpl
  */
 fun MemberExpression.privateName(block: PrivateName.() -> Unit): PrivateName {
     return PrivateNameImpl().apply(block)
@@ -347,8 +347,8 @@ fun MemberExpression.invalid(block: Invalid.() -> Unit): Invalid {
 }
 
 /**
- * MemberExpression#property: Union.U3<Identifier, PrivateName, ComputedPropName>
- * extension function for create Union.U3<Identifier, PrivateName, ComputedPropName> -> ComputedPropNameImpl
+ * MemberExpression#property: MemberExpressionProperty
+ * extension function for create MemberExpressionProperty -> ComputedPropNameImpl
  */
 fun MemberExpression.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName {
     return ComputedPropNameImpl().apply(block)
