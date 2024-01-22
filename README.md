@@ -2,11 +2,16 @@
 
 [SWC](https://github.com/swc-project/swc) jvm binding by kotlin.
 
+
 ## Installtion
 
 ```kotlin
 implementation("dev.yidafu.swc:swc-binding:0.6.0")
 ```
+
+## Documentation
+
+[SWC Binding - Kotlin Doc](https://yidafu.github.io/swc-binding/docs/)
 
 ## Usage
 
@@ -51,7 +56,13 @@ val ast = SwcNative().parseSync(
 
 ### parseSync
 
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/parse-sync.html)
+
+> passing parse react source code
+
 see [swc#parseSync](https://swc.rs/docs/usage/core#parsesync)
+
+Kotlin DSL Wrapper method
 
 ```kotlin
 @Throws(RuntimeException::class)
@@ -65,9 +76,10 @@ Native method
 fun parseSync(code: String, options: String, filename: String?): String
 ```
 
-Kotlin DSL Wrapper method
 
 ### parseFileSync
+
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/parse-file-sync.html)
 
 [swc#parseFileSync](https://swc.rs/docs/usage/core#parsefilesync)
 
@@ -87,6 +99,8 @@ fun parseFileSync(filepath: String, options: String): String
 
 ### transformSync
 
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/transform-sync.html)
+
 [swc#transformSync](https://swc.rs/docs/usage/core#transformsync)
 
 Kotlin DSL Wrapper method
@@ -104,6 +118,8 @@ fun transformSync(code: String, isModule: Boolean, options: String): String
 ```
 
 ### transformFileSync
+
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/transform-file-sync.html)
 
 [swc#transformFileSync](https://swc.rs/docs/usage/core#transformfilesync)
 
@@ -123,6 +139,8 @@ fun transformFileSync(filepath: String, isModule: Boolean, options: String): Str
 
 ### printSync
 
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/print-sync.html)
+
 [swc#printSync](https://swc.rs/docs/usage/core#printsync)
 
 Kotlin DSL Wrapper method
@@ -140,6 +158,8 @@ fun printSync(program: String, options: String): String
 ```
 
 ### minifySync
+
+[see more](https://yidafu.github.io/swc-binding/docs/swc-binding/dev.yidafu.swc/-swc-native/minify-sync.html)
 
 [swc#minifySync](https://swc.rs/docs/usage/core#minifysync)
 
