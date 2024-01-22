@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>docs/how-to-implement-swc-jvm-binding.md</title>
+  <title>docs/how-to-implement-swc-jvm-binding.zh-CN.md</title>
   <link rel="stylesheet" href="theme.css">
 </head>
 <body><div class="markdown-body">
-<h1 id="how-to-implement-swc-jvm-binding">How to implement SWC JVM binding</h1>
-<p>Translated with DeepL.com (free version)</p>
-<h2 id="background">Background</h2>
-<p>In the process of using Kotlin Jupiter Kennel, I found that there is no 3D drawing library, and I can only use JS to draw data. We can only use JS to draw the data by using the <code>HTML(...)</code> function to write JS, which is very inconvenient. So I wrote the <a href="https://github.com/yidafu/kotlin-jupyter-js">kotlin-jupyter-js</a> plugin to support <code>%js</code> line magics. The core problem with the <code>kotlin-jupyter-js</code> plugin is: compiling JS code into ASTs is supported in the JVM. The core problem with the <code>kotlin-jupyter-js</code> plugin is that the JVM supports compiling JS code into ASTs.</p>
-<p>My idea is to implement SWC&#39;s JVM binding to solve this problem, SWC itself provides Node binding, so JVM binding is not that difficult to implement. Moreover, SWC supports TS/JSX compilation, which allows <code>kotlin-jupyter-js</code> to support <code>typescript</code> and <code>React</code>.</p>
-<h2 id="implementation-ideas">Implementation Ideas</h2>
-<p>The SWC JVM binding implementation is divided into two parts: 1) compiling the SWC Rust code into a JNI dynamic library, and 2) the JVM side, which implements the configuration classes and AST classes.</p>
-<p>SWC is for JS and only provides support for Node binding, we need to refer to Node binding to implement JVM binding.</p>
-<p>SWC Node binding exposes API output and input parameters are JSON strings, in Node, JSON strings can be easily converted to objects, but in JVM, you need to declare the corresponding classes.</p>
+<h1 id="-swc-jvm-binding">如何实现 SWC JVM binding</h1>
+<h2 id="-">背景</h2>
+<p>在使用 Kotlin Jupiter Kennel 的过程中发现没有3D绘制库，只能使用 JS 来绘制数据。只能通过<code>HTML(...)</code>函数来写 JS，非常不方便。所以，我写了 <a href="https://github.com/yidafu/kotlin-jupyter-js">kotlin-jupyter-js</a> 插件来支持<code>%js</code> line magics。<code>kotlin-jupyter-js</code>插件的核心问题是：在 JVM 支持编译 JS 代码成 AST。为此需要一个工具将 JS 代码转换成 AST，最好还能支持 TS 和 JSX。</p>
+<p>我的想法是实现 SWC 的 JVM binding 来解决这个问题。SWC 本身提供 Node 的 binding，所以 JVM binding 实现难度没有那么大。而且，SWC 支持 TS/JSX 编译，可以让<code>kotlin-jupyter-js</code>支持<code>typescript</code>和<code>React</code>。</p>
+<h2 id="-">实现思路</h2>
+<p>SWC JVM binding 实现了分成两部分。1. 将 SWC 的 Rust 代码编译成 JNI 动态库；2. JVM 侧，实现配置类和 AST 类。</p>
+<p>SWC 是给 JS 使用的，只提供了支持 Node binding。我们需要参考 Node binding，来实现 JVM 的 binding。</p>
+<p>SWC Node binding 暴露的 API 出参、入参都是 JSON 字符串，在 Node 里 JSON 字符串很容易转为对象，在 JVM 里则需要相应的类声明。</p>
 <blockquote>
-<p>SWC provides WASM binding, you can encapsulate SWC based on WASM, the advantage is that you don&#39;t need to implement JNI binding, but you need to introduce WASM Runtime, so we don&#39;t consider it.</p>
+<p>SWC 提供了 WASM binding，可以基于 WASM 来封装 SWC，好处是不需要实现 JNI binding，但是需要额外引入 WASM Runtime。故没有考虑。</p>
 </blockquote>
 <h2 id="swc-binding">SWC binding</h2>
-<h3 id="rust-jni-ffis">Rust JNI FFIs</h3>
-<p>Compiling Rust into a JNI dynamic library requires the Rust JNI FFI, which is supported by using <a href="https://crates.io/crates/jni">jni</a>.</p>
-<p>This library provides an easy way to bridge Rust and Java, see the official <code>jni</code> example.</p>
-<p>On the JVM side of the code.</p>
+<h3 id="rust-jni-ffi">Rust JNI FFI</h3>
+<p>将 Rust 编译成 JNI 动态库，需要 Rust 的 JNI FFI。直接使用 <a href="https://crates.io/crates/jni">jni</a> 即可支持。</p>
+<p>这个库提供可以很方便地桥接 Rust 和 Java。可以看一下 <code>jni</code> 的官方例子。</p>
+<p>在 JVM 侧代码。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">class</span> <span class="nc">HelloWorld</span> <span class="p">{</span>
     <span class="n">init</span> <span class="p">{</span>
         <span class="n">System</span><span class="p">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="s">&quot;mylib&quot;</span><span class="p">);</span>
@@ -32,7 +31,7 @@
 </pre></div>
 
 </code></pre>
-<p>In Rust code it&#39;s just a matter of writing the glue code.</p>
+<p>在 Rust 代码只需要写一下胶水代码即可。</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="cp">#[no_mangle]</span>
 <span class="k">pub</span> <span class="k">extern</span> <span class="s">&quot;system&quot;</span> <span class="k">fn</span> <span class="n">Java_HelloWorld_hello</span><span class="o">&lt;</span><span class="nl">&#39;local</span><span class="o">&gt;</span><span class="p">(</span><span class="k">mut</span> <span class="n">env</span><span class="o">:</span> <span class="n">JNIEnv</span><span class="o">&lt;</span><span class="nl">&#39;local</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">class</span><span class="o">:</span> <span class="n">JClass</span><span class="o">&lt;</span><span class="nl">&#39;local</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">input</span><span class="o">:</span> <span class="n">JString</span><span class="o">&lt;</span><span class="nl">&#39;local</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jstring</span> <span class="p">{</span>
     <span class="kd">let</span> <span class="n">input</span><span class="o">:</span> <span class="n">String</span> <span class="o">=</span>
@@ -47,16 +46,16 @@
 </pre></div>
 
 </code></pre>
-<p>Calling <code>HelloWorld().hello(&quot;JNI&quot;)</code> through JNI will call the Rust code returning <code>Hello, JNI!</code>.</p>
-<p>The declaration of the bridge function in the above Rust code is quite long, you can use <a href="https://crates.io/crates/jni_fn">jni_fn</a> to generate the bridge function declaration automatically by macro to simplify the declaration.</p>
+<p>调用<code>HelloWorld().hello(&quot;JNI&quot;)</code>，通过 JNI 会调用Rust 代码返回<code>Hello, JNI!</code>.</p>
+<p>上面 Rust 代码里桥接函数的申明比较长，可以使用 <a href="https://crates.io/crates/jni_fn">jni_fn</a> 通过宏自动生成桥接函数声明，简化声明。</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="cp">#[jni_fn(</span><span class="s">&quot;HelloWorld&quot;</span><span class="cp">)]</span>
 <span class="k">pub</span> <span class="k">fn</span> <span class="n">hello</span><span class="o">&lt;</span><span class="nl">&#39;local</span><span class="o">&gt;</span><span class="p">(...)</span> <span class="o">-&gt;</span> <span class="n">jstring</span>
 </pre></div>
 
 </code></pre>
-<p>With <code>jni</code> and <code>jni_fn</code> we can compile Rust code into JNI dynamic libraries.</p>
+<p>通过 <code>jni</code> 和 <code>jni_fn</code> 我们可以将 Rust 代码编译成 JNI 动态库。</p>
 <h3 id="binding">Binding</h3>
-<p>SWC Node binding offers the following methods.</p>
+<p>SWC Node binding 提供了以下方法</p>
 <ul>
 <li>transform<ul>
 <li>transform</li>
@@ -83,12 +82,12 @@
 </ul>
 </li>
 </ul>
-<p>SWC Node binding provides synchronous and asynchronous methods via <a href="https://crates.io/crates/napi">napi</a>. However, the JVM&#39;s FFI <code>jni</code> doesn&#39;t only support asynchrony, so we only implement the synchronous APIs: <code>transformSync</code>,<code>transformFileSync</code>,<code>parseSync</code>,<code>parseFileSync</code>,<code>minifySync</code>,<code>printSync</code>.</p>
+<p>SWC Node binding 通过 <a href="https://crates.io/crates/napi">napi</a> 提供同步和异步方法。但是 JVM 的 FFI <code>jni</code> 并不只支持异步，所以我们只实现同步 API：<code>transformSync</code>,<code>transformFileSync</code>,<code>parseSync</code>,<code>parseFileSync</code>,<code>minifySync</code>,<code>printSync</code>。</p>
 <h3 id="pase_sync">pase_sync</h3>
-<p>Below is an example of <code>pase_sync</code> to explain how to implement it.</p>
-<h4 id="dependencies">Dependencies</h4>
-<p>SWC itself only considers Node binding.<a href="https://crates.io/crates/swc_core">swc_core</a> implements the logic of binding to Node, aggregating other SWC sub-package dependencies. NMP package <code>@swc/core</code> also wraps <code>swc_core</code>. We can&#39;t use the <code>swc_core</code> library directly, we need to replace other SWC subpackage calls.</p>
-<p>For example, <code>Compiler</code> from <code>swc_core</code>:</p>
+<p>下面以<code>pase_sync</code>为例，解释如何实现。</p>
+<h4 id="-">依赖</h4>
+<p>SWC 本身只考虑了 Node binding。<a href="https://crates.io/crates/swc_core">swc_core</a> 实现了与 Node 绑定的逻辑、聚合其他 SWC 子包依赖。NMP 包<code>@swc/core</code>也是封装<code>swc_core</code>。我们不能直接使用<code>swc_core</code>库，需要替换其他 SWC 子包调用。</p>
+<p>比如，从<code>swc_core</code>引入<code>Compiler</code>：</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="kn">use</span> <span class="n">swc_core</span><span class="o">::</span><span class="p">{</span>
     <span class="n">base</span><span class="o">::</span><span class="p">{</span>
         <span class="n">Compiler</span><span class="p">,</span>
@@ -97,12 +96,12 @@
 </pre></div>
 
 </code></pre>
-<p>Needs to be changed to be introduced from <a href="https://crates.io/crates/swc">swc</a>.</p>
+<p>需要改为从 <a href="https://crates.io/crates/swc">swc</a> 引入。</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="kn">use</span> <span class="n">swc</span><span class="o">::</span><span class="n">Compiler</span><span class="p">;</span>
 </pre></div>
 
 </code></pre>
-<p>All SWC-related dependencies after <code>swc_core</code> conversion.</p>
+<p><code>swc_core</code>转换后的所有 SWC 相关依赖:</p>
 <pre><code class="lang-ini"><div class="highlight"><pre><span class="k">[dependencies]</span>
 <span class="c1"># ...</span>
 <span class="na">swc</span> <span class="o">=</span> <span class="s">&quot;0.270.25&quot;</span>
@@ -116,10 +115,10 @@
 </pre></div>
 
 </code></pre>
-<h4 id="entry-exit-parameter">entry/exit parameter</h4>
-<p>Theoretically, what needs to be done is simple: replace all <code>napi</code> related logic with <code>jni</code>. We don&#39;t need to change how SWC implements the specific functionality.</p>
-<p>See <a href="https://github.com/swc-project/swc/tree/main/bindings/binding_core_node">SWC - binding_core_node</a> for the <code>pase_sync</code> implementation <a href="https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/ src/parse.rs#L168">binding_core_node /src/parse.rs#L168</a>, <code>parseSync</code> copies most of the logic directly, but requires changes to the handling of incoming and outgoing parameters.</p>
-<p>The <code>pase_sync</code> implementation of <code>binding_core_node</code>:</p>
+<h4 id="-">出入参</h4>
+<p>理论上，需要做的工作很简单：将所有 <code>napi</code> 相关逻辑替换成<code>jni</code>即可。如何 SWC 如何实现具体功能，我们都不需要改动。</p>
+<p>参考 <a href="https://github.com/swc-project/swc/tree/main/bindings/binding_core_node">SWC - binding_core_node</a> 的 <code>pase_sync</code> 实现 <a href="https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168">binding_core_node/src/parse.rs#L168</a>, <code>parseSync</code> 大部分逻辑都直接复制，但需要修改入参、出参的处理。</p>
+<p><code>binding_core_node</code> 的 <code>pase_sync</code> 实现：</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="cp">#[napi]</span>
 <span class="k">pub</span> <span class="k">fn</span> <span class="n">parse_sync</span><span class="p">(</span><span class="n">src</span><span class="o">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">opts</span><span class="o">:</span> <span class="nb">Buffer</span><span class="p">,</span> <span class="n">filename</span><span class="o">:</span> <span class="nb">Option</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">napi</span><span class="o">::</span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="p">{</span>
     <span class="c1">// ...</span>
@@ -130,7 +129,7 @@
 </pre></div>
 
 </code></pre>
-<p>Signature changes and entry/exit parameter processing are required:</p>
+<p>需要修改签名和出入参处理：</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="cp">#[jni_fn(</span><span class="s">&quot;dev.yidafu.swc.SwcNative&quot;</span><span class="cp">)]</span>
 <span class="k">pub</span> <span class="k">fn</span> <span class="n">parseSync</span><span class="p">(</span><span class="k">mut</span> <span class="n">env</span><span class="o">:</span> <span class="n">JNIEnv</span><span class="p">,</span> <span class="n">_</span><span class="o">:</span> <span class="n">JClass</span><span class="p">,</span> <span class="n">code</span><span class="o">:</span> <span class="n">JString</span><span class="p">,</span> <span class="n">options</span><span class="o">:</span> <span class="n">JString</span><span class="p">,</span> <span class="n">filename</span><span class="o">:</span> <span class="n">JString</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jstring</span> <span class="p">{</span>
     <span class="c1">// process parameter</span>
@@ -159,21 +158,21 @@
 </pre></div>
 
 </code></pre>
-<p>Getting a string passed by the JVM requires a call to <code>get_string</code> of <code>JNIEnv</code>.</p>
-<p>Converting a Rust string to a Java string also requires a call to <code>new_string</code> of <code>JNIEnv</code> before converting to a <code>jstring</code> type.</p>
-<h4 id="exception-handling">Exception Handling</h4>
-<p>If SWC fails to process JS code (e.g. JS code has syntax errors), it needs to throw an exception to the JVM, which will be handled by the JVM side.</p>
-<p>The code thrown by Rust is first caught and then converted into an exception thrown by the JVM.</p>
-<p>The <code>binding_core_node</code> handler implements the <code>MapErr&lt;T&gt;</code> trait for <code>Result</code>, which converts the Rust exception to a <code>napi</code> exception via the <code>convert_err</code> method, and finally throws it in the Node.</p>
-<p>Exception handling in SWC <a href="https://github.com/swc-project/swc/blob/ 828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L179">swc/bindings/binding_core_node/src/parse.rs#L179</a></p>
+<p>获取 JVM 传过来的字符串，需要调用<code>JNIEnv</code>的<code>get_string</code>。</p>
+<p>将 Rust 字符串转为Java字符串也需要调用 <code>JNIEnv</code>的<code>new_string</code>在转为<code>jstring</code>类型。</p>
+<h4 id="-">异常处理</h4>
+<p>如果 SWC 处理 JS 代码失败了（比如JS代码有语法错误），需要抛出异常到 JVM，由 JVM 侧进行处理。</p>
+<p>首先捕获 Rust 抛出的代码，再转换成 JVM 的异常抛出。</p>
+<p><code>binding_core_node</code> 处理时对于<code>Result</code>实现了<code>MapErr&lt;T&gt;</code> trait,通过<code>convert_err</code> 方法��� Rust 异常转为了<code>napi</code>的异常，最后在 Node 里抛出。</p>
+<p>SWC 的异常处理 <a href="https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L179">swc/bindings/binding_core_node/src/parse.rs#L179</a></p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="kd">let</span> <span class="n">program</span> <span class="o">=</span> <span class="n">try_with</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">cm</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span> <span class="kc">false</span><span class="p">,</span> <span class="n">ErrorFormat</span><span class="o">::</span><span class="n">Normal</span><span class="p">,</span> <span class="o">|</span><span class="n">handler</span><span class="o">|</span> <span class="p">{</span>
     <span class="c1">// ....</span>
 <span class="p">}).</span><span class="n">convert_err</span><span class="p">()</span><span class="o">?</span><span class="p">;</span>
 </pre></div>
 
 </code></pre>
-<p>We need to throw JVM exceptions, so implement the JVM&#39;s <code>MapErr&lt;T&gt;</code> trait to turn Rust exceptions into <code>jni</code> exceptions for <code>jni</code> to throw to the JVM.</p>
-<p>Copy the SWC&#39;s <code>MapErr&lt;T&gt;</code> trait.</p>
+<p>我们需要抛出 JVM 的异常，所以要实现 JVM 的 <code>MapErr&lt;T&gt;</code> trait，将Rust异常转为 <code>jni</code>的异常，让<code>jni</code>抛出到 JVM。</p>
+<p>抄一下 SWC 的 <code>MapErr&lt;T&gt;</code> trait。</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="k">pub</span> <span class="k">trait</span> <span class="n">MapErr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;:</span> <span class="n">Into</span><span class="o">&lt;</span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">anyhow</span><span class="o">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
     <span class="k">fn</span> <span class="n">convert_err</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwcResult</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
         <span class="bp">self</span><span class="p">.</span><span class="n">into</span><span class="p">().</span><span class="n">map_err</span><span class="p">(</span><span class="o">|</span><span class="n">err</span><span class="o">|</span> <span class="n">SwcException</span><span class="o">::</span><span class="n">SwcAnyException</span> <span class="p">{</span>
@@ -184,16 +183,16 @@
 </pre></div>
 
 </code></pre>
-<p><code>Result</code> implements <code>MapErr&lt;T&gt;</code>.</p>
+<p><code>Result</code>实现<code>MapErr&lt;T&gt;</code></p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">MapErr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="k">for</span> <span class="nb">Result</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">anyhow</span><span class="o">::</span><span class="n">Error</span><span class="o">&gt;</span> <span class="p">{}</span>
 </pre></div>
 
 </code></pre>
-<p>Here <code>jni</code> throws an exception and it should be noted that the function still needs to return a value, usually an empty string. Here <a href="https://github.com/jni-rs/jni-rs/issues/76">jni-rs#76</a> explains why.</p>
+<p>这里 <code>jni</code> 抛出异常需要注意，函数依然需要返回值，一般返回空串。这里 <a href="https://github.com/jni-rs/jni-rs/issues/76">jni-rs#76</a> 解释了原因。</p>
 <blockquote>
 <p>You still have to return to the JVM, even if you&#39;ve thrown an exception. Remember that unwinding across the ffi boundary is always undefined behavior, so any panics need to be caught and recovered from in your extern functions.</p>
 </blockquote>
-<p>The final exception is handled like this</p>
+<p>最后异常处理像这样</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="kd">let</span> <span class="n">result</span> <span class="o">=</span> <span class="n">try_with</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">cm</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span> <span class="kc">false</span><span class="p">,</span> <span class="n">ErrorFormat</span><span class="o">::</span><span class="n">Normal</span><span class="p">,</span> <span class="o">|</span><span class="n">handler</span><span class="o">|</span> <span class="p">{</span>
     <span class="c1">// ...</span>
 <span class="p">}).</span><span class="n">convert_err</span><span class="p">();</span>
@@ -215,7 +214,7 @@
 
 </code></pre>
 <h3 id="swcnative">SwcNative</h3>
-<p>Implementation of Rust compiled into a dynamic library, the next step will need to implement the JVM side of the glue code, the following is the Kotlin implementation.</p>
+<p>实现Rust编译成动态库，下一步就需要实现 JVM 侧胶水代码，下面是 Kotlin 实现。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">class</span> <span class="nc">SwcNative</span> <span class="p">{</span>
     <span class="n">init</span> <span class="p">{</span>
         <span class="n">System</span><span class="p">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="s">&quot;swc_jni&quot;</span><span class="p">)</span>
@@ -227,8 +226,8 @@
 </pre></div>
 
 </code></pre>
-<p>When the JVM loads <code>swc_jni</code>, it looks for dynamic libraries from the filesystem as a rule, but not from the <code>resources</code> directory of the jar. So, by <code>System.loadLibrary(&quot;swc_jni&quot;)</code> if there is no <code>swc_jni</code> dynamic library locally, it will fail to load. The user installs from maven and there is definitely no <code>swc_jni</code> locally.</p>
-<p>Solution, refer to this answer <a href="https://stackoverflow.com/questions/23189776/load-native-library-from-class-path">Load Native Library from Class path</a>, if <code>System.loadLibrary(&quot;swc_jni&quot;)</code> fails to load, then copy the jar&#39;s dynamic library to a temporary directory and load it again.</p>
+<p>JVM 加载<code>swc_jni</code>时，会按照规则从文件系统寻找动态库，但是不会从 jar 的 <code>resources</code>目录寻找。所以，通过<code>System.loadLibrary(&quot;swc_jni&quot;)</code>如果本地没有<code>swc_jni</code>动态库，就会加载失败。用户从 maven 安装，本地肯定没有<code>swc_jni</code>。</p>
+<p>解决方案，参考这个回答 <a href="https://stackoverflow.com/questions/23189776/load-native-library-from-class-path">Load Native Library from Class path</a>，如果<code>System.loadLibrary(&quot;swc_jni&quot;)</code> 加载失败就将 jar 的动态库复制到临时目录再加载。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre>    <span class="n">init</span> <span class="p">{</span>
         <span class="k">try</span> <span class="p">{</span>
             <span class="n">System</span><span class="p">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="s">&quot;swc_jni&quot;</span><span class="p">)</span>
@@ -242,9 +241,9 @@
 </pre></div>
 
 </code></pre>
-<h3 id="summary">Summary</h3>
-<p>Like the other methods just implement them like <code>parse_sync</code>.</p>
-<p>At this point we can compile JS in the JVM.</p>
+<h3 id="-">小结</h3>
+<p>像其他方法就像<code>parse_sync</code>依葫芦画瓢实现就可以了。</p>
+<p>到这一步我们已经可以在 JVM 里的编译 JS 了。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">SwcNative</span><span class="p">().</span><span class="n">parseSync</span><span class="p">(</span>
     <span class="s">&quot;var foo = &#39;bar&#39;&quot;</span><span class="p">,</span> 
     <span class="s">&quot;&quot;&quot;{&quot;</span><span class="n">syntax</span><span class="s">&quot;: &quot;</span><span class="n">ecmascript</span><span class="s">&quot;;}&quot;&quot;&quot;</span><span class="p">,</span>
@@ -308,15 +307,15 @@
   &quot;interpreter&quot;: null
 }</code></code></details>
 <h2 id="kotlin-ast-dsl">Kotlin AST DSL</h2>
-<p>Now that we get the AST JSON string, it is still inconvenient if we want to manipulate the AST. We need the JSON string to convert it to a class so that traversing and modifying it will be easy.</p>
-<p>Also, the second <code>options</code> of <code>parseSync</code> is not type aware and needs to be constrained to a configuration item.</p>
-<p>So how do we implement type descriptions for SWC ASTs and configuration item parameters in Kotlin?</p>
-<p>I&#39;ve tried an AI conversion from Rust to Kotlin and it works pretty well. The only problem is that it requires kryptonite, and I admit that lack of money is my problem.</p>
-<p>Writing SWC class definitions from scratch? I&#39;m afraid there&#39;s a lot of work to be done, SWC has 200+ ASTs and configuration item types.</p>
-<p>The best solution is to generate Kotlin classes via scripts. As it happens, SWC provides the TS declaration file <a href="https://www.npmjs.com/package/@swc/types">@swc/types</a>.</p>
+<p>现在我们得到 AST JSON 字符串，如果想要对AST进行操作还是很不方便的。我们需要 JSON 字符串将其转换为类，这样遍历、修改都会非常方便。</p>
+<p>而且 <code>parseSync</code> 的第二个<code>options</code>也不知道类型，需要约束配置项。</p>
+<p>那我们如何在 Kotlin 实现 SWC AST 和配置项参数的类型描述呢？</p>
+<p>我尝试过是 AI 将 Rust 转换为 Kotlin，效果相当不错。唯一的问题的就是需要氪金，我承认没钱是我的问题。</p>
+<p>从头写 SWC 类定义？工作做恐怕有的大了。SWC 有 200+ 的 AST 和配置项类型。</p>
+<p>最好的解决方式就是通过脚本来生成 Kotlin 类。恰好，SWC 提供了 TS 声明文件 <a href="https://www.npmjs.com/package/@swc/types">@swc/types</a>。</p>
 <h3 id="-swc-types">@swc/types</h3>
-<p>When you open the declaration file for <code>@swc/types</code>, it is full of <code>type</code> and <code>interface</code> declarations with a very simple structure.</p>
-<p>It can be divided into the following cases.</p>
+<p>打开 <code>@swc/types</code> 的声明文件，里面都是 <code>type</code> 和 <code>interface</code> 声明，结构非常简单。</p>
+<p>可以分为一下情况:</p>
 <ol>
 <li>type alias<ol>
 <li>literal union type: <code>type T = &#39;foo&#39; | &#39;bar&#39;</code></li>
@@ -327,11 +326,11 @@
 </li>
 <li>interface</li>
 </ol>
-<p>The case of Type alias is relatively complex, mainly because of the flexibility of JS.</p>
+<p>Type alias 的情况相对复杂，主要还是因为 JS 的灵活性。</p>
 <h3 id="type-alias">type alias</h3>
-<p>For some special cases we need to reduce the dynamics of types to make it easier for us to work with them.</p>
-<p>Like <code>T | T[]</code> we can convert to <code>T[]</code> to avoid not being able to define the type in Kotlin.</p>
-<p>For example:</p>
+<p>对于一些特殊情况我们需要减少类型的动态性，方便我们进行处理。</p>
+<p>像 <code>T | T[]</code> 我们可以转为 <code>T[]</code>，避免在 Kotlin 里无法定义类型。</p>
+<p>比如：</p>
 <pre><code class="lang-ts"><div class="highlight"><pre><span class="kr">export</span> <span class="kr">interface</span> <span class="nx">Config</span> <span class="p">{</span>
     <span class="nx">test?</span>: <span class="kt">string</span> <span class="o">|</span> <span class="kt">string</span><span class="p">[];</span>
     <span class="c1">// ...</span>
@@ -339,15 +338,15 @@
 </pre></div>
 
 </code></pre>
-<p>Just convert:</p>
+<p>就转换为：</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Config</span> <span class="p">{</span>
     <span class="k">var</span> <span class="py">test</span><span class="p">:</span> <span class="n">Array</span><span class="p">&lt;</span><span class="n">String</span><span class="p">&gt;?</span> <span class="p">=</span> <span class="k">null</span>
 <span class="p">}</span>
 </pre></div>
 
 </code></pre>
-<p>A literal union type like <code>props: &#39;foo&#39; | &#39;bar&#39;</code> should be converted directly to the base type: <code>val props: String?</code>.</p>
-<p>A <code>type T = S &amp; { foo: string }</code> requires that the object literal type be extracted as a separate type, with T inheriting from S and the extracted new type. Conversion to kotlin should look like this:</p>
+<p>像 <code>props: &#39;foo&#39; | &#39;bar&#39;</code> 这样的字面量联合类型应该直接转为基础类型： <code>val props: String?</code>。</p>
+<p><code>type T = S &amp; { foo: string }</code> 需要将对象字面量类型提取单独的类型，T 来继承 S 和 提取出来的新类型。转换成 kotlin应该是这样的：</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">interface</span> <span class="n">BaseT</span> <span class="p">{</span>
     <span class="k">val</span> <span class="py">foo</span><span class="p">:</span> <span class="n">String</span><span class="p">;</span>
 <span class="p">}</span>
@@ -357,9 +356,9 @@
 
 </code></pre>
 <h3 id="interface">interface</h3>
-<p>For <code>interface</code> processing, it is divided into 3 parts: 1. TS interface to Kotlin class; 2. inheritance; 3. serialization.</p>
-<h4 id="ts-interface-to-kotlin-class">TS interface to Kotlin class</h4>
-<p>Define a <code>KotlinClass</code> to represent the Kotlin class to be converted. Implement <code>toString()</code> to convert it to a Kotlin class.</p>
+<p>对于 <code>interface</code> 处理，分为3部分：1. TS interface 转为 Kotlin 类；2. 继承关系；3. 序列化。</p>
+<h4 id="ts-interface-kotlin-">TS interface 转为 Kotlin 类</h4>
+<p>定义个 <code>KotlinClass</code> 来表示要装换成的 Kotlin 类。这样实现<code>toString()</code>即可方便地将其转为 kotlin 类。</p>
 <pre><code class="lang-ts"><div class="highlight"><pre><span class="kr">export</span> <span class="kr">class</span> <span class="nx">KotlinClass</span> <span class="p">{</span>
     <span class="nx">klassName</span>: <span class="kt">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
     <span class="nx">headerComment</span>: <span class="kt">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -371,8 +370,8 @@
 </pre></div>
 
 </code></pre>
-<p>The <code>KotlinClass</code> is generated by traversing the AST of the TS interface.</p>
-<p>When traversing interface properties, you need to recursively traverse the properties of the parent class. Properties inherited from the parent type need to set <code>KotlinClassProperty.isOverride</code> to true to facilitate the generation of kotlin classes with the <code>override</code> modifier.</p>
+<p>通过遍历 TS interface 的 AST，就可以生成 <code>KotlinClass</code>。</p>
+<p>在遍历 interface 属性时，需要递归遍历父类的属性，继承自父类型的属性需要将<code>KotlinClassProperty.isOverride</code>设为 true，方便生成 kotlin 类是加上<code>override</code>修饰符。</p>
 <pre><code class="lang-ts"><div class="highlight"><pre><span class="kr">class</span> <span class="nx">KotlinClassProperty</span> <span class="p">{</span>
     <span class="nx">modifier</span>: <span class="kt">string</span> <span class="o">=</span> <span class="s1">&#39;var&#39;</span>
     <span class="nx">name</span>: <span class="kt">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -385,10 +384,10 @@
 </pre></div>
 
 </code></pre>
-<h4 id="inheritance">Inheritance</h4>
-<p>The parent interface from which the TS interface directly inherits is simply added to the <code>KotlinClass.parents</code> array.</p>
-<p>However, <code>type T = S | E</code> needs to be handled separately.</p>
-<p>As an example</p>
+<h4 id="-">继承关系</h4>
+<p>TS interface 直接继承的父 interface 直接加入 <code>KotlinClass.parents</code> 数组即可。</p>
+<p>但是，对于 <code>type T = S | E</code> 需要进行单独处理</p>
+<p>举个例子</p>
 <pre><code class="lang-ts"><div class="highlight"><pre><span class="kr">export</span> <span class="kr">interface</span> <span class="nx">VariableDeclarator</span> <span class="kr">extends</span> <span class="nx">Node</span><span class="p">,</span> <span class="nx">HasSpan</span> <span class="p">{</span>
     <span class="nx">init?</span>: <span class="kt">Expression</span><span class="p">;</span>
 
@@ -406,8 +405,8 @@
 </pre></div>
 
 </code></pre>
-<p>Here Expression is the parent of all <code>XxxExpression</code>. This makes <code>variableDeclarator.init = thisExpression</code> or <code>variableDeclarator.init = arrayExpression</code> assignments legal.</p>
-<p>Because <code>Expression</code> is a type alias in TS, converting kotlin turns it into an empty interface. Converting to Kotlin results in something like this</p>
+<p>这里 Expression 是所有 <code>XxxExpression</code> 的父类型。这样<code>variableDeclarator.init = thisExpression</code> 或者 <code>variableDeclarator.init = arrayExpression</code> 赋值才合法。</p>
+<p>因为 TS 里 <code>Expression</code> 是 type alias 转换 kotlin 要变成一个空接口。 转换成 Kotlin 结果像这样</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">interface</span> <span class="n">Expression</span> <span class="p">{}</span>
 
 <span class="k">class</span> <span class="nc">VariableDeclarator</span> <span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">HasSpan</span> <span class="p">{</span>
@@ -421,10 +420,10 @@
 </pre></div>
 
 </code></pre>
-<p>So, for <code>type T = S | E</code>, <code>T</code> is the parent of <code>S</code> and <code>E</code>, and <code>T</code> needs to be added to the <code>KotlinClass.parents</code> array of <code>S</code>,<code>E</code>.</p>
-<h4 id="serialization">Serialization</h4>
-<p>When serializing AST nodes, one encounters problems with polymorphic serialization.</p>
-<p>For example, serialize <code>Expression</code>, and <code>Expression</code> is an empty interface, then <code>toJson</code> doesn&#39;t know how to deal with <code>ThisExpression</code> and <code>ArrayExpression</code> properties, and then it can only throw an exception or output an empty object, which don&#39;t meet our expectation.</p>
+<p>所以，对于 <code>type T = S | E</code>，<code>T</code> 是 <code>S</code> 和 <code>E</code>的父类，需要将 <code>T</code> 加入<code>S</code>,<code>E</code> 的 <code>KotlinClass.parents</code> 数组。</p>
+<h4 id="-">序列化</h4>
+<p>AST 节点序列化时，会遇到多态序列化的问题。</p>
+<p>比如，序列化<code>Expression</code>，而<code>Expression</code>是空接口，这时<code>toJson</code>就不知道如何处理<code>ThisExpression</code>和<code>ArrayExpression</code>的属性，这时只能抛出异常或者输出空对象，都不符合我们的期望。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">val</span> <span class="py">thisExpression</span><span class="p">:</span> <span class="n">ThisExpression</span> <span class="p">=</span> <span class="n">ThisExpression</span><span class="p">()</span>
 <span class="k">val</span> <span class="py">arrayExpression</span><span class="p">:</span> <span class="n">ArrayExpression</span> <span class="p">=</span> <span class="n">ArrayExpression</span><span class="p">()</span>
 
@@ -436,7 +435,7 @@
 </pre></div>
 
 </code></pre>
-<p>The same goes for deserialization. <code>parseJson</code> also doesn&#39;t know whether to convert a string to <code>ThisExpression</code> or <code>ArrayExpression</code>.</p>
+<p>反序列化也是一样的。<code>parseJson</code> 也不知道将字符串转为<code>ThisExpression</code>还是<code>ArrayExpression</code>。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">val</span> <span class="py">thisExpression</span> <span class="p">=</span> <span class="s">&quot;&quot;&quot; {&quot;</span><span class="k">type</span><span class="s">&quot;:&quot;</span><span class="n">ThisExpression</span><span class="s">&quot;, &quot;</span><span class="n">props</span><span class="s">&quot;: &quot;</span><span class="n">any</span> <span class="n">value</span><span class="s">&quot; } &quot;&quot;&quot;</span>
 <span class="k">val</span> <span class="py">arrayExpression</span> <span class="p">=</span> <span class="s">&quot;&quot;&quot; {&quot;</span><span class="k">type</span><span class="s">&quot;:&quot;</span><span class="n">ThisExpression</span><span class="s">&quot;, &quot;</span><span class="n">elements</span><span class="s">&quot;: [] } &quot;&quot;&quot;</span>
 
@@ -445,8 +444,8 @@
 </pre></div>
 
 </code></pre>
-<p>Serialization using kotlinx serialization, which supports <a href="https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md">polymorphic serialization</a>, requires transforming the kotlin code.</p>
-<p>Annotate the class with <code>JsonClassDiscriminator</code> to indicate by which field the type is distinguished, and <code>SerialName</code> to indicate the name of the type after serialization. Deserialization can find the specific type based on this type name.</p>
+<p>使用 kotlinx serialization 来序列化，它支持<a href="https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md">多态序列化</a>，需要将改造kotlin代码。</p>
+<p>在类上注解<code>JsonClassDiscriminator</code>标明通过哪个字段来区分类型，<code>SerialName</code>注解标明序列后类型的名称。反序列化时可以根据这个类型名称找到具体类型。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">interface</span> <span class="n">ArrayExpression</span> <span class="p">:</span> <span class="n">ExpressionBase</span><span class="p">,</span> <span class="n">Expression</span> <span class="p">{</span>
     <span class="c1">// ....</span>
 <span class="p">}</span>
@@ -471,7 +470,7 @@
 </pre></div>
 
 </code></pre>
-<p>In order for serialization and deserialization to be able to correctly find specific types, it is also necessary to define <code>SerializersModule</code>.</p>
+<p>为了序列化和反序列化是能够正确找到具体类型，还需要定义<code>SerializersModule</code>。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">val</span> <span class="py">swcSerializersModule</span> <span class="p">=</span> <span class="n">SerializersModule</span> <span class="p">{</span>
     <span class="c1">// ...</span>
     <span class="n">polymorphic</span><span class="p">(</span><span class="n">Expression</span><span class="o">::</span><span class="k">class</span><span class="p">)</span> <span class="p">{</span>
@@ -492,7 +491,7 @@
 </pre></div>
 
 </code></pre>
-<p>This allows normal serialization of polymorphic types</p>
+<p>这样就可以正常序列化多态类型了</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">val</span> <span class="py">json</span> <span class="p">=</span> <span class="n">Json</span> <span class="p">{</span>
     <span class="n">classDiscriminator</span> <span class="p">=</span> <span class="s">&quot;syntax&quot;</span>
     <span class="n">serializersModule</span> <span class="p">=</span> <span class="n">configSerializer</span>
@@ -506,7 +505,7 @@
 
 </code></pre>
 <h3 id="dsl">DSL</h3>
-<p>We have generated class definitions for ASTs and configuration items, and would find it less elegant and convenient to build configuration or ASTs directly using classes.</p>
+<p>我们生成好了 AST 和配置项的类定义，如果直接使用类来构建配置或者 AST 会发现不太优雅和方便。</p>
 <pre><code class="lang-js"><div class="highlight"><pre><span class="kr">const</span> <span class="nx">foo</span> <span class="o">=</span> <span class="s1">&#39;bar&#39;</span>
 </pre></div>
 
@@ -554,7 +553,7 @@
         }
       ]
     }</code></details>
-<p>The JS code above, if we Kotlin build the AST</p>
+<p>上面 JS 代码，如果我们 Kotlin 来构建 AST</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">VariableDeclarationImpl</span><span class="p">().</span><span class="n">apply</span> <span class="p">{</span>
     <span class="n">span</span> <span class="p">=</span> <span class="n">Span</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">17</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
     <span class="n">kind</span> <span class="p">=</span> <span class="err">&#39;</span><span class="n">const</span><span class="err">&#39;</span>
@@ -577,7 +576,7 @@
 </pre></div>
 
 </code></pre>
-<p>Simplified property settings are invoked via <code>apply</code>. Relative to spaghetti code, it&#39;s already cleaner via <code>apply</code>. It could be a bit more succinct.</p>
+<p>通过<code>apply</code>来调用简化的属性设置。相对面条式代码，通过<code>apply</code>已经比较简洁。还能简洁一点。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">variableDeclaration</span>  <span class="p">{</span>
     <span class="n">span</span> <span class="p">=</span> <span class="n">span</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">17</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
     <span class="n">kind</span> <span class="p">=</span> <span class="err">&#39;</span><span class="n">const</span><span class="err">&#39;</span>
@@ -600,8 +599,8 @@
 </pre></div>
 
 </code></pre>
-<p>DSL is now very much like outputting AST JSON and is very simple and straightforward to write.</p>
-<p>Classes that require DSL writing require the <code>SwcDslMarker</code> annotation marker. The <code>SwcDslMarker</code> is mainly to restrict the scope and avoid accessing the outer scope.</p>
+<p>现在的 DSL 已经很像输出 AST JSON，写起来也非常简单直白。</p>
+<p>需要DSL写法的类，都需要<code>SwcDslMarker</code>注解标记。<code>SwcDslMarker</code>主要是为了限制作用域，避免访问外层作用域。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">@DslMarker</span>
 <span class="k">annotation</span> <span class="k">class</span> <span class="nc">SwcDslMarker</span>
 
@@ -616,7 +615,7 @@
 </pre></div>
 
 </code></pre>
-<p>You can refer to the official documentation for how to implement it: <a href="https://kotlinlang.org/docs/type-safe-builders.html#scope-control-dslmarker">kotlin -- Type-safe builders</a></p>
+<p>如何实现可以参考官方文档：<a href="https://kotlinlang.org/docs/type-safe-builders.html#scope-control-dslmarker">kotlin -- Type-safe builders</a></p>
 <h4 id="dsl-extension-function">DSL extension function</h4>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">interface</span> <span class="n">VariableDeclarator</span> <span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">HasSpan</span> <span class="p">{</span>
     <span class="k">val</span> <span class="py">init</span><span class="p">:</span> <span class="n">Expression</span><span class="p">?;</span>
@@ -625,7 +624,7 @@
 </pre></div>
 
 </code></pre>
-<p>For the <code>VariableDeclarator</code> interface, its init field type is <code>Expression</code>, meaning that its right value can be any subtype of <code>arrayExpression</code>, <code>thisExpression</code>, and so on.</p>
+<p>对于<code>VariableDeclarator</code>接口，其init字段类型是<code>Expression</code>，意味着它的右值可以是<code>arrayExpression</code>、<code>thisExpression</code>等任意子类型。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">variableDeclarator</span> <span class="p">{</span>
     <span class="n">init</span> <span class="p">=</span> <span class="n">arrayExpression</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
     <span class="c1">// or</span>
@@ -634,17 +633,17 @@
 </pre></div>
 
 </code></pre>
-<p>So for <code>VariableDeclarator</code> it should have methods to create all <code>Expression</code> subclasses. The creation of <code>Expression</code> subclasses is added by extending the function to do so.</p>
-<p>When we parse <code>@swc/types</code> declaration file, we need to check the type of the attribute, if it is converted to Kotlin and is a class, then find out all its non-intermediate subclasses, and then generate extension functions for it.</p>
+<p>所以对于<code>VariableDeclarator</code>它应该有创建所有 <code>Expression</code> 子类的方法。通过扩展函数来实现来添加创建<code>Expression</code> 子类。</p>
+<p>我们在解析<code>@swc/types</code>声明文件时，需要检查属性类型，如果是转换成Kotlin后是类，那就找出其所有非中间子类，然后为其生成扩展函数。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="k">fun</span> <span class="nf">VariableDeclarator</span><span class="p">.</span><span class="n">arrayExpression</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">ArrayExpression</span><span class="p">.()</span> <span class="p">-&gt;</span> <span class="n">Unit</span><span class="p">):</span> <span class="n">ArrayExpression</span> <span class="p">{</span>
     <span class="k">return</span> <span class="n">ArrayExpressionImpl</span><span class="p">().</span><span class="n">apply</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 </code></pre>
-<p>This allows the <code>Expression</code> class to be constructed from the <code>arrayExpression {}</code> function in <code>variableDeclarator {}</code>.</p>
+<p>这样在 <code>variableDeclarator {}</code> 里就可以通过 <code>arrayExpression {}</code> 函数构建<code>Expression</code>类。</p>
 <h4 id="templateliteral-vs-tstemplateliteraltype"><code>TemplateLiteral</code> vs <code>TsTemplateLiteralType</code></h4>
-<p>There&#39;s another special case to deal with here. <code>TemplateLiteral</code> conflicts with <code>TsTemplateLiteralType</code>, whose <code>type</code> is <code>&quot;TemplateLiteral&quot;</code>. This makes DSL-built ASTs unserializable. See the definition of a structure in rust.</p>
+<p>这里还有个特殊情况需要处理。<code>TemplateLiteral</code>跟<code>TsTemplateLiteralType</code>冲突了，他们的<code>type</code>都是<code>&quot;TemplateLiteral&quot;</code>。这使得 DSL 构建的 AST 无法序列化。参见 rust 的结构体定义。</p>
 <pre><code class="lang-rust"><div class="highlight"><pre><span class="c1">// https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/crates/swc_ecma_ast/src/typescript.rs#L823</span>
 <span class="cp">#[ast_node(</span><span class="s">&quot;TemplateLiteral&quot;</span><span class="cp">)]</span>
 <span class="cp">#[derive(Eq, Hash, EqIgnoreSpan)]</span>
@@ -670,8 +669,8 @@
 </pre></div>
 
 </code></pre>
-<p>These two types need to be handled separately and not generated by a script.</p>
-<p>Implement both <code>TemplateLiteral</code>, <code>TsTemplateLiteralType</code> by one class. When used, it is then up-converted to <code>TemplateLiteral</code>, <code>TsTemplateLiteralType</code>.</p>
+<p>这两个类型需要单独处理，不由脚本来生成。</p>
+<p>由一个类同时实现<code>TemplateLiteral</code>、<code>TsTemplateLiteralType</code>。使用时再向上转型为<code>TemplateLiteral</code>、<code>TsTemplateLiteralType</code>。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="c1">// ignore annotation</span>
 <span class="n">interface</span> <span class="n">TemplateLiteral</span> <span class="p">:</span> <span class="n">ExpressionBase</span><span class="p">,</span> <span class="n">Expression</span> <span class="p">{</span>
     <span class="k">var</span> <span class="py">expressions</span><span class="p">:</span> <span class="n">Array</span><span class="p">&lt;</span><span class="n">Expression</span><span class="p">&gt;?</span>
@@ -697,13 +696,13 @@
 
 </code></pre>
 <h3 id="-parsesync">新的 <code>parseSync</code></h3>
-<p>Now we can upgrade the <code>parseSync</code> signature.</p>
+<p>现在我们可以升级<code>parseSync</code>签名了。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">@Throws</span><span class="p">(</span><span class="n">RuntimeException</span><span class="o">::</span><span class="k">class</span><span class="p">)</span>
 <span class="k">fun</span> <span class="nf">parseSync</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">ParserConfig</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="n">String</span><span class="p">?):</span> <span class="n">Program</span> 
 </pre></div>
 
 </code></pre>
-<p>Type safety and type hints are now guaranteed when used.</p>
+<p>现在使用时可以保证类型安全和类型提示了。</p>
 <pre><code class="lang-kotlin"><div class="highlight"><pre><span class="n">const</span> <span class="n">program</span> <span class="p">=</span> <span class="n">SwcNative</span><span class="p">().</span><span class="n">parseSync</span><span class="p">(</span>
     <span class="s">&quot;&quot;&quot;</span>
     <span class="n">function</span> <span class="n">App</span><span class="p">()</span> <span class="p">{</span>
@@ -724,13 +723,13 @@
 </pre></div>
 
 </code></pre>
-<h2 id="conclusion">Conclusion</h2>
-<p>Here, we have explained the idea and core implementation points of SWC JVM binding: 1. SWC supports JNI; 2. AST JSON is serialized into Kotlin classes; 3. ASTs and configurations are described through DSL.</p>
-<p>Some details are not covered, such as the handling of boundary cases in Kotlin generated scripts, Rust cross-compilation, etc. For more details, you can read the source code. If you are interested in the details, you can read the source code <a href="https://github.com/yidafu/swc-binding">yidafu/swc-binding</a>.</p>
-<p>If you need to compile JS in the JVM, SWC JVM binding has been released to the Maven central repository, use <a href="https://mvnrepository.com/artifact/dev.yidafu.swc/">dev.yidafu.swc:swc-binding:0.5.0</a>. swc-binding)</p>
-<p>For other questions, feel free to <a href="https://github.com/yidafu/swc-binding/issues/new">mention Issue</a>.</p>
+<h2 id="-">总结</h2>
+<p>到这里，解释了 SWC JVM binding 的实现思路和核心实现要点。1. SWC 支持 JNI；2. AST JSON 序列化成 Kotlin 类；3. 通过 DSL 描述 AST和配置项。</p>
+<p>一些细碎的内容没有涉及到，比如，Kotlin 生成脚本一些边界情况的处理、Rust交叉编译等。对细节感兴趣可以阅读源码<a href="https://github.com/yidafu/swc-binding">yidafu/swc-binding</a>。</p>
+<p>如果你有需求在 JVM 编译 JS，SWC JVM binding 已发布到 Maven 中央仓库，请使用 <a href="https://mvnrepository.com/artifact/dev.yidafu.swc/swc-binding">dev.yidafu.swc:swc-binding:0.5.0</a></p>
+<p>其他问题，欢迎<a href="https://github.com/yidafu/swc-binding/issues/new">提Issue</a>。</p>
 <blockquote>
-<p>Thinking never ends.</p>
+<p>思考永无止境</p>
 </blockquote>
 <script src="prism.js" ></script></div></body>
 </html>
