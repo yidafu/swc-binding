@@ -24,6 +24,7 @@ jobs:
           path: |
             ${{ github.workspace }}/swc-binding/build/reports/kover/report.xml
           title: Code Coverage
+          token: ${{ secrets.PR_TOKEN }}
           update-comment: true
           min-coverage-overall: 80
           min-coverage-changed-files: 80
