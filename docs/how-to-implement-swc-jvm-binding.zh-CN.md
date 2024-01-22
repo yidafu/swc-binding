@@ -96,7 +96,7 @@ SWC 本身只考虑了 Node binding。[swc_core](https://crates.io/crates/swc_co
 
 比如，从`swc_core`引入`Compiler`：
 
-```rs
+```rust
 use swc_core::{
     base::{
         Compiler,
@@ -112,7 +112,7 @@ use swc::Compiler;
 
 `swc_core`转换后的所有 SWC 相关依赖:
 
-```toml
+```ini
 [dependencies]
 # ...
 swc = "0.270.25"
