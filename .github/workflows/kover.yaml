@@ -12,6 +12,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          use-cross: true
       - run: cd swc-jni && cargo build --release --target x86_64-unknown-linux-gnu && cp target/x86_64-unknown-linux-gnu/release/libswc_jni.so ../swc-binding/src/main/resources/linux-x64-gnu
       - name: Set up JDK
         uses: actions/setup-java@v3
