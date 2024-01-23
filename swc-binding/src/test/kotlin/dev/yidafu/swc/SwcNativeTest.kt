@@ -4,6 +4,7 @@ import dev.yidafu.swc.dsl.* // ktlint-disable no-wildcard-imports
 import dev.yidafu.swc.types.*
 import org.junit.jupiter.api.assertThrows
 import java.io.File
+import java.net.URL
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -15,8 +16,8 @@ class SwcNativeTest {
         return SwcNativeTest::class.java.classLoader.getResource(filename)!!.file!!
     }
 
-    private fun getResourceContent(filename: String): String {
-        return File(getResource(filename)).readText()
+    private fun getResourceContent(url: String): String {
+        return URL(url).readText()
     }
     @Test
     fun `parse js code to ast str`() {
@@ -392,7 +393,7 @@ class SwcNativeTest {
     @Test
     fun `parse react source code`() {
         val output1 = swcNative.parseSync(
-            getResourceContent("react.development.js"),
+            getResourceContent("https://unpkg.com/react@18/umd/react.development.js"),
             esParseOptions { },
             "react.development.js"
         )
@@ -400,7 +401,7 @@ class SwcNativeTest {
         assertIs<Module>(output1)
 
         val output2 = swcNative.parseSync(
-            getResourceContent("react-dom.development.js"),
+            getResourceContent("https://unpkg.com/react-dom@18/umd/react-dom.development.js"),
             esParseOptions { },
             "react-dom.development.js"
         )
