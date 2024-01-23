@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: rust-cargo
-        uses: actions-rs/toolchain@v1
+      - uses: brndnmtthws/rust-action-rustup@v1
         with:
-          toolchain: stable
+            targets: 'aarch64-unknown-linux-gnu,x86_64-unknown-linux-gnu'
+            self-update: 'true'
       - run: cd swc-jni && cargo build --release && ls targets && cp target/release/libswc_jni.so ../swc-binding/src/main/resources/linux-x64-gnu
       - name: Set up JDK
         uses: actions/setup-java@v3
