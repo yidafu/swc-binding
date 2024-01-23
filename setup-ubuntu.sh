@@ -1,7 +1,8 @@
 #!/bin/bash
 
 rustup target list
-sudo apt update 
+sudo apt update
+sudo apt upgrade
 sudo apt install build-essential
 sudo apt install gcc g++
 sudo apt install g++-aarch64-linux-gnu
