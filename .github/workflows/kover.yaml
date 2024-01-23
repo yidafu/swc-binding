@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: rust-cargo
-        uses: actions-rs/cargo@v1.0.1
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
       - run: cd swc-jni && cargo build --release --target x86_64-unknown-linux-gnu && cp target/x86_64-unknown-linux-gnu/release/libswc_jni.so ../swc-binding/src/main/resources/linux-x64-gnu
