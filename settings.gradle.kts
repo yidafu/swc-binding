@@ -10,6 +10,7 @@
 
 pluginManagement {
     repositories {
+        maven("https://repo.huaweicloud.com/repository/maven/")
         maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public")
         maven("https://s01.oss.sonatype.org/content/groups/public/")
         gradlePluginPortal()
@@ -20,6 +21,13 @@ pluginManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 dependencyResolutionManagement {
+    repositories {
+        maven("https://repo.huaweicloud.com/repository/maven/")
+        maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public")
+        maven("https://s01.oss.sonatype.org/content/groups/public/")
+        mavenCentral()
+    }
+    
     versionCatalogs {
         create("libs") {
             from(files("./build-plugin/libs.versions.toml"))
@@ -33,3 +41,6 @@ rootProject.name = "swc-bing"
 
 include("swc-binding")
 project(":swc-binding").name = "swc-binding"
+
+include("swc-generator-kt")
+project(":swc-generator-kt").name = "swc-generator-kt"

@@ -212,3 +212,8 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,node
 
 .DS_Store
+swc/
+.idea/
+*.md
+.gitignore
+swc-generator-kt/test-outputs/
