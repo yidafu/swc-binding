@@ -106,4 +106,99 @@ class BooleanableTest {
         val output = format.encodeToString(arr)
         assertEquals(input, output)
     }
+
+    @Test
+    fun `Booleanable ofValue creates correct instance`() {
+        val boolStr = Booleanable.ofValue("test")
+        assertEquals("test", boolStr.value)
+        assertTrue(!boolStr.isTrue())
+        assertTrue(!boolStr.isFalse())
+    }
+
+    @Test
+    fun `Booleanable ofTrue creates correct instance`() {
+        val boolTrue = Booleanable.ofTrue<String>()
+        assertEquals(null, boolTrue.value)
+        assertTrue(boolTrue.isTrue())
+        assertTrue(!boolTrue.isFalse())
+    }
+
+    @Test
+    fun `Booleanable ofFalse creates correct instance`() {
+        val boolFalse = Booleanable.ofFalse<String>()
+        assertEquals(null, boolFalse.value)
+        assertTrue(!boolFalse.isTrue())
+        assertTrue(boolFalse.isFalse())
+    }
+
+    @Test
+    fun `Booleanable onValue callback`() {
+        var called = false
+        Booleanable.ofValue("test").onValue {
+            called = true
+            assertEquals("test", it)
+        }
+        assertTrue(called)
+    }
+
+    @Test
+    fun `Booleanable onBool callback`() {
+        var called = false
+        Booleanable.ofTrue<String>().onBool {
+            called = true
+            assertEquals(true, it)
+        }
+        assertTrue(called)
+    }
+
+    @Test
+    fun `Booleanable onValue not called for boolean`() {
+        var called = false
+        Booleanable.ofTrue<String>().onValue {
+            called = true
+        }
+        assertTrue(!called)
+    }
+
+    @Test
+    fun `Booleanable onBool not called for value`() {
+        var called = false
+        Booleanable.ofValue("test").onBool {
+            called = true
+        }
+        assertTrue(!called)
+    }
+
+    @Test
+    fun `BooleanableInt with value`() {
+        val boolInt = Booleanable.ofValue(42)
+        assertEquals(42, boolInt.value)
+    }
+
+    @Test
+    fun `BooleanableFloat with value`() {
+        val boolFloat = Booleanable.ofValue(3.14f)
+        assertEquals(3.14f, boolFloat.value)
+    }
+
+    @Test
+    fun `BooleanableArrayString with value`() {
+        val arr = Booleanable.ofValue(arrayOf("a", "b", "c"))
+        assertEquals(3, arr.value?.size)
+        assertEquals("a", arr.value?.get(0))
+    }
+
+    @Test
+    fun `encode BooleanableInt`() {
+        val boolInt = Booleanable.ofValue(100)
+        val json = format.encodeToString(boolInt)
+        assertEquals("100", json)
+    }
+
+    @Test
+    fun `encode BooleanableFloat`() {
+        val boolFloat = Booleanable.ofValue(2.5f)
+        val json = format.encodeToString(boolFloat)
+        assertEquals("2.5", json)
+    }
 }
