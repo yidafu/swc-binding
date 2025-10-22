@@ -2,9 +2,9 @@ use jni::objects::GlobalRef;
 use jni::JavaVM;
 
 /// 通用的 Java 回调函数
-/// 
+///
 /// 此函数用于从 Rust 后台线程回调 Java/Kotlin 代码
-/// 
+///
 /// # 参数
 /// * `jvm` - JavaVM 实例，用于附加当前线程
 /// * `callback_ref` - 回调对象的全局引用
@@ -18,7 +18,7 @@ pub fn callback_java(jvm: JavaVM, callback_ref: GlobalRef, result: Result<String
             return;
         }
     };
-    
+
     match result {
         Ok(json_string) => {
             // 成功：调用 onSuccess(String result)
@@ -29,7 +29,7 @@ pub fn callback_java(jvm: JavaVM, callback_ref: GlobalRef, result: Result<String
                     return;
                 }
             };
-            
+
             if let Err(e) = env.call_method(
                 &callback_ref,
                 "onSuccess",
@@ -48,7 +48,7 @@ pub fn callback_java(jvm: JavaVM, callback_ref: GlobalRef, result: Result<String
                     return;
                 }
             };
-            
+
             if let Err(e) = env.call_method(
                 &callback_ref,
                 "onError",
@@ -60,4 +60,3 @@ pub fn callback_java(jvm: JavaVM, callback_ref: GlobalRef, result: Result<String
         }
     }
 }
-

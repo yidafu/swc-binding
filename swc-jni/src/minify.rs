@@ -8,9 +8,9 @@ use jni::{
 use jni_fn::jni_fn;
 use serde::Deserialize;
 
+use std::collections::HashMap as AHashMap;
 use swc::config::ErrorFormat;
 use swc_common::{sync::Lrc, FileName, SourceFile, SourceMap};
-use std::collections::HashMap as AHashMap;
 
 use crate::async_utils::callback_java;
 use crate::{get_compiler, util::process_output};
@@ -77,13 +77,7 @@ pub fn minifySync(mut env: JNIEnv, _: JClass, code: JString, opts: JString) -> j
 
 /// 异步压缩方法 - 使用回调
 #[jni_fn("dev.yidafu.swc.SwcNative")]
-pub fn minifyAsync(
-    mut env: JNIEnv,
-    _: JClass,
-    code: JString,
-    opts: JString,
-    callback: JObject,
-) {
+pub fn minifyAsync(mut env: JNIEnv, _: JClass, code: JString, opts: JString, callback: JObject) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
         Err(e) => {
@@ -91,7 +85,7 @@ pub fn minifyAsync(
             return;
         }
     };
-    
+
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
         Err(e) => {
@@ -99,7 +93,7 @@ pub fn minifyAsync(
             return;
         }
     };
-    
+
     let code: String = env
         .get_string(&code)
         .expect("Couldn't get java string!")
@@ -108,7 +102,7 @@ pub fn minifyAsync(
         .get_string(&opts)
         .expect("Couldn't get java string!")
         .into();
-    
+
     thread::spawn(move || {
         let result = perform_minify_work(&code, &opts);
         callback_java(jvm, callback_ref, result);
@@ -121,18 +115,15 @@ fn perform_minify_work(code: &str, opts: &str) -> Result<String, String> {
         .map_err(|e| format!("Failed to deserialize code: {:?}", e))?;
     let opts = get_deserialized(opts.as_bytes())
         .map_err(|e| format!("Failed to parse options: {:?}", e))?;
-    
+
     let c = get_compiler();
     let fm = code.to_file(c.cm.clone());
-    
-    let result = try_with(
-        c.cm.clone(),
-        false,
-        ErrorFormat::Normal,
-        |handler| c.minify(fm, handler, &opts, Default::default()),
-    )
+
+    let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
+        c.minify(fm, handler, &opts, Default::default())
+    })
     .convert_err();
-    
+
     match result {
         Ok(output) => serde_json::to_string(&output)
             .map_err(|e| format!("Failed to serialize output: {:?}", e)),
@@ -148,10 +139,10 @@ mod tests {
     fn test_minify_target_single() {
         let code = r#""const x = 42; console.log(x);""#;
         let target: MinifyTarget = get_deserialized(code.as_bytes()).unwrap();
-        
+
         let c = get_compiler();
         let fm = target.to_file(c.cm.clone());
-        
+
         assert!(!fm.src.is_empty());
     }
 
@@ -159,10 +150,10 @@ mod tests {
     fn test_minify_target_map_single_entry() {
         let code = r#"{"test.js": "const x = 42;"}"#;
         let target: MinifyTarget = get_deserialized(code.as_bytes()).unwrap();
-        
+
         let c = get_compiler();
         let fm = target.to_file(c.cm.clone());
-        
+
         assert!(!fm.src.is_empty());
     }
 
@@ -171,7 +162,7 @@ mod tests {
     fn test_minify_target_map_multiple_entries() {
         let code = r#"{"file1.js": "const x = 42;", "file2.js": "const y = 10;"}"#;
         let target: MinifyTarget = get_deserialized(code.as_bytes()).unwrap();
-        
+
         let c = get_compiler();
         let _fm = target.to_file(c.cm.clone());
     }
@@ -180,10 +171,10 @@ mod tests {
     fn test_perform_minify_work_basic() {
         let code = r#""function test() { const x = 42; return x + 1; }""#;
         let opts = r#"{"compress": {"unused": true}, "mangle": false}"#;
-        
+
         let result = perform_minify_work(code, opts);
         assert!(result.is_ok(), "Minify should succeed: {:?}", result);
-        
+
         let output = result.unwrap();
         assert!(output.contains("code"));
     }
@@ -192,16 +183,20 @@ mod tests {
     fn test_perform_minify_work_with_mangle() {
         let code = r#""function longFunctionName() { const veryLongVariableName = 42; return veryLongVariableName; }""#;
         let opts = r#"{"compress": {}, "mangle": true}"#;
-        
+
         let result = perform_minify_work(code, opts);
-        assert!(result.is_ok(), "Minify with mangle should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Minify with mangle should succeed: {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_perform_minify_work_invalid_code() {
         let code = r#""const x = ;""#;
         let opts = r#"{"compress": {}, "mangle": false}"#;
-        
+
         let result = perform_minify_work(code, opts);
         // Invalid syntax should result in an error
         assert!(result.is_err(), "Minify should fail on invalid code");
@@ -211,7 +206,7 @@ mod tests {
     fn test_perform_minify_work_invalid_options() {
         let code = r#""const x = 42;""#;
         let invalid_opts = r#"{"invalid": "option"}"#;
-        
+
         let result = perform_minify_work(code, invalid_opts);
         assert!(result.is_err(), "Minify should fail with invalid options");
     }
@@ -220,8 +215,12 @@ mod tests {
     fn test_perform_minify_work_map_format() {
         let code = r#"{"test.js": "const x = 42; const y = 10; console.log(x + y);"}"#;
         let opts = r#"{"compress": {"unused": true}, "mangle": false}"#;
-        
+
         let result = perform_minify_work(code, opts);
-        assert!(result.is_ok(), "Minify with map format should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Minify with map format should succeed: {:?}",
+            result
+        );
     }
 }

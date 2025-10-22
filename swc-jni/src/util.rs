@@ -5,11 +5,7 @@ use std::{
     panic::{catch_unwind, AssertUnwindSafe},
 };
 use swc::{config::ErrorFormat, try_with_handler, HandlerOpts, TransformOutput};
-use swc_common::{
-    errors::Handler,
-    sync::{Lrc},
-    SourceMap, GLOBALS,
-};
+use swc_common::{errors::Handler, sync::Lrc, SourceMap, GLOBALS};
 use swc_ecma_ast::Program;
 use thiserror::Error;
 
@@ -70,7 +66,8 @@ where
                     Err(anyhow!("failed to handle with unknown panic message"))
                 }
             },
-        ).map_err(|e| anyhow::anyhow!("Error: {:?}", e))
+        )
+        .map_err(|e| anyhow::anyhow!("Error: {:?}", e))
     })
 }
 

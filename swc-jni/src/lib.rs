@@ -27,7 +27,12 @@ mod tests {
     #[test]
     fn test_get_compiler() {
         let compiler = get_compiler();
-        assert!(!Arc::ptr_eq(&compiler, &Arc::new(Compiler::new(Arc::new(SourceMap::new(FilePathMapping::empty()))))));
+        assert!(!Arc::ptr_eq(
+            &compiler,
+            &Arc::new(Compiler::new(Arc::new(SourceMap::new(
+                FilePathMapping::empty()
+            ))))
+        ));
     }
 
     #[test]

@@ -137,7 +137,7 @@ pub fn transformAsync(
             return;
         }
     };
-    
+
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
         Err(e) => {
@@ -145,7 +145,7 @@ pub fn transformAsync(
             return;
         }
     };
-    
+
     let s: String = env
         .get_string(&code)
         .expect("Couldn't get java string!")
@@ -155,7 +155,7 @@ pub fn transformAsync(
         .expect("Couldn't get java string!")
         .into();
     let is_module = is_module == 1;
-    
+
     thread::spawn(move || {
         let result = perform_transform_work(&s, is_module, &opts);
         callback_java(jvm, callback_ref, result);
@@ -179,7 +179,7 @@ pub fn transformFileAsync(
             return;
         }
     };
-    
+
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
         Err(e) => {
@@ -187,7 +187,7 @@ pub fn transformFileAsync(
             return;
         }
     };
-    
+
     let s: String = env
         .get_string(&filepath)
         .expect("Couldn't get java string!")
@@ -197,7 +197,7 @@ pub fn transformFileAsync(
         .expect("Couldn't get java string!")
         .into();
     let is_module = is_module == 1;
-    
+
     thread::spawn(move || {
         let result = perform_transform_file_work(&s, is_module, &opts);
         callback_java(jvm, callback_ref, result);
@@ -207,16 +207,16 @@ pub fn transformFileAsync(
 /// 实际执行转换工作的辅助函数
 fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<String, String> {
     let c = get_compiler();
-    
-    let mut options: Options = get_deserialized(opts)
-        .map_err(|e| format!("Failed to parse options: {:?}", e))?;
-    
+
+    let mut options: Options =
+        get_deserialized(opts).map_err(|e| format!("Failed to parse options: {:?}", e))?;
+
     if !options.filename.is_empty() {
         options.config.adjust(Path::new(&options.filename));
     }
-    
+
     let error_format = options.experimental.error_format.unwrap_or_default();
-    
+
     let result = try_with(
         c.cm.clone(),
         !options.config.error.filename.into_bool(),
@@ -224,8 +224,8 @@ fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<Str
         |handler| {
             c.run(|| {
                 if is_module {
-                    let program: Program = deserialize_json(code)
-                        .context("failed to deserialize Program")?;
+                    let program: Program =
+                        deserialize_json(code).context("failed to deserialize Program")?;
                     c.process_js(handler, program, &options)
                 } else {
                     let fm = c.cm.new_source_file(
@@ -242,7 +242,7 @@ fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<Str
         },
     )
     .convert_err();
-    
+
     match result {
         Ok(output) => serde_json::to_string(&output)
             .map_err(|e| format!("Failed to serialize output: {:?}", e)),
@@ -251,18 +251,22 @@ fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<Str
 }
 
 /// 实际执行文件转换工作的辅助函数
-fn perform_transform_file_work(filepath: &str, is_module: bool, opts: &str) -> Result<String, String> {
+fn perform_transform_file_work(
+    filepath: &str,
+    is_module: bool,
+    opts: &str,
+) -> Result<String, String> {
     let c = get_compiler();
-    
-    let mut options: Options = get_deserialized(opts)
-        .map_err(|e| format!("Failed to parse options: {:?}", e))?;
-    
+
+    let mut options: Options =
+        get_deserialized(opts).map_err(|e| format!("Failed to parse options: {:?}", e))?;
+
     if !options.filename.is_empty() {
         options.config.adjust(Path::new(&options.filename));
     }
-    
+
     let error_format = options.experimental.error_format.unwrap_or_default();
-    
+
     let result = try_with(
         c.cm.clone(),
         !options.config.error.filename.into_bool(),
@@ -270,8 +274,8 @@ fn perform_transform_file_work(filepath: &str, is_module: bool, opts: &str) -> R
         |handler| {
             c.run(|| {
                 if is_module {
-                    let program: Program = deserialize_json(filepath)
-                        .context("failed to deserialize Program")?;
+                    let program: Program =
+                        deserialize_json(filepath).context("failed to deserialize Program")?;
                     c.process_js(handler, program, &options)
                 } else {
                     let fm = c.cm.load_file(Path::new(filepath))?;
@@ -281,7 +285,7 @@ fn perform_transform_file_work(filepath: &str, is_module: bool, opts: &str) -> R
         },
     )
     .convert_err();
-    
+
     match result {
         Ok(output) => serde_json::to_string(&output)
             .map_err(|e| format!("Failed to serialize output: {:?}", e)),
@@ -292,8 +296,8 @@ fn perform_transform_file_work(filepath: &str, is_module: bool, opts: &str) -> R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     fn create_transform_options_json() -> String {
         r#"{
@@ -307,17 +311,18 @@ mod tests {
             "module": {
                 "type": "commonjs"
             }
-        }"#.to_string()
+        }"#
+        .to_string()
     }
 
     #[test]
     fn test_perform_transform_work_from_code() {
         let code = r#"const arrow = () => 42; class MyClass {}"#;
         let opts = create_transform_options_json();
-        
+
         let result = perform_transform_work(code, false, &opts);
         assert!(result.is_ok(), "Transform should succeed: {:?}", result);
-        
+
         let output = result.unwrap();
         assert!(output.contains("code"));
     }
@@ -330,10 +335,14 @@ mod tests {
             const doubled = nums.map(n => n * 2);
         "#;
         let opts = create_transform_options_json();
-        
+
         let result = perform_transform_work(code, false, &opts);
-        assert!(result.is_ok(), "ES6 to ES5 transform should succeed: {:?}", result);
-        
+        assert!(
+            result.is_ok(),
+            "ES6 to ES5 transform should succeed: {:?}",
+            result
+        );
+
         let output = result.unwrap();
         // Verify it's transformed (should contain 'function' instead of arrow functions)
         assert!(output.contains("code"));
@@ -355,40 +364,47 @@ mod tests {
                 "target": "es5"
             }
         }"#;
-        
+
         let result = perform_transform_work(code, false, opts);
-        assert!(result.is_ok(), "TypeScript transform should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "TypeScript transform should succeed: {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_perform_transform_file_work() {
         let mut temp_file = NamedTempFile::new().unwrap();
         writeln!(temp_file, "const arrow = () => 42;").unwrap();
-        
+
         let opts = create_transform_options_json();
-        let result = perform_transform_file_work(
-            temp_file.path().to_str().unwrap(),
-            false,
-            &opts
+        let result = perform_transform_file_work(temp_file.path().to_str().unwrap(), false, &opts);
+
+        assert!(
+            result.is_ok(),
+            "File transform should succeed: {:?}",
+            result
         );
-        
-        assert!(result.is_ok(), "File transform should succeed: {:?}", result);
     }
 
     #[test]
     fn test_perform_transform_work_invalid_options() {
         let code = "const x = 42;";
         let invalid_opts = r#"{"invalid": "json"}"#;
-        
+
         let result = perform_transform_work(code, false, invalid_opts);
-        assert!(result.is_err(), "Transform should fail with invalid options");
+        assert!(
+            result.is_err(),
+            "Transform should fail with invalid options"
+        );
     }
 
     #[test]
     fn test_perform_transform_work_syntax_error() {
         let code = "const x = ;";
         let opts = create_transform_options_json();
-        
+
         let result = perform_transform_work(code, false, &opts);
         assert!(result.is_err(), "Transform should fail on syntax error");
     }

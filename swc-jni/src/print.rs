@@ -67,7 +67,7 @@ pub fn printAsync(
             return;
         }
     };
-    
+
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
         Err(e) => {
@@ -75,7 +75,7 @@ pub fn printAsync(
             return;
         }
     };
-    
+
     let program: String = env
         .get_string(&program)
         .expect("Couldn't get java string!")
@@ -84,7 +84,7 @@ pub fn printAsync(
         .get_string(&options)
         .expect("Couldn't get java string!")
         .into();
-    
+
     thread::spawn(move || {
         let result = perform_print_work(&program, &opts);
         callback_java(jvm, callback_ref, result);
@@ -94,16 +94,16 @@ pub fn printAsync(
 /// 实际执行打印工作的辅助函数
 fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
     let c = get_compiler();
-    
+
     let program: Program = deserialize_json(program_str)
         .map_err(|e| format!("Failed to deserialize program: {:?}", e))?;
-    
-    let options: Options = get_deserialized(opts)
-        .map_err(|e| format!("Failed to parse options: {:?}", e))?;
-    
+
+    let options: Options =
+        get_deserialized(opts).map_err(|e| format!("Failed to parse options: {:?}", e))?;
+
     // Defaults to es3
     let _codegen_target = options.codegen_target().unwrap_or_default();
-    
+
     let result = GLOBALS.set(&Default::default(), || {
         let print_args = PrintArgs {
             output_path: options.output_path,
@@ -116,7 +116,7 @@ fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
         };
         c.print(&program, print_args).convert_err()
     });
-    
+
     match result {
         Ok(output) => serde_json::to_string(&output)
             .map_err(|e| format!("Failed to serialize output: {:?}", e)),
@@ -162,10 +162,10 @@ mod tests {
     fn test_perform_print_work_basic() {
         let ast = parse_simple_code();
         let opts = create_print_options_json(false, false);
-        
+
         let result = perform_print_work(&ast, &opts);
         assert!(result.is_ok(), "Print should succeed: {:?}", result);
-        
+
         let output = result.unwrap();
         assert!(output.contains("code"));
     }
@@ -174,25 +174,33 @@ mod tests {
     fn test_perform_print_work_with_sourcemap() {
         let ast = parse_simple_code();
         let opts = create_print_options_json(false, true);
-        
+
         let result = perform_print_work(&ast, &opts);
-        assert!(result.is_ok(), "Print with sourcemap should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Print with sourcemap should succeed: {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_perform_print_work_minified() {
         let ast = parse_simple_code();
         let opts = create_print_options_json(true, false);
-        
+
         let result = perform_print_work(&ast, &opts);
-        assert!(result.is_ok(), "Print minified should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Print minified should succeed: {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_perform_print_work_invalid_ast() {
         let invalid_ast = r#"{"invalid": "ast"}"#;
         let opts = create_print_options_json(false, false);
-        
+
         let result = perform_print_work(invalid_ast, &opts);
         assert!(result.is_err(), "Print should fail with invalid AST");
     }
@@ -201,7 +209,7 @@ mod tests {
     fn test_perform_print_work_invalid_options() {
         let ast = parse_simple_code();
         let invalid_opts = r#"{"invalid": "options"}"#;
-        
+
         let result = perform_print_work(&ast, invalid_opts);
         assert!(result.is_err(), "Print should fail with invalid options");
     }
@@ -209,7 +217,7 @@ mod tests {
     #[test]
     fn test_perform_print_work_different_targets() {
         let ast = parse_simple_code();
-        
+
         // Test with es5 target
         let opts = r#"{
             "jsc": {
@@ -217,8 +225,12 @@ mod tests {
                 "target": "es5"
             }
         }"#;
-        
+
         let result = perform_print_work(&ast, opts);
-        assert!(result.is_ok(), "Print with ES5 target should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Print with ES5 target should succeed: {:?}",
+            result
+        );
     }
 }
