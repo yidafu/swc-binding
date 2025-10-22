@@ -6,7 +6,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Disabled
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertFalse
@@ -16,12 +15,7 @@ import kotlin.test.fail
 
 /**
  * Comprehensive tests for async minify methods
- * 
- * DISABLED: This test causes Rust panic due to AST compatibility issues with SWC 43.0.0
- * The issue is related to missing 'ctxt' field in the AST structure.
- * TODO: Fix AST compatibility or regenerate Kotlin types for SWC 43.0.0
  */
-@Disabled("Temporarily disabled due to AST compatibility issues with SWC 43.0.0")
 class AsyncMinifyTest {
     private lateinit var swc: SwcNative
 

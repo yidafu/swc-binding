@@ -215,16 +215,10 @@ class SwcGeneratorKt(private val config: GeneratorConfig = GeneratorConfig()) {
     private val projectRoot = Paths.get("").toAbsolutePath().parent.toString()
     
     // 输入路径优先级：命令行参数 > 环境变量 > 默认值
-    // 测试文件选项：
-    // - test-minimal.d.ts: 最小测试文件，覆盖所有处理逻辑分支
-    // - test-simple.d.ts: 简单测试文件
-    // - test-comprehensive.d.ts: 综合测试文件，包含所有 TS 语法特性
     private val inputPath = config.inputPath 
         ?: System.getenv("SWC_TYPES_PATH") 
-        ?: "$projectRoot/swc-generator/node_modules/.pnpm/@swc+types@0.1.5/node_modules/@swc/types/index.d.ts"  // 使用完整的 @swc/types 文件
-        // ?: "$projectRoot/swc-generator-kt/test-minimal.d.ts"
-        // ?: "$projectRoot/swc-generator-kt/test-simple.d.ts"
-        // ?: "$projectRoot/swc-generator-kt/test-comprehensive.d.ts"
+        // 使用完整的 @swc/types 文件
+        ?: "$projectRoot/swc-generator/node_modules/.pnpm/@swc+types@0.1.5/node_modules/@swc/types/index.d.ts"
     
     private val outputTypesPath = config.outputTypesPath 
         ?: "$projectRoot/swc-generator-kt/swc/types/types.kt"

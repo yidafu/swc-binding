@@ -46,6 +46,18 @@ object DllLoader {
             }
         }
         object Windows : Platform() {
+            private val cpuArch: String by lazy {
+                System.getProperty("os.arch")
+            }
+            
+            fun isArm(): Boolean {
+                return cpuArch.contains("aarch64") || cpuArch.contains("arm64")
+            }
+            
+            fun isIntel(): Boolean {
+                return cpuArch.startsWith("x") || cpuArch.contains("amd64")
+            }
+            
             override fun toString(): String {
                 return "Windows"
             }
@@ -83,7 +95,7 @@ object DllLoader {
         val jarPath = when (val p = Platform.current) {
             is Platform.Linux -> (if (p.isArm()) "linux-arm-gnueabihf" else "linux-x64-gnu") + "/lib$libName.so"
             is Platform.Mac -> (if (p.isIntel()) "darwin-x64" else "darwin-arm64") + "/lib$libName.dylib"
-            is Platform.Windows -> "win32-x64-msvc/$libName.dll"
+            is Platform.Windows -> (if (p.isArm()) "win32-arm64-msvc" else "win32-x64-msvc") + "/$libName.dll"
 //            Platform.SOLARIS -> TODO()
 //            Platform.FREEBSD -> TODO()
 //            Platform.UNSPECIFIED -> TODO()

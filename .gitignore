@@ -212,8 +212,6 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,gradle,rust,node
 
 # swc/ directory (but not test files)
-swc/
-!swc-binding/src/test/kotlin/dev/yidafu/swc/
 *.md
 .gitignore
 swc-generator-kt/test-outputs/
@@ -221,3 +219,5 @@ backup-20251022-125828/
 swc-jni/.cargo/
 swc-jni/*.sh
 swc-jni/coverage.json
+swc-jni/build.sh
+.DS_Store

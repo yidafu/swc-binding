@@ -479,7 +479,8 @@ class MatchPattern
 class Span {
     var start: Int? = null
     var end: Int? = null
-    var ctxt: Int? = null
+    @EncodeDefault
+    var ctxt: Int = 0  // Always encode this field even with default value
 }
 
 @SwcDslMarker

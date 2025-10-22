@@ -17,6 +17,8 @@ class AstJsonTest {
             """.trimIndent()
         val importSpecifier = astJson.decodeFromString<ImportDefaultSpecifier>(astStr)
         val outputStr = astJson.encodeToString(importSpecifier)
+        println("Expected: $astStr")
+        println("Actual: $outputStr")
         assertEquals(astStr, outputStr)
     }
 

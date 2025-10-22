@@ -4,12 +4,14 @@ plugins {
 }
 
 group = "dev.yidafu.swc"
-version = "0.6.0"
+version = "0.7.0"
 
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
     implementation(libs.kotlin.serialization.json)
 }

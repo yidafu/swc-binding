@@ -3,18 +3,9 @@ package dev.yidafu.swc
 import dev.yidafu.swc.dsl.*
 import dev.yidafu.swc.types.*
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Tests for error handling functionality
- * 
- * DISABLED: This test causes Rust panic due to AST compatibility issues with SWC 43.0.0
- * The issue is related to missing 'ctxt' field in the AST structure.
- * TODO: Fix AST compatibility or regenerate Kotlin types for SWC 43.0.0
- */
-@Disabled("Temporarily disabled due to AST compatibility issues with SWC 43.0.0")
 class ErrorHandlingTest {
     private val swcNative = SwcNative()
 

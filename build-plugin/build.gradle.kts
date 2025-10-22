@@ -14,8 +14,9 @@ gradlePlugin {
 }
 
 repositories {
-//    maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
+    maven { setUrl("https://repo.huaweicloud.com/repository/maven/") }
     maven { setUrl("https://mirrors.cloud.tencent.com/nexus/repository/maven-public") }
+//    maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
     mavenCentral()
     gradlePluginPortal()
 }

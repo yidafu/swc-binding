@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.yidafu.swc:swc-binding:0.6.0")
+    implementation("dev.yidafu.swc:swc-binding:0.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     
     // KotlinPoet - 类型安全的 Kotlin 代码生成

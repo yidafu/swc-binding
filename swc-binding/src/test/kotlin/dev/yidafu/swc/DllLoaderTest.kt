@@ -51,6 +51,11 @@ class DllLoaderTest {
     fun `Windows platform detection`() {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Windows) {
+            val isArm = platform.isArm()
+            val isIntel = platform.isIntel()
+            
+            // 应该是 ARM 或 Intel
+            assertTrue(isArm || isIntel)
             assertEquals("Windows", platform.toString())
         }
     }
@@ -137,6 +142,18 @@ class DllLoaderTest {
     }
 
     @Test
+    fun `Windows ARM or Intel detection is consistent`() {
+        val platform = DllLoader.Platform.current
+        if (platform is DllLoader.Platform.Windows) {
+            val isArm = platform.isArm()
+            val isIntel = platform.isIntel()
+            
+            // 不能既是 ARM 又是 Intel
+            assertTrue(!(isArm && isIntel))
+        }
+    }
+
+    @Test
     fun `DLL path contains platform-specific directory`() {
         val path = DllLoader.copyDll2Temp("swc_jni")
         val platform = DllLoader.Platform.current
@@ -151,7 +168,7 @@ class DllLoaderTest {
                 )
             }
             is DllLoader.Platform.Windows -> {
-                assertTrue(path.contains("win32-x64-msvc"))
+                assertTrue(path.contains("win32-x64-msvc") || path.contains("win32-arm64-msvc"))
             }
             else -> {}
         }
