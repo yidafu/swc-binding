@@ -1,12 +1,26 @@
 # swc-binding
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.yidafu.swc/swc-binding.svg)](https://search.maven.org/artifact/dev.yidafu.swc/swc-binding)
+[![Kotlin](https://img.shields.io/badge/kotlin-1.9.21-blue.svg)](https://kotlinlang.org/)
+[![SWC](https://img.shields.io/badge/SWC-43.0.0-green.svg)](https://github.com/swc-project/swc)
+[![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![JVM](https://img.shields.io/badge/JVM-17+-red.svg)](https://www.oracle.com/java/)
+
 [SWC](https://github.com/swc-project/swc) jvm binding by kotlin.
 
 ## Installtion
 
 ```kotlin
-implementation("dev.yidafu.swc:swc-binding:0.6.0")
+implementation("dev.yidafu.swc:swc-binding:0.7.0")
 ```
+
+## Version Compatibility
+
+| swc-binding | Rust SWC | @swc/types | Notes |
+|-------------|----------|------------|-------|
+| 0.7.0       | 43.0.0   | 0.1.25     | Latest stable release with full async support |
+| 0.6.0       | 0.270.25   | 0.1.5     |  |
 
 ## Usage
 
@@ -46,6 +60,76 @@ val ast = SwcNative().parseSync(
     "temp.js"
 )
 ```
+
+### Async Methods (Coroutine Support)
+
+All SWC methods now support asynchronous execution using Kotlin coroutines. Async methods run in background threads and don't block the calling thread.
+
+#### Using Coroutines (Recommended)
+
+```kotlin
+import kotlinx.coroutines.*
+
+// Async parse
+suspend fun parseCode() {
+    val swc = SwcNative()
+    val options = ParserConfig(
+        syntax = Syntax.Typescript(TsSyntax(tsx = true)),
+        target = JscTarget.Es2020
+    )
+    
+    val ast = swc.parseAsync(
+        code = "const x: number = 42;",
+        options = options,
+        filename = "example.ts"
+    )
+    println("Parsed: ${ast.type}")
+}
+
+// Parallel parsing
+suspend fun parseMultiple() = coroutineScope {
+    val swc = SwcNative()
+    val options = ParserConfig(/* ... */)
+    
+    val results = listOf("code1.ts", "code2.ts", "code3.ts")
+        .map { file ->
+            async { swc.parseFileAsync(file, options) }
+        }
+        .awaitAll()
+}
+```
+
+#### Using Callbacks
+
+```kotlin
+val swc = SwcNative()
+swc.parseAsync(
+    code = "const x: number = 42;",
+    options = parseOptions,
+    filename = "example.ts",
+    onSuccess = { ast -> println("Success: ${ast.type}") },
+    onError = { error -> println("Error: $error") }
+)
+```
+
+#### Available Async Methods
+
+All synchronous methods have async counterparts:
+- `parseAsync()` - Asynchronously parse code
+- `parseFileAsync()` - Asynchronously parse file
+- `transformAsync()` - Asynchronously transform code
+- `transformFileAsync()` - Asynchronously transform file
+- `printAsync()` - Asynchronously print AST
+- `minifyAsync()` - Asynchronously minify code
+
+#### Threading Model
+
+- Async methods immediately return and execute work in background threads
+- Callbacks are invoked from Rust background threads
+- Use coroutines for structured concurrency and easy thread management
+- No blocking of the calling thread
+
+See `AsyncSamples.kt` for more examples.
 
 ## API
 

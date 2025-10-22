@@ -1,0 +1,17 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "ecmascript",
+      "jsx": false
+    },
+    "target": "es5",
+    "loose": false,
+    "externalHelpers": false
+  },
+  "module": {
+    "type": "commonjs"
+  },
+  "minify": false,
+  "sourceMaps": false
+}
+

@@ -70,7 +70,7 @@ where
                     Err(anyhow!("failed to handle with unknown panic message"))
                 }
             },
-        )
+        ).map_err(|e| anyhow::anyhow!("Error: {:?}", e))
     })
 }
 
@@ -151,5 +151,73 @@ pub(crate) fn process_output(
             }
             return JString::default().into_raw();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct TestStruct {
+        name: String,
+        value: i32,
+    }
+
+    #[test]
+    fn test_deserialize_json_valid() {
+        let json = r#"{"name": "test", "value": 42}"#;
+        let result: Result<TestStruct, _> = deserialize_json(json);
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.name, "test");
+        assert_eq!(data.value, 42);
+    }
+
+    #[test]
+    fn test_deserialize_json_deep_nesting() {
+        // Test deep nesting - serde_json recursion limit is disabled
+        let deep_json = (0..100).fold(String::from("1"), |acc, _| format!("[{}]", acc));
+        let result: Result<serde_json::Value, _> = deserialize_json(&deep_json);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_get_deserialized_valid() {
+        let json = r#"{"name": "test", "value": 42}"#;
+        let result: SwcResult<TestStruct> = get_deserialized(json.as_bytes());
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.name, "test");
+        assert_eq!(data.value, 42);
+    }
+
+    #[test]
+    fn test_get_deserialized_invalid() {
+        let invalid_json = r#"{"name": "test", "value": }"#;
+        let result: SwcResult<TestStruct> = get_deserialized(invalid_json.as_bytes());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_map_err_conversion() {
+        let error_result: Result<i32, anyhow::Error> = Err(anyhow!("test error"));
+        let converted = error_result.convert_err();
+        assert!(converted.is_err());
+        match converted {
+            Err(SwcException::SwcAnyException { msg }) => {
+                assert!(msg.contains("test error"));
+            }
+            _ => panic!("Expected SwcAnyException"),
+        }
+    }
+
+    #[test]
+    fn test_map_err_ok_value() {
+        let ok_result: Result<i32, anyhow::Error> = Ok(42);
+        let converted = ok_result.convert_err();
+        assert!(converted.is_ok());
+        assert_eq!(converted.unwrap(), 42);
     }
 }

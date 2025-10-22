@@ -217,3 +217,7 @@ swc/
 *.md
 .gitignore
 swc-generator-kt/test-outputs/
+backup-20251022-125828/
+swc-jni/.cargo/
+swc-jni/*.sh
+swc-jni/coverage.json
