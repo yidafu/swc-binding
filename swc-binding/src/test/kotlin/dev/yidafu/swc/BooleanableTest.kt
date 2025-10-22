@@ -191,14 +191,14 @@ class BooleanableTest {
     @Test
     fun `encode BooleanableInt`() {
         val boolInt = Booleanable.ofValue(100)
-        val json = format.encodeToString(boolInt)
+        val json = format.encodeToString(BooleanableIntSerializer, boolInt)
         assertEquals("100", json)
     }
 
     @Test
     fun `encode BooleanableFloat`() {
         val boolFloat = Booleanable.ofValue(2.5f)
-        val json = format.encodeToString(boolFloat)
+        val json = format.encodeToString(BooleanableFloatSerializer, boolFloat)
         assertEquals("2.5", json)
     }
 }
