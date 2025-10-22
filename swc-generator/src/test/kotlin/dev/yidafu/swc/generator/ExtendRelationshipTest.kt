@@ -1,6 +1,6 @@
 package dev.yidafu.swc.generator
 
-import dev.yidafu.swc.generator.relation.ExtendRelationship
+import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

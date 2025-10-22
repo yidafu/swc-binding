@@ -1,6 +1,6 @@
-package dev.yidafu.swc.generator.model
+package dev.yidafu.swc.generator.core.model
 
-import dev.yidafu.swc.generator.relation.ExtendRelationship
+import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 
 /**
  * Kotlin 类/接口模型

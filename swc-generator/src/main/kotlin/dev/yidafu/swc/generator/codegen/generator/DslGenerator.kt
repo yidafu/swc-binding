@@ -1,11 +1,12 @@
-package dev.yidafu.swc.generator.generator
+package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.model.KotlinClass
-import dev.yidafu.swc.generator.model.KotlinExtensionFun
-import dev.yidafu.swc.generator.poet.*
-import dev.yidafu.swc.generator.relation.ExtendRelationship
-import dev.yidafu.swc.generator.transform.Constants
+import dev.yidafu.swc.generator.core.model.KotlinClass
+import dev.yidafu.swc.generator.core.model.KotlinProperty
+import dev.yidafu.swc.generator.core.model.KotlinExtensionFun
+import dev.yidafu.swc.generator.codegen.poet.*
+import dev.yidafu.swc.generator.core.relation.ExtendRelationship
+import dev.yidafu.swc.generator.config.Constants
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -14,7 +15,7 @@ import java.io.File
  */
 class DslGenerator(
     private val kotlinClasses: List<KotlinClass>,
-    private val classAllPropertiesMap: Map<String, List<dev.yidafu.swc.generator.model.KotlinProperty>>
+    private val classAllPropertiesMap: Map<String, List<KotlinProperty>>
 ) {
     private val extFunMap = mutableMapOf<String, KotlinExtensionFun>()
     private val generatedClassNameList = kotlinClasses.map { it.klassName }

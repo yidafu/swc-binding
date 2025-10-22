@@ -1,8 +1,8 @@
-package dev.yidafu.swc.generator.generator
+package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.poet.*
-import dev.yidafu.swc.generator.relation.ExtendRelationship
+import dev.yidafu.swc.generator.codegen.poet.*
+import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -34,7 +34,37 @@ class SerializerGenerator {
         
         val file = File(outputPath)
         file.parentFile?.mkdirs()
-        fileBuilder.build().writeTo(file.parentFile!!)
+        
+        val fileSpec = fileBuilder.build()
+        
+        // 创建临时目录来避免 KotlinPoet 创建包目录结构
+        val tempDir = File.createTempFile("swc-generator", "").apply { 
+            delete()
+            mkdirs() 
+        }
+        
+        try {
+            // 写入到临时目录
+            fileSpec.writeTo(tempDir)
+            
+            // 找到生成的文件（KotlinPoet 会根据包名创建目录结构）
+            val generatedFile = File(tempDir, "dev/yidafu/swc/types/${fileSpec.name}.kt")
+            if (generatedFile.exists()) {
+                // 复制到目标位置
+                generatedFile.copyTo(file, overwrite = true)
+            } else {
+                // 如果没找到，尝试直接查找
+                val foundFile = tempDir.walkTopDown().filter { it.name == "${fileSpec.name}.kt" }.firstOrNull()
+                if (foundFile != null) {
+                    foundFile.copyTo(file, overwrite = true)
+                } else {
+                    throw IllegalStateException("无法找到生成的文件: ${fileSpec.name}.kt")
+                }
+            }
+        } finally {
+            // 清理临时目录
+            tempDir.deleteRecursively()
+        }
         
         Logger.success("Generated: $outputPath (${astNodeList.size} 个类型)")
     }

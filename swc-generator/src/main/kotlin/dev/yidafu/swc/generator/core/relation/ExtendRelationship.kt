@@ -1,4 +1,4 @@
-package dev.yidafu.swc.generator.relation
+package dev.yidafu.swc.generator.core.relation
 
 /**
  * 类型继承关系管理

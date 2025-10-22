@@ -1,4 +1,4 @@
-package dev.yidafu.swc.generator.poet
+package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.ClassName
 

@@ -1,4 +1,4 @@
-package dev.yidafu.swc.generator.transform
+package dev.yidafu.swc.generator.config
 
 /**
  * 常量定义

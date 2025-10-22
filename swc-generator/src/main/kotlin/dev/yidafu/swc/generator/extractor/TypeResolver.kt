@@ -1,7 +1,8 @@
-package dev.yidafu.swc.generator.ast
+package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.model.KotlinProperty
-import dev.yidafu.swc.generator.transform.Constants
+import dev.yidafu.swc.generator.core.model.KotlinProperty
+import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.*
 
 /**

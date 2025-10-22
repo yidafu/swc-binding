@@ -1,15 +1,16 @@
-package dev.yidafu.swc.generator
+package dev.yidafu.swc.generator.cli
 
 import dev.yidafu.swc.SwcNative
 import dev.yidafu.swc.tsParseOptions
-import dev.yidafu.swc.generator.ast.*
-import dev.yidafu.swc.generator.generator.DslGenerator
-import dev.yidafu.swc.generator.generator.SerializerGenerator
-import dev.yidafu.swc.generator.generator.TypesGenerator
-import dev.yidafu.swc.generator.model.KotlinClass
-import dev.yidafu.swc.generator.model.KotlinProperty
-import dev.yidafu.swc.generator.relation.ExtendRelationship
-import dev.yidafu.swc.generator.transform.Constants
+import dev.yidafu.swc.generator.parser.*
+import dev.yidafu.swc.generator.extractor.*
+import dev.yidafu.swc.generator.codegen.generator.DslGenerator
+import dev.yidafu.swc.generator.codegen.generator.SerializerGenerator
+import dev.yidafu.swc.generator.codegen.generator.TypesGenerator
+import dev.yidafu.swc.generator.core.model.KotlinClass
+import dev.yidafu.swc.generator.core.model.KotlinProperty
+import dev.yidafu.swc.generator.core.relation.ExtendRelationship
+import dev.yidafu.swc.generator.config.Constants
 import dev.yidafu.swc.generator.util.*
 import dev.yidafu.swc.types.*
 import kotlinx.serialization.json.*

@@ -1,12 +1,12 @@
-package dev.yidafu.swc.generator.poet
+package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.model.KotlinClass
-import dev.yidafu.swc.generator.model.KotlinProperty
-import dev.yidafu.swc.generator.transform.Constants
+import dev.yidafu.swc.generator.core.model.KotlinClass
+import dev.yidafu.swc.generator.core.model.KotlinProperty
+import dev.yidafu.swc.generator.config.Constants
 import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.poet.PoetConstants.Serialization
-import dev.yidafu.swc.generator.poet.PoetConstants.SwcTypes
+import dev.yidafu.swc.generator.codegen.poet.PoetConstants.Serialization
+import dev.yidafu.swc.generator.codegen.poet.PoetConstants.SwcTypes
 
 /**
  * KotlinPoet 代码生成器

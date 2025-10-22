@@ -1,4 +1,4 @@
-package dev.yidafu.swc.generator.ast
+package dev.yidafu.swc.generator.parser
 
 import kotlinx.serialization.json.*
 

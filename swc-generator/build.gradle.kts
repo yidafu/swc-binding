@@ -28,7 +28,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("dev.yidafu.swc.generator.MainKt")
+    mainClass.set("dev.yidafu.swc.generator.cli.MainKt")
 }
 
 tasks.test {

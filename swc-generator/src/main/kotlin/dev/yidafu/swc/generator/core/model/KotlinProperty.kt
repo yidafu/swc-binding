@@ -1,6 +1,6 @@
-package dev.yidafu.swc.generator.model
+package dev.yidafu.swc.generator.core.model
 
-import dev.yidafu.swc.generator.transform.Constants
+import dev.yidafu.swc.generator.config.Constants
 
 /**
  * Kotlin 属性模型
