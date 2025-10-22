@@ -42,5 +42,5 @@ rootProject.name = "swc-bing"
 include("swc-binding")
 project(":swc-binding").name = "swc-binding"
 
-include("swc-generator-kt")
-project(":swc-generator-kt").name = "swc-generator-kt"
+include("swc-generator")
+project(":swc-generator").name = "swc-generator"

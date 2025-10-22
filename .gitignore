@@ -214,7 +214,7 @@ gradle-app.setting
 # swc/ directory (but not test files)
 *.md
 .gitignore
-swc-generator-kt/test-outputs/
+swc-generator/test-outputs/
 backup-20251022-125828/
 swc-jni/.cargo/
 swc-jni/*.sh
