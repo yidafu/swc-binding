@@ -7,7 +7,7 @@ mkdir -p ../swc-binding/src/main/resources/darwin-x64-apple     # macOS Intel (A
 mkdir -p ../swc-binding/src/main/resources/darwin-arm64-apple   # macOS ARM64 (Apple toolchain)
 # mkdir -p ../swc-binding/src/main/resources/darwin-universal-apple  # macOS Universal Binary
 mkdir -p ../swc-binding/src/main/resources/linux-x64-musl       # Linux x64 (musl static)
-mkdir -p ../swc-binding/src/main/resources/linux-arm64-musl     # Linux ARM64 (musl static)
+mkdir -p ../swc-binding/src/main/resources/linux-arm64-gnu      # Linux ARM64 (GNU toolchain)
 mkdir -p ../swc-binding/src/main/resources/windows-x64-gnu      # Windows x64 (GNU toolchain)
 mkdir -p ../swc-binding/src/main/resources/windows-arm64-gnu    # Windows ARM64 (GNU toolchain)
 
@@ -26,9 +26,9 @@ cp ./target/aarch64-apple-darwin/release/libswc_jni.dylib ../swc-binding/src/mai
 # Linux x64 using musl for static linking and better compatibility
 cargo zigbuild --release --target x86_64-unknown-linux-musl
 cp ./target/x86_64-unknown-linux-musl/release/libswc_jni.so ../swc-binding/src/main/resources/linux-x64-musl
-# Linux ARM64 using musl for static linking and better compatibility
-cargo zigbuild --release --target aarch64-unknown-linux-musl
-cp ./target/aarch64-unknown-linux-musl/release/libswc_jni.so ../swc-binding/src/main/resources/linux-arm64-musl
+# Linux ARM64 using gnu for better compatibility (musl doesn't support cdylib)
+cargo zigbuild --release --target aarch64-unknown-linux-gnu
+cp ./target/aarch64-unknown-linux-gnu/release/libswc_jni.so ../swc-binding/src/main/resources/linux-arm64-gnu
 ############################## Linux ##############################
 
 ############################## Windows ##############################

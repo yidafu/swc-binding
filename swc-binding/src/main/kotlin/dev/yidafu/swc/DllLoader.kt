@@ -94,7 +94,7 @@ object DllLoader {
              * Detect the current platform and return the appropriate Platform instance.
              * 
              * Supported platforms and their resource directories:
-             * - Linux: linux-x64-musl/ or linux-arm64-musl/
+             * - Linux: linux-x64-musl/ or linux-arm64-gnu/
              * - macOS: darwin-x64-apple/ or darwin-arm64-apple/
              * - Windows: windows-x64-gnu/ or windows-arm64-gnu/
              */
@@ -119,13 +119,13 @@ object DllLoader {
      * - darwin-x64-apple/    - macOS Intel (Apple toolchain)
      * - darwin-arm64-apple/  - macOS ARM64 (Apple toolchain)
      * - linux-x64-musl/      - Linux x64 (musl static linking)
-     * - linux-arm64-musl/    - Linux ARM64 (musl static linking)
+     * - linux-arm64-gnu/     - Linux ARM64 (GNU toolchain)
      * - windows-x64-gnu/     - Windows x64 (GNU toolchain)
      * - windows-arm64-gnu/   - Windows ARM64 (GNU toolchain)
      */
     fun copyDll2Temp(libName: String): String {
         val jarPath = when (val p = Platform.current) {
-            is Platform.Linux -> (if (p.isArm()) "linux-arm64-musl" else "linux-x64-musl") + "/lib$libName.so"
+            is Platform.Linux -> (if (p.isArm()) "linux-arm64-gnu" else "linux-x64-musl") + "/lib$libName.so"
             is Platform.Mac -> (if (p.isIntel()) "darwin-x64-apple" else "darwin-arm64-apple") + "/lib$libName.dylib"
             is Platform.Windows -> (if (p.isArm()) "windows-arm64-gnu" else "windows-x64-gnu") + "/$libName.dll"
 //            Platform.SOLARIS -> TODO()

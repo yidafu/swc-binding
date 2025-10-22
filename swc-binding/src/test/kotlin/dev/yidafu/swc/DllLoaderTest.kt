@@ -164,7 +164,7 @@ class DllLoaderTest {
             }
             is DllLoader.Platform.Linux -> {
                 assertTrue(
-                    path.contains("linux-x64-musl") || path.contains("linux-arm64-musl")
+                    path.contains("linux-x64-musl") || path.contains("linux-arm64-gnu")
                 )
             }
             is DllLoader.Platform.Windows -> {
