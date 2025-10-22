@@ -1,355 +1,408 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AssignmentProperty
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * AssignmentProperty#type: String
+ * extension function for create String -> String
+ */
+public fun AssignmentProperty.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> IdentifierImpl
  */
-fun AssignmentProperty.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun AssignmentProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ThisExpressionImpl
  */
-fun AssignmentProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ArrayExpressionImpl
  */
-fun AssignmentProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ObjectExpressionImpl
  */
-fun AssignmentProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression
+    = ObjectExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> FunctionExpressionImpl
  */
-fun AssignmentProperty.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> UnaryExpressionImpl
  */
-fun AssignmentProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> UpdateExpressionImpl
  */
-fun AssignmentProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression
+    = UpdateExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> BinaryExpressionImpl
  */
-fun AssignmentProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression
+    = BinaryExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> AssignmentExpressionImpl
  */
-fun AssignmentProperty.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> MemberExpressionImpl
  */
-fun AssignmentProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression
+    = MemberExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> SuperPropExpressionImpl
  */
-fun AssignmentProperty.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ConditionalExpressionImpl
  */
-fun AssignmentProperty.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> CallExpressionImpl
  */
-fun AssignmentProperty.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> NewExpressionImpl
  */
-fun AssignmentProperty.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> SequenceExpressionImpl
  */
-fun AssignmentProperty.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> StringLiteralImpl
  */
-fun AssignmentProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> BooleanLiteralImpl
  */
-fun AssignmentProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> NullLiteralImpl
  */
-fun AssignmentProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> NumericLiteralImpl
  */
-fun AssignmentProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> BigIntLiteralImpl
  */
-fun AssignmentProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> RegExpLiteralImpl
  */
-fun AssignmentProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXTextImpl
  */
-fun AssignmentProperty.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun AssignmentProperty.jSXText(block: JSXText.() -> Unit): JSXText =
+    JSXTextImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TemplateLiteralImpl
  */
-fun AssignmentProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun AssignmentProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TaggedTemplateExpressionImpl
  */
-fun AssignmentProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ArrowFunctionExpressionImpl
  */
-fun AssignmentProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ClassExpressionImpl
  */
-fun AssignmentProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> YieldExpressionImpl
  */
-fun AssignmentProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> MetaPropertyImpl
  */
-fun AssignmentProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun AssignmentProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> AwaitExpressionImpl
  */
-fun AssignmentProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> ParenthesisExpressionImpl
  */
-fun AssignmentProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXMemberExpressionImpl
  */
-fun AssignmentProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXNamespacedNameImpl
  */
-fun AssignmentProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun AssignmentProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit):
+    JSXNamespacedName = JSXNamespacedNameImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXEmptyExpressionImpl
  */
-fun AssignmentProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXElementImpl
  */
-fun AssignmentProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun AssignmentProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> JSXFragmentImpl
  */
-fun AssignmentProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun AssignmentProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsTypeAssertionImpl
  */
-fun AssignmentProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun AssignmentProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion =
+    TsTypeAssertionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsConstAssertionImpl
  */
-fun AssignmentProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun AssignmentProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion
+    = TsConstAssertionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsNonNullExpressionImpl
  */
-fun AssignmentProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsAsExpressionImpl
  */
-fun AssignmentProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsSatisfiesExpressionImpl
  */
-fun AssignmentProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun AssignmentProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> TsInstantiationImpl
  */
-fun AssignmentProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun AssignmentProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> PrivateNameImpl
  */
-fun AssignmentProperty.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun AssignmentProperty.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> OptionalChainingExpressionImpl
  */
-fun AssignmentProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public
+    fun AssignmentProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * AssignmentProperty#value: Expression
  * extension function for create Expression -> InvalidImpl
  */
-fun AssignmentProperty.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun AssignmentProperty.invalid(block: Invalid.() -> Unit): Invalid =
+    InvalidImpl().apply(block)

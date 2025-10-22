@@ -1,199 +1,244 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Boolean
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.TsArrayType
+import dev.yidafu.swc.types.TsArrayTypeImpl
+import dev.yidafu.swc.types.TsConditionalType
+import dev.yidafu.swc.types.TsConditionalTypeImpl
+import dev.yidafu.swc.types.TsConstructorType
+import dev.yidafu.swc.types.TsConstructorTypeImpl
+import dev.yidafu.swc.types.TsFunctionType
+import dev.yidafu.swc.types.TsFunctionTypeImpl
+import dev.yidafu.swc.types.TsImportType
+import dev.yidafu.swc.types.TsImportTypeImpl
+import dev.yidafu.swc.types.TsIndexedAccessType
+import dev.yidafu.swc.types.TsIndexedAccessTypeImpl
+import dev.yidafu.swc.types.TsInferType
+import dev.yidafu.swc.types.TsInferTypeImpl
+import dev.yidafu.swc.types.TsIntersectionType
+import dev.yidafu.swc.types.TsIntersectionTypeImpl
+import dev.yidafu.swc.types.TsKeywordType
+import dev.yidafu.swc.types.TsKeywordTypeImpl
+import dev.yidafu.swc.types.TsLiteralType
+import dev.yidafu.swc.types.TsLiteralTypeImpl
+import dev.yidafu.swc.types.TsMappedType
+import dev.yidafu.swc.types.TsMappedTypeImpl
+import dev.yidafu.swc.types.TsOptionalType
+import dev.yidafu.swc.types.TsOptionalTypeImpl
+import dev.yidafu.swc.types.TsParenthesizedType
+import dev.yidafu.swc.types.TsParenthesizedTypeImpl
+import dev.yidafu.swc.types.TsRestType
+import dev.yidafu.swc.types.TsRestTypeImpl
+import dev.yidafu.swc.types.TsThisType
+import dev.yidafu.swc.types.TsThisTypeImpl
+import dev.yidafu.swc.types.TsTupleType
+import dev.yidafu.swc.types.TsTupleTypeImpl
+import dev.yidafu.swc.types.TsTypeAliasDeclaration
+import dev.yidafu.swc.types.TsTypeLiteral
+import dev.yidafu.swc.types.TsTypeLiteralImpl
+import dev.yidafu.swc.types.TsTypeOperator
+import dev.yidafu.swc.types.TsTypeOperatorImpl
+import dev.yidafu.swc.types.TsTypeParameterDeclaration
+import dev.yidafu.swc.types.TsTypeParameterDeclarationImpl
+import dev.yidafu.swc.types.TsTypePredicate
+import dev.yidafu.swc.types.TsTypePredicateImpl
+import dev.yidafu.swc.types.TsTypeQuery
+import dev.yidafu.swc.types.TsTypeQueryImpl
+import dev.yidafu.swc.types.TsTypeReference
+import dev.yidafu.swc.types.TsTypeReferenceImpl
+import dev.yidafu.swc.types.TsUnionType
+import dev.yidafu.swc.types.TsUnionTypeImpl
+import kotlin.Unit
+
+/**
+ * TsTypeAliasDeclaration#type: String
+ * extension function for create String -> String
+ */
+public fun TsTypeAliasDeclaration.string(block: String.() -> Unit): String = String().apply(block)
+
+/**
+ * TsTypeAliasDeclaration#declare: Boolean
+ * extension function for create Boolean -> Boolean
+ */
+public fun TsTypeAliasDeclaration.boolean(block: Boolean.() -> Unit): Boolean =
+    Boolean().apply(block)
 
 /**
  * TsTypeAliasDeclaration#id: Identifier
  * extension function for create Identifier -> IdentifierImpl
  */
-fun TsTypeAliasDeclaration.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeParams: TsTypeParameterDeclaration
  * extension function for create TsTypeParameterDeclaration -> TsTypeParameterDeclarationImpl
  */
-fun TsTypeAliasDeclaration.tsTypeParameterDeclaration(block: TsTypeParameterDeclaration.() -> Unit): TsTypeParameterDeclaration {
-    return TsTypeParameterDeclarationImpl().apply(block)
-}
+public
+    fun TsTypeAliasDeclaration.tsTypeParameterDeclaration(block: TsTypeParameterDeclaration.() -> Unit):
+    TsTypeParameterDeclaration = TsTypeParameterDeclarationImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsKeywordTypeImpl
  */
-fun TsTypeAliasDeclaration.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType {
-    return TsKeywordTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType =
+    TsKeywordTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsThisTypeImpl
  */
-fun TsTypeAliasDeclaration.tsThisType(block: TsThisType.() -> Unit): TsThisType {
-    return TsThisTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsThisType(block: TsThisType.() -> Unit): TsThisType =
+    TsThisTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsFunctionTypeImpl
  */
-fun TsTypeAliasDeclaration.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType {
-    return TsFunctionTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType =
+    TsFunctionTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsConstructorTypeImpl
  */
-fun TsTypeAliasDeclaration.tsConstructorType(block: TsConstructorType.() -> Unit): TsConstructorType {
-    return TsConstructorTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsConstructorType(block: TsConstructorType.() -> Unit):
+    TsConstructorType = TsConstructorTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeReferenceImpl
  */
-fun TsTypeAliasDeclaration.tsTypeReference(block: TsTypeReference.() -> Unit): TsTypeReference {
-    return TsTypeReferenceImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTypeReference(block: TsTypeReference.() -> Unit):
+    TsTypeReference = TsTypeReferenceImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeQueryImpl
  */
-fun TsTypeAliasDeclaration.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery {
-    return TsTypeQueryImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery =
+    TsTypeQueryImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeLiteralImpl
  */
-fun TsTypeAliasDeclaration.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral {
-    return TsTypeLiteralImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral =
+    TsTypeLiteralImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsArrayTypeImpl
  */
-fun TsTypeAliasDeclaration.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType {
-    return TsArrayTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType =
+    TsArrayTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTupleTypeImpl
  */
-fun TsTypeAliasDeclaration.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType {
-    return TsTupleTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType =
+    TsTupleTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsOptionalTypeImpl
  */
-fun TsTypeAliasDeclaration.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType {
-    return TsOptionalTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType =
+    TsOptionalTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsRestTypeImpl
  */
-fun TsTypeAliasDeclaration.tsRestType(block: TsRestType.() -> Unit): TsRestType {
-    return TsRestTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsRestType(block: TsRestType.() -> Unit): TsRestType =
+    TsRestTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsUnionTypeImpl
  */
-fun TsTypeAliasDeclaration.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType {
-    return TsUnionTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType =
+    TsUnionTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsIntersectionTypeImpl
  */
-fun TsTypeAliasDeclaration.tsIntersectionType(block: TsIntersectionType.() -> Unit): TsIntersectionType {
-    return TsIntersectionTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsIntersectionType(block: TsIntersectionType.() -> Unit):
+    TsIntersectionType = TsIntersectionTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsConditionalTypeImpl
  */
-fun TsTypeAliasDeclaration.tsConditionalType(block: TsConditionalType.() -> Unit): TsConditionalType {
-    return TsConditionalTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsConditionalType(block: TsConditionalType.() -> Unit):
+    TsConditionalType = TsConditionalTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsInferTypeImpl
  */
-fun TsTypeAliasDeclaration.tsInferType(block: TsInferType.() -> Unit): TsInferType {
-    return TsInferTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsInferType(block: TsInferType.() -> Unit): TsInferType =
+    TsInferTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsParenthesizedTypeImpl
  */
-fun TsTypeAliasDeclaration.tsParenthesizedType(block: TsParenthesizedType.() -> Unit): TsParenthesizedType {
-    return TsParenthesizedTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsParenthesizedType(block: TsParenthesizedType.() -> Unit):
+    TsParenthesizedType = TsParenthesizedTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeOperatorImpl
  */
-fun TsTypeAliasDeclaration.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator {
-    return TsTypeOperatorImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator =
+    TsTypeOperatorImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsIndexedAccessTypeImpl
  */
-fun TsTypeAliasDeclaration.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit): TsIndexedAccessType {
-    return TsIndexedAccessTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit):
+    TsIndexedAccessType = TsIndexedAccessTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsMappedTypeImpl
  */
-fun TsTypeAliasDeclaration.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType {
-    return TsMappedTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType =
+    TsMappedTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsLiteralTypeImpl
  */
-fun TsTypeAliasDeclaration.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType {
-    return TsLiteralTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType =
+    TsLiteralTypeImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsTypePredicateImpl
  */
-fun TsTypeAliasDeclaration.tsTypePredicate(block: TsTypePredicate.() -> Unit): TsTypePredicate {
-    return TsTypePredicateImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsTypePredicate(block: TsTypePredicate.() -> Unit):
+    TsTypePredicate = TsTypePredicateImpl().apply(block)
 
 /**
  * TsTypeAliasDeclaration#typeAnnotation: TsType
  * extension function for create TsType -> TsImportTypeImpl
  */
-fun TsTypeAliasDeclaration.tsImportType(block: TsImportType.() -> Unit): TsImportType {
-    return TsImportTypeImpl().apply(block)
-}
+public fun TsTypeAliasDeclaration.tsImportType(block: TsImportType.() -> Unit): TsImportType =
+    TsImportTypeImpl().apply(block)
 
-fun TsTypeAliasDeclaration.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * TsTypeAliasDeclaration#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun TsTypeAliasDeclaration.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

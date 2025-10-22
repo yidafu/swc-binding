@@ -1,17 +1,18 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Module
+import dev.yidafu.swc.types.ModuleImpl
+import dev.yidafu.swc.types.Program
+import dev.yidafu.swc.types.Script
+import dev.yidafu.swc.types.ScriptImpl
+import kotlin.Unit
 
 /**
  * subtype of Program
  */
-fun Program.module(block: Module.() -> Unit): Module {
-    return ModuleImpl().apply(block)
-}
+public fun Program.module(block: Module.() -> Unit): Module = ModuleImpl().apply(block)
 
 /**
  * subtype of Program
  */
-fun Program.script(block: Script.() -> Unit): Script {
-    return ScriptImpl().apply(block)
-}
+public fun Program.script(block: Script.() -> Unit): Script = ScriptImpl().apply(block)

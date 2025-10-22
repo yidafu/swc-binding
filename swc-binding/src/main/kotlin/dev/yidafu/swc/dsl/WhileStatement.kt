@@ -1,551 +1,629 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BlockStatement
+import dev.yidafu.swc.types.BlockStatementImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.BreakStatement
+import dev.yidafu.swc.types.BreakStatementImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassDeclaration
+import dev.yidafu.swc.types.ClassDeclarationImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.ContinueStatement
+import dev.yidafu.swc.types.ContinueStatementImpl
+import dev.yidafu.swc.types.DebuggerStatement
+import dev.yidafu.swc.types.DebuggerStatementImpl
+import dev.yidafu.swc.types.DoWhileStatement
+import dev.yidafu.swc.types.DoWhileStatementImpl
+import dev.yidafu.swc.types.EmptyStatement
+import dev.yidafu.swc.types.EmptyStatementImpl
+import dev.yidafu.swc.types.ExpressionStatement
+import dev.yidafu.swc.types.ExpressionStatementImpl
+import dev.yidafu.swc.types.ForInStatement
+import dev.yidafu.swc.types.ForInStatementImpl
+import dev.yidafu.swc.types.ForOfStatement
+import dev.yidafu.swc.types.ForOfStatementImpl
+import dev.yidafu.swc.types.ForStatement
+import dev.yidafu.swc.types.ForStatementImpl
+import dev.yidafu.swc.types.FunctionDeclaration
+import dev.yidafu.swc.types.FunctionDeclarationImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.IfStatement
+import dev.yidafu.swc.types.IfStatementImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.LabeledStatement
+import dev.yidafu.swc.types.LabeledStatementImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.ReturnStatement
+import dev.yidafu.swc.types.ReturnStatementImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.SwitchStatement
+import dev.yidafu.swc.types.SwitchStatementImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.ThrowStatement
+import dev.yidafu.swc.types.ThrowStatementImpl
+import dev.yidafu.swc.types.TryStatement
+import dev.yidafu.swc.types.TryStatementImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsEnumDeclaration
+import dev.yidafu.swc.types.TsEnumDeclarationImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsInterfaceDeclaration
+import dev.yidafu.swc.types.TsInterfaceDeclarationImpl
+import dev.yidafu.swc.types.TsModuleDeclaration
+import dev.yidafu.swc.types.TsModuleDeclarationImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsTypeAliasDeclaration
+import dev.yidafu.swc.types.TsTypeAliasDeclarationImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.VariableDeclaration
+import dev.yidafu.swc.types.VariableDeclarationImpl
+import dev.yidafu.swc.types.WhileStatement
+import dev.yidafu.swc.types.WithStatement
+import dev.yidafu.swc.types.WithStatementImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * WhileStatement#type: String
+ * extension function for create String -> String
+ */
+public fun WhileStatement.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ThisExpressionImpl
  */
-fun WhileStatement.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun WhileStatement.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ArrayExpressionImpl
  */
-fun WhileStatement.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun WhileStatement.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ObjectExpressionImpl
  */
-fun WhileStatement.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun WhileStatement.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression =
+    ObjectExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> FunctionExpressionImpl
  */
-fun WhileStatement.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun WhileStatement.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> UnaryExpressionImpl
  */
-fun WhileStatement.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun WhileStatement.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> UpdateExpressionImpl
  */
-fun WhileStatement.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun WhileStatement.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression =
+    UpdateExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> BinaryExpressionImpl
  */
-fun WhileStatement.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun WhileStatement.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression =
+    BinaryExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> AssignmentExpressionImpl
  */
-fun WhileStatement.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun WhileStatement.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> MemberExpressionImpl
  */
-fun WhileStatement.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun WhileStatement.memberExpression(block: MemberExpression.() -> Unit): MemberExpression =
+    MemberExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> SuperPropExpressionImpl
  */
-fun WhileStatement.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun WhileStatement.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ConditionalExpressionImpl
  */
-fun WhileStatement.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun WhileStatement.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> CallExpressionImpl
  */
-fun WhileStatement.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun WhileStatement.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> NewExpressionImpl
  */
-fun WhileStatement.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun WhileStatement.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> SequenceExpressionImpl
  */
-fun WhileStatement.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun WhileStatement.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> IdentifierImpl
  */
-fun WhileStatement.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun WhileStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> StringLiteralImpl
  */
-fun WhileStatement.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun WhileStatement.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> BooleanLiteralImpl
  */
-fun WhileStatement.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun WhileStatement.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> NullLiteralImpl
  */
-fun WhileStatement.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun WhileStatement.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> NumericLiteralImpl
  */
-fun WhileStatement.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun WhileStatement.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> BigIntLiteralImpl
  */
-fun WhileStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun WhileStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> RegExpLiteralImpl
  */
-fun WhileStatement.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun WhileStatement.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXTextImpl
  */
-fun WhileStatement.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun WhileStatement.jSXText(block: JSXText.() -> Unit): JSXText = JSXTextImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TemplateLiteralImpl
  */
-fun WhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun WhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TaggedTemplateExpressionImpl
  */
-fun WhileStatement.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun WhileStatement.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ArrowFunctionExpressionImpl
  */
-fun WhileStatement.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun WhileStatement.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ClassExpressionImpl
  */
-fun WhileStatement.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun WhileStatement.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> YieldExpressionImpl
  */
-fun WhileStatement.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun WhileStatement.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> MetaPropertyImpl
  */
-fun WhileStatement.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun WhileStatement.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> AwaitExpressionImpl
  */
-fun WhileStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun WhileStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> ParenthesisExpressionImpl
  */
-fun WhileStatement.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun WhileStatement.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXMemberExpressionImpl
  */
-fun WhileStatement.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun WhileStatement.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXNamespacedNameImpl
  */
-fun WhileStatement.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun WhileStatement.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName
+    = JSXNamespacedNameImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXEmptyExpressionImpl
  */
-fun WhileStatement.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun WhileStatement.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXElementImpl
  */
-fun WhileStatement.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun WhileStatement.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> JSXFragmentImpl
  */
-fun WhileStatement.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun WhileStatement.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsTypeAssertionImpl
  */
-fun WhileStatement.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun WhileStatement.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion =
+    TsTypeAssertionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsConstAssertionImpl
  */
-fun WhileStatement.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun WhileStatement.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion =
+    TsConstAssertionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsNonNullExpressionImpl
  */
-fun WhileStatement.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun WhileStatement.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsAsExpressionImpl
  */
-fun WhileStatement.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun WhileStatement.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsSatisfiesExpressionImpl
  */
-fun WhileStatement.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun WhileStatement.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> TsInstantiationImpl
  */
-fun WhileStatement.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun WhileStatement.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> PrivateNameImpl
  */
-fun WhileStatement.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun WhileStatement.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> OptionalChainingExpressionImpl
  */
-fun WhileStatement.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public fun WhileStatement.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression
  * extension function for create Expression -> InvalidImpl
  */
-fun WhileStatement.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun WhileStatement.invalid(block: Invalid.() -> Unit): Invalid = InvalidImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> BlockStatementImpl
  */
-fun WhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement {
-    return BlockStatementImpl().apply(block)
-}
+public fun WhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> EmptyStatementImpl
  */
-fun WhileStatement.emptyStatement(block: EmptyStatement.() -> Unit): EmptyStatement {
-    return EmptyStatementImpl().apply(block)
-}
+public fun WhileStatement.emptyStatement(block: EmptyStatement.() -> Unit): EmptyStatement =
+    EmptyStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> DebuggerStatementImpl
  */
-fun WhileStatement.debuggerStatement(block: DebuggerStatement.() -> Unit): DebuggerStatement {
-    return DebuggerStatementImpl().apply(block)
-}
+public fun WhileStatement.debuggerStatement(block: DebuggerStatement.() -> Unit): DebuggerStatement
+    = DebuggerStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> WithStatementImpl
  */
-fun WhileStatement.withStatement(block: WithStatement.() -> Unit): WithStatement {
-    return WithStatementImpl().apply(block)
-}
+public fun WhileStatement.withStatement(block: WithStatement.() -> Unit): WithStatement =
+    WithStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ReturnStatementImpl
  */
-fun WhileStatement.returnStatement(block: ReturnStatement.() -> Unit): ReturnStatement {
-    return ReturnStatementImpl().apply(block)
-}
+public fun WhileStatement.returnStatement(block: ReturnStatement.() -> Unit): ReturnStatement =
+    ReturnStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> LabeledStatementImpl
  */
-fun WhileStatement.labeledStatement(block: LabeledStatement.() -> Unit): LabeledStatement {
-    return LabeledStatementImpl().apply(block)
-}
+public fun WhileStatement.labeledStatement(block: LabeledStatement.() -> Unit): LabeledStatement =
+    LabeledStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> BreakStatementImpl
  */
-fun WhileStatement.breakStatement(block: BreakStatement.() -> Unit): BreakStatement {
-    return BreakStatementImpl().apply(block)
-}
+public fun WhileStatement.breakStatement(block: BreakStatement.() -> Unit): BreakStatement =
+    BreakStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ContinueStatementImpl
  */
-fun WhileStatement.continueStatement(block: ContinueStatement.() -> Unit): ContinueStatement {
-    return ContinueStatementImpl().apply(block)
-}
+public fun WhileStatement.continueStatement(block: ContinueStatement.() -> Unit): ContinueStatement
+    = ContinueStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> IfStatementImpl
  */
-fun WhileStatement.ifStatement(block: IfStatement.() -> Unit): IfStatement {
-    return IfStatementImpl().apply(block)
-}
+public fun WhileStatement.ifStatement(block: IfStatement.() -> Unit): IfStatement =
+    IfStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> SwitchStatementImpl
  */
-fun WhileStatement.switchStatement(block: SwitchStatement.() -> Unit): SwitchStatement {
-    return SwitchStatementImpl().apply(block)
-}
+public fun WhileStatement.switchStatement(block: SwitchStatement.() -> Unit): SwitchStatement =
+    SwitchStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ThrowStatementImpl
  */
-fun WhileStatement.throwStatement(block: ThrowStatement.() -> Unit): ThrowStatement {
-    return ThrowStatementImpl().apply(block)
-}
+public fun WhileStatement.throwStatement(block: ThrowStatement.() -> Unit): ThrowStatement =
+    ThrowStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> TryStatementImpl
  */
-fun WhileStatement.tryStatement(block: TryStatement.() -> Unit): TryStatement {
-    return TryStatementImpl().apply(block)
-}
+public fun WhileStatement.tryStatement(block: TryStatement.() -> Unit): TryStatement =
+    TryStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> DoWhileStatementImpl
  */
-fun WhileStatement.doWhileStatement(block: DoWhileStatement.() -> Unit): DoWhileStatement {
-    return DoWhileStatementImpl().apply(block)
-}
+public fun WhileStatement.doWhileStatement(block: DoWhileStatement.() -> Unit): DoWhileStatement =
+    DoWhileStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ForStatementImpl
  */
-fun WhileStatement.forStatement(block: ForStatement.() -> Unit): ForStatement {
-    return ForStatementImpl().apply(block)
-}
+public fun WhileStatement.forStatement(block: ForStatement.() -> Unit): ForStatement =
+    ForStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ForInStatementImpl
  */
-fun WhileStatement.forInStatement(block: ForInStatement.() -> Unit): ForInStatement {
-    return ForInStatementImpl().apply(block)
-}
+public fun WhileStatement.forInStatement(block: ForInStatement.() -> Unit): ForInStatement =
+    ForInStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ForOfStatementImpl
  */
-fun WhileStatement.forOfStatement(block: ForOfStatement.() -> Unit): ForOfStatement {
-    return ForOfStatementImpl().apply(block)
-}
+public fun WhileStatement.forOfStatement(block: ForOfStatement.() -> Unit): ForOfStatement =
+    ForOfStatementImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ClassDeclarationImpl
  */
-fun WhileStatement.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration {
-    return ClassDeclarationImpl().apply(block)
-}
+public fun WhileStatement.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration =
+    ClassDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> FunctionDeclarationImpl
  */
-fun WhileStatement.functionDeclaration(block: FunctionDeclaration.() -> Unit): FunctionDeclaration {
-    return FunctionDeclarationImpl().apply(block)
-}
+public fun WhileStatement.functionDeclaration(block: FunctionDeclaration.() -> Unit):
+    FunctionDeclaration = FunctionDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> VariableDeclarationImpl
  */
-fun WhileStatement.variableDeclaration(block: VariableDeclaration.() -> Unit): VariableDeclaration {
-    return VariableDeclarationImpl().apply(block)
-}
+public fun WhileStatement.variableDeclaration(block: VariableDeclaration.() -> Unit):
+    VariableDeclaration = VariableDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> TsInterfaceDeclarationImpl
  */
-fun WhileStatement.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit): TsInterfaceDeclaration {
-    return TsInterfaceDeclarationImpl().apply(block)
-}
+public fun WhileStatement.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
+    TsInterfaceDeclaration = TsInterfaceDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> TsTypeAliasDeclarationImpl
  */
-fun WhileStatement.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit): TsTypeAliasDeclaration {
-    return TsTypeAliasDeclarationImpl().apply(block)
-}
+public fun WhileStatement.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit):
+    TsTypeAliasDeclaration = TsTypeAliasDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> TsEnumDeclarationImpl
  */
-fun WhileStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): TsEnumDeclaration {
-    return TsEnumDeclarationImpl().apply(block)
-}
+public fun WhileStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): TsEnumDeclaration
+    = TsEnumDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> TsModuleDeclarationImpl
  */
-fun WhileStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit): TsModuleDeclaration {
-    return TsModuleDeclarationImpl().apply(block)
-}
+public fun WhileStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
+    TsModuleDeclaration = TsModuleDeclarationImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement
  * extension function for create Statement -> ExpressionStatementImpl
  */
-fun WhileStatement.expressionStatement(block: ExpressionStatement.() -> Unit): ExpressionStatement {
-    return ExpressionStatementImpl().apply(block)
-}
+public fun WhileStatement.expressionStatement(block: ExpressionStatement.() -> Unit):
+    ExpressionStatement = ExpressionStatementImpl().apply(block)
 
-fun WhileStatement.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * WhileStatement#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun WhileStatement.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

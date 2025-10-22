@@ -1,17 +1,20 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.TsEnumMemberId
+import kotlin.Unit
 
 /**
  * subtype of TsEnumMemberId
  */
-fun TsEnumMemberId.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun TsEnumMemberId.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * subtype of TsEnumMemberId
  */
-fun TsEnumMemberId.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun TsEnumMemberId.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)

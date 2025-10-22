@@ -1,207 +1,244 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.BlockStatement
+import dev.yidafu.swc.types.BlockStatementImpl
+import dev.yidafu.swc.types.BreakStatement
+import dev.yidafu.swc.types.BreakStatementImpl
+import dev.yidafu.swc.types.ClassDeclaration
+import dev.yidafu.swc.types.ClassDeclarationImpl
+import dev.yidafu.swc.types.ContinueStatement
+import dev.yidafu.swc.types.ContinueStatementImpl
+import dev.yidafu.swc.types.DebuggerStatement
+import dev.yidafu.swc.types.DebuggerStatementImpl
+import dev.yidafu.swc.types.DoWhileStatement
+import dev.yidafu.swc.types.DoWhileStatementImpl
+import dev.yidafu.swc.types.EmptyStatement
+import dev.yidafu.swc.types.EmptyStatementImpl
+import dev.yidafu.swc.types.ExpressionStatement
+import dev.yidafu.swc.types.ExpressionStatementImpl
+import dev.yidafu.swc.types.ForInStatement
+import dev.yidafu.swc.types.ForInStatementImpl
+import dev.yidafu.swc.types.ForOfStatement
+import dev.yidafu.swc.types.ForOfStatementImpl
+import dev.yidafu.swc.types.ForStatement
+import dev.yidafu.swc.types.ForStatementImpl
+import dev.yidafu.swc.types.FunctionDeclaration
+import dev.yidafu.swc.types.FunctionDeclarationImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.IfStatement
+import dev.yidafu.swc.types.IfStatementImpl
+import dev.yidafu.swc.types.LabeledStatement
+import dev.yidafu.swc.types.ReturnStatement
+import dev.yidafu.swc.types.ReturnStatementImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.SwitchStatement
+import dev.yidafu.swc.types.SwitchStatementImpl
+import dev.yidafu.swc.types.ThrowStatement
+import dev.yidafu.swc.types.ThrowStatementImpl
+import dev.yidafu.swc.types.TryStatement
+import dev.yidafu.swc.types.TryStatementImpl
+import dev.yidafu.swc.types.TsEnumDeclaration
+import dev.yidafu.swc.types.TsEnumDeclarationImpl
+import dev.yidafu.swc.types.TsInterfaceDeclaration
+import dev.yidafu.swc.types.TsInterfaceDeclarationImpl
+import dev.yidafu.swc.types.TsModuleDeclaration
+import dev.yidafu.swc.types.TsModuleDeclarationImpl
+import dev.yidafu.swc.types.TsTypeAliasDeclaration
+import dev.yidafu.swc.types.TsTypeAliasDeclarationImpl
+import dev.yidafu.swc.types.VariableDeclaration
+import dev.yidafu.swc.types.VariableDeclarationImpl
+import dev.yidafu.swc.types.WhileStatement
+import dev.yidafu.swc.types.WhileStatementImpl
+import dev.yidafu.swc.types.WithStatement
+import dev.yidafu.swc.types.WithStatementImpl
+import kotlin.Unit
+
+/**
+ * LabeledStatement#type: String
+ * extension function for create String -> String
+ */
+public fun LabeledStatement.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * LabeledStatement#label: Identifier
  * extension function for create Identifier -> IdentifierImpl
  */
-fun LabeledStatement.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun LabeledStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> BlockStatementImpl
  */
-fun LabeledStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement {
-    return BlockStatementImpl().apply(block)
-}
+public fun LabeledStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> EmptyStatementImpl
  */
-fun LabeledStatement.emptyStatement(block: EmptyStatement.() -> Unit): EmptyStatement {
-    return EmptyStatementImpl().apply(block)
-}
+public fun LabeledStatement.emptyStatement(block: EmptyStatement.() -> Unit): EmptyStatement =
+    EmptyStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> DebuggerStatementImpl
  */
-fun LabeledStatement.debuggerStatement(block: DebuggerStatement.() -> Unit): DebuggerStatement {
-    return DebuggerStatementImpl().apply(block)
-}
+public fun LabeledStatement.debuggerStatement(block: DebuggerStatement.() -> Unit):
+    DebuggerStatement = DebuggerStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> WithStatementImpl
  */
-fun LabeledStatement.withStatement(block: WithStatement.() -> Unit): WithStatement {
-    return WithStatementImpl().apply(block)
-}
+public fun LabeledStatement.withStatement(block: WithStatement.() -> Unit): WithStatement =
+    WithStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ReturnStatementImpl
  */
-fun LabeledStatement.returnStatement(block: ReturnStatement.() -> Unit): ReturnStatement {
-    return ReturnStatementImpl().apply(block)
-}
+public fun LabeledStatement.returnStatement(block: ReturnStatement.() -> Unit): ReturnStatement =
+    ReturnStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> BreakStatementImpl
  */
-fun LabeledStatement.breakStatement(block: BreakStatement.() -> Unit): BreakStatement {
-    return BreakStatementImpl().apply(block)
-}
+public fun LabeledStatement.breakStatement(block: BreakStatement.() -> Unit): BreakStatement =
+    BreakStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ContinueStatementImpl
  */
-fun LabeledStatement.continueStatement(block: ContinueStatement.() -> Unit): ContinueStatement {
-    return ContinueStatementImpl().apply(block)
-}
+public fun LabeledStatement.continueStatement(block: ContinueStatement.() -> Unit):
+    ContinueStatement = ContinueStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> IfStatementImpl
  */
-fun LabeledStatement.ifStatement(block: IfStatement.() -> Unit): IfStatement {
-    return IfStatementImpl().apply(block)
-}
+public fun LabeledStatement.ifStatement(block: IfStatement.() -> Unit): IfStatement =
+    IfStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> SwitchStatementImpl
  */
-fun LabeledStatement.switchStatement(block: SwitchStatement.() -> Unit): SwitchStatement {
-    return SwitchStatementImpl().apply(block)
-}
+public fun LabeledStatement.switchStatement(block: SwitchStatement.() -> Unit): SwitchStatement =
+    SwitchStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ThrowStatementImpl
  */
-fun LabeledStatement.throwStatement(block: ThrowStatement.() -> Unit): ThrowStatement {
-    return ThrowStatementImpl().apply(block)
-}
+public fun LabeledStatement.throwStatement(block: ThrowStatement.() -> Unit): ThrowStatement =
+    ThrowStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> TryStatementImpl
  */
-fun LabeledStatement.tryStatement(block: TryStatement.() -> Unit): TryStatement {
-    return TryStatementImpl().apply(block)
-}
+public fun LabeledStatement.tryStatement(block: TryStatement.() -> Unit): TryStatement =
+    TryStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> WhileStatementImpl
  */
-fun LabeledStatement.whileStatement(block: WhileStatement.() -> Unit): WhileStatement {
-    return WhileStatementImpl().apply(block)
-}
+public fun LabeledStatement.whileStatement(block: WhileStatement.() -> Unit): WhileStatement =
+    WhileStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> DoWhileStatementImpl
  */
-fun LabeledStatement.doWhileStatement(block: DoWhileStatement.() -> Unit): DoWhileStatement {
-    return DoWhileStatementImpl().apply(block)
-}
+public fun LabeledStatement.doWhileStatement(block: DoWhileStatement.() -> Unit): DoWhileStatement =
+    DoWhileStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ForStatementImpl
  */
-fun LabeledStatement.forStatement(block: ForStatement.() -> Unit): ForStatement {
-    return ForStatementImpl().apply(block)
-}
+public fun LabeledStatement.forStatement(block: ForStatement.() -> Unit): ForStatement =
+    ForStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ForInStatementImpl
  */
-fun LabeledStatement.forInStatement(block: ForInStatement.() -> Unit): ForInStatement {
-    return ForInStatementImpl().apply(block)
-}
+public fun LabeledStatement.forInStatement(block: ForInStatement.() -> Unit): ForInStatement =
+    ForInStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ForOfStatementImpl
  */
-fun LabeledStatement.forOfStatement(block: ForOfStatement.() -> Unit): ForOfStatement {
-    return ForOfStatementImpl().apply(block)
-}
+public fun LabeledStatement.forOfStatement(block: ForOfStatement.() -> Unit): ForOfStatement =
+    ForOfStatementImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ClassDeclarationImpl
  */
-fun LabeledStatement.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration {
-    return ClassDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration =
+    ClassDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> FunctionDeclarationImpl
  */
-fun LabeledStatement.functionDeclaration(block: FunctionDeclaration.() -> Unit): FunctionDeclaration {
-    return FunctionDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.functionDeclaration(block: FunctionDeclaration.() -> Unit):
+    FunctionDeclaration = FunctionDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> VariableDeclarationImpl
  */
-fun LabeledStatement.variableDeclaration(block: VariableDeclaration.() -> Unit): VariableDeclaration {
-    return VariableDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.variableDeclaration(block: VariableDeclaration.() -> Unit):
+    VariableDeclaration = VariableDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> TsInterfaceDeclarationImpl
  */
-fun LabeledStatement.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit): TsInterfaceDeclaration {
-    return TsInterfaceDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
+    TsInterfaceDeclaration = TsInterfaceDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> TsTypeAliasDeclarationImpl
  */
-fun LabeledStatement.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit): TsTypeAliasDeclaration {
-    return TsTypeAliasDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit):
+    TsTypeAliasDeclaration = TsTypeAliasDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> TsEnumDeclarationImpl
  */
-fun LabeledStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): TsEnumDeclaration {
-    return TsEnumDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit):
+    TsEnumDeclaration = TsEnumDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> TsModuleDeclarationImpl
  */
-fun LabeledStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit): TsModuleDeclaration {
-    return TsModuleDeclarationImpl().apply(block)
-}
+public fun LabeledStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
+    TsModuleDeclaration = TsModuleDeclarationImpl().apply(block)
 
 /**
  * LabeledStatement#body: Statement
  * extension function for create Statement -> ExpressionStatementImpl
  */
-fun LabeledStatement.expressionStatement(block: ExpressionStatement.() -> Unit): ExpressionStatement {
-    return ExpressionStatementImpl().apply(block)
-}
+public fun LabeledStatement.expressionStatement(block: ExpressionStatement.() -> Unit):
+    ExpressionStatement = ExpressionStatementImpl().apply(block)
 
-fun LabeledStatement.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * LabeledStatement#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun LabeledStatement.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

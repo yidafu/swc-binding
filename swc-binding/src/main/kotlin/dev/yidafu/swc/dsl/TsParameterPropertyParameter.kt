@@ -1,17 +1,20 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.AssignmentPattern
+import dev.yidafu.swc.types.AssignmentPatternImpl
+import dev.yidafu.swc.types.BindingIdentifier
+import dev.yidafu.swc.types.BindingIdentifierImpl
+import dev.yidafu.swc.types.TsParameterPropertyParameter
+import kotlin.Unit
 
 /**
  * subtype of TsParameterPropertyParameter
  */
-fun TsParameterPropertyParameter.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier {
-    return BindingIdentifierImpl().apply(block)
-}
+public fun TsParameterPropertyParameter.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
 
 /**
  * subtype of TsParameterPropertyParameter
  */
-fun TsParameterPropertyParameter.assignmentPattern(block: AssignmentPattern.() -> Unit): AssignmentPattern {
-    return AssignmentPatternImpl().apply(block)
-}
+public fun TsParameterPropertyParameter.assignmentPattern(block: AssignmentPattern.() -> Unit):
+    AssignmentPattern = AssignmentPatternImpl().apply(block)

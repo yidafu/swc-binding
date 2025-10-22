@@ -1,379 +1,440 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Argument
+import dev.yidafu.swc.types.ArgumentImpl
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Import
+import dev.yidafu.swc.types.ImportImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.Super
+import dev.yidafu.swc.types.SuperImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.TsTypeParameterInstantiation
+import dev.yidafu.swc.types.TsTypeParameterInstantiationImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> SuperImpl
+ * CallExpression#type: String
+ * extension function for create String -> String
  */
-fun CallExpression.jsSuper(block: Super.() -> Unit): Super {
-    return SuperImpl().apply(block)
-}
+public fun CallExpression.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ImportImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> SuperImpl
  */
-fun CallExpression.import(block: Import.() -> Unit): Import {
-    return ImportImpl().apply(block)
-}
+public fun CallExpression.jsSuper(block: Super.() -> Unit): Super = SuperImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ThisExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ImportImpl
  */
-fun CallExpression.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun CallExpression.`import`(block: Import.() -> Unit): Import = ImportImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ArrayExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ThisExpressionImpl
  */
-fun CallExpression.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun CallExpression.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ObjectExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ArrayExpressionImpl
  */
-fun CallExpression.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun CallExpression.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> FunctionExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ObjectExpressionImpl
  */
-fun CallExpression.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun CallExpression.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression =
+    ObjectExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> UnaryExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> FunctionExpressionImpl
  */
-fun CallExpression.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun CallExpression.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> UpdateExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> UnaryExpressionImpl
  */
-fun CallExpression.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun CallExpression.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> BinaryExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> UpdateExpressionImpl
  */
-fun CallExpression.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun CallExpression.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression =
+    UpdateExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> AssignmentExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> BinaryExpressionImpl
  */
-fun CallExpression.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun CallExpression.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression =
+    BinaryExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> MemberExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> AssignmentExpressionImpl
  */
-fun CallExpression.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun CallExpression.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> SuperPropExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> MemberExpressionImpl
  */
-fun CallExpression.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun CallExpression.memberExpression(block: MemberExpression.() -> Unit): MemberExpression =
+    MemberExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ConditionalExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> SuperPropExpressionImpl
  */
-fun CallExpression.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun CallExpression.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> NewExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ConditionalExpressionImpl
  */
-fun CallExpression.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun CallExpression.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> SequenceExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> NewExpressionImpl
  */
-fun CallExpression.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun CallExpression.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> IdentifierImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> SequenceExpressionImpl
  */
-fun CallExpression.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun CallExpression.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> StringLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> IdentifierImpl
  */
-fun CallExpression.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun CallExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> BooleanLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> StringLiteralImpl
  */
-fun CallExpression.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun CallExpression.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> NullLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> BooleanLiteralImpl
  */
-fun CallExpression.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun CallExpression.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> NumericLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> NullLiteralImpl
  */
-fun CallExpression.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun CallExpression.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> BigIntLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> NumericLiteralImpl
  */
-fun CallExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun CallExpression.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> RegExpLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> BigIntLiteralImpl
  */
-fun CallExpression.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun CallExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXTextImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> RegExpLiteralImpl
  */
-fun CallExpression.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun CallExpression.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TemplateLiteralImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXTextImpl
  */
-fun CallExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun CallExpression.jSXText(block: JSXText.() -> Unit): JSXText = JSXTextImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TaggedTemplateExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TemplateLiteralImpl
  */
-fun CallExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun CallExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ArrowFunctionExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TaggedTemplateExpressionImpl
  */
-fun CallExpression.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun CallExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ClassExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ArrowFunctionExpressionImpl
  */
-fun CallExpression.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun CallExpression.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> YieldExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ClassExpressionImpl
  */
-fun CallExpression.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun CallExpression.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> MetaPropertyImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> YieldExpressionImpl
  */
-fun CallExpression.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun CallExpression.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> AwaitExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> MetaPropertyImpl
  */
-fun CallExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun CallExpression.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> ParenthesisExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> AwaitExpressionImpl
  */
-fun CallExpression.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun CallExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXMemberExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> ParenthesisExpressionImpl
  */
-fun CallExpression.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun CallExpression.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXNamespacedNameImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXMemberExpressionImpl
  */
-fun CallExpression.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun CallExpression.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXEmptyExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXNamespacedNameImpl
  */
-fun CallExpression.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun CallExpression.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName
+    = JSXNamespacedNameImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXElementImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXEmptyExpressionImpl
  */
-fun CallExpression.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun CallExpression.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> JSXFragmentImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXElementImpl
  */
-fun CallExpression.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun CallExpression.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsTypeAssertionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> JSXFragmentImpl
  */
-fun CallExpression.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun CallExpression.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsConstAssertionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsTypeAssertionImpl
  */
-fun CallExpression.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun CallExpression.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion =
+    TsTypeAssertionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsNonNullExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsConstAssertionImpl
  */
-fun CallExpression.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun CallExpression.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion =
+    TsConstAssertionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsAsExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsNonNullExpressionImpl
  */
-fun CallExpression.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun CallExpression.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsSatisfiesExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsAsExpressionImpl
  */
-fun CallExpression.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun CallExpression.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> TsInstantiationImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsSatisfiesExpressionImpl
  */
-fun CallExpression.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun CallExpression.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> PrivateNameImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> TsInstantiationImpl
  */
-fun CallExpression.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun CallExpression.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> OptionalChainingExpressionImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> PrivateNameImpl
  */
-fun CallExpression.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public fun CallExpression.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
- * CallExpression#callee: CallExpressionCallee
- * extension function for create CallExpressionCallee -> InvalidImpl
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> ->
+ * OptionalChainingExpressionImpl
  */
-fun CallExpression.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun CallExpression.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
-fun CallExpression.argument(block: Argument.() -> Unit): Argument {
-    return Argument().apply(block)
-}
+/**
+ * CallExpression#callee: Union.U3<Super, Import, Expression>
+ * extension function for create Union.U3<Super, Import, Expression> -> InvalidImpl
+ */
+public fun CallExpression.invalid(block: Invalid.() -> Unit): Invalid = InvalidImpl().apply(block)
+
+/**
+ * CallExpression#arguments: Array<Argument>
+ * extension function for create Array<Argument> -> ArgumentImpl
+ */
+public fun CallExpression.argument(block: Argument.() -> Unit): Argument =
+    ArgumentImpl().apply(block)
 
 /**
  * CallExpression#typeArguments: TsTypeParameterInstantiation
  * extension function for create TsTypeParameterInstantiation -> TsTypeParameterInstantiationImpl
  */
-fun CallExpression.tsTypeParameterInstantiation(block: TsTypeParameterInstantiation.() -> Unit): TsTypeParameterInstantiation {
-    return TsTypeParameterInstantiationImpl().apply(block)
-}
+public
+    fun CallExpression.tsTypeParameterInstantiation(block: TsTypeParameterInstantiation.() -> Unit):
+    TsTypeParameterInstantiation = TsTypeParameterInstantiationImpl().apply(block)
 
-fun CallExpression.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * CallExpression#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun CallExpression.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

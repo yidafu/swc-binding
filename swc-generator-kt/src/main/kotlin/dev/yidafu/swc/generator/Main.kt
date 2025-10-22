@@ -211,21 +211,21 @@ class SwcGeneratorKt(private val config: GeneratorConfig = GeneratorConfig()) {
     // 保存原始 JSON 字符串，供 visitor 使用
     private var astJsonString: String = ""
     
-    // 配置路径
+    // 配置路径 - 项目根目录（swc-generator-kt 的父目录）
     private val projectRoot = Paths.get("").toAbsolutePath().parent.toString()
     
     // 输入路径优先级：命令行参数 > 环境变量 > 默认值
     private val inputPath = config.inputPath 
         ?: System.getenv("SWC_TYPES_PATH") 
         // 使用完整的 @swc/types 文件
-        ?: "$projectRoot/swc-generator/node_modules/.pnpm/@swc+types@0.1.5/node_modules/@swc/types/index.d.ts"
+        ?: "$projectRoot/swc-generator-kt/node_modules/.pnpm/@swc+types@0.1.5/node_modules/@swc/types/index.d.ts"
     
     private val outputTypesPath = config.outputTypesPath 
-        ?: "$projectRoot/swc-generator-kt/swc/types/types.kt"
+        ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/types/types.kt"
     private val outputSerializerPath = config.outputSerializerPath 
-        ?: "$projectRoot/swc-generator-kt/swc/types/serializer.kt"
+        ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/types/serializer.kt"
     private val outputDslDir = config.outputDslDir 
-        ?: "$projectRoot/swc-generator-kt/swc/dsl"
+        ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/dsl"
     
     fun run() {
         Logger.setTotalSteps(9)

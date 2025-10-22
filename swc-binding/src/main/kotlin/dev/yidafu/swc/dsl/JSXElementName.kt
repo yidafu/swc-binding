@@ -1,24 +1,28 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.JSXElementName
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import kotlin.Unit
 
 /**
  * subtype of JSXElementName
  */
-fun JSXElementName.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun JSXElementName.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * subtype of JSXElementName
  */
-fun JSXElementName.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun JSXElementName.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * subtype of JSXElementName
  */
-fun JSXElementName.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun JSXElementName.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName
+    = JSXNamespacedNameImpl().apply(block)

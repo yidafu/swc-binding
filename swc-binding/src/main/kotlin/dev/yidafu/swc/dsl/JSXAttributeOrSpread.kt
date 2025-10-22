@@ -1,17 +1,20 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.JSXAttribute
+import dev.yidafu.swc.types.JSXAttributeImpl
+import dev.yidafu.swc.types.JSXAttributeOrSpread
+import dev.yidafu.swc.types.SpreadElement
+import dev.yidafu.swc.types.SpreadElementImpl
+import kotlin.Unit
 
 /**
  * subtype of JSXAttributeOrSpread
  */
-fun JSXAttributeOrSpread.jSXAttribute(block: JSXAttribute.() -> Unit): JSXAttribute {
-    return JSXAttributeImpl().apply(block)
-}
+public fun JSXAttributeOrSpread.jSXAttribute(block: JSXAttribute.() -> Unit): JSXAttribute =
+    JSXAttributeImpl().apply(block)
 
 /**
  * subtype of JSXAttributeOrSpread
  */
-fun JSXAttributeOrSpread.spreadElement(block: SpreadElement.() -> Unit): SpreadElement {
-    return SpreadElementImpl().apply(block)
-}
+public fun JSXAttributeOrSpread.spreadElement(block: SpreadElement.() -> Unit): SpreadElement =
+    SpreadElementImpl().apply(block)

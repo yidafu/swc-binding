@@ -1,415 +1,476 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrayPattern
+import dev.yidafu.swc.types.ArrayPatternImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AssignmentPattern
+import dev.yidafu.swc.types.AssignmentPatternImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BindingIdentifier
+import dev.yidafu.swc.types.BindingIdentifierImpl
+import dev.yidafu.swc.types.BlockStatement
+import dev.yidafu.swc.types.BlockStatementImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ComputedPropName
+import dev.yidafu.swc.types.ComputedPropNameImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.ObjectPattern
+import dev.yidafu.swc.types.ObjectPatternImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.RestElement
+import dev.yidafu.swc.types.RestElementImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.SetterProperty
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * SetterProperty#type: String
+ * extension function for create String -> String
+ */
+public fun SetterProperty.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> BindingIdentifierImpl
  */
-fun SetterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier {
-    return BindingIdentifierImpl().apply(block)
-}
+public fun SetterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ArrayPatternImpl
  */
-fun SetterProperty.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern {
-    return ArrayPatternImpl().apply(block)
-}
+public fun SetterProperty.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
+    ArrayPatternImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> RestElementImpl
  */
-fun SetterProperty.restElement(block: RestElement.() -> Unit): RestElement {
-    return RestElementImpl().apply(block)
-}
+public fun SetterProperty.restElement(block: RestElement.() -> Unit): RestElement =
+    RestElementImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ObjectPatternImpl
  */
-fun SetterProperty.objectPattern(block: ObjectPattern.() -> Unit): ObjectPattern {
-    return ObjectPatternImpl().apply(block)
-}
+public fun SetterProperty.objectPattern(block: ObjectPattern.() -> Unit): ObjectPattern =
+    ObjectPatternImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> AssignmentPatternImpl
  */
-fun SetterProperty.assignmentPattern(block: AssignmentPattern.() -> Unit): AssignmentPattern {
-    return AssignmentPatternImpl().apply(block)
-}
+public fun SetterProperty.assignmentPattern(block: AssignmentPattern.() -> Unit): AssignmentPattern
+    = AssignmentPatternImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> InvalidImpl
  */
-fun SetterProperty.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun SetterProperty.invalid(block: Invalid.() -> Unit): Invalid = InvalidImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ThisExpressionImpl
  */
-fun SetterProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun SetterProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ArrayExpressionImpl
  */
-fun SetterProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun SetterProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ObjectExpressionImpl
  */
-fun SetterProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun SetterProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression =
+    ObjectExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> FunctionExpressionImpl
  */
-fun SetterProperty.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun SetterProperty.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> UnaryExpressionImpl
  */
-fun SetterProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun SetterProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> UpdateExpressionImpl
  */
-fun SetterProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun SetterProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression =
+    UpdateExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> BinaryExpressionImpl
  */
-fun SetterProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun SetterProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression =
+    BinaryExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> AssignmentExpressionImpl
  */
-fun SetterProperty.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun SetterProperty.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> MemberExpressionImpl
  */
-fun SetterProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun SetterProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression =
+    MemberExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> SuperPropExpressionImpl
  */
-fun SetterProperty.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun SetterProperty.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ConditionalExpressionImpl
  */
-fun SetterProperty.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun SetterProperty.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> CallExpressionImpl
  */
-fun SetterProperty.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun SetterProperty.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> NewExpressionImpl
  */
-fun SetterProperty.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun SetterProperty.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> SequenceExpressionImpl
  */
-fun SetterProperty.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun SetterProperty.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * SetterProperty#key: PropertyName
  * extension function for create PropertyName -> IdentifierImpl
  */
-fun SetterProperty.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun SetterProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * SetterProperty#key: PropertyName
  * extension function for create PropertyName -> StringLiteralImpl
  */
-fun SetterProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun SetterProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> BooleanLiteralImpl
  */
-fun SetterProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun SetterProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> NullLiteralImpl
  */
-fun SetterProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun SetterProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * SetterProperty#key: PropertyName
  * extension function for create PropertyName -> NumericLiteralImpl
  */
-fun SetterProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun SetterProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * SetterProperty#key: PropertyName
  * extension function for create PropertyName -> BigIntLiteralImpl
  */
-fun SetterProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun SetterProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> RegExpLiteralImpl
  */
-fun SetterProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun SetterProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXTextImpl
  */
-fun SetterProperty.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun SetterProperty.jSXText(block: JSXText.() -> Unit): JSXText = JSXTextImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TemplateLiteralImpl
  */
-fun SetterProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun SetterProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TaggedTemplateExpressionImpl
  */
-fun SetterProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun SetterProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ArrowFunctionExpressionImpl
  */
-fun SetterProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun SetterProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ClassExpressionImpl
  */
-fun SetterProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun SetterProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> YieldExpressionImpl
  */
-fun SetterProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun SetterProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> MetaPropertyImpl
  */
-fun SetterProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun SetterProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> AwaitExpressionImpl
  */
-fun SetterProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun SetterProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> ParenthesisExpressionImpl
  */
-fun SetterProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun SetterProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXMemberExpressionImpl
  */
-fun SetterProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun SetterProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXNamespacedNameImpl
  */
-fun SetterProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun SetterProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName
+    = JSXNamespacedNameImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXEmptyExpressionImpl
  */
-fun SetterProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun SetterProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXElementImpl
  */
-fun SetterProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun SetterProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> JSXFragmentImpl
  */
-fun SetterProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun SetterProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsTypeAssertionImpl
  */
-fun SetterProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun SetterProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion =
+    TsTypeAssertionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsConstAssertionImpl
  */
-fun SetterProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun SetterProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion =
+    TsConstAssertionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsNonNullExpressionImpl
  */
-fun SetterProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun SetterProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsAsExpressionImpl
  */
-fun SetterProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun SetterProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsSatisfiesExpressionImpl
  */
-fun SetterProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun SetterProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> TsInstantiationImpl
  */
-fun SetterProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun SetterProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> PrivateNameImpl
  */
-fun SetterProperty.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun SetterProperty.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern
  * extension function for create Pattern -> OptionalChainingExpressionImpl
  */
-fun SetterProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public fun SetterProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * SetterProperty#body: BlockStatement
  * extension function for create BlockStatement -> BlockStatementImpl
  */
-fun SetterProperty.blockStatement(block: BlockStatement.() -> Unit): BlockStatement {
-    return BlockStatementImpl().apply(block)
-}
+public fun SetterProperty.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
 
 /**
  * SetterProperty#key: PropertyName
  * extension function for create PropertyName -> ComputedPropNameImpl
  */
-fun SetterProperty.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName {
-    return ComputedPropNameImpl().apply(block)
-}
+public fun SetterProperty.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName =
+    ComputedPropNameImpl().apply(block)
 
-fun SetterProperty.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * SetterProperty#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun SetterProperty.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

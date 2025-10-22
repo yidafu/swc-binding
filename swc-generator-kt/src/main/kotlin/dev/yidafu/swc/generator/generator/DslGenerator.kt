@@ -211,7 +211,11 @@ class DslGenerator(
             }
         }
         
-        fileBuilder.build().writeTo(File(outputDir))
+        // 手动写入文件，避免 KotlinPoet 创建包目录结构
+        val fileSpec = fileBuilder.build()
+        val fileName = "${receiver}.kt"
+        val outputFile = File(outputDir, fileName)
+        outputFile.writeText(fileSpec.toString())
     }
     
     /**
@@ -297,7 +301,11 @@ class DslGenerator(
             fileBuilder.addFunction(funSpec)
         }
         
-        fileBuilder.build().writeTo(File(outputDir))
+        // 手动写入文件，避免 KotlinPoet 创建包目录结构
+        val fileSpec = fileBuilder.build()
+        val fileName = "create.kt"
+        val outputFile = File(outputDir, fileName)
+        outputFile.writeText(fileSpec.toString())
         Logger.verbose("  生成了 ${implClasses.size} 个 create 函数", 6)
     }
     

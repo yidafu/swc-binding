@@ -1,363 +1,415 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ComputedPropName
+import dev.yidafu.swc.types.ComputedPropNameImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.KeyValueProperty
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * KeyValueProperty#type: String
+ * extension function for create String -> String
+ */
+public fun KeyValueProperty.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ThisExpressionImpl
  */
-fun KeyValueProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ArrayExpressionImpl
  */
-fun KeyValueProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ObjectExpressionImpl
  */
-fun KeyValueProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression =
+    ObjectExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> FunctionExpressionImpl
  */
-fun KeyValueProperty.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> UnaryExpressionImpl
  */
-fun KeyValueProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> UpdateExpressionImpl
  */
-fun KeyValueProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression =
+    UpdateExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> BinaryExpressionImpl
  */
-fun KeyValueProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression =
+    BinaryExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> AssignmentExpressionImpl
  */
-fun KeyValueProperty.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> MemberExpressionImpl
  */
-fun KeyValueProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.memberExpression(block: MemberExpression.() -> Unit): MemberExpression =
+    MemberExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> SuperPropExpressionImpl
  */
-fun KeyValueProperty.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ConditionalExpressionImpl
  */
-fun KeyValueProperty.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> CallExpressionImpl
  */
-fun KeyValueProperty.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> NewExpressionImpl
  */
-fun KeyValueProperty.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> SequenceExpressionImpl
  */
-fun KeyValueProperty.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#key: PropertyName
  * extension function for create PropertyName -> IdentifierImpl
  */
-fun KeyValueProperty.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun KeyValueProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * KeyValueProperty#key: PropertyName
  * extension function for create PropertyName -> StringLiteralImpl
  */
-fun KeyValueProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> BooleanLiteralImpl
  */
-fun KeyValueProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> NullLiteralImpl
  */
-fun KeyValueProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#key: PropertyName
  * extension function for create PropertyName -> NumericLiteralImpl
  */
-fun KeyValueProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#key: PropertyName
  * extension function for create PropertyName -> BigIntLiteralImpl
  */
-fun KeyValueProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> RegExpLiteralImpl
  */
-fun KeyValueProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXTextImpl
  */
-fun KeyValueProperty.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun KeyValueProperty.jSXText(block: JSXText.() -> Unit): JSXText = JSXTextImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TemplateLiteralImpl
  */
-fun KeyValueProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun KeyValueProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TaggedTemplateExpressionImpl
  */
-fun KeyValueProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ArrowFunctionExpressionImpl
  */
-fun KeyValueProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ClassExpressionImpl
  */
-fun KeyValueProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> YieldExpressionImpl
  */
-fun KeyValueProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> MetaPropertyImpl
  */
-fun KeyValueProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun KeyValueProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> AwaitExpressionImpl
  */
-fun KeyValueProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> ParenthesisExpressionImpl
  */
-fun KeyValueProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXMemberExpressionImpl
  */
-fun KeyValueProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXNamespacedNameImpl
  */
-fun KeyValueProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun KeyValueProperty.jSXNamespacedName(block: JSXNamespacedName.() -> Unit):
+    JSXNamespacedName = JSXNamespacedNameImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXEmptyExpressionImpl
  */
-fun KeyValueProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXElementImpl
  */
-fun KeyValueProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun KeyValueProperty.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> JSXFragmentImpl
  */
-fun KeyValueProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun KeyValueProperty.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsTypeAssertionImpl
  */
-fun KeyValueProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun KeyValueProperty.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion =
+    TsTypeAssertionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsConstAssertionImpl
  */
-fun KeyValueProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun KeyValueProperty.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion =
+    TsConstAssertionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsNonNullExpressionImpl
  */
-fun KeyValueProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsAsExpressionImpl
  */
-fun KeyValueProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsSatisfiesExpressionImpl
  */
-fun KeyValueProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun KeyValueProperty.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> TsInstantiationImpl
  */
-fun KeyValueProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun KeyValueProperty.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> PrivateNameImpl
  */
-fun KeyValueProperty.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun KeyValueProperty.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> OptionalChainingExpressionImpl
  */
-fun KeyValueProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public
+    fun KeyValueProperty.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression
  * extension function for create Expression -> InvalidImpl
  */
-fun KeyValueProperty.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun KeyValueProperty.invalid(block: Invalid.() -> Unit): Invalid = InvalidImpl().apply(block)
 
 /**
  * KeyValueProperty#key: PropertyName
  * extension function for create PropertyName -> ComputedPropNameImpl
  */
-fun KeyValueProperty.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName {
-    return ComputedPropNameImpl().apply(block)
-}
+public fun KeyValueProperty.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName =
+    ComputedPropNameImpl().apply(block)

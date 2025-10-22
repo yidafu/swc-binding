@@ -1,63 +1,82 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.AssignmentProperty
+import dev.yidafu.swc.types.AssignmentPropertyImpl
+import dev.yidafu.swc.types.GetterProperty
+import dev.yidafu.swc.types.GetterPropertyImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.KeyValueProperty
+import dev.yidafu.swc.types.KeyValuePropertyImpl
+import dev.yidafu.swc.types.MethodProperty
+import dev.yidafu.swc.types.MethodPropertyImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.SetterProperty
+import dev.yidafu.swc.types.SetterPropertyImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.SpreadElement
+import dev.yidafu.swc.types.SpreadElementImpl
+import dev.yidafu.swc.types.String
+import kotlin.Unit
+
+/**
+ * ObjectExpression#type: String
+ * extension function for create String -> String
+ */
+public fun ObjectExpression.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> SpreadElementImpl
  */
-fun ObjectExpression.spreadElement(block: SpreadElement.() -> Unit): SpreadElement {
-    return SpreadElementImpl().apply(block)
-}
+public fun ObjectExpression.spreadElement(block: SpreadElement.() -> Unit): SpreadElement =
+    SpreadElementImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> IdentifierImpl
  */
-fun ObjectExpression.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun ObjectExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> KeyValuePropertyImpl
  */
-fun ObjectExpression.keyValueProperty(block: KeyValueProperty.() -> Unit): KeyValueProperty {
-    return KeyValuePropertyImpl().apply(block)
-}
+public fun ObjectExpression.keyValueProperty(block: KeyValueProperty.() -> Unit): KeyValueProperty =
+    KeyValuePropertyImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> AssignmentPropertyImpl
  */
-fun ObjectExpression.assignmentProperty(block: AssignmentProperty.() -> Unit): AssignmentProperty {
-    return AssignmentPropertyImpl().apply(block)
-}
+public fun ObjectExpression.assignmentProperty(block: AssignmentProperty.() -> Unit):
+    AssignmentProperty = AssignmentPropertyImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> GetterPropertyImpl
  */
-fun ObjectExpression.getterProperty(block: GetterProperty.() -> Unit): GetterProperty {
-    return GetterPropertyImpl().apply(block)
-}
+public fun ObjectExpression.getterProperty(block: GetterProperty.() -> Unit): GetterProperty =
+    GetterPropertyImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> SetterPropertyImpl
  */
-fun ObjectExpression.setterProperty(block: SetterProperty.() -> Unit): SetterProperty {
-    return SetterPropertyImpl().apply(block)
-}
+public fun ObjectExpression.setterProperty(block: SetterProperty.() -> Unit): SetterProperty =
+    SetterPropertyImpl().apply(block)
 
 /**
  * ObjectExpression#properties: Array<Union.U2<SpreadElement, Property>>
  * extension function for create Array<Union.U2<SpreadElement, Property>> -> MethodPropertyImpl
  */
-fun ObjectExpression.methodProperty(block: MethodProperty.() -> Unit): MethodProperty {
-    return MethodPropertyImpl().apply(block)
-}
+public fun ObjectExpression.methodProperty(block: MethodProperty.() -> Unit): MethodProperty =
+    MethodPropertyImpl().apply(block)
 
-fun ObjectExpression.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * ObjectExpression#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun ObjectExpression.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

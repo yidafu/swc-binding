@@ -1,17 +1,20 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.TsModuleBlock
+import dev.yidafu.swc.types.TsModuleBlockImpl
+import dev.yidafu.swc.types.TsNamespaceBody
+import dev.yidafu.swc.types.TsNamespaceDeclaration
+import dev.yidafu.swc.types.TsNamespaceDeclarationImpl
+import kotlin.Unit
 
 /**
  * subtype of TsNamespaceBody
  */
-fun TsNamespaceBody.tsModuleBlock(block: TsModuleBlock.() -> Unit): TsModuleBlock {
-    return TsModuleBlockImpl().apply(block)
-}
+public fun TsNamespaceBody.tsModuleBlock(block: TsModuleBlock.() -> Unit): TsModuleBlock =
+    TsModuleBlockImpl().apply(block)
 
 /**
  * subtype of TsNamespaceBody
  */
-fun TsNamespaceBody.tsNamespaceDeclaration(block: TsNamespaceDeclaration.() -> Unit): TsNamespaceDeclaration {
-    return TsNamespaceDeclarationImpl().apply(block)
-}
+public fun TsNamespaceBody.tsNamespaceDeclaration(block: TsNamespaceDeclaration.() -> Unit):
+    TsNamespaceDeclaration = TsNamespaceDeclarationImpl().apply(block)

@@ -1,527 +1,606 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsArrayType
+import dev.yidafu.swc.types.TsArrayTypeImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConditionalType
+import dev.yidafu.swc.types.TsConditionalTypeImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsConstructorType
+import dev.yidafu.swc.types.TsConstructorTypeImpl
+import dev.yidafu.swc.types.TsFunctionType
+import dev.yidafu.swc.types.TsFunctionTypeImpl
+import dev.yidafu.swc.types.TsImportType
+import dev.yidafu.swc.types.TsImportTypeImpl
+import dev.yidafu.swc.types.TsIndexedAccessType
+import dev.yidafu.swc.types.TsIndexedAccessTypeImpl
+import dev.yidafu.swc.types.TsInferType
+import dev.yidafu.swc.types.TsInferTypeImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsIntersectionType
+import dev.yidafu.swc.types.TsIntersectionTypeImpl
+import dev.yidafu.swc.types.TsKeywordType
+import dev.yidafu.swc.types.TsKeywordTypeImpl
+import dev.yidafu.swc.types.TsLiteralType
+import dev.yidafu.swc.types.TsLiteralTypeImpl
+import dev.yidafu.swc.types.TsMappedType
+import dev.yidafu.swc.types.TsMappedTypeImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsOptionalType
+import dev.yidafu.swc.types.TsOptionalTypeImpl
+import dev.yidafu.swc.types.TsParenthesizedType
+import dev.yidafu.swc.types.TsParenthesizedTypeImpl
+import dev.yidafu.swc.types.TsRestType
+import dev.yidafu.swc.types.TsRestTypeImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsThisType
+import dev.yidafu.swc.types.TsThisTypeImpl
+import dev.yidafu.swc.types.TsTupleType
+import dev.yidafu.swc.types.TsTupleTypeImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeAssertionImpl
+import dev.yidafu.swc.types.TsTypeLiteral
+import dev.yidafu.swc.types.TsTypeLiteralImpl
+import dev.yidafu.swc.types.TsTypeOperator
+import dev.yidafu.swc.types.TsTypeOperatorImpl
+import dev.yidafu.swc.types.TsTypePredicate
+import dev.yidafu.swc.types.TsTypePredicateImpl
+import dev.yidafu.swc.types.TsTypeQuery
+import dev.yidafu.swc.types.TsTypeQueryImpl
+import dev.yidafu.swc.types.TsTypeReference
+import dev.yidafu.swc.types.TsTypeReferenceImpl
+import dev.yidafu.swc.types.TsUnionType
+import dev.yidafu.swc.types.TsUnionTypeImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * TsSatisfiesExpression#type: String
+ * extension function for create String -> String
+ */
+public fun TsSatisfiesExpression.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ThisExpressionImpl
  */
-fun TsSatisfiesExpression.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ArrayExpressionImpl
  */
-fun TsSatisfiesExpression.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression
+    = ArrayExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ObjectExpressionImpl
  */
-fun TsSatisfiesExpression.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.objectExpression(block: ObjectExpression.() -> Unit):
+    ObjectExpression = ObjectExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> FunctionExpressionImpl
  */
-fun TsSatisfiesExpression.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> UnaryExpressionImpl
  */
-fun TsSatisfiesExpression.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression
+    = UnaryExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> UpdateExpressionImpl
  */
-fun TsSatisfiesExpression.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.updateExpression(block: UpdateExpression.() -> Unit):
+    UpdateExpression = UpdateExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> BinaryExpressionImpl
  */
-fun TsSatisfiesExpression.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.binaryExpression(block: BinaryExpression.() -> Unit):
+    BinaryExpression = BinaryExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> AssignmentExpressionImpl
  */
-fun TsSatisfiesExpression.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> MemberExpressionImpl
  */
-fun TsSatisfiesExpression.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.memberExpression(block: MemberExpression.() -> Unit):
+    MemberExpression = MemberExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> SuperPropExpressionImpl
  */
-fun TsSatisfiesExpression.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ConditionalExpressionImpl
  */
-fun TsSatisfiesExpression.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> CallExpressionImpl
  */
-fun TsSatisfiesExpression.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> NewExpressionImpl
  */
-fun TsSatisfiesExpression.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> SequenceExpressionImpl
  */
-fun TsSatisfiesExpression.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> IdentifierImpl
  */
-fun TsSatisfiesExpression.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun TsSatisfiesExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> StringLiteralImpl
  */
-fun TsSatisfiesExpression.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> BooleanLiteralImpl
  */
-fun TsSatisfiesExpression.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> NullLiteralImpl
  */
-fun TsSatisfiesExpression.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> NumericLiteralImpl
  */
-fun TsSatisfiesExpression.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> BigIntLiteralImpl
  */
-fun TsSatisfiesExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> RegExpLiteralImpl
  */
-fun TsSatisfiesExpression.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXTextImpl
  */
-fun TsSatisfiesExpression.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXText(block: JSXText.() -> Unit): JSXText =
+    JSXTextImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TemplateLiteralImpl
  */
-fun TsSatisfiesExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
+    = TemplateLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TaggedTemplateExpressionImpl
  */
-fun TsSatisfiesExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public
+    fun TsSatisfiesExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ArrowFunctionExpressionImpl
  */
-fun TsSatisfiesExpression.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ClassExpressionImpl
  */
-fun TsSatisfiesExpression.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.classExpression(block: ClassExpression.() -> Unit): ClassExpression
+    = ClassExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> YieldExpressionImpl
  */
-fun TsSatisfiesExpression.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression
+    = YieldExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> MetaPropertyImpl
  */
-fun TsSatisfiesExpression.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun TsSatisfiesExpression.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> AwaitExpressionImpl
  */
-fun TsSatisfiesExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression
+    = AwaitExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> ParenthesisExpressionImpl
  */
-fun TsSatisfiesExpression.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXMemberExpressionImpl
  */
-fun TsSatisfiesExpression.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXNamespacedNameImpl
  */
-fun TsSatisfiesExpression.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXNamespacedName(block: JSXNamespacedName.() -> Unit):
+    JSXNamespacedName = JSXNamespacedNameImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXEmptyExpressionImpl
  */
-fun TsSatisfiesExpression.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXElementImpl
  */
-fun TsSatisfiesExpression.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> JSXFragmentImpl
  */
-fun TsSatisfiesExpression.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun TsSatisfiesExpression.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TsTypeAssertionImpl
  */
-fun TsSatisfiesExpression.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion {
-    return TsTypeAssertionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypeAssertion(block: TsTypeAssertion.() -> Unit): TsTypeAssertion
+    = TsTypeAssertionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TsConstAssertionImpl
  */
-fun TsSatisfiesExpression.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsConstAssertion(block: TsConstAssertion.() -> Unit):
+    TsConstAssertion = TsConstAssertionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TsNonNullExpressionImpl
  */
-fun TsSatisfiesExpression.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TsAsExpressionImpl
  */
-fun TsSatisfiesExpression.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> TsInstantiationImpl
  */
-fun TsSatisfiesExpression.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation
+    = TsInstantiationImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> PrivateNameImpl
  */
-fun TsSatisfiesExpression.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun TsSatisfiesExpression.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> OptionalChainingExpressionImpl
  */
-fun TsSatisfiesExpression.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public
+    fun TsSatisfiesExpression.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression
  * extension function for create Expression -> InvalidImpl
  */
-fun TsSatisfiesExpression.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun TsSatisfiesExpression.invalid(block: Invalid.() -> Unit): Invalid =
+    InvalidImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsKeywordTypeImpl
  */
-fun TsSatisfiesExpression.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType {
-    return TsKeywordTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType =
+    TsKeywordTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsThisTypeImpl
  */
-fun TsSatisfiesExpression.tsThisType(block: TsThisType.() -> Unit): TsThisType {
-    return TsThisTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsThisType(block: TsThisType.() -> Unit): TsThisType =
+    TsThisTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsFunctionTypeImpl
  */
-fun TsSatisfiesExpression.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType {
-    return TsFunctionTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType =
+    TsFunctionTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsConstructorTypeImpl
  */
-fun TsSatisfiesExpression.tsConstructorType(block: TsConstructorType.() -> Unit): TsConstructorType {
-    return TsConstructorTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsConstructorType(block: TsConstructorType.() -> Unit):
+    TsConstructorType = TsConstructorTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeReferenceImpl
  */
-fun TsSatisfiesExpression.tsTypeReference(block: TsTypeReference.() -> Unit): TsTypeReference {
-    return TsTypeReferenceImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypeReference(block: TsTypeReference.() -> Unit): TsTypeReference
+    = TsTypeReferenceImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeQueryImpl
  */
-fun TsSatisfiesExpression.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery {
-    return TsTypeQueryImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery =
+    TsTypeQueryImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeLiteralImpl
  */
-fun TsSatisfiesExpression.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral {
-    return TsTypeLiteralImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral =
+    TsTypeLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsArrayTypeImpl
  */
-fun TsSatisfiesExpression.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType {
-    return TsArrayTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType =
+    TsArrayTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTupleTypeImpl
  */
-fun TsSatisfiesExpression.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType {
-    return TsTupleTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType =
+    TsTupleTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsOptionalTypeImpl
  */
-fun TsSatisfiesExpression.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType {
-    return TsOptionalTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType =
+    TsOptionalTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsRestTypeImpl
  */
-fun TsSatisfiesExpression.tsRestType(block: TsRestType.() -> Unit): TsRestType {
-    return TsRestTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsRestType(block: TsRestType.() -> Unit): TsRestType =
+    TsRestTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsUnionTypeImpl
  */
-fun TsSatisfiesExpression.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType {
-    return TsUnionTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType =
+    TsUnionTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsIntersectionTypeImpl
  */
-fun TsSatisfiesExpression.tsIntersectionType(block: TsIntersectionType.() -> Unit): TsIntersectionType {
-    return TsIntersectionTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsIntersectionType(block: TsIntersectionType.() -> Unit):
+    TsIntersectionType = TsIntersectionTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsConditionalTypeImpl
  */
-fun TsSatisfiesExpression.tsConditionalType(block: TsConditionalType.() -> Unit): TsConditionalType {
-    return TsConditionalTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsConditionalType(block: TsConditionalType.() -> Unit):
+    TsConditionalType = TsConditionalTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsInferTypeImpl
  */
-fun TsSatisfiesExpression.tsInferType(block: TsInferType.() -> Unit): TsInferType {
-    return TsInferTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsInferType(block: TsInferType.() -> Unit): TsInferType =
+    TsInferTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsParenthesizedTypeImpl
  */
-fun TsSatisfiesExpression.tsParenthesizedType(block: TsParenthesizedType.() -> Unit): TsParenthesizedType {
-    return TsParenthesizedTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsParenthesizedType(block: TsParenthesizedType.() -> Unit):
+    TsParenthesizedType = TsParenthesizedTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeOperatorImpl
  */
-fun TsSatisfiesExpression.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator {
-    return TsTypeOperatorImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator =
+    TsTypeOperatorImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsIndexedAccessTypeImpl
  */
-fun TsSatisfiesExpression.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit): TsIndexedAccessType {
-    return TsIndexedAccessTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit):
+    TsIndexedAccessType = TsIndexedAccessTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsMappedTypeImpl
  */
-fun TsSatisfiesExpression.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType {
-    return TsMappedTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType =
+    TsMappedTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsLiteralTypeImpl
  */
-fun TsSatisfiesExpression.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType {
-    return TsLiteralTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType =
+    TsLiteralTypeImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsTypePredicateImpl
  */
-fun TsSatisfiesExpression.tsTypePredicate(block: TsTypePredicate.() -> Unit): TsTypePredicate {
-    return TsTypePredicateImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsTypePredicate(block: TsTypePredicate.() -> Unit): TsTypePredicate
+    = TsTypePredicateImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType
  * extension function for create TsType -> TsImportTypeImpl
  */
-fun TsSatisfiesExpression.tsImportType(block: TsImportType.() -> Unit): TsImportType {
-    return TsImportTypeImpl().apply(block)
-}
+public fun TsSatisfiesExpression.tsImportType(block: TsImportType.() -> Unit): TsImportType =
+    TsImportTypeImpl().apply(block)
 
-fun TsSatisfiesExpression.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * TsSatisfiesExpression#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun TsSatisfiesExpression.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

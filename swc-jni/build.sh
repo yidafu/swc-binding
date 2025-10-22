@@ -35,6 +35,7 @@ cp target/x86_64-unknown-linux-gnu/release/libswc_jni.so ../swc-binding/src/main
 # cargo build --release --target x86_64-pc-windows-gnu
 cargo xwin build --release --target x86_64-pc-windows-msvc
 cp target/x86_64-pc-windows-msvc/release/swc_jni.dll ../swc-binding/src/main/resources/win32-x64-msvc
-cargo xwin build --release --target aarch64-pc-windows-msvc
-cp target/aarch64-pc-windows-msvc/release/swc_jni.dll ../swc-binding/src/main/resources/win32-arm64-msvc
+# Temporarily disabled due to psm library compatibility issues with Windows ARM64
+# cargo xwin build --release --target aarch64-pc-windows-msvc
+# cp target/aarch64-pc-windows-msvc/release/swc_jni.dll ../swc-binding/src/main/resources/win32-arm64-msvc
 ############################## Windows ##############################

@@ -1,24 +1,28 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.TsImportType
+import dev.yidafu.swc.types.TsImportTypeImpl
+import dev.yidafu.swc.types.TsQualifiedName
+import dev.yidafu.swc.types.TsQualifiedNameImpl
+import dev.yidafu.swc.types.TsTypeQueryExpr
+import kotlin.Unit
 
 /**
  * subtype of TsTypeQueryExpr
  */
-fun TsTypeQueryExpr.tsQualifiedName(block: TsQualifiedName.() -> Unit): TsQualifiedName {
-    return TsQualifiedNameImpl().apply(block)
-}
+public fun TsTypeQueryExpr.tsQualifiedName(block: TsQualifiedName.() -> Unit): TsQualifiedName =
+    TsQualifiedNameImpl().apply(block)
 
 /**
  * subtype of TsTypeQueryExpr
  */
-fun TsTypeQueryExpr.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun TsTypeQueryExpr.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * subtype of TsTypeQueryExpr
  */
-fun TsTypeQueryExpr.tsImportType(block: TsImportType.() -> Unit): TsImportType {
-    return TsImportTypeImpl().apply(block)
-}
+public fun TsTypeQueryExpr.tsImportType(block: TsImportType.() -> Unit): TsImportType =
+    TsImportTypeImpl().apply(block)

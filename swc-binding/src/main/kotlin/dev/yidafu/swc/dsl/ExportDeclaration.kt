@@ -1,63 +1,82 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ClassDeclaration
+import dev.yidafu.swc.types.ClassDeclarationImpl
+import dev.yidafu.swc.types.ExportDeclaration
+import dev.yidafu.swc.types.FunctionDeclaration
+import dev.yidafu.swc.types.FunctionDeclarationImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.TsEnumDeclaration
+import dev.yidafu.swc.types.TsEnumDeclarationImpl
+import dev.yidafu.swc.types.TsInterfaceDeclaration
+import dev.yidafu.swc.types.TsInterfaceDeclarationImpl
+import dev.yidafu.swc.types.TsModuleDeclaration
+import dev.yidafu.swc.types.TsModuleDeclarationImpl
+import dev.yidafu.swc.types.TsTypeAliasDeclaration
+import dev.yidafu.swc.types.TsTypeAliasDeclarationImpl
+import dev.yidafu.swc.types.VariableDeclaration
+import dev.yidafu.swc.types.VariableDeclarationImpl
+import kotlin.Unit
+
+/**
+ * ExportDeclaration#type: String
+ * extension function for create String -> String
+ */
+public fun ExportDeclaration.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> ClassDeclarationImpl
  */
-fun ExportDeclaration.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration {
-    return ClassDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.classDeclaration(block: ClassDeclaration.() -> Unit): ClassDeclaration
+    = ClassDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> FunctionDeclarationImpl
  */
-fun ExportDeclaration.functionDeclaration(block: FunctionDeclaration.() -> Unit): FunctionDeclaration {
-    return FunctionDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.functionDeclaration(block: FunctionDeclaration.() -> Unit):
+    FunctionDeclaration = FunctionDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> VariableDeclarationImpl
  */
-fun ExportDeclaration.variableDeclaration(block: VariableDeclaration.() -> Unit): VariableDeclaration {
-    return VariableDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.variableDeclaration(block: VariableDeclaration.() -> Unit):
+    VariableDeclaration = VariableDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> TsInterfaceDeclarationImpl
  */
-fun ExportDeclaration.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit): TsInterfaceDeclaration {
-    return TsInterfaceDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
+    TsInterfaceDeclaration = TsInterfaceDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> TsTypeAliasDeclarationImpl
  */
-fun ExportDeclaration.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit): TsTypeAliasDeclaration {
-    return TsTypeAliasDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.tsTypeAliasDeclaration(block: TsTypeAliasDeclaration.() -> Unit):
+    TsTypeAliasDeclaration = TsTypeAliasDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> TsEnumDeclarationImpl
  */
-fun ExportDeclaration.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): TsEnumDeclaration {
-    return TsEnumDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit):
+    TsEnumDeclaration = TsEnumDeclarationImpl().apply(block)
 
 /**
  * ExportDeclaration#declaration: Declaration
  * extension function for create Declaration -> TsModuleDeclarationImpl
  */
-fun ExportDeclaration.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit): TsModuleDeclaration {
-    return TsModuleDeclarationImpl().apply(block)
-}
+public fun ExportDeclaration.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
+    TsModuleDeclaration = TsModuleDeclarationImpl().apply(block)
 
-fun ExportDeclaration.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * ExportDeclaration#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun ExportDeclaration.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)

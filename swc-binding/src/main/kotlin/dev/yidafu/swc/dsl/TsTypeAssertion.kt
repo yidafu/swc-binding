@@ -1,527 +1,602 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.types.ArrayExpression
+import dev.yidafu.swc.types.ArrayExpressionImpl
+import dev.yidafu.swc.types.ArrowFunctionExpression
+import dev.yidafu.swc.types.ArrowFunctionExpressionImpl
+import dev.yidafu.swc.types.AssignmentExpression
+import dev.yidafu.swc.types.AssignmentExpressionImpl
+import dev.yidafu.swc.types.AwaitExpression
+import dev.yidafu.swc.types.AwaitExpressionImpl
+import dev.yidafu.swc.types.BigIntLiteral
+import dev.yidafu.swc.types.BigIntLiteralImpl
+import dev.yidafu.swc.types.BinaryExpression
+import dev.yidafu.swc.types.BinaryExpressionImpl
+import dev.yidafu.swc.types.BooleanLiteral
+import dev.yidafu.swc.types.BooleanLiteralImpl
+import dev.yidafu.swc.types.CallExpression
+import dev.yidafu.swc.types.CallExpressionImpl
+import dev.yidafu.swc.types.ClassExpression
+import dev.yidafu.swc.types.ClassExpressionImpl
+import dev.yidafu.swc.types.ConditionalExpression
+import dev.yidafu.swc.types.ConditionalExpressionImpl
+import dev.yidafu.swc.types.FunctionExpression
+import dev.yidafu.swc.types.FunctionExpressionImpl
+import dev.yidafu.swc.types.Identifier
+import dev.yidafu.swc.types.IdentifierImpl
+import dev.yidafu.swc.types.Invalid
+import dev.yidafu.swc.types.InvalidImpl
+import dev.yidafu.swc.types.JSXElement
+import dev.yidafu.swc.types.JSXElementImpl
+import dev.yidafu.swc.types.JSXEmptyExpression
+import dev.yidafu.swc.types.JSXEmptyExpressionImpl
+import dev.yidafu.swc.types.JSXFragment
+import dev.yidafu.swc.types.JSXFragmentImpl
+import dev.yidafu.swc.types.JSXMemberExpression
+import dev.yidafu.swc.types.JSXMemberExpressionImpl
+import dev.yidafu.swc.types.JSXNamespacedName
+import dev.yidafu.swc.types.JSXNamespacedNameImpl
+import dev.yidafu.swc.types.JSXText
+import dev.yidafu.swc.types.JSXTextImpl
+import dev.yidafu.swc.types.MemberExpression
+import dev.yidafu.swc.types.MemberExpressionImpl
+import dev.yidafu.swc.types.MetaProperty
+import dev.yidafu.swc.types.MetaPropertyImpl
+import dev.yidafu.swc.types.NewExpression
+import dev.yidafu.swc.types.NewExpressionImpl
+import dev.yidafu.swc.types.NullLiteral
+import dev.yidafu.swc.types.NullLiteralImpl
+import dev.yidafu.swc.types.NumericLiteral
+import dev.yidafu.swc.types.NumericLiteralImpl
+import dev.yidafu.swc.types.ObjectExpression
+import dev.yidafu.swc.types.ObjectExpressionImpl
+import dev.yidafu.swc.types.OptionalChainingExpression
+import dev.yidafu.swc.types.OptionalChainingExpressionImpl
+import dev.yidafu.swc.types.ParenthesisExpression
+import dev.yidafu.swc.types.ParenthesisExpressionImpl
+import dev.yidafu.swc.types.PrivateName
+import dev.yidafu.swc.types.PrivateNameImpl
+import dev.yidafu.swc.types.RegExpLiteral
+import dev.yidafu.swc.types.RegExpLiteralImpl
+import dev.yidafu.swc.types.SequenceExpression
+import dev.yidafu.swc.types.SequenceExpressionImpl
+import dev.yidafu.swc.types.Span
+import dev.yidafu.swc.types.SpanImpl
+import dev.yidafu.swc.types.String
+import dev.yidafu.swc.types.StringLiteral
+import dev.yidafu.swc.types.StringLiteralImpl
+import dev.yidafu.swc.types.SuperPropExpression
+import dev.yidafu.swc.types.SuperPropExpressionImpl
+import dev.yidafu.swc.types.TaggedTemplateExpression
+import dev.yidafu.swc.types.TaggedTemplateExpressionImpl
+import dev.yidafu.swc.types.TemplateLiteral
+import dev.yidafu.swc.types.TemplateLiteralImpl
+import dev.yidafu.swc.types.ThisExpression
+import dev.yidafu.swc.types.ThisExpressionImpl
+import dev.yidafu.swc.types.TsArrayType
+import dev.yidafu.swc.types.TsArrayTypeImpl
+import dev.yidafu.swc.types.TsAsExpression
+import dev.yidafu.swc.types.TsAsExpressionImpl
+import dev.yidafu.swc.types.TsConditionalType
+import dev.yidafu.swc.types.TsConditionalTypeImpl
+import dev.yidafu.swc.types.TsConstAssertion
+import dev.yidafu.swc.types.TsConstAssertionImpl
+import dev.yidafu.swc.types.TsConstructorType
+import dev.yidafu.swc.types.TsConstructorTypeImpl
+import dev.yidafu.swc.types.TsFunctionType
+import dev.yidafu.swc.types.TsFunctionTypeImpl
+import dev.yidafu.swc.types.TsImportType
+import dev.yidafu.swc.types.TsImportTypeImpl
+import dev.yidafu.swc.types.TsIndexedAccessType
+import dev.yidafu.swc.types.TsIndexedAccessTypeImpl
+import dev.yidafu.swc.types.TsInferType
+import dev.yidafu.swc.types.TsInferTypeImpl
+import dev.yidafu.swc.types.TsInstantiation
+import dev.yidafu.swc.types.TsInstantiationImpl
+import dev.yidafu.swc.types.TsIntersectionType
+import dev.yidafu.swc.types.TsIntersectionTypeImpl
+import dev.yidafu.swc.types.TsKeywordType
+import dev.yidafu.swc.types.TsKeywordTypeImpl
+import dev.yidafu.swc.types.TsLiteralType
+import dev.yidafu.swc.types.TsLiteralTypeImpl
+import dev.yidafu.swc.types.TsMappedType
+import dev.yidafu.swc.types.TsMappedTypeImpl
+import dev.yidafu.swc.types.TsNonNullExpression
+import dev.yidafu.swc.types.TsNonNullExpressionImpl
+import dev.yidafu.swc.types.TsOptionalType
+import dev.yidafu.swc.types.TsOptionalTypeImpl
+import dev.yidafu.swc.types.TsParenthesizedType
+import dev.yidafu.swc.types.TsParenthesizedTypeImpl
+import dev.yidafu.swc.types.TsRestType
+import dev.yidafu.swc.types.TsRestTypeImpl
+import dev.yidafu.swc.types.TsSatisfiesExpression
+import dev.yidafu.swc.types.TsSatisfiesExpressionImpl
+import dev.yidafu.swc.types.TsThisType
+import dev.yidafu.swc.types.TsThisTypeImpl
+import dev.yidafu.swc.types.TsTupleType
+import dev.yidafu.swc.types.TsTupleTypeImpl
+import dev.yidafu.swc.types.TsTypeAssertion
+import dev.yidafu.swc.types.TsTypeLiteral
+import dev.yidafu.swc.types.TsTypeLiteralImpl
+import dev.yidafu.swc.types.TsTypeOperator
+import dev.yidafu.swc.types.TsTypeOperatorImpl
+import dev.yidafu.swc.types.TsTypePredicate
+import dev.yidafu.swc.types.TsTypePredicateImpl
+import dev.yidafu.swc.types.TsTypeQuery
+import dev.yidafu.swc.types.TsTypeQueryImpl
+import dev.yidafu.swc.types.TsTypeReference
+import dev.yidafu.swc.types.TsTypeReferenceImpl
+import dev.yidafu.swc.types.TsUnionType
+import dev.yidafu.swc.types.TsUnionTypeImpl
+import dev.yidafu.swc.types.UnaryExpression
+import dev.yidafu.swc.types.UnaryExpressionImpl
+import dev.yidafu.swc.types.UpdateExpression
+import dev.yidafu.swc.types.UpdateExpressionImpl
+import dev.yidafu.swc.types.YieldExpression
+import dev.yidafu.swc.types.YieldExpressionImpl
+import kotlin.Unit
+
+/**
+ * TsTypeAssertion#type: String
+ * extension function for create String -> String
+ */
+public fun TsTypeAssertion.string(block: String.() -> Unit): String = String().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ThisExpressionImpl
  */
-fun TsTypeAssertion.thisExpression(block: ThisExpression.() -> Unit): ThisExpression {
-    return ThisExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.thisExpression(block: ThisExpression.() -> Unit): ThisExpression =
+    ThisExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ArrayExpressionImpl
  */
-fun TsTypeAssertion.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression {
-    return ArrayExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.arrayExpression(block: ArrayExpression.() -> Unit): ArrayExpression =
+    ArrayExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ObjectExpressionImpl
  */
-fun TsTypeAssertion.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression {
-    return ObjectExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.objectExpression(block: ObjectExpression.() -> Unit): ObjectExpression =
+    ObjectExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> FunctionExpressionImpl
  */
-fun TsTypeAssertion.functionExpression(block: FunctionExpression.() -> Unit): FunctionExpression {
-    return FunctionExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.functionExpression(block: FunctionExpression.() -> Unit):
+    FunctionExpression = FunctionExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> UnaryExpressionImpl
  */
-fun TsTypeAssertion.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression {
-    return UnaryExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.unaryExpression(block: UnaryExpression.() -> Unit): UnaryExpression =
+    UnaryExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> UpdateExpressionImpl
  */
-fun TsTypeAssertion.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression {
-    return UpdateExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.updateExpression(block: UpdateExpression.() -> Unit): UpdateExpression =
+    UpdateExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> BinaryExpressionImpl
  */
-fun TsTypeAssertion.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression {
-    return BinaryExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.binaryExpression(block: BinaryExpression.() -> Unit): BinaryExpression =
+    BinaryExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> AssignmentExpressionImpl
  */
-fun TsTypeAssertion.assignmentExpression(block: AssignmentExpression.() -> Unit): AssignmentExpression {
-    return AssignmentExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.assignmentExpression(block: AssignmentExpression.() -> Unit):
+    AssignmentExpression = AssignmentExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> MemberExpressionImpl
  */
-fun TsTypeAssertion.memberExpression(block: MemberExpression.() -> Unit): MemberExpression {
-    return MemberExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.memberExpression(block: MemberExpression.() -> Unit): MemberExpression =
+    MemberExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> SuperPropExpressionImpl
  */
-fun TsTypeAssertion.superPropExpression(block: SuperPropExpression.() -> Unit): SuperPropExpression {
-    return SuperPropExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.superPropExpression(block: SuperPropExpression.() -> Unit):
+    SuperPropExpression = SuperPropExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ConditionalExpressionImpl
  */
-fun TsTypeAssertion.conditionalExpression(block: ConditionalExpression.() -> Unit): ConditionalExpression {
-    return ConditionalExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.conditionalExpression(block: ConditionalExpression.() -> Unit):
+    ConditionalExpression = ConditionalExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> CallExpressionImpl
  */
-fun TsTypeAssertion.callExpression(block: CallExpression.() -> Unit): CallExpression {
-    return CallExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.callExpression(block: CallExpression.() -> Unit): CallExpression =
+    CallExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> NewExpressionImpl
  */
-fun TsTypeAssertion.newExpression(block: NewExpression.() -> Unit): NewExpression {
-    return NewExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.newExpression(block: NewExpression.() -> Unit): NewExpression =
+    NewExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> SequenceExpressionImpl
  */
-fun TsTypeAssertion.sequenceExpression(block: SequenceExpression.() -> Unit): SequenceExpression {
-    return SequenceExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.sequenceExpression(block: SequenceExpression.() -> Unit):
+    SequenceExpression = SequenceExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> IdentifierImpl
  */
-fun TsTypeAssertion.identifier(block: Identifier.() -> Unit): Identifier {
-    return IdentifierImpl().apply(block)
-}
+public fun TsTypeAssertion.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> StringLiteralImpl
  */
-fun TsTypeAssertion.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral {
-    return StringLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
+    StringLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> BooleanLiteralImpl
  */
-fun TsTypeAssertion.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral {
-    return BooleanLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.booleanLiteral(block: BooleanLiteral.() -> Unit): BooleanLiteral =
+    BooleanLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> NullLiteralImpl
  */
-fun TsTypeAssertion.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral {
-    return NullLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.nullLiteral(block: NullLiteral.() -> Unit): NullLiteral =
+    NullLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> NumericLiteralImpl
  */
-fun TsTypeAssertion.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral {
-    return NumericLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.numericLiteral(block: NumericLiteral.() -> Unit): NumericLiteral =
+    NumericLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> BigIntLiteralImpl
  */
-fun TsTypeAssertion.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral {
-    return BigIntLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
+    BigIntLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> RegExpLiteralImpl
  */
-fun TsTypeAssertion.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral {
-    return RegExpLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
+    RegExpLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXTextImpl
  */
-fun TsTypeAssertion.jSXText(block: JSXText.() -> Unit): JSXText {
-    return JSXTextImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXText(block: JSXText.() -> Unit): JSXText = JSXTextImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TemplateLiteralImpl
  */
-fun TsTypeAssertion.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral {
-    return TemplateLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TaggedTemplateExpressionImpl
  */
-fun TsTypeAssertion.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit): TaggedTemplateExpression {
-    return TaggedTemplateExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
+    TaggedTemplateExpression = TaggedTemplateExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ArrowFunctionExpressionImpl
  */
-fun TsTypeAssertion.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit): ArrowFunctionExpression {
-    return ArrowFunctionExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.arrowFunctionExpression(block: ArrowFunctionExpression.() -> Unit):
+    ArrowFunctionExpression = ArrowFunctionExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ClassExpressionImpl
  */
-fun TsTypeAssertion.classExpression(block: ClassExpression.() -> Unit): ClassExpression {
-    return ClassExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.classExpression(block: ClassExpression.() -> Unit): ClassExpression =
+    ClassExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> YieldExpressionImpl
  */
-fun TsTypeAssertion.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression {
-    return YieldExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.yieldExpression(block: YieldExpression.() -> Unit): YieldExpression =
+    YieldExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> MetaPropertyImpl
  */
-fun TsTypeAssertion.metaProperty(block: MetaProperty.() -> Unit): MetaProperty {
-    return MetaPropertyImpl().apply(block)
-}
+public fun TsTypeAssertion.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
+    MetaPropertyImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> AwaitExpressionImpl
  */
-fun TsTypeAssertion.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression {
-    return AwaitExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
+    AwaitExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> ParenthesisExpressionImpl
  */
-fun TsTypeAssertion.parenthesisExpression(block: ParenthesisExpression.() -> Unit): ParenthesisExpression {
-    return ParenthesisExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.parenthesisExpression(block: ParenthesisExpression.() -> Unit):
+    ParenthesisExpression = ParenthesisExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXMemberExpressionImpl
  */
-fun TsTypeAssertion.jSXMemberExpression(block: JSXMemberExpression.() -> Unit): JSXMemberExpression {
-    return JSXMemberExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
+    JSXMemberExpression = JSXMemberExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXNamespacedNameImpl
  */
-fun TsTypeAssertion.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName {
-    return JSXNamespacedNameImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName
+    = JSXNamespacedNameImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXEmptyExpressionImpl
  */
-fun TsTypeAssertion.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit): JSXEmptyExpression {
-    return JSXEmptyExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
+    JSXEmptyExpression = JSXEmptyExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXElementImpl
  */
-fun TsTypeAssertion.jSXElement(block: JSXElement.() -> Unit): JSXElement {
-    return JSXElementImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXElement(block: JSXElement.() -> Unit): JSXElement =
+    JSXElementImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> JSXFragmentImpl
  */
-fun TsTypeAssertion.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment {
-    return JSXFragmentImpl().apply(block)
-}
+public fun TsTypeAssertion.jSXFragment(block: JSXFragment.() -> Unit): JSXFragment =
+    JSXFragmentImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TsConstAssertionImpl
  */
-fun TsTypeAssertion.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion {
-    return TsConstAssertionImpl().apply(block)
-}
+public fun TsTypeAssertion.tsConstAssertion(block: TsConstAssertion.() -> Unit): TsConstAssertion =
+    TsConstAssertionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TsNonNullExpressionImpl
  */
-fun TsTypeAssertion.tsNonNullExpression(block: TsNonNullExpression.() -> Unit): TsNonNullExpression {
-    return TsNonNullExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
+    TsNonNullExpression = TsNonNullExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TsAsExpressionImpl
  */
-fun TsTypeAssertion.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression {
-    return TsAsExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.tsAsExpression(block: TsAsExpression.() -> Unit): TsAsExpression =
+    TsAsExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TsSatisfiesExpressionImpl
  */
-fun TsTypeAssertion.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit): TsSatisfiesExpression {
-    return TsSatisfiesExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.tsSatisfiesExpression(block: TsSatisfiesExpression.() -> Unit):
+    TsSatisfiesExpression = TsSatisfiesExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> TsInstantiationImpl
  */
-fun TsTypeAssertion.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation {
-    return TsInstantiationImpl().apply(block)
-}
+public fun TsTypeAssertion.tsInstantiation(block: TsInstantiation.() -> Unit): TsInstantiation =
+    TsInstantiationImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> PrivateNameImpl
  */
-fun TsTypeAssertion.privateName(block: PrivateName.() -> Unit): PrivateName {
-    return PrivateNameImpl().apply(block)
-}
+public fun TsTypeAssertion.privateName(block: PrivateName.() -> Unit): PrivateName =
+    PrivateNameImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> OptionalChainingExpressionImpl
  */
-fun TsTypeAssertion.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit): OptionalChainingExpression {
-    return OptionalChainingExpressionImpl().apply(block)
-}
+public fun TsTypeAssertion.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
+    OptionalChainingExpression = OptionalChainingExpressionImpl().apply(block)
 
 /**
  * TsTypeAssertion#expression: Expression
  * extension function for create Expression -> InvalidImpl
  */
-fun TsTypeAssertion.invalid(block: Invalid.() -> Unit): Invalid {
-    return InvalidImpl().apply(block)
-}
+public fun TsTypeAssertion.invalid(block: Invalid.() -> Unit): Invalid = InvalidImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsKeywordTypeImpl
  */
-fun TsTypeAssertion.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType {
-    return TsKeywordTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsKeywordType(block: TsKeywordType.() -> Unit): TsKeywordType =
+    TsKeywordTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsThisTypeImpl
  */
-fun TsTypeAssertion.tsThisType(block: TsThisType.() -> Unit): TsThisType {
-    return TsThisTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsThisType(block: TsThisType.() -> Unit): TsThisType =
+    TsThisTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsFunctionTypeImpl
  */
-fun TsTypeAssertion.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType {
-    return TsFunctionTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsFunctionType(block: TsFunctionType.() -> Unit): TsFunctionType =
+    TsFunctionTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsConstructorTypeImpl
  */
-fun TsTypeAssertion.tsConstructorType(block: TsConstructorType.() -> Unit): TsConstructorType {
-    return TsConstructorTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsConstructorType(block: TsConstructorType.() -> Unit): TsConstructorType
+    = TsConstructorTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeReferenceImpl
  */
-fun TsTypeAssertion.tsTypeReference(block: TsTypeReference.() -> Unit): TsTypeReference {
-    return TsTypeReferenceImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTypeReference(block: TsTypeReference.() -> Unit): TsTypeReference =
+    TsTypeReferenceImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeQueryImpl
  */
-fun TsTypeAssertion.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery {
-    return TsTypeQueryImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTypeQuery(block: TsTypeQuery.() -> Unit): TsTypeQuery =
+    TsTypeQueryImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeLiteralImpl
  */
-fun TsTypeAssertion.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral {
-    return TsTypeLiteralImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTypeLiteral(block: TsTypeLiteral.() -> Unit): TsTypeLiteral =
+    TsTypeLiteralImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsArrayTypeImpl
  */
-fun TsTypeAssertion.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType {
-    return TsArrayTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsArrayType(block: TsArrayType.() -> Unit): TsArrayType =
+    TsArrayTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTupleTypeImpl
  */
-fun TsTypeAssertion.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType {
-    return TsTupleTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTupleType(block: TsTupleType.() -> Unit): TsTupleType =
+    TsTupleTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsOptionalTypeImpl
  */
-fun TsTypeAssertion.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType {
-    return TsOptionalTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsOptionalType(block: TsOptionalType.() -> Unit): TsOptionalType =
+    TsOptionalTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsRestTypeImpl
  */
-fun TsTypeAssertion.tsRestType(block: TsRestType.() -> Unit): TsRestType {
-    return TsRestTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsRestType(block: TsRestType.() -> Unit): TsRestType =
+    TsRestTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsUnionTypeImpl
  */
-fun TsTypeAssertion.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType {
-    return TsUnionTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsUnionType(block: TsUnionType.() -> Unit): TsUnionType =
+    TsUnionTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsIntersectionTypeImpl
  */
-fun TsTypeAssertion.tsIntersectionType(block: TsIntersectionType.() -> Unit): TsIntersectionType {
-    return TsIntersectionTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsIntersectionType(block: TsIntersectionType.() -> Unit):
+    TsIntersectionType = TsIntersectionTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsConditionalTypeImpl
  */
-fun TsTypeAssertion.tsConditionalType(block: TsConditionalType.() -> Unit): TsConditionalType {
-    return TsConditionalTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsConditionalType(block: TsConditionalType.() -> Unit): TsConditionalType
+    = TsConditionalTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsInferTypeImpl
  */
-fun TsTypeAssertion.tsInferType(block: TsInferType.() -> Unit): TsInferType {
-    return TsInferTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsInferType(block: TsInferType.() -> Unit): TsInferType =
+    TsInferTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsParenthesizedTypeImpl
  */
-fun TsTypeAssertion.tsParenthesizedType(block: TsParenthesizedType.() -> Unit): TsParenthesizedType {
-    return TsParenthesizedTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsParenthesizedType(block: TsParenthesizedType.() -> Unit):
+    TsParenthesizedType = TsParenthesizedTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTypeOperatorImpl
  */
-fun TsTypeAssertion.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator {
-    return TsTypeOperatorImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTypeOperator(block: TsTypeOperator.() -> Unit): TsTypeOperator =
+    TsTypeOperatorImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsIndexedAccessTypeImpl
  */
-fun TsTypeAssertion.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit): TsIndexedAccessType {
-    return TsIndexedAccessTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsIndexedAccessType(block: TsIndexedAccessType.() -> Unit):
+    TsIndexedAccessType = TsIndexedAccessTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsMappedTypeImpl
  */
-fun TsTypeAssertion.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType {
-    return TsMappedTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsMappedType(block: TsMappedType.() -> Unit): TsMappedType =
+    TsMappedTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsLiteralTypeImpl
  */
-fun TsTypeAssertion.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType {
-    return TsLiteralTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsLiteralType(block: TsLiteralType.() -> Unit): TsLiteralType =
+    TsLiteralTypeImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsTypePredicateImpl
  */
-fun TsTypeAssertion.tsTypePredicate(block: TsTypePredicate.() -> Unit): TsTypePredicate {
-    return TsTypePredicateImpl().apply(block)
-}
+public fun TsTypeAssertion.tsTypePredicate(block: TsTypePredicate.() -> Unit): TsTypePredicate =
+    TsTypePredicateImpl().apply(block)
 
 /**
  * TsTypeAssertion#typeAnnotation: TsType
  * extension function for create TsType -> TsImportTypeImpl
  */
-fun TsTypeAssertion.tsImportType(block: TsImportType.() -> Unit): TsImportType {
-    return TsImportTypeImpl().apply(block)
-}
+public fun TsTypeAssertion.tsImportType(block: TsImportType.() -> Unit): TsImportType =
+    TsImportTypeImpl().apply(block)
 
-fun TsTypeAssertion.span(block: Span.() -> Unit): Span {
-    return Span().apply(block)
-}
+/**
+ * TsTypeAssertion#span: Span
+ * extension function for create Span -> SpanImpl
+ */
+public fun TsTypeAssertion.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)
