@@ -96,6 +96,9 @@ cargo build --release
 
 # Build macOS debug version with dynamic library
 ./build_debug.sh
+# Or
+# Build all platforms dynamic libraries
+./build.sh
 
 # Run tests
 cargo test

@@ -2,7 +2,7 @@
 name = "swc_jni"
 version = "0.1.0"
 edition = "2021"
-authore = ["yidafu"]
+authors = ["yidafu"]
 categories = ["swc", "jni"]
 license = "Apache-2.0"
 description = "swc jni binding"
@@ -39,5 +39,5 @@ thiserror = "2.0.17"
 tempfile = "3.23.0"
 
 [lib]
-crate_type = ["cdylib"]
+crate-type = ["cdylib"]
 path = "src/lib.rs"

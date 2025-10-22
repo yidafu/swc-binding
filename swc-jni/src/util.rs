@@ -111,7 +111,7 @@ pub(crate) fn process_result(mut env: JNIEnv, result: Result<Program, SwcExcepti
             let output = env
                 .new_string(ast_json)
                 .expect("Couldn't create java string!");
-            return output.into_raw();
+            output.into_raw()
         }
         Err(e) => {
             match e {
@@ -120,7 +120,7 @@ pub(crate) fn process_result(mut env: JNIEnv, result: Result<Program, SwcExcepti
                     env.throw(msg).unwrap();
                 }
             }
-            return JString::default().into_raw();
+            JString::default().into_raw()
         }
     }
 }
@@ -137,7 +137,7 @@ pub(crate) fn process_output(
             let output = env
                 .new_string(ast_json)
                 .expect("Couldn't create java string!");
-            return output.into_raw();
+            output.into_raw()
         }
         Err(e) => {
             match e {
@@ -146,7 +146,7 @@ pub(crate) fn process_output(
                     env.throw(msg).unwrap();
                 }
             }
-            return JString::default().into_raw();
+            JString::default().into_raw()
         }
     }
 }
