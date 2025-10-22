@@ -160,15 +160,15 @@ class DllLoaderTest {
 
         when (platform) {
             is DllLoader.Platform.Mac -> {
-                assertTrue(path.contains("darwin-arm64") || path.contains("darwin-x64"))
+                assertTrue(path.contains("darwin-arm64-apple") || path.contains("darwin-x64-apple"))
             }
             is DllLoader.Platform.Linux -> {
                 assertTrue(
-                    path.contains("linux-x64-gnu") || path.contains("linux-arm-gnueabihf")
+                    path.contains("linux-x64-musl") || path.contains("linux-arm64-musl")
                 )
             }
             is DllLoader.Platform.Windows -> {
-                assertTrue(path.contains("win32-x64-msvc") || path.contains("win32-arm64-msvc"))
+                assertTrue(path.contains("windows-x64-gnu") || path.contains("windows-arm64-gnu"))
             }
             else -> {}
         }
