@@ -92,6 +92,12 @@ class DslGenerator(
         if (listOf("HasSpan", "HasDecorator").contains(extFun.receiver)) return
         if (extFun.receiver == extFun.funName.replace("Impl", "")) return
         
+        // 过滤掉包含非法字符的类型名称
+        if (!isValidTypeName(extFun.funName) || !isValidTypeName(extFun.receiver)) {
+            Logger.warn("跳过无效类型名称: ${extFun.receiver}.${extFun.funName}")
+            return
+        }
+        
         if (extFun.funName.endsWith("Impl")) {
             if (generatedClassNameList.contains(extFun.funName)) {
                 addExtensionFun(extFun)
@@ -102,6 +108,50 @@ class DslGenerator(
             // 如果是 interface 或 ref union type，添加
             addExtensionFun(extFun)
         }
+    }
+    
+    /**
+     * 验证类型名称是否有效（增强版）
+     */
+    private fun isValidTypeName(typeName: String): Boolean {
+        if (typeName.isBlank()) return false
+        
+        // 检查是否包含非法字符
+        if (typeName.contains("<") || typeName.contains(">")) {
+            Logger.verbose("类型名称包含泛型符号: $typeName", 10)
+            return false
+        }
+        if (typeName.contains(" ") || typeName.contains("\n") || typeName.contains("\t")) {
+            Logger.verbose("类型名称包含空白字符: $typeName", 10)
+            return false
+        }
+        
+        // 检查是否包含注释残留
+        if (typeName.contains("/*") || typeName.contains("*/")) {
+            Logger.verbose("类型名称包含注释: $typeName", 10)
+            return false
+        }
+        
+        // 检查是否以小写字母开头（类型名应该大写）
+        if (typeName.isNotEmpty() && typeName[0].isLowerCase()) {
+            Logger.verbose("类型名称首字母小写: $typeName", 10)
+            return false
+        }
+        
+        // 检查是否符合 Kotlin 标识符规范
+        if (!typeName.matches(Regex("[A-Z][a-zA-Z0-9_]*"))) {
+            Logger.verbose("类型名称不符合 Kotlin 标识符规范: $typeName", 10)
+            return false
+        }
+        
+        // 检查是否为保留字
+        val reservedWords = setOf("class", "interface", "object", "fun", "val", "var", "if", "else", "when")
+        if (reservedWords.contains(typeName.lowercase())) {
+            Logger.verbose("类型名称是保留字: $typeName", 10)
+            return false
+        }
+        
+        return true
     }
     
     /**
@@ -170,9 +220,9 @@ class DslGenerator(
     private fun createDslExtensionFun(extFun: KotlinExtensionFun, receiver: String): FunSpec {
         val funName = toFunName(extFun.funName.replace("Impl", ""))
         // 清理泛型参数，避免 ClassName 构造器错误
-        val returnTypeName = removeGenerics(extFun.funName.replace("Impl", ""))
-        val implTypeName = removeGenerics(extFun.funName)
-        val receiverTypeName = removeGenerics(receiver)
+        val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
+        val implTypeName = sanitizeTypeName(removeGenerics(extFun.funName))
+        val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
         
         return createExtensionFun(
             funName = funName,
@@ -181,6 +231,38 @@ class DslGenerator(
             implType = ClassName(PoetConstants.PKG_TYPES, implTypeName),
             kdoc = extFun.comments.takeIf { it.isNotEmpty() }
         )
+    }
+    
+    /**
+     * 清理类型名称，确保它是有效的 Kotlin 类型名称（增强版）
+     */
+    private fun sanitizeTypeName(typeName: String): String {
+        var cleaned = typeName.trim()
+        
+        // 移除注释
+        cleaned = cleaned.replace(Regex("""/\*.*?\*/"""), "").trim()
+        
+        // 移除任何残留的泛型参数（处理不完整的泛型）
+        cleaned = cleaned.replace(Regex("<[^>]*>?"), "")
+        
+        // 移除空格、换行等空白字符
+        cleaned = cleaned.replace(Regex("\\s+"), "")
+        
+        // 移除任何非法字符
+        cleaned = cleaned.replace(Regex("[^a-zA-Z0-9_]"), "")
+        
+        // 确保首字母大写
+        if (cleaned.isNotEmpty() && !cleaned.first().isUpperCase()) {
+            cleaned = cleaned.replaceFirstChar { it.uppercase() }
+        }
+        
+        // 如果清理后为空或无效，返回默认值
+        if (cleaned.isEmpty() || !cleaned.matches(Regex("[A-Z][a-zA-Z0-9_]*"))) {
+            Logger.warn("类型名称清理失败: $typeName -> $cleaned，使用 'InvalidType'")
+            return "InvalidType"
+        }
+        
+        return cleaned
     }
     
     /**

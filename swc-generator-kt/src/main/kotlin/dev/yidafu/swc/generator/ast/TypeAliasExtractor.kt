@@ -3,30 +3,37 @@ package dev.yidafu.swc.generator.ast
 import dev.yidafu.swc.generator.model.KotlinProperty
 import dev.yidafu.swc.generator.transform.Constants
 import dev.yidafu.swc.generator.util.*
-import dev.yidafu.swc.types.*
 
 /**
  * Type Alias 提取器
+ * 
+ * 使用 AstNode 提取和分析 type alias 声明
  */
 class TypeAliasExtractor(private val visitor: TsAstVisitor) {
     
     /**
      * 判断是否为字面量 Union（如 type T = "a" | "b"）
      */
-    fun isLiteralUnion(typeAlias: TsTypeAliasDeclaration): Boolean {
-        return (typeAlias.typeAnnotation as? TsUnionType)
-            ?.types.orEmpty()
-            .all { it is TsLiteralType }
+    fun isLiteralUnion(typeAlias: AstNode): Boolean {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
+        if (!typeAnnotation.isUnionType()) return false
+        
+        val types = typeAnnotation.getNodes("types")
+        return types.all { it.isLiteralType() }
     }
     
     /**
      * 判断是否为混合 Union（包含字面量和基础类型）
      */
-    fun isMixedUnion(typeAlias: TsTypeAliasDeclaration): Boolean {
-        val types = (typeAlias.typeAnnotation as? TsUnionType)?.types.orEmpty()
-        val hasLiteral = types.any { it is TsLiteralType }
+    fun isMixedUnion(typeAlias: AstNode): Boolean {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
+        if (!typeAnnotation.isUnionType()) return false
+        
+        val types = typeAnnotation.getNodes("types")
+        val hasLiteral = types.any { it.isLiteralType() }
         val hasBasicType = types.any { 
-            (it as? TsKeywordType)?.kind in listOf("string", "number", "boolean")
+            val kind = it.getString("kind")
+            kind in listOf("string", "number", "boolean")
         }
         return hasLiteral && hasBasicType
     }
@@ -34,54 +41,78 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
     /**
      * 判断是否为引用 Union（如 type T = A | B）
      */
-    fun isRefUnion(typeAlias: TsTypeAliasDeclaration): Boolean {
-        return (typeAlias.typeAnnotation as? TsUnionType)
-            ?.types.orEmpty()
-            .all { it is TsTypeReference }
+    fun isRefUnion(typeAlias: AstNode): Boolean {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
+        if (!typeAnnotation.isUnionType()) return false
+        
+        val types = typeAnnotation.getNodes("types")
+        return types.all { it.isTypeReference() }
     }
     
     /**
      * 判断是否为 Intersection 类型
      */
-    fun isIntersectionType(typeAlias: TsTypeAliasDeclaration): Boolean {
-        return typeAlias.typeAnnotation is TsIntersectionType
+    fun isIntersectionType(typeAlias: AstNode): Boolean {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
+        return typeAnnotation.isIntersectionType()
     }
     
     /**
      * 提取字面量 Union 的属性列表
      */
-    fun extractLiteralUnionProperties(typeAlias: TsTypeAliasDeclaration): List<KotlinProperty> {
-        val unionType = typeAlias.typeAnnotation as? TsUnionType ?: return emptyList()
+    fun extractLiteralUnionProperties(typeAlias: AstNode): List<KotlinProperty> {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return emptyList()
+        if (!typeAnnotation.isUnionType()) return emptyList()
         
-        return unionType.types.orEmpty()
-            .mapNotNull { (it as? TsLiteralType)?.literal }
+        val types = typeAnnotation.getNodes("types")
+        return types
+            .mapNotNull { it.getNode("literal") }
             .mapNotNull { literal -> createPropertyFromLiteral(literal) }
     }
     
     /**
      * 从字面量创建属性
      */
-    private fun createPropertyFromLiteral(literal: TsLiteral): KotlinProperty? {
-        return when (literal) {
-            is StringLiteral -> KotlinProperty(
-                modifier = "const val",
-                name = Constants.literalNameMap[literal.value?.uppercase()] ?: literal.value?.uppercase() ?: "",
-                type = "String",  // 设置类型为 String
-                defaultValue = literal.getValueString()
-            )
-            is BooleanLiteral -> KotlinProperty(
-                modifier = "const val",
-                name = "BOOL_${literal.value.toString().uppercase()}",
-                type = "Boolean",  // 设置类型为 Boolean
-                defaultValue = literal.value.toString()
-            )
-            is NumericLiteral -> {
-                val numValue = literal.value ?: return null
+    private fun createPropertyFromLiteral(literal: AstNode): KotlinProperty? {
+        return when {
+            literal.isStringLiteral() -> {
+                val value = literal.getStringLiteralValue() ?: return null
+                
+                // 先检查 literalNameMap（注意：key 是原始值，不是大写）
+                val propertyName = Constants.literalNameMap[value] 
+                    ?: Constants.literalNameMap[value.uppercase()] 
+                    ?: sanitizeLiteralName(value)
+                
+                // 验证生成的属性名是否有效
+                if (!isValidPropertyName(propertyName)) {
+                    Logger.debug("跳过无效字面量: '$value' -> '$propertyName'", 6)
+                    return null
+                }
+                
                 KotlinProperty(
-                    modifier = "const val",
-                    name = "NUMBER_${numValue.toInt()}",  // 转换为整数避免小数点
-                    type = "Int",  // 设置类型为 Int
-                    defaultValue = numValue.toInt().toString()
+                    modifier = "var",
+                    name = propertyName,
+                    type = "String",
+                    defaultValue = "\"$value\""
+                )
+            }
+            literal.isBooleanLiteral() -> {
+                val value = literal.getBooleanLiteralValue() ?: false
+                KotlinProperty(
+                    modifier = "var",
+                    name = "BOOL_${value.toString().uppercase()}",
+                    type = "Boolean",
+                    defaultValue = value.toString()
+                )
+            }
+            literal.isNumericLiteral() -> {
+                val value = literal.getNumericLiteralValue() ?: return null
+                val numValue = value.toInt()
+                KotlinProperty(
+                    modifier = "var",
+                    name = "NUMBER_$numValue",
+                    type = "Int",
+                    defaultValue = numValue.toString()
                 )
             }
             else -> null
@@ -89,26 +120,63 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
     }
     
     /**
+     * 清理字面量名称，转换为有效的 Kotlin 标识符
+     */
+    private fun sanitizeLiteralName(value: String): String {
+        // 处理 Kotlin 关键字
+        if (Constants.kotlinKeywordMap.containsKey(value)) {
+            return Constants.kotlinKeywordMap[value]!!.uppercase()
+        }
+        
+        // 如果只包含字母数字，转为大写
+        if (value.matches(Regex("[a-zA-Z][a-zA-Z0-9]*"))) {
+            return value.uppercase()
+        }
+        
+        // 对于包含特殊字符但没有映射的，生成一个基于内容的名称
+        return "LITERAL_${value.hashCode().toString().replace("-", "NEG")}"
+    }
+    
+    /**
+     * 验证属性名是否有效
+     */
+    private fun isValidPropertyName(name: String): Boolean {
+        if (name.isEmpty()) return false
+        if (!name[0].isLetter() && name[0] != '_') return false
+        return name.all { it.isLetterOrDigit() || it == '_' }
+    }
+    
+    /**
      * 获取 Union 类型的所有类型名称
      */
-    fun getUnionTypeNames(typeAlias: TsTypeAliasDeclaration): List<String> {
-        return (typeAlias.typeAnnotation as? TsUnionType)
-            ?.types.orEmpty()
-            .mapNotNull { (it as? TsTypeReference)?.typeName?.getTypeName() }
+    fun getUnionTypeNames(typeAlias: AstNode): List<String> {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return emptyList()
+        if (!typeAnnotation.isUnionType()) return emptyList()
+        
+        val types = typeAnnotation.getNodes("types")
+        return types
+            .mapNotNull { it.getTypeReferenceName() }
             .filter { it.isNotEmpty() }
     }
     
     /**
      * 提取 Intersection 类型信息
-     * 返回 Pair<父类型, TypeLiteral>
+     * 返回 Pair<父类型, TypeLiteral AstNode>
      */
-    fun extractIntersectionInfo(typeAlias: TsTypeAliasDeclaration): Pair<String, TsTypeLiteral>? {
-        val types = (typeAlias.typeAnnotation as? TsIntersectionType)?.types.orEmpty()
+    fun extractIntersectionInfo(typeAlias: AstNode): Pair<String, AstNode>? {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return null
+        if (!typeAnnotation.isIntersectionType()) return null
+        
+        val types = typeAnnotation.getNodes("types")
         if (types.size < 2) return null
         
-        val first = types[0] as? TsTypeReference ?: return null
-        val second = types[1] as? TsTypeLiteral ?: return null
-        val parentName = first.typeName.getTypeName().takeIf { it.isNotEmpty() } ?: return null
+        val first = types[0]
+        val second = types[1]
+        
+        if (!first.isTypeReference()) return null
+        if (!second.isTypeLiteral()) return null
+        
+        val parentName = first.getTypeReferenceName() ?: return null
         
         return parentName to second
     }
@@ -116,10 +184,20 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
     /**
      * 检查字面量 Union 的所有类型是否相同
      */
-    fun isAllLiteralTypeSame(typeAlias: TsTypeAliasDeclaration): Boolean {
-        val types = (typeAlias.typeAnnotation as? TsUnionType)
-            ?.types.orEmpty()
-            .mapNotNull { (it as? TsLiteralType)?.literal?.getKotlinType() }
+    fun isAllLiteralTypeSame(typeAlias: AstNode): Boolean {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
+        if (!typeAnnotation.isUnionType()) return false
+        
+        val types = typeAnnotation.getNodes("types")
+            .mapNotNull { 
+                val literal = it.getNode("literal")
+                when {
+                    literal?.isStringLiteral() == true -> "String"
+                    literal?.isNumericLiteral() == true -> "Number"
+                    literal?.isBooleanLiteral() == true -> "Boolean"
+                    else -> null
+                }
+            }
         
         return types.isNotEmpty() && types.distinct().size == 1
     }
@@ -127,15 +205,15 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
     /**
      * 获取类型别名的类型字符串表示
      */
-    fun getTypeString(typeAlias: TsTypeAliasDeclaration): String {
-        return TypeResolver.resolveType(typeAlias.typeAnnotation)
+    fun getTypeString(typeAlias: AstNode): String {
+        val typeAnnotation = typeAlias.getNode("typeAnnotation")
+        return TypeResolver.resolveType(typeAnnotation)
     }
     
     /**
      * 提取类型别名名称
      */
-    fun getTypeAliasName(typeAlias: TsTypeAliasDeclaration): String {
-        return typeAlias.id.safeValue()
+    fun getTypeAliasName(typeAlias: AstNode): String {
+        return typeAlias.getTypeAliasName() ?: ""
     }
 }
-

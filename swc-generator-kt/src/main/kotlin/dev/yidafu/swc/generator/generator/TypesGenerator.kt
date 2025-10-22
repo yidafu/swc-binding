@@ -65,6 +65,8 @@ class TypesGenerator(
         var successCount = 0
         var failureCount = 0
         
+        val failedClasses = mutableListOf<Pair<String, String>>()
+        
         filteredClasses.forEach { klass ->
             runCatching {
                 KotlinPoetGenerator.createTypeSpec(klass)
@@ -74,13 +76,43 @@ class TypesGenerator(
                 Logger.verbose("  ✓ ${klass.klassName}", 6)
             }.onFailure { e ->
                 failureCount++
+                val errorMsg = e.message ?: "未知错误"
+                failedClasses.add(klass.klassName to errorMsg)
+                
                 Logger.warn("⚠️  生成失败: ${klass.klassName}")
-                Logger.debug("  错误: ${e.message}", 6)
-                Logger.debug("  堆栈: ${e.stackTraceToString().take(200)}", 8)
+                Logger.verbose("  错误: $errorMsg", 8)
+                Logger.verbose("  类型: ${klass.modifier}, 属性数: ${klass.properties.size}", 8)
+                
+                if (klass.properties.isNotEmpty()) {
+                    Logger.verbose("  前3个属性:", 8)
+                    klass.properties.take(3).forEach { prop ->
+                        Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.type}", 10)
+                    }
+                }
             }
         }
         
+        // 生成汇总报告
         Logger.debug("  生成完成: 成功 $successCount，失败 $failureCount", 4)
+        
+        if (failureCount > 0) {
+            Logger.separator()
+            Logger.warn("生成失败汇总 ($failureCount 个类):")
+            failedClasses.take(10).forEach { (name, error) ->
+                Logger.info("  - $name: ${error.take(60)}", 2)
+            }
+            if (failedClasses.size > 10) {
+                Logger.info("  ... 还有 ${failedClasses.size - 10} 个失败", 2)
+            }
+        }
+        
+        // 计算成功率
+        val successRate = if (filteredClasses.isNotEmpty()) {
+            (successCount.toDouble() / filteredClasses.size * 100).toInt()
+        } else {
+            0
+        }
+        Logger.info("  成功率: $successRate% ($successCount/${filteredClasses.size})", 2)
     }
     
     /**

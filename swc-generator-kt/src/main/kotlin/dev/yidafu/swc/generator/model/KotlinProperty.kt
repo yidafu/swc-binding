@@ -23,6 +23,11 @@ data class KotlinProperty(
      * 获取类型列表（处理 Union 类型）
      */
     fun getTypeList(): List<String> {
+        // 跳过 Booleanable 类型，不尝试提取其内部类型
+        if (type.startsWith("Booleanable")) {
+            return emptyList()
+        }
+        
         val baseType = if (isArray()) {
             type.substringAfter("Array<").substringBeforeLast(">")
         } else {
@@ -32,7 +37,8 @@ data class KotlinProperty(
         return if (baseType.startsWith("Union.U")) {
             extractUnionTypes(baseType)
         } else {
-            listOf(baseType)
+            // 即使是单一类型也要清理
+            listOf(cleanTypeName(baseType))
         }
     }
     
@@ -45,8 +51,27 @@ data class KotlinProperty(
             ?.groupValues
             ?.get(1)
             ?.split(",")
-            ?.map { it.trim() }
-            ?: listOf(unionType)
+            ?.map { cleanTypeName(it) }
+            ?: listOf(cleanTypeName(unionType))
+    }
+    
+    /**
+     * 清理类型名称，移除空格和修复泛型
+     */
+    private fun cleanTypeName(typeName: String): String {
+        var cleaned = typeName.trim()
+        
+        // 移除多余的空格
+        cleaned = cleaned.replace(Regex("\\s+"), "")
+        
+        // 修复不完整的泛型参数
+        val openCount = cleaned.count { it == '<' }
+        val closeCount = cleaned.count { it == '>' }
+        if (openCount > closeCount) {
+            cleaned += ">".repeat(openCount - closeCount)
+        }
+        
+        return cleaned
     }
     
     /**

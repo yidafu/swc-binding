@@ -22,21 +22,37 @@ fun createDslLambdaType(receiverClassName: String): LambdaTypeName {
 }
 
 /**
- * 解析 Kotlin 类型字符串为 TypeName
+ * 解析 Kotlin 类型字符串为 TypeName（增强版）
  */
 fun String.parseAsTypeName(): TypeName {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
     
+    // 验证类型名称
+    if (!cleanType.isValidKotlinTypeName()) {
+        dev.yidafu.swc.generator.util.Logger.warn("无效的类型名称: '$cleanType'，使用 Any 替代")
+        return ANY
+    }
+    
     // 处理数组
     if (cleanType.startsWith("Array<")) {
         val innerType = cleanType.substringAfter("Array<").substringBeforeLast(">")
-        return ClassName("kotlin", "Array").parameterizedBy(innerType.parseAsTypeName())
+        return try {
+            ClassName("kotlin", "Array").parameterizedBy(innerType.parseAsTypeName())
+        } catch (e: Exception) {
+            dev.yidafu.swc.generator.util.Logger.warn("数组类型解析失败: $cleanType, ${e.message}")
+            ANY
+        }
     }
     
     // 处理泛型
     if (cleanType.contains("<")) {
         val baseName = cleanType.substringBefore("<")
-        val typeParams = cleanType.extractGenericParams()
+        val typeParams = try {
+            cleanType.extractGenericParams()
+        } catch (e: Exception) {
+            dev.yidafu.swc.generator.util.Logger.warn("泛型参数提取失败: $cleanType, ${e.message}")
+            return ClassName("", baseName.sanitizeForClassName())
+        }
         
         val baseClassName = when (baseName) {
             "Map" -> MAP
@@ -45,11 +61,16 @@ fun String.parseAsTypeName(): TypeName {
             "MutableMap" -> MUTABLE_MAP
             "MutableList" -> MUTABLE_LIST
             "MutableSet" -> MUTABLE_SET
-            else -> ClassName("", baseName)
+            else -> ClassName("", baseName.sanitizeForClassName())
         }
         
         if (typeParams.isNotEmpty()) {
-            return baseClassName.parameterizedBy(typeParams.map { it.parseAsTypeName() })
+            return try {
+                baseClassName.parameterizedBy(typeParams.map { it.parseAsTypeName() })
+            } catch (e: Exception) {
+                dev.yidafu.swc.generator.util.Logger.warn("泛型类型构造失败: $cleanType, ${e.message}")
+                baseClassName
+            }
         }
     }
     
@@ -64,19 +85,118 @@ fun String.parseAsTypeName(): TypeName {
         "Any" -> ANY
         "Unit" -> UNIT
         "Nothing" -> NOTHING
-        else -> ClassName("", cleanType)
+        else -> ClassName("", cleanType.sanitizeForClassName())
     }
 }
 
 /**
- * 提取泛型参数
+ * 提取泛型参数（支持嵌套）
  */
 fun String.extractGenericParams(): List<String> {
     val params = this.substringAfter("<").substringBeforeLast(">")
     if (params.isEmpty()) return emptyList()
     
-    // TODO: 处理嵌套泛型，目前简化处理
-    return params.split(",").map { it.trim() }
+    return params.extractNestedGenericParams()
+}
+
+/**
+ * 提取嵌套泛型参数
+ * 例如: "Map<String, List<Int>>" -> ["Map<String, List<Int>>"]
+ */
+fun String.extractNestedGenericParams(): List<String> {
+    if (isEmpty()) return emptyList()
+    
+    val result = mutableListOf<String>()
+    var current = StringBuilder()
+    var depth = 0
+    
+    for (char in this) {
+        when (char) {
+            '<' -> {
+                depth++
+                current.append(char)
+            }
+            '>' -> {
+                depth--
+                current.append(char)
+            }
+            ',' -> {
+                if (depth == 0) {
+                    result.add(current.toString().trim())
+                    current = StringBuilder()
+                } else {
+                    current.append(char)
+                }
+            }
+            else -> current.append(char)
+        }
+    }
+    
+    if (current.isNotEmpty()) {
+        result.add(current.toString().trim())
+    }
+    
+    return result
+}
+
+/**
+ * 验证是否为有效的 Kotlin 类型名称
+ */
+fun String.isValidKotlinTypeName(): Boolean {
+    if (isEmpty()) return false
+    
+    // 移除泛型参数后检查
+    val baseName = this.substringBefore("<").trim()
+    
+    // 检查是否以大写字母或小写字母开头（允许基本类型）
+    if (!baseName.first().isLetter()) return false
+    
+    // 检查是否只包含字母、数字、下划线
+    if (!baseName.matches(Regex("[a-zA-Z][a-zA-Z0-9_]*"))) return false
+    
+    // 检查是否包含非法字符
+    if (this.contains(" ") || this.contains("\n") || this.contains("\t")) return false
+    
+    // 检查泛型括号是否匹配
+    val openCount = this.count { it == '<' }
+    val closeCount = this.count { it == '>' }
+    if (openCount != closeCount) return false
+    
+    return true
+}
+
+/**
+ * 清理类型名称，使其适合用作 ClassName
+ */
+fun String.sanitizeForClassName(): String {
+    var cleaned = this.trim()
+    
+    // 移除注释
+    cleaned = cleaned.replace(Regex("""/\*.*?\*/"""), "").trim()
+    
+    // 移除泛型参数（ClassName 不接受泛型）
+    cleaned = cleaned.substringBefore("<")
+    
+    // 移除空格和换行
+    cleaned = cleaned.replace(Regex("\\s+"), "")
+    
+    // 确保首字母大写（除非是基本类型）
+    if (cleaned.isNotEmpty() && !cleaned.first().isUpperCase()) {
+        val basicTypes = setOf("string", "number", "boolean", "any", "unit", "nothing")
+        if (!basicTypes.contains(cleaned.lowercase())) {
+            cleaned = cleaned.replaceFirstChar { it.uppercase() }
+        }
+    }
+    
+    // 移除任何残留的非法字符
+    cleaned = cleaned.replace(Regex("[^a-zA-Z0-9_]"), "")
+    
+    // 如果为空或不合法，返回 "Any"
+    if (cleaned.isEmpty() || !cleaned.matches(Regex("[a-zA-Z][a-zA-Z0-9_]*"))) {
+        return "Any"
+    }
+    
+    return cleaned
 }
 
 /**
