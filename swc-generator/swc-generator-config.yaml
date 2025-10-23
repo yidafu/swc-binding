@@ -1,142 +1,33 @@
 # SWC Generator 配置文件
-# 此文件用于自定义 swc-generator 的行为
-
-typeMapping:
-  # TypeScript 到 Kotlin 类型映射
-  jsToKotlin:
-    number: Int
-    boolean: Boolean
-    string: String
-    "string[]": "Array<String>"
-  
-  # 属性类型重写规则
-  propertyTypeOverrides:
-    global_defs: "Map<String, String>"
-    top_retain: BooleanableString
-    sequences: Boolean
-    pure_getters: BooleanableString
-    toplevel: BooleanableString
-    targets: "Map<String, String>"
-
 classModifiers:
-  # 需要转换为 Kotlin class 的类型
   toKotlinClass:
-    - Span
-  
-  # 需要保留的接口（不生成 Impl 类）
+    - "Span"
   keepInterface:
-    - HasDecorator
-    - HasSpan
-    - Node
-    - Fn
-    - PropBase
-    - ExpressionBase
-    - ClassPropertyBase
-    - PatternBase
-    - ClassMethodBase
-    - BaseModuleConfig
-  
-  # sealed interface 列表
+    - "HasDecorator"
+    - "HasSpan"
+    - "Node"
+    - "Fn"
+    - "PropBase"
+    - "ExpressionBase"
+    - "ClassPropertyBase"
+    - "PatternBase"
+    - "ClassMethodBase"
+    - "BaseModuleConfig"
   sealedInterface:
-    - Node
-  
-  # 属性名转 snake_case 的类型
+    - "Node"
   propsToSnakeCase:
-    - JsFormatOptions
+    - "JsFormatOptions"
 
 namingRules:
-  # Kotlin 关键字映射
   kotlinKeywords:
-    object: jsObject
-    inline: jsInline
-    in: jsIn
-    super: jsSuper
-    class: jsClass
-  
-  # 字面量操作符名称映射
-  literalOperators:
-    "+": Addition
-    "+=": AdditionAssignment
-    "=": Assignment
-    "&": BitwiseAND
-    "&=": BitwiseANDAssignment
-    "~": BitwiseNOT
-    "|": BitwiseOR
-    "|=": BitwiseORAssignment
-    "^": BitwiseXOR
-    "^=": BitwiseXORAssignment
-    ",": CommaOperator
-    "ternary": Conditional
-    "--": Decrement
-    "/": Division
-    "/=": DivisionAssignment
-    "==": Equality
-    "**": Exponentiation
-    "**=": ExponentiationAssignment
-    ">": GreaterThan
-    ">=": GreaterThanOrEqual
-    " ": GroupingOperator
-    "++": Increment
-    "!=": Inequality
-    "<<": LeftShift
-    "<<=": LeftShiftAssignment
-    "<": LessThan
-    "<=": LessThanOrEqual
-    "&&": LogicalAND
-    "&&=": LogicalANDAssignment
-    "!": LogicalNOT
-    "||": LogicalOR
-    "||=": LogicalORAssignment
-    "*": Multiplication
-    "*=": MultiplicationAssignment
-    "??=": NullishCoalescingAssignment
-    "??": NullishCoalescingOperator
-    "?.": OptionalChaining
-    "%": Remainder
-    "%=": RemainderAssignment
-    ">>": RightShift
-    ">>=": RightShiftAssignment
-    "...": SpreadSyntax
-    "===": StrictEquality
-    "!==": StrictInequality
-    "-": Subtraction
-    "-=": SubtractionAssignment
-    ">>>": UnsignedRightShift
-    ">>>=": UnsignedRightShiftAssignment
-
-filterRules:
-  # 重要接口列表（不会被过滤掉）
-  importantInterfaces:
-    - Options
-    - Config
-    - CallerOptions
-    - Plugin
-    - MatchPattern
-    - TerserCompressOptions
-    - TerserMangleOptions
-    - JsMinifyOptions
-    - JsFormatOptions
-    - EnvConfig
-    - JscConfig
-    - ModuleConfig
-    - TsParserConfig
-    - EsParserConfig
-    - ParserConfig
-  
-  # 跳过的类名模式（正则表达式）
-  skipClassPatterns:
-    - "TsTemplateLiteralType.*"
-    - "TemplateLiteral.*"
-  
-  # 跳过的 DSL 接收器
-  skipDslReceivers:
-    - HasSpan
-    - HasDecorator
+    "object": "jsObject"
+    "inline": "jsInline"
+    "in": "jsIn"
+    "super": "jsSuper"
+    "class": "jsClass"
 
 paths:
-  # 默认输入路径（null 表示使用命令行参数或环境变量）
-  defaultInputPath: null
-  # 默认输出路径
+  defaultInputPath: "/Users/dovyih/github/swc-binding/swc-generator/node_modules/.pnpm/@swc+types@0.1.25/node_modules/@swc/types/index.d.ts"
   defaultOutputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/types.kt"
   defaultOutputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/serializer.kt"
   defaultOutputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/dsl"

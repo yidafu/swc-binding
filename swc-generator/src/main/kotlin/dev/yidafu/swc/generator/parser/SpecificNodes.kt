@@ -2,21 +2,20 @@ package dev.yidafu.swc.generator.parser
 
 /**
  * 专用节点类
- * 
- * 为常用的 AST 节点类型提供更友好的封装
+ * * 为常用的 AST 节点类型提供更友好的封装
  */
 
 /**
  * Program 节点（Module 或 Script）
  */
 class ProgramNode(private val node: AstNode) {
-    val type: String get() = node.type  // "Module" 或 "Script"
+    val type: String get() = node.type // "Module" 或 "Script"
     val body: List<AstNode> get() = node.getNodes("body")
     val span: Span? get() = node.getSpan()
-    
+
     fun isModule() = type == "Module"
     fun isScript() = type == "Script"
-    
+
     /**
      * 遍历所有 body 项
      */
@@ -35,14 +34,14 @@ class InterfaceNode(private val node: AstNode) {
     val typeParams: AstNode? get() = node.getNode("typeParams")
     val declare: Boolean get() = node.getBoolean("declare") ?: false
     val span: Span? get() = node.getSpan()
-    
+
     /**
      * 获取所有属性
      */
     fun getProperties(): List<AstNode> {
         return body?.getNodes("body") ?: emptyList()
     }
-    
+
     /**
      * 获取所有 extends 的类型名称
      */
@@ -59,7 +58,7 @@ class InterfaceNode(private val node: AstNode) {
             }
         }
     }
-    
+
     /**
      * 遍历所有属性
      */
@@ -77,21 +76,21 @@ class TypeAliasNode(private val node: AstNode) {
     val typeParams: AstNode? get() = node.getNode("typeParams")
     val declare: Boolean get() = node.getBoolean("declare") ?: false
     val span: Span? get() = node.getSpan()
-    
+
     /**
      * 是否为 Union Type
      */
     fun isUnionType(): Boolean {
         return typeAnnotation?.isUnionType() == true
     }
-    
+
     /**
      * 是否为 Intersection Type
      */
     fun isIntersectionType(): Boolean {
         return typeAnnotation?.isIntersectionType() == true
     }
-    
+
     /**
      * 是否为 Literal Union（所有成员都是字面量）
      */
@@ -101,7 +100,7 @@ class TypeAliasNode(private val node: AstNode) {
         val types = annotation.getNodes("types")
         return types.isNotEmpty() && types.all { it.isLiteralType() }
     }
-    
+
     /**
      * 获取 Union Type 的所有类型
      */
@@ -110,7 +109,7 @@ class TypeAliasNode(private val node: AstNode) {
         if (!annotation.isUnionType()) return emptyList()
         return annotation.getNodes("types")
     }
-    
+
     /**
      * 获取 Intersection Type 的所有类型
      */
@@ -131,7 +130,7 @@ class PropertySignatureNode(private val node: AstNode) {
     val readonly: Boolean get() = node.getBoolean("readonly") ?: false
     val computed: Boolean get() = node.getBoolean("computed") ?: false
     val span: Span? get() = node.getSpan()
-    
+
     /**
      * 获取属性名称
      */
@@ -143,7 +142,7 @@ class PropertySignatureNode(private val node: AstNode) {
             else -> null
         }
     }
-    
+
     /**
      * 获取类型注解节点（去除 TsTypeAnnotation 包装）
      */
@@ -160,14 +159,14 @@ class PropertySignatureNode(private val node: AstNode) {
 class ExportDeclarationNode(private val node: AstNode) {
     val declaration: AstNode? get() = node.getNode("declaration")
     val span: Span? get() = node.getSpan()
-    
+
     /**
      * 是否导出 Interface
      */
     fun isExportInterface(): Boolean {
         return declaration?.isInterface() == true
     }
-    
+
     /**
      * 是否导出 Type Alias
      */
@@ -182,7 +181,7 @@ class ExportDeclarationNode(private val node: AstNode) {
 class TypeAnnotationNode(private val node: AstNode) {
     val typeAnnotation: AstNode? get() = node.getNode("typeAnnotation")
     val span: Span? get() = node.getSpan()
-    
+
     /**
      * 获取实际的类型节点
      */
@@ -232,4 +231,3 @@ fun AstNode.asExportDeclarationNode(): ExportDeclarationNode? {
 fun AstNode.asTypeAnnotationNode(): TypeAnnotationNode? {
     return if (type == "TsTypeAnnotation") TypeAnnotationNode(this) else null
 }
-

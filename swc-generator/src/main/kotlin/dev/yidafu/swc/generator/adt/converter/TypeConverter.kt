@@ -1,17 +1,23 @@
 package dev.yidafu.swc.generator.adt.converter
 
-import dev.yidafu.swc.generator.config.ConfigLoader
+import dev.yidafu.swc.generator.adt.kotlin.KotlinType
+import dev.yidafu.swc.generator.adt.kotlin.KotlinTypeFactory
+import dev.yidafu.swc.generator.adt.result.ErrorCode
+import dev.yidafu.swc.generator.adt.result.GeneratorResult
+import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.adt.typescript.KeywordKind
+import dev.yidafu.swc.generator.adt.typescript.LiteralValue
+import dev.yidafu.swc.generator.adt.typescript.TypeScriptType
+import dev.yidafu.swc.generator.adt.typescript.getTypeName
+import dev.yidafu.swc.generator.config.GlobalConfig
+import dev.yidafu.swc.generator.config.HardcodedRules
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.adt.typescript.*
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.util.StringCache
 
 /**
  * TypeScript 到 Kotlin 类型转换器
  */
 class TypeConverter(private val config: SwcGeneratorConfig) {
-    
+
     /**
      * 将 TypeScript 类型转换为 Kotlin 类型
      */
@@ -20,27 +26,27 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             // TODO: 添加类型转换缓存
             // val cacheKey = tsType.toString()
             // val cached = StringCache.get(cacheKey)
-            
-        val result = when (tsType) {
-            is TypeScriptType.Keyword -> convertKeyword(tsType.kind)
-            is TypeScriptType.Reference -> convertReference(tsType)
-            is TypeScriptType.Union -> convertUnion(tsType)
-            is TypeScriptType.Intersection -> convertIntersection(tsType)
-            is TypeScriptType.Array -> convertArray(tsType)
-            is TypeScriptType.Tuple -> convertTuple(tsType)
-            is TypeScriptType.Literal -> convertLiteral(tsType)
-            is TypeScriptType.TypeLiteral -> convertTypeLiteral(tsType)
-            is TypeScriptType.Function -> convertFunction(tsType)
-            is TypeScriptType.IndexSignature -> convertIndexSignature(tsType)
-            is TypeScriptType.Any -> KotlinTypeFactory.any()
-            is TypeScriptType.Unknown -> KotlinTypeFactory.any()
-            is TypeScriptType.Never -> KotlinTypeFactory.nothing()
-            is TypeScriptType.Void -> KotlinTypeFactory.unit()
-            is TypeScriptType.Null -> KotlinTypeFactory.nothing()
-            is TypeScriptType.Undefined -> KotlinTypeFactory.nothing()
-        }
-        
-        GeneratorResultFactory.success(result)
+
+            val result = when (tsType) {
+                is TypeScriptType.Keyword -> convertKeyword(tsType.kind)
+                is TypeScriptType.Reference -> convertReference(tsType)
+                is TypeScriptType.Union -> convertUnion(tsType)
+                is TypeScriptType.Intersection -> convertIntersection(tsType)
+                is TypeScriptType.Array -> convertArray(tsType)
+                is TypeScriptType.Tuple -> convertTuple(tsType)
+                is TypeScriptType.Literal -> convertLiteral(tsType)
+                is TypeScriptType.TypeLiteral -> convertTypeLiteral(tsType)
+                is TypeScriptType.Function -> convertFunction(tsType)
+                is TypeScriptType.IndexSignature -> convertIndexSignature(tsType)
+                is TypeScriptType.Any -> KotlinTypeFactory.any()
+                is TypeScriptType.Unknown -> KotlinTypeFactory.any()
+                is TypeScriptType.Never -> KotlinTypeFactory.nothing()
+                is TypeScriptType.Void -> KotlinTypeFactory.unit()
+                is TypeScriptType.Null -> KotlinTypeFactory.nothing()
+                is TypeScriptType.Undefined -> KotlinTypeFactory.nothing()
+            }
+
+            GeneratorResultFactory.success(result)
         } catch (e: Exception) {
             GeneratorResultFactory.failure(
                 code = ErrorCode.TYPE_RESOLUTION_ERROR,
@@ -50,7 +56,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             )
         }
     }
-    
+
     /**
      * 转换关键字类型
      */
@@ -68,41 +74,41 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             KeywordKind.SYMBOL -> KotlinTypeFactory.string() // Symbol 转换为 String
         }
     }
-    
+
     /**
      * 转换类型引用
      */
     private fun convertReference(ref: TypeScriptType.Reference): KotlinType {
         // 处理泛型参数
         if (ref.typeParams.isNotEmpty()) {
-            val params = ref.typeParams.mapNotNull { 
+            val params = ref.typeParams.mapNotNull {
                 convertToKotlinType(it).getOrNull()
             }
             return KotlinTypeFactory.generic(ref.name, *params.toTypedArray())
         }
-        
+
         // 特殊映射
-        val mapped = config.typeMapping.jsToKotlin[ref.name]
+        val mapped = HardcodedRules.jsToKotlinTypeMap[ref.name]
         if (mapped != null) {
             return KotlinTypeFactory.simple(mapped)
         }
-        
+
         return KotlinTypeFactory.simple(ref.name)
     }
-    
+
     /**
      * 转换联合类型
      */
     private fun convertUnion(union: TypeScriptType.Union): KotlinType {
-        val kotlinTypes = union.types.mapNotNull { 
+        val kotlinTypes = union.types.mapNotNull {
             convertToKotlinType(it).getOrNull()
         }
-        
+
         // 过滤 null
-        val nonNullTypes = kotlinTypes.filter { 
+        val nonNullTypes = kotlinTypes.filter {
             it !is KotlinType.Nothing
         }
-        
+
         return when {
             nonNullTypes.isEmpty() -> KotlinTypeFactory.nothing()
             nonNullTypes.size == 1 -> nonNullTypes.first()
@@ -113,14 +119,14 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
                     val otherType = nonNullTypes.find { it !is KotlinType.Boolean } ?: KotlinTypeFactory.any()
                     return KotlinTypeFactory.booleanable(otherType)
                 }
-                
+
                 // 转换为 Union 类型
                 KotlinTypeFactory.union(*nonNullTypes.toTypedArray())
             }
             else -> KotlinTypeFactory.any()
         }
     }
-    
+
     /**
      * 转换交叉类型
      */
@@ -133,7 +139,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             KotlinTypeFactory.any()
         }
     }
-    
+
     /**
      * 转换数组类型
      */
@@ -142,21 +148,21 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             .getOrDefault(KotlinTypeFactory.any())
         return KotlinTypeFactory.generic("Array", elementType)
     }
-    
+
     /**
      * 转换元组类型
      */
     private fun convertTuple(tuple: TypeScriptType.Tuple): KotlinType {
-        val types = tuple.types.mapNotNull { 
+        val types = tuple.types.mapNotNull {
             convertToKotlinType(it).getOrNull()
         }
-        
+
         return when (types.size) {
             2 -> KotlinTypeFactory.union(types[0], types[1])
             else -> KotlinTypeFactory.any()
         }
     }
-    
+
     /**
      * 转换字面量类型
      */
@@ -169,7 +175,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             is LiteralValue.UndefinedLiteral -> KotlinTypeFactory.nothing()
         }
     }
-    
+
     /**
      * 转换类型字面量
      */
@@ -178,20 +184,20 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
         // 这里返回一个占位符，实际处理在其他地方
         return KotlinTypeFactory.simple("TypeLiteral")
     }
-    
+
     /**
      * 转换函数类型
      */
     private fun convertFunction(function: TypeScriptType.Function): KotlinType {
-        val paramTypes = function.params.mapNotNull { 
+        val paramTypes = function.params.mapNotNull {
             convertToKotlinType(it.type).getOrNull()
         }
         val returnType = convertToKotlinType(function.returnType)
             .getOrDefault(KotlinTypeFactory.unit())
-        
+
         return KotlinType.Function(paramTypes, returnType)
     }
-    
+
     /**
      * 转换索引签名
      */
@@ -200,17 +206,16 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             .getOrDefault(KotlinTypeFactory.string())
         val valueType = convertToKotlinType(indexSig.valueType)
             .getOrDefault(KotlinTypeFactory.any())
-        
+
         return KotlinTypeFactory.generic("Map", keyType, valueType)
     }
-    
+
     companion object {
         /**
          * 便捷的转换方法
          */
         fun convert(tsType: TypeScriptType): GeneratorResult<KotlinType> {
-            val config = ConfigLoader.loadConfig()
-            val converter = TypeConverter(config)
+            val converter = TypeConverter(GlobalConfig.config)
             return converter.convertToKotlinType(tsType)
         }
     }

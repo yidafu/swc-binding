@@ -7,7 +7,7 @@ object ExtendRelationship {
     private val child2ParentMap = mutableMapOf<String, MutableSet<String>>()
     private val parent2ChildMap = mutableMapOf<String, MutableSet<String>>()
     private val nodeExtendsList = mutableListOf<Pair<String, String>>()
-    
+
     /**
      * 添加继承关系
      * @param parent 父类型
@@ -16,20 +16,20 @@ object ExtendRelationship {
     fun addRelation(parent: String, child: String) {
         val pSet = child2ParentMap.getOrPut(child) { mutableSetOf() }
         pSet.add(parent)
-        
+
         val cSet = parent2ChildMap.getOrPut(parent) { mutableSetOf() }
         cSet.add(child)
-        
+
         nodeExtendsList.add(parent to child)
     }
-    
+
     /**
      * 判断是否为叶子节点（没有子类型）
      */
     fun isGrandChild(child: String): Boolean {
         return findAllChildrenByParent(child).isEmpty()
     }
-    
+
     /**
      * 获取根类型
      */
@@ -45,14 +45,14 @@ object ExtendRelationship {
             return child
         }
     }
-    
+
     /**
      * 查找直接父类型
      */
     fun findParentsByChild(child: String): List<String> {
         return child2ParentMap[child]?.toList() ?: emptyList()
     }
-    
+
     /**
      * 查找所有父类型（递归）
      */
@@ -64,28 +64,28 @@ object ExtendRelationship {
         }
         return result.toList()
     }
-    
+
     /**
      * 获取所有父类型
      */
     fun getAllParents(): List<String> {
         return parent2ChildMap.keys.toList()
     }
-    
+
     /**
      * 获取所有子类型
      */
     fun getAllChildren(): List<String> {
         return child2ParentMap.keys.toList()
     }
-    
+
     /**
      * 查找所有叶子子类型（递归）
      */
     fun findAllGrandChildren(type: String): List<String> {
         val result = mutableSetOf<String>()
         val childTypes = nodeExtendsList.filter { it.first == type }.map { it.second }
-        
+
         if (childTypes.isNotEmpty()) {
             childTypes.forEach { child ->
                 result.addAll(findAllGrandChildren(child))
@@ -93,17 +93,17 @@ object ExtendRelationship {
         } else {
             result.add(type)
         }
-        
+
         return result.toList()
     }
-    
+
     /**
      * 查找直接子类型
      */
     fun findAllDirectChildren(type: String): List<String> {
         return parent2ChildMap[type]?.toList() ?: emptyList()
     }
-    
+
     /**
      * 查找所有子类型（包括间接子类型）
      */
@@ -111,16 +111,16 @@ object ExtendRelationship {
         val result = mutableSetOf<String>()
         val childTypes = nodeExtendsList.filter { it.first == type }.map { it.second }
         result.addAll(childTypes)
-        
+
         if (childTypes.isNotEmpty()) {
             childTypes.forEach { child ->
                 result.addAll(findAllChildrenByParent(child))
             }
         }
-        
+
         return result.toList()
     }
-    
+
     /**
      * 获取所有类型
      */
@@ -130,7 +130,7 @@ object ExtendRelationship {
         allTypes.addAll(parent2ChildMap.keys)
         return allTypes.toList()
     }
-    
+
     /**
      * 查找与指定节点相关的所有类型
      */
@@ -143,7 +143,7 @@ object ExtendRelationship {
         }
         return result.toList()
     }
-    
+
     /**
      * 查找共同父类型
      */
@@ -152,11 +152,11 @@ object ExtendRelationship {
         children.forEach { child ->
             child2ParentPathMap[child] = getPathWithFound(child)
         }
-        
+
         val parentPathList = child2ParentPathMap.values.toList()
         val distanceMap = mutableMapOf<String, Int>()
         val allParentTypes = parentPathList.flatten().toSet()
-        
+
         allParentTypes.forEach { pType ->
             var maxDistance = -1
             parentPathList.forEach { list ->
@@ -164,7 +164,7 @@ object ExtendRelationship {
             }
             distanceMap[pType] = maxDistance
         }
-        
+
         var commonType = "Node"
         var minDistance = 999
         distanceMap.entries.forEach { (k, v) ->
@@ -173,10 +173,10 @@ object ExtendRelationship {
                 minDistance = v
             }
         }
-        
+
         return commonType
     }
-    
+
     /**
      * 获取到根节点的路径
      */
@@ -190,7 +190,7 @@ object ExtendRelationship {
         }
         return path2Node.toList()
     }
-    
+
     /**
      * 获取有序路径
      */
@@ -208,7 +208,7 @@ object ExtendRelationship {
         }
         return null
     }
-    
+
     /**
      * 清空所有关系（用于测试）
      */
@@ -218,4 +218,3 @@ object ExtendRelationship {
         nodeExtendsList.clear()
     }
 }
-

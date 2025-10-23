@@ -6,7 +6,7 @@ package dev.yidafu.swc.generator.adt.result
 sealed class GeneratorResult<out T> {
     data class Success<T>(val value: T) : GeneratorResult<T>()
     data class Failure(val error: GeneratorError) : GeneratorResult<Nothing>()
-    
+
     /**
      * 映射成功值
      */
@@ -14,7 +14,7 @@ sealed class GeneratorResult<out T> {
         is Success -> Success(transform(value))
         is Failure -> this
     }
-    
+
     /**
      * 扁平映射，用于链式操作
      */
@@ -22,7 +22,7 @@ sealed class GeneratorResult<out T> {
         is Success -> transform(value)
         is Failure -> this
     }
-    
+
     /**
      * 获取成功值或 null
      */
@@ -30,7 +30,7 @@ sealed class GeneratorResult<out T> {
         is Success -> value
         is Failure -> null
     }
-    
+
     /**
      * 获取成功值或默认值
      */
@@ -38,7 +38,7 @@ sealed class GeneratorResult<out T> {
         is Success -> value
         is Failure -> default
     }
-    
+
     /**
      * 获取成功值或抛出异常
      */
@@ -46,7 +46,7 @@ sealed class GeneratorResult<out T> {
         is Success -> value
         is Failure -> throw error.toException()
     }
-    
+
     /**
      * 处理成功情况
      */
@@ -56,7 +56,7 @@ sealed class GeneratorResult<out T> {
         }
         return this
     }
-    
+
     /**
      * 处理失败情况
      */
@@ -66,12 +66,12 @@ sealed class GeneratorResult<out T> {
         }
         return this
     }
-    
+
     /**
      * 是否为成功
      */
     fun isSuccess(): Boolean = this is Success
-    
+
     /**
      * 是否为失败
      */
@@ -121,11 +121,11 @@ class GeneratorException(
  */
 object GeneratorResultFactory {
     fun <T> success(value: T): GeneratorResult<T> = GeneratorResult.Success(value)
-    
+
     fun <T> failure(code: ErrorCode, message: String, cause: Throwable? = null, context: Map<String, Any> = emptyMap()): GeneratorResult<T> {
         return GeneratorResult.Failure(GeneratorError(code, message, cause, context))
     }
-    
+
     fun <T> failure(error: GeneratorError): GeneratorResult<T> {
         return GeneratorResult.Failure(error)
     }

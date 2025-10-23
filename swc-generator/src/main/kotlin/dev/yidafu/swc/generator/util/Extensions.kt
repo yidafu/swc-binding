@@ -140,7 +140,7 @@ fun JsonElement.getStringField(key: String): String {
     return try {
         val obj = this.asJsonObjectOrNull() ?: return ""
         val value = obj[key] ?: return ""
-        
+
         when {
             value.isJsonNull() -> ""
             value.isJsonPrimitive() -> value.asJsonPrimitiveOrNull()?.contentOrNull ?: ""
@@ -162,7 +162,7 @@ fun JsonElement.getArrayField(key: String): List<JsonElement> {
     return try {
         val obj = this.asJsonObjectOrNull() ?: return emptyList()
         val value = obj[key] ?: return emptyList()
-        
+
         when {
             value.isJsonNull() -> emptyList()
             value.isJsonArray() -> value.asJsonArrayOrNull()?.toList() ?: emptyList()
@@ -184,7 +184,7 @@ fun JsonElement.getObjectField(key: String): JsonObject? {
     return try {
         val obj = this.asJsonObjectOrNull() ?: return null
         val value = obj[key] ?: return null
-        
+
         when {
             value.isJsonNull() -> null
             value.isJsonObject() -> value.asJsonObjectOrNull()
@@ -206,7 +206,7 @@ fun JsonElement.getBooleanField(key: String, defaultValue: Boolean = false): Boo
     return try {
         val obj = this.asJsonObjectOrNull() ?: return defaultValue
         val value = obj[key] ?: return defaultValue
-        
+
         when {
             value.isJsonNull() -> defaultValue
             value.isJsonPrimitive() -> value.asJsonPrimitiveOrNull()?.booleanOrNull ?: defaultValue
@@ -228,7 +228,7 @@ fun JsonElement.getNumberField(key: String, defaultValue: Int = 0): Int {
     return try {
         val obj = this.asJsonObjectOrNull() ?: return defaultValue
         val value = obj[key] ?: return defaultValue
-        
+
         when {
             value.isJsonNull() -> defaultValue
             value.isJsonPrimitive() -> value.asJsonPrimitiveOrNull()?.intOrNull ?: defaultValue

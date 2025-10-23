@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     application
+    id("dev.yidafu.library")
 }
 
 group = "dev.yidafu.swc"
@@ -16,16 +17,16 @@ repositories {
 dependencies {
     implementation("dev.yidafu.swc:swc-binding:0.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // KotlinPoet - 类型安全的 Kotlin 代码生成
     implementation("com.squareup:kotlinpoet:1.15.3")
-    
+
     // kotlinx-cli - 命令行参数解析
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
-    
+
     // YAML 配置解析
     implementation("com.charleskorn.kaml:kaml:0.55.0")
-    
+
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 }
@@ -41,4 +42,3 @@ tasks.test {
 kotlin {
     jvmToolchain(17)
 }
-

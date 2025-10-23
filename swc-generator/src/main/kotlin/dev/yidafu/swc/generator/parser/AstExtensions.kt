@@ -2,8 +2,7 @@ package dev.yidafu.swc.generator.parser
 
 /**
  * AstNode 扩展函数
- * 
- * 提供便捷的节点访问和类型判断方法
+ * * 提供便捷的节点访问和类型判断方法
  */
 
 // ========== 便捷访问方法 ==========
@@ -11,31 +10,31 @@ package dev.yidafu.swc.generator.parser
 /**
  * 获取 Identifier 节点的 value
  */
-fun AstNode.getIdentifierValue(): String? = 
-    if (type == "Identifier") getString("value") else null
+fun AstNode.getIdentifierValue(): String? = if (type == "Identifier") getString("value") else null
 
 /**
  * 获取 StringLiteral 节点的 value
  */
-fun AstNode.getStringLiteralValue(): String? = 
-    if (type == "StringLiteral") getString("value") else null
+fun AstNode.getStringLiteralValue(): String? = if (type == "StringLiteral") getString("value") else null
 
 /**
  * 获取 NumericLiteral 节点的 value
  */
-fun AstNode.getNumericLiteralValue(): Double? = 
-    if (type == "NumericLiteral") {
-        val raw = getRaw("value")
-        if (raw is kotlinx.serialization.json.JsonPrimitive) {
-            raw.content.toDoubleOrNull()
-        } else null
-    } else null
+fun AstNode.getNumericLiteralValue(): Double? = if (type == "NumericLiteral") {
+    val raw = getRaw("value")
+    if (raw is kotlinx.serialization.json.JsonPrimitive) {
+        raw.content.toDoubleOrNull()
+    } else {
+        null
+    }
+} else {
+    null
+}
 
 /**
  * 获取 BooleanLiteral 节点的 value
  */
-fun AstNode.getBooleanLiteralValue(): Boolean? = 
-    if (type == "BooleanLiteral") getBoolean("value") else null
+fun AstNode.getBooleanLiteralValue(): Boolean? = if (type == "BooleanLiteral") getBoolean("value") else null
 
 // ========== 类型判断 ==========
 
@@ -227,4 +226,3 @@ fun AstNode.forEachBodyItem(block: (AstNode) -> Unit) {
     if (!isModule() && !isScript()) return
     getNodes("body").forEach(block)
 }
-

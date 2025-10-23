@@ -4,14 +4,17 @@ import dev.yidafu.swc.generator.util.*
 
 /**
  * TypeScript AST 访问器
- * 
- * 使用通用 AstNode 遍历 AST，提取 interface 和 type alias 声明
+ * * 使用通用 AstNode 遍历 AST，提取 interface 和 type alias 声明
  */
 class TsAstVisitor(jsonString: String) {
     private val program = AstNode.fromJson(jsonString)
     private val interfaces = mutableListOf<AstNode>()
     private val typeAliases = mutableListOf<AstNode>()
-    
+
+    // 性能优化：添加索引映射，将 O(n) 查找优化为 O(1)
+    private val interfaceMap = mutableMapOf<String, AstNode>()
+    private val typeAliasMap = mutableMapOf<String, AstNode>()
+
     /**
      * 遍历 AST 提取所有 interface 和 type alias
      */
@@ -22,7 +25,7 @@ class TsAstVisitor(jsonString: String) {
         }
         Logger.debug("遍历完成: ${interfaces.size} 接口, ${typeAliases.size} 类型别名", 4)
     }
-    
+
     private fun visitProgramBody() {
         val items = program.getNodes("body")
         Logger.verbose("Program 包含 ${items.size} 个项", 6)
@@ -31,18 +34,26 @@ class TsAstVisitor(jsonString: String) {
             visitModuleItem(item)
         }
     }
-    
+
     private fun visitModuleItem(item: AstNode) {
         Logger.verbose("    处理 ModuleItem: ${item.type}", 10)
-        
+
         when (item.type) {
             "TsInterfaceDeclaration" -> {
                 interfaces.add(item)
-                Logger.verbose("发现 interface: ${item.getInterfaceName()}", 8)
+                val name = item.getInterfaceName()
+                if (name != null) {
+                    interfaceMap[name] = item
+                }
+                Logger.verbose("发现 interface: $name", 8)
             }
             "TsTypeAliasDeclaration" -> {
                 typeAliases.add(item)
-                Logger.verbose("发现 type alias: ${item.getTypeAliasName()}", 8)
+                val name = item.getTypeAliasName()
+                if (name != null) {
+                    typeAliasMap[name] = item
+                }
+                Logger.verbose("发现 type alias: $name", 8)
             }
             // 增强: 支持多种 export 形式
             "ExportDeclaration", "TsExportDeclaration", "ExportNamedDeclaration" -> {
@@ -61,37 +72,44 @@ class TsAstVisitor(jsonString: String) {
             }
         }
     }
-    
+
     /**
      * 处理 export 声明
      */
     private fun handleExportDeclaration(exportNode: AstNode) {
         // 尝试多种可能的字段名
-        val declaration = exportNode.getNode("declaration") 
-            ?: exportNode.getNode("decl")
+        val declaration = exportNode.getNode("declaration") ?: exportNode.getNode("decl")
             ?: return
-        
+
         Logger.debug("        Export declaration 类型: ${declaration.type}", 12)
-        
+
         when (declaration.type) {
             "TsInterfaceDeclaration" -> {
                 interfaces.add(declaration)
-                Logger.verbose("发现 interface (exported): ${declaration.getInterfaceName()}", 8)
+                val name = declaration.getInterfaceName()
+                if (name != null) {
+                    interfaceMap[name] = declaration
+                }
+                Logger.verbose("发现 interface (exported): $name", 8)
             }
             "TsTypeAliasDeclaration" -> {
                 typeAliases.add(declaration)
-                Logger.verbose("发现 type alias (exported): ${declaration.getTypeAliasName()}", 8)
+                val name = declaration.getTypeAliasName()
+                if (name != null) {
+                    typeAliasMap[name] = declaration
+                }
+                Logger.verbose("发现 type alias (exported): $name", 8)
             }
             else -> {
                 Logger.debug("        跳过 export: ${declaration.type}", 12)
             }
         }
     }
-    
+
     private fun visitModuleDeclaration(decl: AstNode) {
         val body = decl.getNode("body") ?: return
         Logger.verbose("  模块声明 body 类型: ${body.type}", 10)
-        
+
         when (body.type) {
             "TsModuleBlock" -> {
                 val items = body.getNodes("body")
@@ -107,18 +125,26 @@ class TsAstVisitor(jsonString: String) {
             }
         }
     }
-    
+
     private fun visitStatement(stmt: AstNode) {
         // Statement 中也可能包含类型定义
         Logger.debug("        visitStatement: ${stmt.type}", 12)
         when (stmt.type) {
             "TsInterfaceDeclaration" -> {
                 interfaces.add(stmt)
-                Logger.verbose("发现 interface (from Statement): ${stmt.getInterfaceName()}", 8)
+                val name = stmt.getInterfaceName()
+                if (name != null) {
+                    interfaceMap[name] = stmt
+                }
+                Logger.verbose("发现 interface (from Statement): $name", 8)
             }
             "TsTypeAliasDeclaration" -> {
                 typeAliases.add(stmt)
-                Logger.verbose("发现 type alias (from Statement): ${stmt.getTypeAliasName()}", 8)
+                val name = stmt.getTypeAliasName()
+                if (name != null) {
+                    typeAliasMap[name] = stmt
+                }
+                Logger.verbose("发现 type alias (from Statement): $name", 8)
             }
             else -> {
                 // 其他 Statement 类型暂时跳过
@@ -126,32 +152,32 @@ class TsAstVisitor(jsonString: String) {
             }
         }
     }
-    
+
     /**
      * 获取所有 interface 声明
      */
     fun getInterfaces(): List<AstNode> {
         return interfaces
     }
-    
+
     /**
      * 获取所有 type alias 声明
      */
     fun getTypeAliases(): List<AstNode> {
         return typeAliases
     }
-    
+
     /**
-     * 根据名称查找 interface
+     * 根据名称查找 interface (O(1) 查找)
      */
     fun findInterface(name: String): AstNode? {
-        return interfaces.find { it.getInterfaceName() == name }
+        return interfaceMap[name]
     }
-    
+
     /**
-     * 根据名称查找 type alias
+     * 根据名称查找 type alias (O(1) 查找)
      */
     fun findTypeAlias(name: String): AstNode? {
-        return typeAliases.find { it.getTypeAliasName() == name }
+        return typeAliasMap[name]
     }
 }

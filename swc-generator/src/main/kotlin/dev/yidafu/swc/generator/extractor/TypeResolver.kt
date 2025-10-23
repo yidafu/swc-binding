@@ -1,29 +1,25 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.core.model.KotlinProperty
+import dev.yidafu.swc.generator.adt.converter.TypeConverter
+import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.adt.result.*
+import dev.yidafu.swc.generator.adt.typescript.*
 import dev.yidafu.swc.generator.config.ConfigLoader
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.*
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.adt.typescript.*
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.adt.converter.TypeConverter
 
 /**
  * TypeScript 类型解析器
- * 
- * 使用 AstNode 解析 TypeScript 类型为 ADT
+ * * 使用 AstNode 解析 TypeScript 类型为 ADT
  */
 object TypeResolver {
-    private val config by lazy { 
-        dev.yidafu.swc.generator.config.ConfigLoader.loadConfig() 
-    }
-    
+    private val config by lazy { ConfigLoader.loadConfig() }
+
     val typeAliasMap = mutableMapOf<String, String>()
-    
+
     // 缓存 TypeScript 类型解析结果
     private val tsTypeCache = mutableMapOf<AstNode, TypeScriptType>()
-    
+
     /**
      * 提取 TypeScript 类型（ADT 版本）
      */
@@ -31,12 +27,12 @@ object TypeResolver {
         if (tsType == null) {
             return GeneratorResultFactory.success(TypeScriptType.Any)
         }
-        
+
         // 检查缓存
         tsTypeCache[tsType]?.let {
             return GeneratorResultFactory.success(it)
         }
-        
+
         val result = when {
             tsType.isKeywordType() -> extractKeywordType(tsType)
             tsType.isTypeReference() -> extractTypeReference(tsType)
@@ -49,13 +45,13 @@ object TypeResolver {
             tsType.type == "TsParenthesizedType" -> extractTypeScriptType(tsType.getNode("typeAnnotation"))
             else -> GeneratorResultFactory.success(TypeScriptType.Any)
         }
-        
+
         // 缓存结果
         result.getOrNull()?.let { tsTypeCache[tsType] = it }
-        
+
         return result
     }
-    
+
     /**
      * 解析 TsType 为 Kotlin 类型字符串（向后兼容版本）
      */
@@ -67,9 +63,9 @@ object TypeResolver {
             .map { it.toTypeString() }
             .getOrDefault("Any")
     }
-    
+
     // ==================== ADT 提取方法 ====================
-    
+
     /**
      * 提取关键字类型
      */
@@ -91,44 +87,44 @@ object TypeResolver {
         }
         return GeneratorResultFactory.success(TypeScriptType.Keyword(keywordKind))
     }
-    
+
     /**
      * 提取类型引用
      */
     private fun extractTypeReference(type: AstNode): GeneratorResult<TypeScriptType> {
         val typeName = type.getTypeReferenceName() ?: return GeneratorResultFactory.success(TypeScriptType.Any)
-        
+
         // 处理泛型参数
         val typeParams = type.getNode("typeParams")?.getNodes("params") ?: emptyList()
         val paramTypes = typeParams.mapNotNull { param ->
             extractTypeScriptType(param).getOrNull()
         }
-        
+
         return GeneratorResultFactory.success(TypeScriptType.Reference(typeName, paramTypes))
     }
-    
+
     /**
      * 提取联合类型
      */
     private fun extractUnionType(type: AstNode): GeneratorResult<TypeScriptType> {
         val typeList = type.getNodes("types")
-        val types = typeList.mapNotNull { 
+        val types = typeList.mapNotNull {
             extractTypeScriptType(it).getOrNull()
         }
         return GeneratorResultFactory.success(TypeScriptType.Union(types))
     }
-    
+
     /**
      * 提取交叉类型
      */
     private fun extractIntersectionType(type: AstNode): GeneratorResult<TypeScriptType> {
         val types = type.getNodes("types")
-        val typeTypes = types.mapNotNull { 
+        val typeTypes = types.mapNotNull {
             extractTypeScriptType(it).getOrNull()
         }
         return GeneratorResultFactory.success(TypeScriptType.Intersection(typeTypes))
     }
-    
+
     /**
      * 提取数组类型
      */
@@ -137,7 +133,7 @@ object TypeResolver {
         val elementType = extractTypeScriptType(elemType).getOrDefault(TypeScriptType.Any)
         return GeneratorResultFactory.success(TypeScriptType.Array(elementType))
     }
-    
+
     /**
      * 提取元组类型
      */
@@ -148,24 +144,24 @@ object TypeResolver {
         }
         return GeneratorResultFactory.success(TypeScriptType.Tuple(types))
     }
-    
+
     /**
      * 提取字面量类型
      */
     private fun extractLiteralType(type: AstNode): GeneratorResult<TypeScriptType> {
         val literal = type.getNode("literal") ?: return GeneratorResultFactory.success(TypeScriptType.Any)
         val value = literal.getLiteralValue() ?: ""
-        
+
         val literalValue = when {
             literal.isStringLiteral() -> LiteralValue.StringLiteral(value)
             literal.isNumericLiteral() -> LiteralValue.NumberLiteral(value.toDoubleOrNull() ?: 0.0)
             literal.isBooleanLiteral() -> LiteralValue.BooleanLiteral(value.toBoolean())
             else -> LiteralValue.StringLiteral(value)
         }
-        
+
         return GeneratorResultFactory.success(TypeScriptType.Literal(literalValue))
     }
-    
+
     /**
      * 提取类型字面量
      */
@@ -181,14 +177,14 @@ object TypeResolver {
                 null
             }
         }
-        
+
         return GeneratorResultFactory.success(TypeScriptType.TypeLiteral(typeMembers))
     }
-    
+
     /**
      * 从 TsTypeLiteral 提取属性
      */
-    fun extractPropertiesFromTypeLiteral(typeLiteral: AstNode): List<KotlinProperty> {
+    fun extractPropertiesFromTypeLiteral(typeLiteral: AstNode): List<KotlinDeclaration.PropertyDecl> {
         val members = typeLiteral.getNodes("members")
         return members.mapNotNull { member ->
             if (member.isPropertySignature()) {
@@ -198,23 +194,24 @@ object TypeResolver {
             }
         }
     }
-    
+
     /**
      * 从 TsPropertySignature 提取属性
      */
-    private fun extractPropertyFromSignature(propSig: AstNode): KotlinProperty? {
+    private fun extractPropertyFromSignature(propSig: AstNode): KotlinDeclaration.PropertyDecl? {
         val propName = propSig.getPropertyName() ?: return null
-        
+
         if (propName.isEmpty()) return null
-        
+
         val typeAnnotation = propSig.getNode("typeAnnotation")?.getNode("typeAnnotation")
         val tsType = extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
         val kotlinType = TypeConverter.convert(tsType).getOrDefault(KotlinType.Any)
-        
-        return KotlinProperty(
+
+        return KotlinDeclaration.PropertyDecl(
             name = propName,
-            kotlinType = kotlinType,
-            defaultValue = ""
+            type = kotlinType,
+            modifier = PropertyModifier.Var,
+            defaultValue = Expression.StringLiteral("")
         )
     }
 }

@@ -10,17 +10,18 @@ import java.io.File
  * serializer.kt 生成器（使用 KotlinPoet）
  */
 class SerializerGenerator {
-    
+
     /**
      * 写入文件
      */
     fun writeToFile(outputPath: String, astNodeList: List<String>) {
         Logger.debug("使用 KotlinPoet 生成 serializer.kt...", 4)
-        
+
         val polymorphicMap = buildPolymorphicMap(astNodeList)
         Logger.debug("  多态类型数: ${polymorphicMap.size}", 4)
-        
-        val fileBuilder = createFileBuilder(PoetConstants.PKG_TYPES, "serializer",
+
+        val fileBuilder = createFileBuilder(
+            PoetConstants.PKG_TYPES, "serializer",
             "kotlinx.serialization" to "DeserializationStrategy",
             "kotlinx.serialization" to "SerializationException",
             "kotlinx.serialization" to "*",
@@ -29,24 +30,24 @@ class SerializerGenerator {
             "kotlinx.serialization.modules" to "subclass",
             "kotlinx.serialization.modules" to "SerializersModule"
         )
-        
+
         fileBuilder.addProperty(createSerializersModuleProperty(polymorphicMap))
-        
+
         val file = File(outputPath)
         file.parentFile?.mkdirs()
-        
+
         val fileSpec = fileBuilder.build()
-        
+
         // 创建临时目录来避免 KotlinPoet 创建包目录结构
-        val tempDir = File.createTempFile("swc-generator", "").apply { 
+        val tempDir = File.createTempFile("swc-generator", "").apply {
             delete()
-            mkdirs() 
+            mkdirs()
         }
-        
+
         try {
             // 写入到临时目录
             fileSpec.writeTo(tempDir)
-            
+
             // 找到生成的文件（KotlinPoet 会根据包名创建目录结构）
             val generatedFile = File(tempDir, "dev/yidafu/swc/types/${fileSpec.name}.kt")
             if (generatedFile.exists()) {
@@ -65,10 +66,10 @@ class SerializerGenerator {
             // 清理临时目录
             tempDir.deleteRecursively()
         }
-        
+
         Logger.success("Generated: $outputPath (${astNodeList.size} 个类型)")
     }
-    
+
     /**
      * 构建多态映射
      */
@@ -84,18 +85,18 @@ class SerializerGenerator {
                 }
             }
     }
-    
+
     /**
      * 创建 swcSerializersModule 属性
      */
     private fun createSerializersModuleProperty(polymorphicMap: Map<String, List<String>>): PropertySpec {
         val initializerCode = buildSerializerModuleCode(polymorphicMap)
-        
+
         return PropertySpec.builder("swcSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
             .initializer(initializerCode)
             .build()
     }
-    
+
     /**
      * 构建 SerializersModule 初始化代码
      */
@@ -117,5 +118,3 @@ class SerializerGenerator {
             .build()
     }
 }
-
-

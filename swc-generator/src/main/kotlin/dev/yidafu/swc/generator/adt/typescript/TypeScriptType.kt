@@ -6,7 +6,7 @@ package dev.yidafu.swc.generator.adt.typescript
 sealed class TypeScriptType {
     data class Keyword(val kind: KeywordKind) : TypeScriptType()
     data class Reference(
-        val name: String, 
+        val name: String,
         val typeParams: List<TypeScriptType> = emptyList()
     ) : TypeScriptType()
     data class Union(val types: List<TypeScriptType>) : TypeScriptType()

@@ -2,11 +2,10 @@ package dev.yidafu.swc.generator.adt.kotlin
 
 /**
  * Kotlin 声明 ADT（代数数据类型）
- * 
- * 表示 Kotlin 代码中的各种声明结构
+ * * 表示 Kotlin 代码中的各种声明结构
  */
 sealed class KotlinDeclaration {
-    
+
     /**
      * 类声明
      */
@@ -18,7 +17,7 @@ sealed class KotlinDeclaration {
         val annotations: List<Annotation>,
         val kdoc: String? = null
     ) : KotlinDeclaration()
-    
+
     /**
      * 属性声明
      */
@@ -30,7 +29,7 @@ sealed class KotlinDeclaration {
         val annotations: List<Annotation> = emptyList(),
         val kdoc: String? = null
     ) : KotlinDeclaration()
-    
+
     /**
      * 函数声明
      */
@@ -43,7 +42,7 @@ sealed class KotlinDeclaration {
         val annotations: List<Annotation> = emptyList(),
         val kdoc: String? = null
     ) : KotlinDeclaration()
-    
+
     /**
      * 类型别名声明
      */
@@ -54,7 +53,7 @@ sealed class KotlinDeclaration {
         val annotations: List<Annotation> = emptyList(),
         val kdoc: String? = null
     ) : KotlinDeclaration()
-    
+
     /**
      * 参数声明
      */
@@ -64,7 +63,7 @@ sealed class KotlinDeclaration {
         val defaultValue: Expression? = null,
         val annotations: List<Annotation> = emptyList()
     )
-    
+
     /**
      * 类型参数
      */
@@ -73,7 +72,7 @@ sealed class KotlinDeclaration {
         val variance: Variance = Variance.INVARIANT,
         val upperBounds: List<KotlinType> = emptyList()
     )
-    
+
     /**
      * 注解
      */
@@ -87,7 +86,7 @@ sealed class KotlinDeclaration {
  * 类型参数变型
  */
 enum class Variance {
-    INVARIANT,  // 不变
-    COVARIANT,  // 协变 (out)
-    CONTRAVARIANT  // 逆变 (in)
+    INVARIANT, // 不变
+    COVARIANT, // 协变 (out)
+    CONTRAVARIANT // 逆变 (in)
 }

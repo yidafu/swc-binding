@@ -10,8 +10,7 @@ fun KotlinType.isPrimitive(): Boolean = when (this) {
         "String", "Int", "Boolean", "Long", "Double", "Float", "Char", "Byte", "Short" -> true
         else -> false
     }
-    is KotlinType.StringType, is KotlinType.Int, is KotlinType.Boolean, 
-    is KotlinType.Long, is KotlinType.Double, is KotlinType.Float,
+    is KotlinType.StringType, is KotlinType.Int, is KotlinType.Boolean, is KotlinType.Long, is KotlinType.Double, is KotlinType.Float,
     is KotlinType.Char, is KotlinType.Byte, is KotlinType.Short -> true
     else -> false
 }
@@ -31,6 +30,7 @@ fun KotlinType.getTypeName(): String = when (this) {
     is KotlinType.Generic -> name
     is KotlinType.Nullable -> innerType.getTypeName()
     is KotlinType.Function -> "Function"
+    is KotlinType.ReceiverFunction -> "ReceiverFunction"
     is KotlinType.Union -> "Union"
     is KotlinType.Booleanable -> "Booleanable"
     is KotlinType.Any -> "Any"
@@ -63,12 +63,14 @@ object KotlinTypeFactory {
     fun any() = KotlinType.Any
     fun unit() = KotlinType.Unit
     fun nothing() = KotlinType.Nothing
-    
+
     fun simple(name: String) = KotlinType.Simple(name)
     fun generic(name: String, vararg params: KotlinType) = KotlinType.Generic(name, params.toList())
     fun nullable(type: KotlinType) = KotlinType.Nullable(type)
     fun booleanable(type: KotlinType) = KotlinType.Booleanable(type)
     fun union(vararg types: KotlinType) = KotlinType.Union(types.toList())
+    fun receiverFunction(receiver: KotlinType, vararg params: KotlinType, returnType: KotlinType = unit()) =
+        KotlinType.ReceiverFunction(receiver, params.toList(), returnType)
 }
 
 /**
@@ -76,7 +78,7 @@ object KotlinTypeFactory {
  */
 fun String.parseToKotlinType(): KotlinType {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
-    
+
     return when {
         cleanType.startsWith("Array<") -> {
             val elementType = cleanType.substringAfter("Array<").substringBeforeLast(">")
@@ -116,7 +118,7 @@ fun String.parseToKotlinType(): KotlinType {
 fun String.extractGenericParams(): List<String> {
     val params = this.substringAfter("<").substringBeforeLast(">")
     if (params.isEmpty()) return emptyList()
-    
+
     return params.extractNestedGenericParams()
 }
 
@@ -125,11 +127,11 @@ fun String.extractGenericParams(): List<String> {
  */
 fun String.extractNestedGenericParams(): List<String> {
     if (isEmpty()) return emptyList()
-    
+
     val result = mutableListOf<String>()
     var current = StringBuilder()
     var depth = 0
-    
+
     for (char in this) {
         when (char) {
             '<' -> {
@@ -151,10 +153,10 @@ fun String.extractNestedGenericParams(): List<String> {
             else -> current.append(char)
         }
     }
-    
+
     if (current.isNotEmpty()) {
         result.add(current.toString().trim())
     }
-    
+
     return result
 }

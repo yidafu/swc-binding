@@ -4,8 +4,7 @@ import kotlinx.serialization.json.*
 
 /**
  * 通用 AST 节点
- * 
- * 这是一个轻量级的 AST 节点包装器，提供类型安全的访问方法
+ * * 这是一个轻量级的 AST 节点包装器，提供类型安全的访问方法
  */
 data class AstNode(
     val type: String,
@@ -14,21 +13,18 @@ data class AstNode(
     /**
      * 获取字符串字段
      */
-    fun getString(name: String): String? = 
-        data[name]?.jsonPrimitive?.contentOrNull
-    
+    fun getString(name: String): String? = data[name]?.jsonPrimitive?.contentOrNull
+
     /**
      * 获取数字字段
      */
-    fun getInt(name: String): Int? = 
-        data[name]?.jsonPrimitive?.intOrNull
-    
+    fun getInt(name: String): Int? = data[name]?.jsonPrimitive?.intOrNull
+
     /**
      * 获取布尔字段
      */
-    fun getBoolean(name: String): Boolean? = 
-        data[name]?.jsonPrimitive?.booleanOrNull
-    
+    fun getBoolean(name: String): Boolean? = data[name]?.jsonPrimitive?.booleanOrNull
+
     /**
      * 获取子节点
      */
@@ -41,7 +37,7 @@ data class AstNode(
             obj
         )
     }
-    
+
     /**
      * 获取节点数组
      */
@@ -58,28 +54,27 @@ data class AstNode(
             )
         }
     }
-    
+
     /**
      * 检查字段是否存在且不为 null
      */
-    fun has(name: String): Boolean = 
-        data.containsKey(name) && data[name] !is JsonNull
-    
+    fun has(name: String): Boolean = data.containsKey(name) && data[name] !is JsonNull
+
     /**
      * 获取原始 JSON 数据（用于特殊情况）
      */
     fun getRaw(name: String): JsonElement? = data[name]
-    
+
     /**
      * 获取所有字段名
      */
     fun getFieldNames(): Set<String> = data.keys
-    
+
     /**
      * 转换为 JSON 对象（用于调试）
      */
     fun toJsonObject(): JsonObject = data
-    
+
     companion object {
         /**
          * 从 JSON 字符串创建
@@ -92,7 +87,7 @@ data class AstNode(
                 obj
             )
         }
-        
+
         /**
          * 从 JsonObject 创建
          */
@@ -103,7 +98,7 @@ data class AstNode(
             )
         }
     }
-    
+
     override fun toString(): String = "AstNode(type=$type)"
 }
 
@@ -132,4 +127,3 @@ fun AstNode.getSpan(): Span? {
  * 判断节点类型
  */
 fun AstNode.isType(vararg types: String): Boolean = types.contains(this.type)
-

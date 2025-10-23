@@ -6,11 +6,10 @@ import dev.yidafu.swc.generator.util.Logger
 
 /**
  * ADT 到 KotlinPoet 的核心转换器
- * 
- * 负责将 KotlinDeclaration ADT 转换为 KotlinPoet 的 TypeSpec、PropertySpec 等
+ * * 负责将 KotlinDeclaration ADT 转换为 KotlinPoet 的 TypeSpec、PropertySpec 等
  */
 object KotlinPoetConverter {
-    
+
     /**
      * 转换 KotlinType 为 TypeName
      */
@@ -23,7 +22,7 @@ object KotlinPoetConverter {
             throw e
         }
     }
-    
+
     /**
      * 转换 KotlinDeclaration 为 TypeSpec
      */
@@ -44,37 +43,58 @@ object KotlinPoetConverter {
             }
         }
     }
-    
+
     /**
      * 转换类声明为 TypeSpec
      */
     fun convertClassDeclaration(decl: KotlinDeclaration.ClassDecl): TypeSpec {
         val builder = createTypeBuilder(decl.name, decl.modifier)
-        
+
         // 添加修饰符
         addClassModifiers(builder, decl.modifier)
-        
+
         // 添加注解
         decl.annotations.forEach { annotation ->
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
-        
+
         // 添加父类型
         if (decl.parents.isNotEmpty()) {
             addParents(builder, decl.parents, decl.modifier is ClassModifier.Interface)
         }
-        
-        // 添加属性
-        decl.properties.forEach { prop ->
-            convertProperty(prop)?.let { builder.addProperty(it) }
+
+        // 添加属性或构造函数参数
+        if (decl.modifier is ClassModifier.DataClass) {
+            // Data class: 属性作为构造函数参数
+            val constructorParams = decl.properties.map { prop ->
+                val typeName = convertType(prop.type)
+                val paramBuilder = ParameterSpec.builder(prop.name, typeName)
+
+                // 添加注解
+                prop.annotations.forEach { annotation ->
+                    convertAnnotation(annotation)?.let { paramBuilder.addAnnotation(it) }
+                }
+
+                paramBuilder.build()
+            }
+            builder.primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameters(constructorParams)
+                    .build()
+            )
+        } else {
+            // 普通类: 属性作为类属性
+            decl.properties.forEach { prop ->
+                convertProperty(prop)?.let { builder.addProperty(it) }
+            }
         }
-        
+
         // 添加文档
         decl.kdoc?.let { builder.addKdoc(it.cleanKdoc()) }
-        
+
         return builder.build()
     }
-    
+
     /**
      * 转换属性声明为 PropertySpec
      */
@@ -82,23 +102,27 @@ object KotlinPoetConverter {
         return try {
             val typeName = convertType(prop.type)
             val builder = PropertySpec.builder(prop.name, typeName)
-            
+
             // 添加修饰符
             addPropertyModifiers(builder, prop.modifier)
-            
+
             // 添加注解
             prop.annotations.forEach { annotation ->
                 convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
             }
-            
+
             // 添加默认值
             prop.defaultValue?.let { defaultValue ->
-                builder.initializer(defaultValue.toCodeString())
+                val defaultValueStr = defaultValue.toCodeString()
+                // 只有当默认值不为空时才添加 initializer
+                if (defaultValueStr.isNotBlank()) {
+                    builder.initializer(defaultValueStr)
+                }
             }
-            
+
             // 添加文档
             prop.kdoc?.let { builder.addKdoc(it.cleanKdoc()) }
-            
+
             builder.build()
         } catch (e: Exception) {
             Logger.warn("转换属性失败: ${prop.name}, ${e.message}")
@@ -106,61 +130,61 @@ object KotlinPoetConverter {
             null
         }
     }
-    
+
     /**
      * 转换函数声明为 FunSpec
      */
     fun convertFunctionDeclaration(func: KotlinDeclaration.FunctionDecl): FunSpec {
         val builder = FunSpec.builder(func.name)
-        
+
         // 添加接收者
         func.receiver?.let { receiver ->
             builder.receiver(convertType(receiver))
         }
-        
+
         // 添加参数
         func.parameters.forEach { param ->
             val paramSpec = ParameterSpec.builder(
                 param.name,
                 convertType(param.type)
             )
-            
+
             // 添加参数注解
             param.annotations.forEach { annotation ->
                 convertAnnotation(annotation)?.let { paramSpec.addAnnotation(it) }
             }
-            
+
             // 添加默认值
             param.defaultValue?.let { defaultValue ->
                 paramSpec.defaultValue(defaultValue.toCodeString())
             }
-            
+
             builder.addParameter(paramSpec.build())
         }
-        
+
         // 设置返回类型
         builder.returns(convertType(func.returnType))
-        
+
         // 添加修饰符
         addFunctionModifiers(builder, func.modifier)
-        
+
         // 添加注解
         func.annotations.forEach { annotation ->
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
-        
+
         // 添加文档
         func.kdoc?.let { builder.addKdoc(it.cleanKdoc()) }
-        
+
         return builder.build()
     }
-    
+
     /**
      * 转换类型别名声明为 TypeAliasSpec
      */
     fun convertTypeAliasDeclaration(alias: KotlinDeclaration.TypeAliasDecl): TypeAliasSpec {
         val builder = TypeAliasSpec.builder(alias.name, convertType(alias.type))
-        
+
         // 添加类型参数
         alias.typeParameters.forEach { typeParam ->
             val typeVar = when (typeParam.variance) {
@@ -170,37 +194,56 @@ object KotlinPoetConverter {
             }
             builder.addTypeVariable(typeVar)
         }
-        
+
         // 添加注解
         alias.annotations.forEach { annotation ->
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
-        
+
         // 添加文档
         alias.kdoc?.let { builder.addKdoc(it.cleanKdoc()) }
-        
+
         return builder.build()
     }
-    
+
     /**
      * 转换注解为 AnnotationSpec
      */
     fun convertAnnotation(annotation: KotlinDeclaration.Annotation): AnnotationSpec? {
         return try {
-            val builder = AnnotationSpec.builder(ClassName("", annotation.name))
-            
+            val className = when (annotation.name) {
+                "SerialName" -> ClassName("kotlinx.serialization", "SerialName")
+                "Serializable" -> ClassName("kotlinx.serialization", "Serializable")
+                "JsonClassDiscriminator" -> ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
+                "OptIn" -> ClassName("kotlin", "OptIn")
+                "SwcDslMarker" -> ClassName("dev.yidafu.swc.types", "SwcDslMarker")
+                else -> ClassName("", annotation.name)
+            }
+            val builder = AnnotationSpec.builder(className)
+
             // 添加参数
             annotation.arguments.forEach { arg ->
-                builder.addMember("%L", arg.toCodeString())
+                when (arg) {
+                    is Expression.StringLiteral -> builder.addMember("%S", arg.value)
+                    is Expression.ClassReference -> {
+                        // 对于类引用，需要特殊处理
+                        val className = when (arg.className) {
+                            "ExperimentalSerializationApi" -> ClassName("kotlinx.serialization", "ExperimentalSerializationApi")
+                            else -> ClassName("", arg.className)
+                        }
+                        builder.addMember("%T::class", className)
+                    }
+                    else -> builder.addMember("%L", arg.toCodeString())
+                }
             }
-            
+
             builder.build()
         } catch (e: Exception) {
             Logger.warn("转换注解失败: ${annotation.name}, ${e.message}")
             null
         }
     }
-    
+
     /**
      * 创建 TypeSpec.Builder
      */
@@ -213,7 +256,7 @@ object KotlinPoetConverter {
             else -> TypeSpec.classBuilder(name)
         }
     }
-    
+
     /**
      * 添加类修饰符
      */
@@ -227,7 +270,7 @@ object KotlinPoetConverter {
             else -> { /* 默认修饰符 */ }
         }
     }
-    
+
     /**
      * 添加属性修饰符
      */
@@ -243,9 +286,17 @@ object KotlinPoetConverter {
                 builder.addModifiers(KModifier.LATEINIT)
                 builder.mutable(true)
             }
+            is PropertyModifier.OverrideVal -> {
+                builder.addModifiers(KModifier.OVERRIDE)
+                builder.mutable(false)
+            }
+            is PropertyModifier.OverrideVar -> {
+                builder.addModifiers(KModifier.OVERRIDE)
+                builder.mutable(true)
+            }
         }
     }
-    
+
     /**
      * 添加函数修饰符
      */
@@ -261,7 +312,7 @@ object KotlinPoetConverter {
             else -> { /* 默认修饰符 */ }
         }
     }
-    
+
     /**
      * 添加父类型
      */
@@ -271,17 +322,52 @@ object KotlinPoetConverter {
         isInterface: Boolean
     ) {
         if (parents.isEmpty()) return
-        
+
         if (isInterface) {
             parents.forEach { parent ->
                 builder.addSuperinterface(convertType(parent))
             }
         } else {
-            // 第一个作为 superclass，其他作为 superinterface
-            builder.superclass(convertType(parents.first()))
-            parents.drop(1).forEach { parent ->
-                builder.addSuperinterface(convertType(parent))
+            // 根据父类型本身的性质决定是 superclass 还是 superinterface
+            parents.forEach { parent ->
+                val parentTypeName = convertType(parent)
+                // 检查父类型是否是接口（通过类型名称判断）
+                if (isInterfaceType(parent)) {
+                    builder.addSuperinterface(parentTypeName)
+                } else {
+                    builder.superclass(parentTypeName)
+                }
             }
+        }
+    }
+
+    /**
+     * 判断类型是否是接口
+     * 这里通过类型名称来判断，因为接口通常以 Interface 结尾或者有特定的命名模式
+     */
+    private fun isInterfaceType(kotlinType: KotlinType): Boolean {
+        return when (kotlinType) {
+            is KotlinType.Simple -> {
+                // 检查是否是已知的接口类型
+                val name = kotlinType.name
+                // 如果类型名称在重要接口列表中，或者以 Interface 结尾，则认为是接口
+                name.endsWith("Interface") || 
+                name.endsWith("Options") || 
+                name.endsWith("Config") ||
+                name == "Node" ||
+                name == "HasSpan" ||
+                name == "HasDecorator" ||
+                name == "Plugin" ||
+                name == "MatchPattern" ||
+                name == "Identifier" ||
+                name == "StringLiteral" ||
+                name == "NumericLiteral" ||
+                name == "ArrayPattern" ||
+                name == "ExpressionBase" ||
+                name == "Pattern" ||
+                name == "Expression"
+            }
+            else -> false
         }
     }
 }
