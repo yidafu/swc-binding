@@ -23,10 +23,22 @@ fun createDslLambdaType(receiverClassName: String): LambdaTypeName {
 
 /**
  * 解析 Kotlin 类型字符串为 TypeName（增强版）
+ * 使用缓存优化重复解析
  */
+private val typeNameCache = mutableMapOf<String, TypeName>()
+
 fun String.parseAsTypeName(): TypeName {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
+    
+    return typeNameCache.getOrPut(cleanType) {
+        parseAsTypeNameInternal(cleanType)
+    }
+}
 
+/**
+ * 内部解析实现
+ */
+private fun parseAsTypeNameInternal(cleanType: String): TypeName {
     // 验证类型名称
     if (!cleanType.isValidKotlinTypeName()) {
         dev.yidafu.swc.generator.util.Logger.warn("无效的类型名称: '$cleanType'，使用 Any 替代")
@@ -35,46 +47,76 @@ fun String.parseAsTypeName(): TypeName {
 
     // 处理数组
     if (cleanType.startsWith("Array<")) {
-        val innerType = cleanType.substringAfter("Array<").substringBeforeLast(">")
-        return try {
-            ClassName("kotlin", "Array").parameterizedBy(innerType.parseAsTypeName())
-        } catch (e: Exception) {
-            dev.yidafu.swc.generator.util.Logger.warn("数组类型解析失败: $cleanType, ${e.message}")
-            ANY
-        }
+        return parseArrayType(cleanType)
     }
 
     // 处理泛型
     if (cleanType.contains("<")) {
-        val baseName = cleanType.substringBefore("<")
-        val typeParams = try {
-            cleanType.extractGenericParams()
-        } catch (e: Exception) {
-            dev.yidafu.swc.generator.util.Logger.warn("泛型参数提取失败: $cleanType, ${e.message}")
-            return ClassName("", baseName.sanitizeForClassName())
-        }
-
-        val baseClassName = when (baseName) {
-            "Map" -> MAP
-            "List" -> LIST
-            "Set" -> SET
-            "MutableMap" -> MUTABLE_MAP
-            "MutableList" -> MUTABLE_LIST
-            "MutableSet" -> MUTABLE_SET
-            else -> ClassName("", baseName.sanitizeForClassName())
-        }
-
-        if (typeParams.isNotEmpty()) {
-            return try {
-                baseClassName.parameterizedBy(typeParams.map { it.parseAsTypeName() })
-            } catch (e: Exception) {
-                dev.yidafu.swc.generator.util.Logger.warn("泛型类型构造失败: $cleanType, ${e.message}")
-                baseClassName
-            }
-        }
+        return parseGenericType(cleanType)
     }
 
     // 基础类型
+    return parseBasicType(cleanType)
+}
+
+/**
+ * 解析数组类型
+ */
+private fun parseArrayType(cleanType: String): TypeName {
+    val innerType = cleanType.substringAfter("Array<").substringBeforeLast(">")
+    return try {
+        ClassName("kotlin", "Array").parameterizedBy(innerType.parseAsTypeName())
+    } catch (e: Exception) {
+        dev.yidafu.swc.generator.util.Logger.warn("数组类型解析失败: $cleanType, ${e.message}")
+        ANY
+    }
+}
+
+/**
+ * 解析泛型类型
+ */
+private fun parseGenericType(cleanType: String): TypeName {
+    val baseName = cleanType.substringBefore("<")
+    val typeParams = try {
+        cleanType.extractGenericParams()
+    } catch (e: Exception) {
+        dev.yidafu.swc.generator.util.Logger.warn("泛型参数提取失败: $cleanType, ${e.message}")
+        return ClassName("", baseName.sanitizeForClassName())
+    }
+
+    val baseClassName = getBaseClassName(baseName)
+
+    return if (typeParams.isNotEmpty()) {
+        try {
+            baseClassName.parameterizedBy(typeParams.map { it.parseAsTypeName() })
+        } catch (e: Exception) {
+            dev.yidafu.swc.generator.util.Logger.warn("泛型类型构造失败: $cleanType, ${e.message}")
+            baseClassName
+        }
+    } else {
+        baseClassName
+    }
+}
+
+/**
+ * 获取基础类名
+ */
+private fun getBaseClassName(baseName: String): ClassName {
+    return when (baseName) {
+        "Map" -> MAP
+        "List" -> LIST
+        "Set" -> SET
+        "MutableMap" -> MUTABLE_MAP
+        "MutableList" -> MUTABLE_LIST
+        "MutableSet" -> MUTABLE_SET
+        else -> ClassName("", baseName.sanitizeForClassName())
+    }
+}
+
+/**
+ * 解析基本类型
+ */
+private fun parseBasicType(cleanType: String): TypeName {
     return when (cleanType) {
         "String" -> STRING
         "Int" -> INT
@@ -238,7 +280,7 @@ fun TypeSpec.Builder.addParents(
 /**
  * 为 TypeSpec.Builder 批量添加属性
  */
-fun TypeSpec.Builder.addProperties(properties: List<PropertySpec>): TypeSpec.Builder {
+fun TypeSpec.Builder.addPropertiesBatch(properties: List<PropertySpec>): TypeSpec.Builder {
     properties.forEach { addProperty(it) }
     return this
 }

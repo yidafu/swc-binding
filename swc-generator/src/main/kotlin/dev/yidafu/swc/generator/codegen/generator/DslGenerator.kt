@@ -42,61 +42,66 @@ class DslGenerator(
 
     /**
      * 生成 DSL 扩展函数
+     * 优化：批量处理，减少重复计算
      */
     fun generateExtensionFunctions() {
         val needGenerateDslClassList = classDecls
             .filter { ExtendRelationship.findAllChildrenByParent(it.name).isNotEmpty() }
             .map { it.name }
 
+        // 批量创建扩展函数列表
         needGenerateDslClassList.forEach { key ->
             createExtensionFunList(key)
         }
 
-        needGenerateDslClassList
+        // 批量处理属性相关的扩展函数
+        val propertyExtensionFuns = generatePropertyExtensionFunctions(needGenerateDslClassList)
+        propertyExtensionFuns.forEach { extFun ->
+            addExtensionFunWrapper(extFun)
+        }
+    }
+    
+    /**
+     * 生成属性相关的扩展函数
+     */
+    private fun generatePropertyExtensionFunctions(needGenerateDslClassList: List<String>): List<KotlinExtensionFun> {
+        return needGenerateDslClassList
             .mapNotNull { klass ->
                 val props = classAllPropertiesMap[klass]
                 if (props != null) klass to props else null
             }
-            .forEach { (klass, props) ->
-                props.forEach { prop ->
-                    when (val type = prop.type) {
-                        is KotlinType.Union -> {
-                            type.types.forEach { unionType ->
-                                ExtendRelationship.findAllGrandChildren(unionType.toTypeString()).forEach { child ->
-                                    addExtensionFunWrapper(
-                                        KotlinExtensionFun(
-                                            klass,
-                                            child,
-                                            """
-                                        /**
-                                          * $klass#${prop.name}: ${prop.getTypeString()}
-                                          * extension function for create${prop.getTypeString()} -> $child
-                                          */
-                                            """.trimIndent()
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                        else -> {
-                            ExtendRelationship.findAllGrandChildren(type.toTypeString()).forEach { child ->
-                                addExtensionFunWrapper(
-                                    KotlinExtensionFun(
-                                        klass,
-                                        child,
-                                        """
-                                    /**
-                                      * $klass#${prop.name}: ${prop.getTypeString()}
-                                      * extension function for create ${prop.getTypeString()} -> $child
-                                      */
-                                        """.trimIndent()
-                                    )
-                                )
-                            }
-                        }
+            .flatMap { (klass, props) ->
+                props.flatMap { prop ->
+                    generatePropertyExtensionFunctions(klass, prop)
+                }
+            }
+    }
+    
+    /**
+     * 为单个属性生成扩展函数
+     */
+    private fun generatePropertyExtensionFunctions(klass: String, prop: KotlinDeclaration.PropertyDecl): List<KotlinExtensionFun> {
+        val kdoc = """
+            /**
+              * $klass#${prop.name}: ${prop.getTypeString()}
+              * extension function for create ${prop.getTypeString()} -> {child}
+              */
+        """.trimIndent()
+        
+        return when (val type = prop.type) {
+            is KotlinType.Union -> {
+                type.types.flatMap { unionType ->
+                    ExtendRelationship.findAllGrandChildren(unionType.toTypeString()).map { child ->
+                        KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
                     }
                 }
             }
+            else -> {
+                ExtendRelationship.findAllGrandChildren(type.toTypeString()).map { child ->
+                    KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
+                }
+            }
+        }
     }
 
     /**
@@ -215,7 +220,6 @@ class DslGenerator(
     private fun createDslExtensionFun(extFun: KotlinExtensionFun, receiver: String): FunSpec {
         val funName = toFunName(extFun.funName.replace("Impl", ""))
         val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
-        val implTypeName = sanitizeTypeName(removeGenerics(extFun.funName))
         val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
 
         // 使用 ADT 创建函数声明
@@ -250,22 +254,33 @@ class DslGenerator(
     private fun createDslExtensionFunLegacy(extFun: KotlinExtensionFun, receiver: String): FunSpec {
         val funName = toFunName(extFun.funName.replace("Impl", ""))
         val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
-        val implTypeName = sanitizeTypeName(removeGenerics(extFun.funName))
         val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
 
         return createExtensionFun(
             funName = funName,
             receiverType = ClassName(PoetConstants.PKG_TYPES, receiverTypeName),
             returnType = ClassName(PoetConstants.PKG_TYPES, returnTypeName),
-            implType = ClassName(PoetConstants.PKG_TYPES, implTypeName),
+            implType = ClassName(PoetConstants.PKG_TYPES, sanitizeTypeName(removeGenerics(extFun.funName))),
             kdoc = extFun.comments.takeIf { it.isNotEmpty() }
         )
     }
 
     /**
      * 清理类型名称，确保它是有效的 Kotlin 类型名称（增强版）
+     * 使用缓存优化重复清理
      */
+    private val sanitizedTypeNameCache = mutableMapOf<String, String>()
+    
     private fun sanitizeTypeName(typeName: String): String {
+        return sanitizedTypeNameCache.getOrPut(typeName) {
+            sanitizeTypeNameInternal(typeName)
+        }
+    }
+    
+    /**
+     * 内部清理类型名称实现
+     */
+    private fun sanitizeTypeNameInternal(typeName: String): String {
         var cleaned = typeName.trim()
 
         // 移除注释

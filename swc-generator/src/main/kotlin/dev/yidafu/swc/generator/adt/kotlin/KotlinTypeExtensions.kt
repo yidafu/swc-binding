@@ -75,10 +75,22 @@ object KotlinTypeFactory {
 
 /**
  * 扩展方法：从字符串解析为 KotlinType
+ * 使用缓存优化重复解析
  */
+private val kotlinTypeCache = mutableMapOf<String, KotlinType>()
+
 fun String.parseToKotlinType(): KotlinType {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
+    
+    return kotlinTypeCache.getOrPut(cleanType) {
+        parseToKotlinTypeInternal(cleanType)
+    }
+}
 
+/**
+ * 内部解析实现
+ */
+private fun parseToKotlinTypeInternal(cleanType: String): KotlinType {
     return when {
         cleanType.startsWith("Array<") -> {
             val elementType = cleanType.substringAfter("Array<").substringBeforeLast(">")
@@ -94,21 +106,28 @@ fun String.parseToKotlinType(): KotlinType {
             val innerType = cleanType.substringBefore("?")
             KotlinTypeFactory.nullable(innerType.parseToKotlinType())
         }
-        else -> when (cleanType) {
-            "String" -> KotlinTypeFactory.string()
-            "Int" -> KotlinTypeFactory.int()
-            "Boolean" -> KotlinTypeFactory.boolean()
-            "Long" -> KotlinTypeFactory.long()
-            "Double" -> KotlinTypeFactory.double()
-            "Float" -> KotlinTypeFactory.float()
-            "Char" -> KotlinTypeFactory.char()
-            "Byte" -> KotlinTypeFactory.byte()
-            "Short" -> KotlinTypeFactory.short()
-            "Any" -> KotlinTypeFactory.any()
-            "Unit" -> KotlinTypeFactory.unit()
-            "Nothing" -> KotlinTypeFactory.nothing()
-            else -> KotlinTypeFactory.simple(cleanType)
-        }
+        else -> parseBasicKotlinType(cleanType)
+    }
+}
+
+/**
+ * 解析基本Kotlin类型
+ */
+private fun parseBasicKotlinType(cleanType: String): KotlinType {
+    return when (cleanType) {
+        "String" -> KotlinTypeFactory.string()
+        "Int" -> KotlinTypeFactory.int()
+        "Boolean" -> KotlinTypeFactory.boolean()
+        "Long" -> KotlinTypeFactory.long()
+        "Double" -> KotlinTypeFactory.double()
+        "Float" -> KotlinTypeFactory.float()
+        "Char" -> KotlinTypeFactory.char()
+        "Byte" -> KotlinTypeFactory.byte()
+        "Short" -> KotlinTypeFactory.short()
+        "Any" -> KotlinTypeFactory.any()
+        "Unit" -> KotlinTypeFactory.unit()
+        "Nothing" -> KotlinTypeFactory.nothing()
+        else -> KotlinTypeFactory.simple(cleanType)
     }
 }
 

@@ -8,6 +8,7 @@ import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.config.HardcodedRules
 import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 import dev.yidafu.swc.generator.util.Logger
+import dev.yidafu.swc.generator.util.PerformanceOptimizer
 import java.io.File
 
 /**
@@ -56,54 +57,74 @@ class TypesGenerator(
 
     /**
      * 解析类型名称为 TypeName
+     * 使用缓存优化重复解析
      */
+    private val typeNameCache = mutableMapOf<String, TypeName>()
+    
     private fun parseTypeName(typeStr: String): TypeName {
-        return when {
-            typeStr.startsWith("Union.U") -> {
-                // 处理 Union.U2<A, B> 等
-                val match = Regex("""Union\.U(\d+)<(.+)>""").find(typeStr)
-                if (match != null) {
-                    val unionNum = match.groupValues[1].toInt()
-                    val genericParams = match.groupValues[2].split(",").map { it.trim() }
-
-                    val className = ClassName("dev.yidafu.swc", "Union.U$unionNum")
-                    val typeParams = genericParams.map { TypeVariableName(it) }
-                    className.parameterizedBy(typeParams)
-                } else {
-                    ClassName("dev.yidafu.swc", typeStr)
-                }
+        return typeNameCache.getOrPut(typeStr) {
+            when {
+                typeStr.startsWith("Union.U") -> parseUnionType(typeStr)
+                typeStr.startsWith("Map<") -> parseMapType(typeStr)
+                typeStr.startsWith("Array<") -> parseArrayType(typeStr)
+                else -> parseBasicType(typeStr)
             }
-            typeStr.startsWith("Map<") -> {
-                // 处理 Map<String, String> 等
-                val match = Regex("""Map<(.+),\s*(.+)>""").find(typeStr)
-                if (match != null) {
-                    val keyType = parseTypeName(match.groupValues[1])
-                    val valueType = parseTypeName(match.groupValues[2])
-                    Map::class.asClassName().parameterizedBy(keyType, valueType)
-                } else {
-                    ClassName("kotlin.collections", "Map")
-                }
-            }
-            typeStr.startsWith("Array<") -> {
-                // 处理 Array<T> 等
-                val match = Regex("""Array<(.+)>""").find(typeStr)
-                if (match != null) {
-                    val elementType = parseTypeName(match.groupValues[1])
-                    Array::class.asClassName().parameterizedBy(elementType)
-                } else {
-                    ClassName("kotlin", "Array")
-                }
-            }
-            else -> {
-                // 基本类型
-                when (typeStr) {
-                    "String" -> String::class.asTypeName()
-                    "Int" -> Int::class.asTypeName()
-                    "Boolean" -> Boolean::class.asTypeName()
-                    "Any" -> Any::class.asTypeName()
-                    else -> ClassName("dev.yidafu.swc.types", typeStr)
-                }
-            }
+        }
+    }
+    
+    /**
+     * 解析Union类型
+     */
+    private fun parseUnionType(typeStr: String): TypeName {
+        val match = Regex("""Union\.U(\d+)<(.+)>""").find(typeStr)
+        return if (match != null) {
+            val unionNum = match.groupValues[1].toInt()
+            val genericParams = match.groupValues[2].split(",").map { it.trim() }
+            val className = ClassName("dev.yidafu.swc", "Union.U$unionNum")
+            val typeParams = genericParams.map { TypeVariableName(it) }
+            className.parameterizedBy(typeParams)
+        } else {
+            ClassName("dev.yidafu.swc", typeStr)
+        }
+    }
+    
+    /**
+     * 解析Map类型
+     */
+    private fun parseMapType(typeStr: String): TypeName {
+        val match = Regex("""Map<(.+),\s*(.+)>""").find(typeStr)
+        return if (match != null) {
+            val keyType = parseTypeName(match.groupValues[1])
+            val valueType = parseTypeName(match.groupValues[2])
+            Map::class.asClassName().parameterizedBy(keyType, valueType)
+        } else {
+            ClassName("kotlin.collections", "Map")
+        }
+    }
+    
+    /**
+     * 解析Array类型
+     */
+    private fun parseArrayType(typeStr: String): TypeName {
+        val match = Regex("""Array<(.+)>""").find(typeStr)
+        return if (match != null) {
+            val elementType = parseTypeName(match.groupValues[1])
+            Array::class.asClassName().parameterizedBy(elementType)
+        } else {
+            ClassName("kotlin", "Array")
+        }
+    }
+    
+    /**
+     * 解析基本类型
+     */
+    private fun parseBasicType(typeStr: String): TypeName {
+        return when (typeStr) {
+            "String" -> String::class.asTypeName()
+            "Int" -> Int::class.asTypeName()
+            "Boolean" -> Boolean::class.asTypeName()
+            "Any" -> Any::class.asTypeName()
+            else -> ClassName("dev.yidafu.swc.types", typeStr)
         }
     }
 
@@ -111,39 +132,45 @@ class TypesGenerator(
      * 生成代码并写入文件
      */
     fun writeToFile(outputPath: String) {
-        Logger.debug("使用 KotlinPoet 生成 types.kt...", 4)
+        PerformanceOptimizer.measureTime("生成 types.kt 文件") {
+            Logger.debug("使用 KotlinPoet 生成 types.kt...", 4)
 
-        val fileBuilder = createFileBuilder(
-            PoetConstants.PKG_TYPES,
-            "types",
-            PoetConstants.PKG_BOOLEANABLE to "*",
-            "kotlinx.serialization" to "*",
-            "kotlinx.serialization.json" to "JsonClassDiscriminator"
-        )
+            val fileBuilder = createFileBuilder(
+                PoetConstants.PKG_TYPES,
+                "types",
+                PoetConstants.PKG_BOOLEANABLE to "*",
+                "kotlinx.serialization" to "*",
+                "kotlinx.serialization.json" to "JsonClassDiscriminator"
+            )
 
-        // 添加注解类和类型别名
-        fileBuilder.addType(createSwcDslMarkerAnnotation())
-        fileBuilder.addTypeAlias(createRecordTypeAlias())
+            // 添加注解类和类型别名
+            fileBuilder.addType(createSwcDslMarkerAnnotation())
+            fileBuilder.addTypeAlias(createRecordTypeAlias())
 
-        // 使用 KotlinPoetConverter 添加类型别名
-        typeAliases.forEach { typeAlias ->
-            try {
-                val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
-                fileBuilder.addTypeAlias(typeAliasSpec)
-            } catch (e: Exception) {
-                Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
+            // 使用 KotlinPoetConverter 添加类型别名
+            typeAliases.forEach { typeAlias ->
+                try {
+                    val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
+                    fileBuilder.addTypeAlias(typeAliasSpec)
+                } catch (e: Exception) {
+                    Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
+                }
             }
+
+            // 生成并添加类
+            generateClasses(fileBuilder)
+
+            // 写入文件
+            writeFile(fileBuilder, outputPath)
         }
-
-        // 生成并添加类
-        generateClasses(fileBuilder)
-
-        // 写入文件
-        writeFile(fileBuilder, outputPath)
+        
+        // 打印性能统计
+        PerformanceOptimizer.printCacheStats()
     }
 
     /**
      * 生成类并添加到文件
+     * 优化：批量处理，减少重复计算
      */
     private fun generateClasses(fileBuilder: FileSpec.Builder) {
         Logger.debug("  开始生成类，总类数: ${classDecls.size}", 4)
@@ -154,9 +181,10 @@ class TypesGenerator(
         if (filteredClasses.isEmpty()) {
             Logger.warn("⚠️  警告：所有类都被过滤掉了！")
             Logger.debug("  原始类列表: ${classDecls.map { it.name }}", 6)
+            return
         }
 
-        // 1. 自动设置 sealed 修饰符
+        // 批量处理：自动设置 sealed 修饰符
         val classesWithSealed = filteredClasses.map { klass ->
             if (klass.shouldBeSealed(filteredClasses)) {
                 Logger.debug("  自动设置 sealed: ${klass.name}", 6)
@@ -166,61 +194,93 @@ class TypesGenerator(
             }
         }
 
-        // 2. 按继承关系排序和分组
+        // 按继承关系排序和分组
         val sortedClasses = sortClassesByInheritance(classesWithSealed)
         Logger.debug("  排序后的类数量: ${sortedClasses.size}", 4)
 
-        var successCount = 0
-        var failureCount = 0
-
-        val failedClasses = mutableListOf<Pair<String, String>>()
-
-        sortedClasses.forEach { klass: KotlinDeclaration.ClassDecl ->
-            runCatching {
-                KotlinPoetGenerator.createTypeSpec(klass)
-            }.onSuccess { typeSpec: TypeSpec ->
-                fileBuilder.addType(typeSpec)
-                successCount++
-                Logger.verbose("  ✓ ${klass.name}", 6)
-            }.onFailure { e ->
-                failureCount++
-                val errorMsg = e.message ?: "未知错误"
-                failedClasses.add(klass.name to errorMsg)
-
-                Logger.warn("⚠️  生成失败: ${klass.name}")
-                Logger.verbose("  错误: $errorMsg", 8)
-                Logger.verbose("  类型: ${klass.modifier}, 属性数: ${klass.properties.size}", 8)
-
-                if (klass.properties.isNotEmpty()) {
-                    Logger.verbose("  前3个属性:", 8)
-                    klass.properties.take(3).forEach { prop: KotlinDeclaration.PropertyDecl ->
-                        Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.getTypeString()}", 10)
-                    }
-                }
-            }
+        // 批量生成类型规范
+        val generationResults = generateTypeSpecsBatch(sortedClasses)
+        
+        // 批量添加到文件
+        generationResults.successful.forEach { typeSpec ->
+            fileBuilder.addType(typeSpec)
         }
 
         // 生成汇总报告
+        logGenerationResults(generationResults, sortedClasses.size)
+    }
+    
+    /**
+     * 批量生成类型规范
+     */
+    private data class GenerationResults(
+        val successful: List<TypeSpec>,
+        val failed: List<Pair<String, String>>
+    )
+    
+    private fun generateTypeSpecsBatch(classes: List<KotlinDeclaration.ClassDecl>): GenerationResults {
+        val successful = mutableListOf<TypeSpec>()
+        val failed = mutableListOf<Pair<String, String>>()
+        
+        classes.forEach { klass ->
+            runCatching {
+                KotlinPoetGenerator.createTypeSpec(klass)
+            }.onSuccess { typeSpec ->
+                successful.add(typeSpec)
+                Logger.verbose("  ✓ ${klass.name}", 6)
+            }.onFailure { e ->
+                val errorMsg = e.message ?: "未知错误"
+                failed.add(klass.name to errorMsg)
+                logClassGenerationFailure(klass, errorMsg)
+            }
+        }
+        
+        return GenerationResults(successful, failed)
+    }
+    
+    /**
+     * 记录类生成失败信息
+     */
+    private fun logClassGenerationFailure(klass: KotlinDeclaration.ClassDecl, errorMsg: String) {
+        Logger.warn("⚠️  生成失败: ${klass.name}")
+        Logger.verbose("  错误: $errorMsg", 8)
+        Logger.verbose("  类型: ${klass.modifier}, 属性数: ${klass.properties.size}", 8)
+
+        if (klass.properties.isNotEmpty()) {
+            Logger.verbose("  前3个属性:", 8)
+            klass.properties.take(3).forEach { prop ->
+                Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.getTypeString()}", 10)
+            }
+        }
+    }
+    
+    /**
+     * 记录生成结果
+     */
+    private fun logGenerationResults(results: GenerationResults, totalClasses: Int) {
+        val successCount = results.successful.size
+        val failureCount = results.failed.size
+        
         Logger.debug("  生成完成: 成功 $successCount，失败 $failureCount", 4)
 
         if (failureCount > 0) {
             Logger.separator()
             Logger.warn("生成失败汇总 ($failureCount 个类):")
-            failedClasses.take(10).forEach { (name, error) ->
+            results.failed.take(10).forEach { (name, error) ->
                 Logger.info("  - $name: ${error.take(60)}", 2)
             }
-            if (failedClasses.size > 10) {
-                Logger.info("  ... 还有 ${failedClasses.size - 10} 个失败", 2)
+            if (results.failed.size > 10) {
+                Logger.info("  ... 还有 ${results.failed.size - 10} 个失败", 2)
             }
         }
 
         // 计算成功率
-        val successRate = if (sortedClasses.isNotEmpty()) {
-            (successCount.toDouble() / sortedClasses.size * 100).toInt()
+        val successRate = if (totalClasses > 0) {
+            (successCount.toDouble() / totalClasses * 100).toInt()
         } else {
             0
         }
-        Logger.info("  成功率: $successRate% ($successCount/${sortedClasses.size})", 2)
+        Logger.info("  成功率: $successRate% ($successCount/$totalClasses)", 2)
     }
 
     /**
@@ -361,7 +421,7 @@ class TypesGenerator(
         val result = mutableListOf<KotlinDeclaration.ClassDecl>()
         
         // 处理每个继承树
-        groupedByRoot.forEach { (root, classesInTree) ->
+        groupedByRoot.forEach { (_, classesInTree) ->
             // 树内按继承深度排序（深度小的在前）
             val sortedTree = classesInTree.sortedBy { it.getInheritanceDepth() }
             result.addAll(sortedTree)
