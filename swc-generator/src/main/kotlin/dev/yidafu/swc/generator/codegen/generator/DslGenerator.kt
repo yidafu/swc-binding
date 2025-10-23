@@ -1,13 +1,14 @@
 package dev.yidafu.swc.generator.codegen.generator
 
-import com.squareup.kotlinpoet.*
+import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.core.model.KotlinClass
 import dev.yidafu.swc.generator.core.model.KotlinProperty
 import dev.yidafu.swc.generator.core.model.KotlinExtensionFun
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.core.relation.ExtendRelationship
-import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.config.ConfigLoader
 import dev.yidafu.swc.generator.util.Logger
+import com.squareup.kotlinpoet.*
 import java.io.File
 
 /**
@@ -25,7 +26,8 @@ class DslGenerator(
      */
     private fun addExtensionFun(extFun: KotlinExtensionFun) {
         if (extFun.receiver != extFun.funName) {
-            if (listOf("HasSpan", "HasDecorator").contains(extFun.receiver)) return
+            val config = dev.yidafu.swc.generator.config.ConfigLoader.loadConfig()
+            if (config.filterRules.skipDslReceivers.contains(extFun.receiver)) return
             if (extFun.receiver == extFun.funName.replace("Impl", "")) return
             
             extFunMap["${extFun.receiver} - ${extFun.funName.replace("Impl", "")}"] = extFun
@@ -51,18 +53,36 @@ class DslGenerator(
             }
             .forEach { (klass, props) ->
                 props.forEach { prop ->
-                    prop.getTypeList().forEach { type ->
-                        ExtendRelationship.findAllGrandChildren(type).forEach { child ->
-                            addExtensionFunWrapper(KotlinExtensionFun(
-                                klass,
-                                child,
-                                """
-                                /**
-                                  * $klass#${prop.name}: ${prop.type}
-                                  * extension function for create ${prop.type} -> $child
-                                  */
-                                """.trimIndent()
-                            ))
+                    when (val type = prop.kotlinType) {
+                        is dev.yidafu.swc.generator.adt.kotlin.KotlinType.Union -> {
+                            type.types.forEach { unionType ->
+                                ExtendRelationship.findAllGrandChildren(unionType.toTypeString()).forEach { child ->
+                                    addExtensionFunWrapper(KotlinExtensionFun(
+                                        klass,
+                                        child,
+                                        """
+                                        /**
+                                          * $klass#${prop.name}: ${prop.getTypeString()}
+                                          * extension function for create ${prop.getTypeString()} -> $child
+                                          */
+                                        """.trimIndent()
+                                    ))
+                                }
+                            }
+                        }
+                        else -> {
+                            ExtendRelationship.findAllGrandChildren(type.toTypeString()).forEach { child ->
+                                addExtensionFunWrapper(KotlinExtensionFun(
+                                    klass,
+                                    child,
+                                    """
+                                    /**
+                                      * $klass#${prop.name}: ${prop.getTypeString()}
+                                      * extension function for create ${prop.getTypeString()} -> $child
+                                      */
+                                    """.trimIndent()
+                                ))
+                            }
                         }
                     }
                 }
@@ -90,7 +110,8 @@ class DslGenerator(
      * 添加扩展函数（带包装逻辑）
      */
     private fun addExtensionFunWrapper(extFun: KotlinExtensionFun) {
-        if (listOf("HasSpan", "HasDecorator").contains(extFun.receiver)) return
+        val config = dev.yidafu.swc.generator.config.ConfigLoader.loadConfig()
+        if (config.filterRules.skipDslReceivers.contains(extFun.receiver)) return
         if (extFun.receiver == extFun.funName.replace("Impl", "")) return
         
         // 过滤掉包含非法字符的类型名称
@@ -204,7 +225,7 @@ class DslGenerator(
         funList.forEach { extFun ->
             runCatching {
                 createDslExtensionFun(extFun, receiver)
-            }.onSuccess { funSpec ->
+            }.onSuccess { funSpec: FunSpec ->
                 fileBuilder.addFunction(funSpec)
             }.onFailure { e ->
                 Logger.warn("生成失败: ${extFun.funName}, 跳过 (${e.message})")
@@ -220,11 +241,42 @@ class DslGenerator(
     }
     
     /**
-     * 创建 DSL 扩展函数
+     * 创建 DSL 扩展函数（使用 ADT）
      */
     private fun createDslExtensionFun(extFun: KotlinExtensionFun, receiver: String): FunSpec {
         val funName = toFunName(extFun.funName.replace("Impl", ""))
-        // 清理泛型参数，避免 ClassName 构造器错误
+        val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
+        val implTypeName = sanitizeTypeName(removeGenerics(extFun.funName))
+        val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
+        
+        // 使用 ADT 创建函数声明
+        val functionDecl = KotlinDeclaration.FunctionDecl(
+            name = funName,
+            receiver = KotlinTypeFactory.simple(receiverTypeName),
+            parameters = listOf(
+                KotlinDeclaration.ParameterDecl(
+                    name = "block",
+                    type = KotlinTypeFactory.simple("Function1")
+                )
+            ),
+            returnType = KotlinTypeFactory.simple(returnTypeName),
+            modifier = FunctionModifier.Fun,
+            kdoc = extFun.comments.takeIf { it.isNotEmpty() }
+        )
+        
+        return try {
+            KotlinPoetConverter.convertFunctionDeclaration(functionDecl)
+        } catch (e: Exception) {
+            Logger.warn("使用 KotlinPoetConverter 转换函数失败，回退到手动构建: ${e.message}")
+            createDslExtensionFunLegacy(extFun, receiver)
+        }
+    }
+    
+    /**
+     * 创建 DSL 扩展函数（传统方式，作为回退）
+     */
+    private fun createDslExtensionFunLegacy(extFun: KotlinExtensionFun, receiver: String): FunSpec {
+        val funName = toFunName(extFun.funName.replace("Impl", ""))
         val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
         val implTypeName = sanitizeTypeName(removeGenerics(extFun.funName))
         val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
@@ -283,7 +335,8 @@ class DslGenerator(
     private fun toFunName(str: String): String {
         val withoutGenerics = removeGenerics(str)
         val name = withoutGenerics.replaceFirstChar { it.lowercase() }
-        return Constants.kotlinKeywordMap[name] ?: name
+        val config = ConfigLoader.loadConfig()
+        return config.kotlinKeywordMap[name] ?: name
     }
     
     /**
@@ -298,7 +351,7 @@ class DslGenerator(
         )
         
         implClasses.forEach { klass ->
-            val funSpec = createCreateFunction(klass)
+            val funSpec: FunSpec = createCreateFunction(klass)
             fileBuilder.addFunction(funSpec)
         }
         
@@ -320,7 +373,7 @@ class DslGenerator(
         val implType = ClassName(PoetConstants.PKG_TYPES, klassName)
         
         return FunSpec.builder("create$interfaceName")
-            .addParameter("block", createDslLambdaType(interfaceType))
+            .addParameter("block", createDslLambdaType(interfaceType as TypeName))
             .returns(interfaceType)
             .addStatement("return %T().apply(block)", implType)
             .build()

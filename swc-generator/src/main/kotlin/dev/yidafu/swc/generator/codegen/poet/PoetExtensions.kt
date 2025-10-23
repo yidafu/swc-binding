@@ -207,6 +207,7 @@ fun String.cleanKdoc(): String {
         .replace("*/", "")
         .replace("  * ", "")
         .replace("*", "")
+        .replace("%", "%%") // 转义 % 字符，防止 KotlinPoet 将其解释为格式化占位符
         .trim()
 }
 

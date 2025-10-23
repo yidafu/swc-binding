@@ -3,10 +3,11 @@ package dev.yidafu.swc.generator.codegen.poet
 import com.squareup.kotlinpoet.*
 import dev.yidafu.swc.generator.core.model.KotlinClass
 import dev.yidafu.swc.generator.core.model.KotlinProperty
-import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.config.ConfigLoader
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.codegen.poet.PoetConstants.Serialization
 import dev.yidafu.swc.generator.codegen.poet.PoetConstants.SwcTypes
+import dev.yidafu.swc.generator.codegen.poet.KotlinPoetConverter
 
 /**
  * KotlinPoet 代码生成器
@@ -14,10 +15,24 @@ import dev.yidafu.swc.generator.codegen.poet.PoetConstants.SwcTypes
 object KotlinPoetGenerator {
     
     /**
-     * 从 KotlinProperty 创建 PropertySpec（增强版）
+     * 从 KotlinProperty 创建 PropertySpec（使用 KotlinPoetConverter）
      */
     fun createPropertySpec(prop: KotlinProperty): PropertySpec? {
-        val propName = Constants.kotlinKeywordMap[prop.name] ?: prop.name
+        return try {
+            val declaration = prop.toDeclaration()
+            KotlinPoetConverter.convertProperty(declaration)
+        } catch (e: Exception) {
+            Logger.warn("使用 KotlinPoetConverter 转换属性失败，回退到手动构建: ${e.message}")
+            createPropertySpecLegacy(prop)
+        }
+    }
+    
+    /**
+     * 从 KotlinProperty 创建 PropertySpec（传统方式，作为回退）
+     */
+    private fun createPropertySpecLegacy(prop: KotlinProperty): PropertySpec? {
+        val config = ConfigLoader.loadConfig()
+        val propName = config.kotlinKeywordMap[prop.name] ?: prop.name
         
         // 验证属性类型
         val actualTypeStr = prop.getActualType()
@@ -177,11 +192,24 @@ object KotlinPoetGenerator {
     }
     
     /**
-     * 从 KotlinClass 创建 TypeSpec
+     * 从 KotlinClass 创建 TypeSpec（使用 KotlinPoetConverter）
      */
     fun createTypeSpec(klass: KotlinClass): TypeSpec {
+        return try {
+            val declaration = klass.toDeclaration()
+            KotlinPoetConverter.convertDeclaration(declaration)
+        } catch (e: Exception) {
+            Logger.warn("使用 KotlinPoetConverter 转换失败，回退到手动构建: ${e.message}")
+            createTypeSpecLegacy(klass)
+        }
+    }
+    
+    /**
+     * 从 KotlinClass 创建 TypeSpec（传统方式，作为回退）
+     */
+    private fun createTypeSpecLegacy(klass: KotlinClass): TypeSpec {
         // 过滤掉无法创建的属性
-        val validProperties = klass.properties.mapNotNull { prop ->
+        val validProperties = klass.properties.mapNotNull { prop: KotlinProperty ->
             createPropertySpec(prop)
         }
         

@@ -1,5 +1,7 @@
 package dev.yidafu.swc.generator.core.model
 
+import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.core.model.KotlinProperty
 import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 
 /**
@@ -39,15 +41,97 @@ data class KotlinClass(
         if (klassName.contains("NumericLiteral")) {
             properties.forEach { prop ->
                 if (prop.name == "value") {
-                    prop.type = "Double"
+                    prop.kotlinType = KotlinType.Double
                 }
             }
         }
     }
     
     /**
-     * 转换为字符串
+     * 转换为 KotlinDeclaration.ClassDecl
      */
+    fun toDeclaration(): KotlinDeclaration.ClassDecl {
+        val classModifier = when {
+            modifier.contains("sealed interface") -> ClassModifier.SealedInterface
+            modifier.contains("interface") -> ClassModifier.Interface
+            modifier.contains("object") -> ClassModifier.Object
+            modifier.contains("enum") -> ClassModifier.EnumClass
+            modifier.contains("sealed") -> ClassModifier.SealedClass
+            modifier.contains("abstract") -> ClassModifier.AbstractClass
+            modifier.contains("open") -> ClassModifier.OpenClass
+            modifier.contains("data") -> ClassModifier.DataClass
+            else -> ClassModifier.FinalClass
+        }
+        
+        val propertyDecls = properties.map { prop ->
+            prop.toDeclaration()
+        }
+        
+        val parentTypes = parents.map { parent ->
+            parent.parseToKotlinType()
+        }
+        
+        val annotations = this.annotations.map { annotationStr ->
+            parseAnnotation(annotationStr)
+        }.filterNotNull()
+        
+        return KotlinDeclaration.ClassDecl(
+            name = klassName,
+            modifier = classModifier,
+            properties = propertyDecls,
+            parents = parentTypes,
+            annotations = annotations,
+            kdoc = headerComment.takeIf { it.isNotEmpty() }
+        )
+    }
+    
+    /**
+     * 解析注解字符串为 Annotation
+     */
+    private fun parseAnnotation(annotationStr: String): KotlinDeclaration.Annotation? {
+        val cleaned = annotationStr.trim()
+        return when {
+            cleaned.startsWith("@") -> {
+                val name = if (cleaned.contains("(")) {
+                    cleaned.substring(1, cleaned.indexOf("("))
+                } else {
+                    cleaned.substring(1)
+                }
+                val args = extractAnnotationArgs(cleaned)
+                KotlinDeclaration.Annotation(name, args)
+            }
+            else -> null
+        }
+    }
+    
+    /**
+     * 提取注解参数
+     */
+    private fun extractAnnotationArgs(annotationStr: String): List<Expression> {
+        if (!annotationStr.contains("(")) return emptyList()
+        
+        val argsStr = annotationStr.substringAfter("(").substringBeforeLast(")")
+        if (argsStr.isEmpty()) return emptyList()
+        
+        // 简单的参数解析，支持字符串字面量
+        return argsStr.split(",").map { arg ->
+            val trimmed = arg.trim()
+            when {
+                trimmed.startsWith("\"") && trimmed.endsWith("\"") -> {
+                    Expression.StringLiteral(trimmed.substring(1, trimmed.length - 1))
+                }
+                trimmed == "true" -> Expression.BooleanLiteral(true)
+                trimmed == "false" -> Expression.BooleanLiteral(false)
+                trimmed.matches(Regex("\\d+")) -> Expression.NumberLiteral(trimmed)
+                else -> Expression.Literal(trimmed)
+            }
+        }
+    }
+    
+    /**
+     * 转换为字符串（已废弃，建议使用 toDeclaration()）
+     */
+    @Deprecated("使用 toDeclaration() 替代", ReplaceWith("toDeclaration()"))
     override fun toString(): String {
         overrideNumericLiteralValueType()
         return if (modifier.contains("interface")) toInterfaceString() else toClassString()
@@ -70,7 +154,7 @@ data class KotlinClass(
         appendLine("$modifier $klassName$parentStr {")
         
         properties.forEach { prop ->
-            appendLine(if (withValue) prop.toStringWithValue() else prop.toString())
+            appendLine(if (withValue) prop.toString() else prop.toString())
         }
         
         appendLine("}")

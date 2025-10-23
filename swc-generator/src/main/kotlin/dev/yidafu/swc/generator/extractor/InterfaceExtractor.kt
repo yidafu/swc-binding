@@ -1,8 +1,11 @@
 package dev.yidafu.swc.generator.extractor
 
+import dev.yidafu.swc.generator.adt.typescript.*
+import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.adt.converter.TypeConverter
 import dev.yidafu.swc.generator.core.model.KotlinProperty
 import dev.yidafu.swc.generator.core.relation.ExtendRelationship
-import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.config.ConfigLoader
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.*
 
@@ -85,33 +88,42 @@ class InterfaceExtractor(private val visitor: TsAstVisitor) {
         
         if (propName.isEmpty()) return null
         
-        // 获取类型注解
+        // 使用 ADT 流程
         val typeAnnotation = propSig.getNode("typeAnnotation")?.getNode("typeAnnotation")
-        var kotlinType = TypeResolver.resolveType(typeAnnotation)
+        val tsType = TypeResolver.extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
+        var kotlinType = TypeConverter.convert(tsType).getOrDefault(KotlinType.Any)
         
-        // 移除注释并应用类型重写规则
-        kotlinType = kotlinType.removeComment()
-        val actualName = Constants.kotlinKeywordMap[propName] ?: propName
-        kotlinType = Constants.propTypeRewrite[actualName] ?: kotlinType
+        // 应用配置重写
+        val config = ConfigLoader.loadConfig()
+        val actualName = config.kotlinKeywordMap[propName] ?: propName
+        kotlinType = config.propTypeRewrite[actualName]?.let {
+            KotlinType.Simple(it)
+        } ?: kotlinType
         
-        // 提取默认值（字符串字面量）
-        val defaultValue = if (typeAnnotation?.isLiteralType() == true) {
-            val literal = typeAnnotation.getNode("literal")
-            if (literal?.isStringLiteral() == true) {
-                literal.getStringLiteralValue() ?: ""
-            } else {
-                ""
-            }
-        } else {
-            ""
-        }
+        // 提取默认值
+        val defaultValue = extractDefaultValue(tsType)
         
         return KotlinProperty(
             name = propName,
-            type = kotlinType,
+            kotlinType = kotlinType,
             comment = extractComment(propSig),
             defaultValue = defaultValue
         )
+    }
+    
+    /**
+     * 从 TypeScript 类型提取默认值
+     */
+    private fun extractDefaultValue(tsType: TypeScriptType): String {
+        return when {
+            tsType is TypeScriptType.Literal -> when (val value = tsType.value) {
+                is LiteralValue.StringLiteral -> "\"${value.value}\""
+                is LiteralValue.NumberLiteral -> value.value.toString()
+                is LiteralValue.BooleanLiteral -> value.value.toString()
+                else -> ""
+            }
+            else -> ""
+        }
     }
     
     /**

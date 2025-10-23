@@ -23,6 +23,9 @@ dependencies {
     // kotlinx-cli - 命令行参数解析
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
     
+    // YAML 配置解析
+    implementation("com.charleskorn.kaml:kaml:0.55.0")
+    
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 }

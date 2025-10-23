@@ -3,9 +3,11 @@ package dev.yidafu.swc.generator.codegen.generator
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.core.model.KotlinClass
+import dev.yidafu.swc.generator.core.model.KotlinProperty
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 import dev.yidafu.swc.generator.util.Logger
+import dev.yidafu.swc.generator.adt.kotlin.*
 import java.io.File
 
 /**
@@ -14,14 +16,95 @@ import java.io.File
 class TypesGenerator(
     private val kotlinClasses: List<KotlinClass>
 ) {
-    private val typeAliases = mutableListOf<TypeAliasSpec>()
+    private val typeAliases = mutableListOf<KotlinDeclaration.TypeAliasDecl>()
     
     /**
-     * 添加 typealias
+     * 添加 typealias（使用 ADT）
      */
+    fun addTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
+        typeAliases.add(typeAlias)
+        Logger.debug("添加 typealias: ${typeAlias.name} = ${typeAlias.type.toTypeString()}", 6)
+    }
+    
+    /**
+     * 添加 typealias（向后兼容的字符串方式）
+     */
+    @Deprecated("使用 addTypeAlias(KotlinDeclaration.TypeAliasDecl) 替代")
     fun addTypeAlias(typeAlias: String) {
         // 解析 typealias 字符串并添加
         Logger.debug("添加 typealias: $typeAlias", 6)
+        
+        // 解析 typealias 字符串，格式: "typealias Name = Type"
+        val regex = Regex("""typealias\s+(\w+)\s*=\s*(.+)""")
+        val match = regex.find(typeAlias)
+        if (match != null) {
+            val name = match.groupValues[1]
+            val typeStr = match.groupValues[2]
+            
+            // 创建 TypeAliasDecl
+            val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
+                name = name,
+                type = typeStr.parseToKotlinType()
+            )
+            
+            addTypeAlias(typeAliasDecl)
+            Logger.debug("成功添加 typealias: $name = $typeStr", 8)
+        } else {
+            Logger.warn("无法解析 typealias: $typeAlias")
+        }
+    }
+    
+    /**
+     * 解析类型名称为 TypeName
+     */
+    private fun parseTypeName(typeStr: String): TypeName {
+        return when {
+            typeStr.startsWith("Union.U") -> {
+                // 处理 Union.U2<A, B> 等
+                val match = Regex("""Union\.U(\d+)<(.+)>""").find(typeStr)
+                if (match != null) {
+                    val unionNum = match.groupValues[1].toInt()
+                    val genericParams = match.groupValues[2].split(",").map { it.trim() }
+                    
+                    val className = ClassName("dev.yidafu.swc", "Union.U$unionNum")
+                    val typeParams = genericParams.map { TypeVariableName(it) }
+                    className.parameterizedBy(typeParams)
+                } else {
+                    ClassName("dev.yidafu.swc", typeStr)
+                }
+            }
+            typeStr.startsWith("Map<") -> {
+                // 处理 Map<String, String> 等
+                val match = Regex("""Map<(.+),\s*(.+)>""").find(typeStr)
+                if (match != null) {
+                    val keyType = parseTypeName(match.groupValues[1])
+                    val valueType = parseTypeName(match.groupValues[2])
+                    Map::class.asClassName().parameterizedBy(keyType, valueType)
+                } else {
+                    ClassName("kotlin.collections", "Map")
+                }
+            }
+            typeStr.startsWith("Array<") -> {
+                // 处理 Array<T> 等
+                val match = Regex("""Array<(.+)>""").find(typeStr)
+                if (match != null) {
+                    val elementType = parseTypeName(match.groupValues[1])
+                    Array::class.asClassName().parameterizedBy(elementType)
+                } else {
+                    ClassName("kotlin", "Array")
+                }
+            }
+            else -> {
+                // 基本类型
+                when (typeStr) {
+                    "String" -> String::class.asTypeName()
+                    "Int" -> Int::class.asTypeName()
+                    "Boolean" -> Boolean::class.asTypeName()
+                    "Any" -> Any::class.asTypeName()
+                    else -> ClassName("dev.yidafu.swc.types", typeStr)
+                }
+            }
+        }
     }
     
     /**
@@ -39,7 +122,16 @@ class TypesGenerator(
         // 添加注解类和类型别名
         fileBuilder.addType(createSwcDslMarkerAnnotation())
         fileBuilder.addTypeAlias(createRecordTypeAlias())
-        typeAliases.forEach { fileBuilder.addTypeAlias(it) }
+        
+        // 使用 KotlinPoetConverter 添加类型别名
+        typeAliases.forEach { typeAlias ->
+            try {
+                val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
+                fileBuilder.addTypeAlias(typeAliasSpec)
+            } catch (e: Exception) {
+                Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
+            }
+        }
         
         // 生成并添加类
         generateClasses(fileBuilder)
@@ -70,7 +162,7 @@ class TypesGenerator(
         filteredClasses.forEach { klass ->
             runCatching {
                 KotlinPoetGenerator.createTypeSpec(klass)
-            }.onSuccess { typeSpec ->
+            }.onSuccess { typeSpec: TypeSpec ->
                 fileBuilder.addType(typeSpec)
                 successCount++
                 Logger.verbose("  ✓ ${klass.klassName}", 6)
@@ -85,8 +177,8 @@ class TypesGenerator(
                 
                 if (klass.properties.isNotEmpty()) {
                     Logger.verbose("  前3个属性:", 8)
-                    klass.properties.take(3).forEach { prop ->
-                        Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.type}", 10)
+                    klass.properties.take(3).forEach { prop: KotlinProperty ->
+                        Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.getTypeString()}", 10)
                     }
                 }
             }
@@ -128,12 +220,15 @@ class TypesGenerator(
      * 创建 Record typealias
      */
     private fun createRecordTypeAlias(): TypeAliasSpec {
+        val tTypeVar = TypeVariableName("T")
+        val sTypeVar = TypeVariableName("S")
+        
         return TypeAliasSpec.builder(
             "Record",
-            MAP.parameterizedBy(TypeVariableName("T"), STRING)
+            MAP.parameterizedBy(tTypeVar, sTypeVar)
         )
-            .addTypeVariable(TypeVariableName("T"))
-            .addTypeVariable(TypeVariableName("S"))
+            .addTypeVariable(tTypeVar)
+            .addTypeVariable(sTypeVar)
             .build()
     }
     
@@ -199,11 +294,19 @@ class TypesGenerator(
         astNodeList.addAll(ExtendRelationship.findAllRelativeByName("HasSpan"))
         Logger.debug("  AST节点列表大小: ${astNodeList.size}", 8)
         
+        // 从配置加载重要接口列表
+        val config = dev.yidafu.swc.generator.config.ConfigLoader.loadConfig()
+        val importantInterfaces = config.filterRules.importantInterfaces.toSet()
+        
         // 找出那些只作为接口存在、不需要独立生成的类
         // 只过滤掉那些是 interface 且有唯一 Impl 子类的
         val notImplClassList = kotlinClasses
             .filter { !astNodeList.contains(it.klassName) }
             .filter { klass ->
+                // 重要接口不过滤
+                if (importantInterfaces.contains(klass.klassName)) {
+                    return@filter false
+                }
                 // 只过滤 interface，不过滤 class
                 if (!klass.modifier.contains("interface")) {
                     return@filter false
@@ -218,9 +321,11 @@ class TypesGenerator(
         
         val filtered = kotlinClasses
             .filter { !notImplClassList.contains(it.klassName) }
-            .filter { klass ->
-                !klass.klassName.startsWith("TsTemplateLiteralType") &&
-                !klass.klassName.startsWith("TemplateLiteral")
+            .filter { klass: KotlinClass ->
+                // 使用配置的跳过模式进行过滤
+                config.filterRules.skipClassPatterns.none { pattern: String ->
+                    klass.klassName.matches(Regex(pattern))
+                }
             }
         
         Logger.debug("  过滤完成，剩余类: ${filtered.map { it.klassName }}", 8)

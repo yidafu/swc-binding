@@ -1,6 +1,6 @@
 package dev.yidafu.swc.generator.core.model
 
-import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.adt.kotlin.*
 
 /**
  * Kotlin 属性模型
@@ -8,7 +8,7 @@ import dev.yidafu.swc.generator.config.Constants
 data class KotlinProperty(
     var modifier: String = "var",
     var name: String = "",
-    var type: String = "",
+    var kotlinType: KotlinType = KotlinType.Any,
     var comment: String = "",
     var defaultValue: String = "",
     var isOverride: Boolean = false,
@@ -17,184 +17,152 @@ data class KotlinProperty(
     /**
      * 判断是否为数组类型
      */
-    fun isArray(): Boolean = type.startsWith("Array<")
-    
-    /**
-     * 获取类型列表（处理 Union 类型）
-     */
-    fun getTypeList(): List<String> {
-        // 跳过 Booleanable 类型，不尝试提取其内部类型
-        if (type.startsWith("Booleanable")) {
-            return emptyList()
-        }
-        
-        val baseType = if (isArray()) {
-            type.substringAfter("Array<").substringBeforeLast(">")
-        } else {
-            type
-        }
-        
-        return if (baseType.startsWith("Union.U")) {
-            extractUnionTypes(baseType)
-        } else {
-            // 即使是单一类型也要清理
-            listOf(cleanTypeName(baseType))
-        }
+    fun isArray(): Boolean = when (val type = kotlinType) {
+        is KotlinType.Generic -> type.name == "Array"
+        else -> false
     }
     
     /**
-     * 从 Union 类型字符串提取类型列表
+     * 判断是否为联合类型
      */
-    private fun extractUnionTypes(unionType: String): List<String> {
-        return Regex("""Union\.U\d+<([^>]+)>""")
-            .find(unionType)
-            ?.groupValues
-            ?.get(1)
-            ?.split(",")
-            ?.map { cleanTypeName(it) }
-            ?: listOf(cleanTypeName(unionType))
-    }
+    fun isUnion(): Boolean = kotlinType is KotlinType.Union
     
     /**
-     * 清理类型名称，移除空格和修复泛型
+     * 判断是否为 Booleanable 类型
      */
-    private fun cleanTypeName(typeName: String): String {
-        var cleaned = typeName.trim()
-        
-        // 移除多余的空格
-        cleaned = cleaned.replace(Regex("\\s+"), "")
-        
-        // 修复不完整的泛型参数
-        val openCount = cleaned.count { it == '<' }
-        val closeCount = cleaned.count { it == '>' }
-        if (openCount > closeCount) {
-            cleaned += ">".repeat(openCount - closeCount)
-        }
-        
-        return cleaned
-    }
+    fun isBooleanable(): Boolean = kotlinType is KotlinType.Booleanable
+    
+    /**
+     * 判断是否为基本类型
+     */
+    fun isPrimitive(): Boolean = kotlinType.isPrimitive()
+    
+    /**
+     * 获取实际的 Kotlin 类型
+     */
+    fun getActualKotlinType(): KotlinType = kotlinType
+    
+    /**
+     * 获取类型字符串（用于向后兼容）
+     */
+    fun getTypeString(): String = kotlinType.toTypeString()
     
     /**
      * 获取注解
      */
     fun getAnnotation(): String {
-        val actualType = removeComment(getActualType()).replace("<", "").replace(">", "")
-        
-        if (Constants.kotlinKeywordMap.containsKey(name)) {
-            return "@SerialName(\"$name\")\n  "
-        }
-        
-        if (actualType.startsWith("Booleanable")) {
-            return "@Serializable(${actualType}Serializer::class)\n  "
-        }
-        
-        return ""
-    }
-    
-    private var cachedActualType: String? = null
-    
-    /**
-     * 获取实际类型（处理 Union 转换为共同父类型等）
-     */
-    fun getActualType(): String {
-        // 使用缓存提升性能
-        return cachedActualType ?: computeActualType().also { cachedActualType = it }
-    }
-    
-    /**
-     * 计算实际类型
-     */
-    private fun computeActualType(): String {
-        val trimmedType = type.trim()
-        
-        return if (trimmedType.startsWith("Array<")) {
-            val innerType = trimmedType.substringAfter("Array<").substringBeforeLast(">")
-            "Array<${processUnion(innerType)}>"
-        } else {
-            processUnion(trimmedType)
-        }
-    }
-    
-    /**
-     * 处理 Union 类型转换
-     */
-    private fun processUnion(typeStr: String): String {
-        if (!typeStr.contains("Union.U")) return typeStr
-        
-        val types = extractUnionTypes(typeStr)
-        
-        // 处理 Booleanable 类型
-        if (types.contains("Boolean")) {
-            return handleBooleanableType(types)
-        }
-        
-        // 如果都不是基础类型，返回原类型（需要通过 ExtendRelationship 处理）
-        val hasBasicType = types.any { it in listOf("Boolean", "String", "Int") || it.startsWith("Array<") }
-        return if (hasBasicType) typeStr else typeStr
-    }
-    
-    /**
-     * 处理 Booleanable 类型
-     */
-    private fun handleBooleanableType(types: List<String>): String {
-        return when (types.size) {
-            2 -> {
-                val otherType = types.find { it != "Boolean" } ?: "String"
-                "Booleanable${otherType.replace("<", "").replace(">", "")}"
+        val annotation = buildString {
+            if (discriminator != "type") {
+                append("@SerialName(\"$discriminator\")")
             }
-            3 -> {
-                val nonBooleanTypes = types.filter { it != "Boolean" }
-                if (nonBooleanTypes.size == 2 && nonBooleanTypes[1].contains("Array<${nonBooleanTypes[0]}")) {
-                    "Booleanable${nonBooleanTypes[1].replace("<", "").replace(">", "")}"
-                } else {
-                    types.joinToString(", ")
+        }
+        return annotation
+    }
+    
+    /**
+     * 获取实际类型字符串（已废弃，建议使用 kotlinType.toTypeName()）
+     */
+    @Deprecated("使用 kotlinType.toTypeName() 替代", ReplaceWith("kotlinType.toTypeName()"))
+    fun getActualType(): String = kotlinType.toTypeString()
+    
+    /**
+     * 转换为 KotlinDeclaration.PropertyDecl
+     */
+    fun toDeclaration(): KotlinDeclaration.PropertyDecl {
+        val propertyModifier = when (modifier) {
+            "const val" -> PropertyModifier.ConstVal
+            "val" -> PropertyModifier.Val
+            "var" -> PropertyModifier.Var
+            "lateinit var" -> PropertyModifier.LateinitVar
+            else -> PropertyModifier.Var
+        }
+        
+        val defaultValue = if (defaultValue.isNotEmpty()) {
+            parseDefaultValue(defaultValue)
+        } else null
+        
+        val annotations = parseAnnotations()
+        
+        return KotlinDeclaration.PropertyDecl(
+            name = name,
+            type = kotlinType,
+            modifier = propertyModifier,
+            defaultValue = defaultValue,
+            annotations = annotations,
+            kdoc = comment.takeIf { it.isNotEmpty() }
+        )
+    }
+    
+    /**
+     * 解析默认值
+     */
+    private fun parseDefaultValue(valueStr: String): Expression? {
+        val trimmed = valueStr.trim()
+        return when {
+            trimmed == "null" -> Expression.NullLiteral
+            trimmed.startsWith("\"") && trimmed.endsWith("\"") -> {
+                Expression.StringLiteral(trimmed.substring(1, trimmed.length - 1))
+            }
+            trimmed == "true" -> Expression.BooleanLiteral(true)
+            trimmed == "false" -> Expression.BooleanLiteral(false)
+            trimmed.matches(Regex("\\d+")) -> Expression.NumberLiteral(trimmed)
+            trimmed.matches(Regex("\\d+\\.\\d+")) -> Expression.NumberLiteral(trimmed)
+            trimmed.endsWith("L") -> Expression.NumberLiteral(trimmed)
+            trimmed.endsWith("f") -> Expression.NumberLiteral(trimmed)
+            else -> Expression.Literal(trimmed)
+        }
+    }
+    
+    /**
+     * 解析注解
+     */
+    private fun parseAnnotations(): List<KotlinDeclaration.Annotation> {
+        val annotationStr = getAnnotation()
+        if (annotationStr.isEmpty()) return emptyList()
+        
+        return listOfNotNull(parseAnnotation(annotationStr))
+    }
+    
+    /**
+     * 解析单个注解
+     */
+    private fun parseAnnotation(annotationStr: String): KotlinDeclaration.Annotation? {
+        val cleaned = annotationStr.trim()
+        return when {
+            cleaned.startsWith("@") -> {
+                val name = cleaned.substring(1)
+                val args = extractAnnotationArgs(cleaned)
+                KotlinDeclaration.Annotation(name, args)
+            }
+            else -> null
+        }
+    }
+    
+    /**
+     * 提取注解参数
+     */
+    private fun extractAnnotationArgs(annotationStr: String): List<Expression> {
+        if (!annotationStr.contains("(")) return emptyList()
+        
+        val argsStr = annotationStr.substringAfter("(").substringBeforeLast(")")
+        if (argsStr.isEmpty()) return emptyList()
+        
+        return argsStr.split(",").map { arg ->
+            val trimmed = arg.trim()
+            when {
+                trimmed.startsWith("\"") && trimmed.endsWith("\"") -> {
+                    Expression.StringLiteral(trimmed.substring(1, trimmed.length - 1))
                 }
+                trimmed == "true" -> Expression.BooleanLiteral(true)
+                trimmed == "false" -> Expression.BooleanLiteral(false)
+                trimmed.matches(Regex("\\d+")) -> Expression.NumberLiteral(trimmed)
+                else -> Expression.Literal(trimmed)
             }
-            else -> types.joinToString(", ")
         }
-    }
-    
-    private fun removeComment(str: String): String {
-        return str.replace(Regex("""/\*(.|\r\n|\n)*?\*/"""), "")
     }
     
     /**
      * 克隆属性
      */
-    fun clone(): KotlinProperty = copy()
-    
-    /**
-     * 转换为字符串（不带默认值）
-     */
-    override fun toString(): String {
-        return buildString {
-            if (comment.isNotEmpty()) append("$comment\n")
-            append(getAnnotation())
-            if (name == discriminator) append("  // conflict with @SerialName\n  //")
-            if (isOverride) append(" override")
-            append(" var ")
-            append(Constants.kotlinKeywordMap[name] ?: name)
-            val actualType = getActualType()
-            if (actualType.isNotEmpty()) append(": $actualType?")
-        }
-    }
-    
-    /**
-     * 转换为字符串（带默认值）
-     */
-    fun toStringWithValue(): String {
-        return buildString {
-            append("  ")
-            if (comment.isNotEmpty()) append("$comment\n")
-            append(getAnnotation())
-            if (name == discriminator) append("  // conflict with @SerialName\n  //")
-            if (isOverride) append("override ")
-            append("var ")
-            append(Constants.kotlinKeywordMap[name] ?: name)
-            val actualType = getActualType()
-            if (actualType.isNotEmpty()) append(" : $actualType?")
-            append(" = ${defaultValue.ifEmpty { "null" }}")
-        }
-    }
+    fun clone(): KotlinProperty = copy(kotlinType = kotlinType)
 }
-

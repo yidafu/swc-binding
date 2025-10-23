@@ -1,6 +1,6 @@
 package dev.yidafu.swc.generator.core.model
 
-import dev.yidafu.swc.generator.config.Constants
+import dev.yidafu.swc.generator.config.ConfigLoader
 
 /**
  * Kotlin 扩展函数模型
@@ -15,7 +15,8 @@ data class KotlinExtensionFun(
      */
     private fun toFunName(str: String): String {
         val name = str[0].lowercase() + str.substring(1)
-        return Constants.kotlinKeywordMap[name] ?: name
+        val config = ConfigLoader.loadConfig()
+        return config.kotlinKeywordMap[name] ?: name
     }
     
     /**
