@@ -13,14 +13,14 @@ val astJson = Json {
     serializersModule = swcSerializersModule
     // TODO: @swc/types seems incomplete
     ignoreUnknownKeys = true
-    explicitNulls = true  // Include null values in JSON to prevent Rust deserialization errors
+    explicitNulls = true // Include null values in JSON to prevent Rust deserialization errors
 }
 
 @OptIn(ExperimentalSerializationApi::class)
 val configJson = Json {
     classDiscriminator = "syntax"
     serializersModule = configSerializer
-    explicitNulls = true  // Include null values in JSON to prevent Rust deserialization errors
+    explicitNulls = true // Include null values in JSON to prevent Rust deserialization errors
 }
 
 fun parseAstTree(jsonStr: String): Program {

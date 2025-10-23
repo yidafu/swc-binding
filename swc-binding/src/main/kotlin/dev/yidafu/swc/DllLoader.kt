@@ -55,6 +55,7 @@ object DllLoader {
                 return "Mac"
             }
         }
+
         /**
          * Windows platform detection and resource path mapping.
          * Uses GNU toolchain for better cross-platform compatibility.
@@ -64,15 +65,15 @@ object DllLoader {
             private val cpuArch: String by lazy {
                 System.getProperty("os.arch")
             }
-            
+
             fun isArm(): Boolean {
                 return cpuArch.contains("aarch64") || cpuArch.contains("arm64")
             }
-            
+
             fun isIntel(): Boolean {
                 return cpuArch.startsWith("x") || cpuArch.contains("amd64")
             }
-            
+
             override fun toString(): String {
                 return "Windows"
             }
@@ -92,8 +93,7 @@ object DllLoader {
         companion object {
             /**
              * Detect the current platform and return the appropriate Platform instance.
-             * 
-             * Supported platforms and their resource directories:
+             * * Supported platforms and their resource directories:
              * - Linux: linux-x64-musl/ or linux-arm64-gnu/
              * - macOS: darwin-x64-apple/ or darwin-arm64-apple/
              * - Windows: windows-x64-gnu/ or windows-arm64-gnu/
@@ -114,8 +114,7 @@ object DllLoader {
 
     /**
      * Copy the native library to a temporary directory and return the absolute path.
-     * 
-     * Resource directory structure:
+     * * Resource directory structure:
      * - darwin-x64-apple/    - macOS Intel (Apple toolchain)
      * - darwin-arm64-apple/  - macOS ARM64 (Apple toolchain)
      * - linux-x64-musl/      - Linux x64 (musl static linking)

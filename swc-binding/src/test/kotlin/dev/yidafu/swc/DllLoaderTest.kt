@@ -53,7 +53,7 @@ class DllLoaderTest {
         if (platform is DllLoader.Platform.Windows) {
             val isArm = platform.isArm()
             val isIntel = platform.isIntel()
-            
+
             // 应该是 ARM 或 Intel
             assertTrue(isArm || isIntel)
             assertEquals("Windows", platform.toString())
@@ -147,7 +147,7 @@ class DllLoaderTest {
         if (platform is DllLoader.Platform.Windows) {
             val isArm = platform.isArm()
             val isIntel = platform.isIntel()
-            
+
             // 不能既是 ARM 又是 Intel
             assertTrue(!(isArm && isIntel))
         }

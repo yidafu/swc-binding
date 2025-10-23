@@ -1,26 +1,28 @@
 package dev.yidafu.swc.dsl
 
-import dev.yidafu.swc.types.Boolean
+import Boolean
 import dev.yidafu.swc.types.Identifier
 import dev.yidafu.swc.types.Span
-import dev.yidafu.swc.types.SpanImpl
-import dev.yidafu.swc.types.String
+import kotlin.String
 import kotlin.Unit
 
 /**
- * Identifier#value: String
+ * Identifier#baseField: String
  * extension function for create String -> String
  */
-public fun Identifier.string(block: String.() -> Unit): String = String().apply(block)
+public fun Identifier.string(block: Identifier.() -> Unit): String {
+}
 
 /**
  * Identifier#optional: Boolean
  * extension function for create Boolean -> Boolean
  */
-public fun Identifier.boolean(block: Boolean.() -> Unit): Boolean = Boolean().apply(block)
+public fun Identifier.boolean(block: Identifier.() -> Unit): Boolean {
+}
 
 /**
  * Identifier#span: Span
  * extension function for create Span -> SpanImpl
  */
-public fun Identifier.span(block: Span.() -> Unit): Span = SpanImpl().apply(block)
+public fun Identifier.span(block: Identifier.() -> Unit): Span {
+}
