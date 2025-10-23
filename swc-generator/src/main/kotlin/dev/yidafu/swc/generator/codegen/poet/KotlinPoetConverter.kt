@@ -3,6 +3,7 @@ package dev.yidafu.swc.generator.codegen.poet
 import com.squareup.kotlinpoet.*
 import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.util.Logger
+import dev.yidafu.swc.generator.util.PerformanceOptimizer
 
 /**
  * ADT 到 KotlinPoet 的核心转换器
@@ -12,14 +13,24 @@ object KotlinPoetConverter {
 
     /**
      * 转换 KotlinType 为 TypeName
+     * 使用性能优化的缓存
      */
+    private val typeCache = mutableMapOf<String, TypeName>()
+    
     fun convertType(kotlinType: KotlinType): TypeName {
-        return try {
-            kotlinType.toTypeName()
-        } catch (e: Exception) {
-            Logger.warn("类型转换失败: ${kotlinType.toTypeString()}, ${e.message}")
-            Logger.warn("错误详情: ${e.stackTraceToString()}")
-            throw e
+        val typeString = kotlinType.toTypeString()
+        
+        // 使用缓存避免重复转换
+        return typeCache.getOrPut(typeString) {
+            PerformanceOptimizer.measureTime("类型转换: $typeString") {
+                try {
+                    kotlinType.toTypeName()
+                } catch (e: Exception) {
+                    Logger.warn("类型转换失败: $typeString, ${e.message}")
+                    Logger.verbose("错误详情: ${e.stackTraceToString()}", 8)
+                    throw e
+                }
+            }
         }
     }
 
@@ -208,39 +219,59 @@ object KotlinPoetConverter {
 
     /**
      * 转换注解为 AnnotationSpec
+     * 使用缓存优化重复转换
      */
+    private val annotationCache = mutableMapOf<String, AnnotationSpec?>()
+    
     fun convertAnnotation(annotation: KotlinDeclaration.Annotation): AnnotationSpec? {
-        return try {
-            val className = when (annotation.name) {
-                "SerialName" -> ClassName("kotlinx.serialization", "SerialName")
-                "Serializable" -> ClassName("kotlinx.serialization", "Serializable")
-                "JsonClassDiscriminator" -> ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
-                "OptIn" -> ClassName("kotlin", "OptIn")
-                "SwcDslMarker" -> ClassName("dev.yidafu.swc.types", "SwcDslMarker")
-                else -> ClassName("", annotation.name)
-            }
-            val builder = AnnotationSpec.builder(className)
+        val cacheKey = "${annotation.name}:${annotation.arguments.joinToString(",") { it.toCodeString() }}"
+        
+        return annotationCache.getOrPut(cacheKey) {
+            try {
+                val className = getAnnotationClassName(annotation.name)
+                val builder = AnnotationSpec.builder(className)
 
-            // 添加参数
-            annotation.arguments.forEach { arg ->
-                when (arg) {
-                    is Expression.StringLiteral -> builder.addMember("%S", arg.value)
-                    is Expression.ClassReference -> {
-                        // 对于类引用，需要特殊处理
-                        val className = when (arg.className) {
-                            "ExperimentalSerializationApi" -> ClassName("kotlinx.serialization", "ExperimentalSerializationApi")
-                            else -> ClassName("", arg.className)
-                        }
-                        builder.addMember("%T::class", className)
-                    }
-                    else -> builder.addMember("%L", arg.toCodeString())
+                // 添加参数
+                annotation.arguments.forEach { arg ->
+                    addAnnotationArgument(builder, arg)
                 }
-            }
 
-            builder.build()
-        } catch (e: Exception) {
-            Logger.warn("转换注解失败: ${annotation.name}, ${e.message}")
-            null
+                builder.build()
+            } catch (e: Exception) {
+                Logger.warn("转换注解失败: ${annotation.name}, ${e.message}")
+                null
+            }
+        }
+    }
+    
+    /**
+     * 获取注解类名（提取公共逻辑）
+     */
+    private fun getAnnotationClassName(annotationName: String): ClassName {
+        return when (annotationName) {
+            "SerialName" -> ClassName("kotlinx.serialization", "SerialName")
+            "Serializable" -> ClassName("kotlinx.serialization", "Serializable")
+            "JsonClassDiscriminator" -> ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
+            "OptIn" -> ClassName("kotlin", "OptIn")
+            "SwcDslMarker" -> ClassName("dev.yidafu.swc.types", "SwcDslMarker")
+            else -> ClassName("", annotationName)
+        }
+    }
+    
+    /**
+     * 添加注解参数（提取公共逻辑）
+     */
+    private fun addAnnotationArgument(builder: AnnotationSpec.Builder, arg: Expression) {
+        when (arg) {
+            is Expression.StringLiteral -> builder.addMember("%S", arg.value)
+            is Expression.ClassReference -> {
+                val className = when (arg.className) {
+                    "ExperimentalSerializationApi" -> ClassName("kotlinx.serialization", "ExperimentalSerializationApi")
+                    else -> ClassName("", arg.className)
+                }
+                builder.addMember("%T::class", className)
+            }
+            else -> builder.addMember("%L", arg.toCodeString())
         }
     }
 
@@ -343,29 +374,30 @@ object KotlinPoetConverter {
 
     /**
      * 判断类型是否是接口
-     * 这里通过类型名称来判断，因为接口通常以 Interface 结尾或者有特定的命名模式
+     * 使用预定义的接口名称集合优化性能
      */
+    private val interfaceNames = setOf(
+        "Node", "HasSpan", "HasDecorator", "Plugin", "MatchPattern",
+        "Identifier", "StringLiteral", "NumericLiteral", "ArrayPattern",
+        "ExpressionBase", "Pattern", "Expression",
+        // 添加更多接口类型
+        "Constructor", "StaticBlock", "ClassMethod", "PrivateMethod",
+        "TsIndexSignature", "ClassProperty", "PrivateProperty", "EmptyStatement",
+        "ExportDefaultExpression", "ExportDeclaration", "ImportDeclaration",
+        "ExportAllDeclaration", "ExportNamedDeclaration", "ExportDefaultDeclaration",
+        "BlockStatement", "ExpressionStatement", "DebuggerStatement", "WithStatement",
+        "ReturnStatement", "LabeledStatement", "BreakStatement", "ContinueStatement",
+        "IfStatement", "SwitchStatement", "ThrowStatement", "TryStatement",
+        "WhileStatement", "DoWhileStatement", "ForStatement", "ForInStatement", "ForOfStatement"
+    )
+    
+    private val interfaceSuffixes = setOf("Interface", "Options", "Config")
+    
     private fun isInterfaceType(kotlinType: KotlinType): Boolean {
         return when (kotlinType) {
             is KotlinType.Simple -> {
-                // 检查是否是已知的接口类型
                 val name = kotlinType.name
-                // 如果类型名称在重要接口列表中，或者以 Interface 结尾，则认为是接口
-                name.endsWith("Interface") || 
-                name.endsWith("Options") || 
-                name.endsWith("Config") ||
-                name == "Node" ||
-                name == "HasSpan" ||
-                name == "HasDecorator" ||
-                name == "Plugin" ||
-                name == "MatchPattern" ||
-                name == "Identifier" ||
-                name == "StringLiteral" ||
-                name == "NumericLiteral" ||
-                name == "ArrayPattern" ||
-                name == "ExpressionBase" ||
-                name == "Pattern" ||
-                name == "Expression"
+                interfaceNames.contains(name) || interfaceSuffixes.any { name.endsWith(it) }
             }
             else -> false
         }
