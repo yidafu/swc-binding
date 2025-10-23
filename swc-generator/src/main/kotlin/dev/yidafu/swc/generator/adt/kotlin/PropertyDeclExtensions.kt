@@ -210,16 +210,13 @@ fun KotlinDeclaration.PropertyDecl.hasComment(): Boolean {
  * 将所有属性类型包装为 Nullable 类型
  */
 fun KotlinDeclaration.PropertyDecl.withNullableIfNeeded(): KotlinDeclaration.PropertyDecl {
-    // 如果已经是 nullable，确保有默认值
+    // 如果已经是 nullable，直接返回
     if (type is KotlinType.Nullable) {
-        return copy(
-            defaultValue = defaultValue ?: Expression.NullLiteral
-        )
+        return this
     }
     
-    // 所有属性都变为可空，并设置默认值为 null
+    // 所有属性都变为可空，保持原有默认值
     return copy(
-        type = KotlinType.Nullable(type),
-        defaultValue = Expression.NullLiteral
+        type = KotlinType.Nullable(type)
     )
 }

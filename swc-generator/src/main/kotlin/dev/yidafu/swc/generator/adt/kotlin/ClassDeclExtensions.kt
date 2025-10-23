@@ -120,11 +120,12 @@ fun KotlinDeclaration.ClassDecl.toClass(): KotlinDeclaration.ClassDecl {
 fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
     val discriminator = getDiscriminator()
     val serialName = computeSerialName(discriminator)
+    val interfaceName = name // 保存接口名称
 
     return copy(
         name = wrapReservedWord("${name}Impl"),
         modifier = ClassModifier.FinalClass,
-        parents = listOf(KotlinType.Simple(name)),
+        parents = listOf(KotlinType.Simple(interfaceName)),
         annotations = listOf(
             KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi"))),
             KotlinDeclaration.Annotation("SwcDslMarker"),
@@ -134,10 +135,26 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
         ),
         properties = properties.map { prop ->
             val serialName = prop.getPropertySerialName()
-            prop.withNullableIfNeeded().copy(
+            val updatedProp = prop.withNullableIfNeeded().copy(
                 modifier = PropertyModifier.OverrideVar,
                 annotations = prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
             )
+            
+            // 如果是 type 属性，设置默认值为接口名称
+            if (prop.name == "type") {
+                val innerType = when (updatedProp.type) {
+                    is KotlinType.Nullable -> updatedProp.type.innerType
+                    else -> updatedProp.type
+                }
+                if (innerType is KotlinType.StringType) {
+                    updatedProp.copy(defaultValue = Expression.StringLiteral(interfaceName))
+                } else {
+                    updatedProp.copy(defaultValue = Expression.NullLiteral)
+                }
+            } else {
+                // 其他属性设置默认值为 null
+                updatedProp.copy(defaultValue = Expression.NullLiteral)
+            }
         }
     )
 }
