@@ -158,7 +158,7 @@ sealed class Expression {
     fun toCodeString(): String = when (this) {
         is Literal -> value.escapeForKotlinPoet()
         is NullLiteral -> "null"
-        is StringLiteral -> value.escapeForKotlinPoet()
+        is StringLiteral -> "\"${value.escapeForKotlinPoet()}\""
         is NumberLiteral -> value
         is BooleanLiteral -> value.toString()
         is FunctionCall -> {
