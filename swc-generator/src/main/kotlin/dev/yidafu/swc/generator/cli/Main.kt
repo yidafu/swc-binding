@@ -117,9 +117,9 @@ class SwcGenerator {
      */
     private fun createEmitterConfig(): GeneratorConfig {
         val projectRoot = Paths.get("").toAbsolutePath().parent.toString()
-        val outputTypesPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/types/types.kt"
-        val outputSerializerPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/types/serializer.kt"
-        val outputDslDir = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/dsl"
+        val outputTypesPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt"
+        val outputSerializerPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt"
+        val outputDslDir = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
 
         return GeneratorConfig(
             outputTypesPath = outputTypesPath,

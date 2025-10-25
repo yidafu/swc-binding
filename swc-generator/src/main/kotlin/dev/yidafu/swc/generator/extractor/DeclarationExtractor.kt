@@ -116,20 +116,26 @@ class DeclarationExtractor(private val visitor: TsAstVisitor) {
                     val name = expr.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         TypeReference(name)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 expr?.type == "TsQualifiedName" -> {
                     val name = expr.getNode("right")?.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         TypeReference(name)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 expr?.type == "TsTypeReference" -> {
                     val name = expr.getNode("typeName")?.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         val typeArgs = extractTypeArguments(expr)
                         TypeReference(name, typeArgs)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 else -> null
             }
@@ -204,5 +210,4 @@ class DeclarationExtractor(private val visitor: TsAstVisitor) {
             .toSet()
         return fromExtends + fromMembers
     }
-
 }

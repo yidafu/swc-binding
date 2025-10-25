@@ -29,7 +29,7 @@ private val typeNameCache = mutableMapOf<String, TypeName>()
 
 fun String.parseAsTypeName(): TypeName {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
-    
+
     return typeNameCache.getOrPut(cleanType) {
         parseAsTypeNameInternal(cleanType)
     }
@@ -276,7 +276,6 @@ fun TypeSpec.Builder.addParents(
 
     return this
 }
-
 
 /**
  * 创建简单的扩展函数

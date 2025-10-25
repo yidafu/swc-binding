@@ -63,9 +63,9 @@ export interface Span {
     ctxt: number;
 }
 
-export type Declaration = any;
-export type ExportSpecifier = any;
-export type StringLiteral = any;
-export type DefaultDecl = any;
-export type ImportSpecifier = any;
+export type Declaration = object;
+export type ExportSpecifier = object;
+export type StringLiteral = object;
+export type DefaultDecl = object;
+export type ImportSpecifier = object;
 

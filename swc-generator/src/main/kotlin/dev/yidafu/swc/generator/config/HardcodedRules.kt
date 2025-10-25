@@ -4,13 +4,11 @@ package dev.yidafu.swc.generator.config
  * 硬编码规则配置
  *
  * 包含固定的过滤规则和重要接口列表，这些规则不需要通过配置文件修改
- * 
- * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
+ * * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
  */
 object HardcodedRules {
 
     // 注意：基础类型映射已移至 ADT 转换过程中自动处理
-
 
     /**
      * 跳过的DSL接收者
@@ -37,7 +35,6 @@ object HardcodedRules {
     fun shouldBeNullable(typeName: String): Boolean {
         return true
     }
-
 
     /**
      * 获取属性类型覆盖

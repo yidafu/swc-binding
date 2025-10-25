@@ -45,10 +45,8 @@ sealed class KotlinType {
             // 对于基本类型，使用空包名
             // 对于自定义类型，使用当前包名
             when (name) {
-                "String", "Int", "Boolean", "Long", "Double", "Float", "Char", "Byte", "Short", "Any", "Unit", "Nothing" -> 
-                    ClassName("", name)
-                else -> 
-                    ClassName("dev.yidafu.swc.generated", name)
+                "String", "Int", "Boolean", "Long", "Double", "Float", "Char", "Byte", "Short", "Any", "Unit", "Nothing" -> ClassName("", name)
+                else -> ClassName("dev.yidafu.swc.generated", name)
             }
         }
         is Generic -> {

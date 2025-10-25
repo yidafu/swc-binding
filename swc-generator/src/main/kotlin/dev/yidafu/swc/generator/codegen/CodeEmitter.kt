@@ -1,13 +1,12 @@
 package dev.yidafu.swc.generator.codegen
 
 import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.result.*
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.codegen.generator.DslGenerator
 import dev.yidafu.swc.generator.codegen.generator.SerializerGenerator
 import dev.yidafu.swc.generator.codegen.generator.TypesGenerator
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.transformer.TransformResult
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
@@ -54,7 +53,6 @@ class CodeEmitter(
         }
     }
 
-
     /**
      * 生成 types.kt
      */
@@ -66,7 +64,7 @@ class CodeEmitter(
             Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
         } else {
             config.outputTypesPath?.let { path ->
-                val generator = TypesGenerator(transformResult.classDecls)
+                val generator = TypesGenerator(transformResult.classDecls.toMutableList())
                 // 添加类型别名
                 transformResult.typeAliases.forEach { typeAlias ->
                     generator.addTypeAlias(typeAlias)

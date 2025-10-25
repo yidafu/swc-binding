@@ -136,8 +136,8 @@ object ConfigLoader {
             ),
             paths = PathsConfig(
                 defaultInputPath = null,
-                defaultOutputTypesPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/types.kt",
-                defaultOutputSerializerPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/serializer.kt",
+                defaultOutputTypesPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt",
+                defaultOutputSerializerPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt",
                 defaultOutputDslDir = "../swc-binding/src/main/kotlin/dev/yidafu/swc/dsl"
             )
         )

@@ -75,7 +75,7 @@ export interface Decorator extends Node, HasSpan {
     expression: any;
 }
 
-export type Expression = any;
-export type Pattern = any;
-export type TsTypeAnnotation = any;
+export type Expression = string;
+export type Pattern = string;
+export type TsTypeAnnotation = string;
 

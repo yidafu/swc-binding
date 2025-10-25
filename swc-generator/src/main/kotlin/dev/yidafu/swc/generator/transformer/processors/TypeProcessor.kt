@@ -33,7 +33,7 @@ data class TransformContext(
     fun addProperties(className: String, properties: List<KotlinDeclaration.PropertyDecl>) {
         propertiesMap[className] = properties
     }
-    
+
     fun addTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
         typeAliasList.add(typeAlias)
     }
@@ -43,13 +43,13 @@ data class TransformContext(
     fun getClassDecl(name: String): KotlinDeclaration.ClassDecl? = classDeclMap[name]
 
     fun getAllClassDecls(): List<KotlinDeclaration.ClassDecl> = classDeclMap.values.toList()
-    
+
     fun getAllTypeAliases(): List<KotlinDeclaration.TypeAliasDecl> = typeAliasList.toList()
-    
+
     fun updateClassDecl(classDecl: KotlinDeclaration.ClassDecl) {
         classDeclMap[classDecl.name] = classDecl
     }
-    
+
     fun updateTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
         val index = typeAliasList.indexOfFirst { it.name == typeAlias.name }
         if (index >= 0) {

@@ -1,35 +1,34 @@
 package dev.yidafu.swc.generator.processor
 
 import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.adt.result.ErrorCode
 import dev.yidafu.swc.generator.adt.result.GeneratorResult
 import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
-import dev.yidafu.swc.generator.adt.result.ErrorCode
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.Logger
 
 /**
  * 默认的 Kotlin ADT 处理器实现
- * 
- * 处理特殊的业务逻辑，如：
+ * * 处理特殊的业务逻辑，如：
  * - 属性类型覆盖
  * - 特殊修饰符设置
  * - 注解添加
  * - 命名规则应用
  */
 class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
-    
+
     override fun processDeclarations(
         declarations: List<KotlinDeclaration>,
         config: SwcGeneratorConfig
     ): GeneratorResult<List<KotlinDeclaration>> {
         return try {
             Logger.debug("开始处理 Kotlin ADT 声明，总数: ${declarations.size}", 4)
-            
+
             val processedDeclarations = declarations.mapNotNull { declaration ->
                 processDeclaration(declaration, config).getOrNull()
             }
-            
+
             Logger.debug("Kotlin ADT 处理完成，处理后数量: ${processedDeclarations.size}", 4)
             GeneratorResultFactory.success(processedDeclarations)
         } catch (e: Exception) {
@@ -37,7 +36,7 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
             GeneratorResultFactory.failure(ErrorCode.CODE_GENERATION_ERROR, "处理 Kotlin ADT 声明失败", e)
         }
     }
-    
+
     override fun processDeclaration(
         declaration: KotlinDeclaration,
         config: SwcGeneratorConfig
@@ -48,13 +47,14 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
                 is KotlinDeclaration.PropertyDecl -> processPropertyDeclaration(declaration, config)
                 is KotlinDeclaration.FunctionDecl -> processFunctionDeclaration(declaration, config)
                 is KotlinDeclaration.TypeAliasDecl -> processTypeAliasDeclaration(declaration, config)
+                is KotlinDeclaration.EnumEntry -> GeneratorResultFactory.success(declaration)
             }
         } catch (e: Exception) {
             Logger.warn("处理声明失败: ${getDeclarationName(declaration)}, ${e.message}")
             GeneratorResultFactory.success(declaration) // 失败时返回原始声明
         }
     }
-    
+
     /**
      * 处理类声明
      */
@@ -66,17 +66,17 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
         val processedProperties = declaration.properties.mapNotNull { property ->
             processPropertyDeclaration(property, config).getOrNull()
         }
-        
+
         // 应用特殊规则
         val processedDeclaration = declaration.copy(
-            properties = processedProperties,
+            properties = processedProperties
             // 可以在这里添加其他特殊处理逻辑
             // 例如：特殊修饰符、注解等
         )
-        
+
         return GeneratorResultFactory.success(processedDeclaration)
     }
-    
+
     /**
      * 处理属性声明
      */
@@ -86,22 +86,22 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
     ): GeneratorResult<KotlinDeclaration.PropertyDecl> {
         // 应用属性类型覆盖规则
         val processedType = applyPropertyTypeOverrides(declaration.type, declaration.name)
-        
+
         // 应用命名规则
         val processedName = applyNamingRules(declaration.name)
-        
+
         // 应用注解规则
         val processedAnnotations = applyAnnotationRules(declaration.annotations, declaration.name)
-        
+
         val processedDeclaration = declaration.copy(
             name = processedName,
             type = processedType,
             annotations = processedAnnotations
         )
-        
+
         return GeneratorResultFactory.success(processedDeclaration)
     }
-    
+
     /**
      * 处理函数声明
      */
@@ -111,14 +111,14 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
     ): GeneratorResult<KotlinDeclaration.FunctionDecl> {
         // 应用命名规则
         val processedName = applyNamingRules(declaration.name)
-        
+
         val processedDeclaration = declaration.copy(
             name = processedName
         )
-        
+
         return GeneratorResultFactory.success(processedDeclaration)
     }
-    
+
     /**
      * 处理类型别名声明
      */
@@ -128,14 +128,14 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
     ): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
         // 应用命名规则
         val processedName = applyNamingRules(declaration.name)
-        
+
         val processedDeclaration = declaration.copy(
             name = processedName
         )
-        
+
         return GeneratorResultFactory.success(processedDeclaration)
     }
-    
+
     /**
      * 应用属性类型覆盖规则
      */
@@ -143,7 +143,7 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
         val overrideType = CodeGenerationRules.getPropertyTypeOverride(propertyName)
         return overrideType ?: type
     }
-    
+
     /**
      * 应用命名规则
      */
@@ -151,7 +151,7 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
         // 应用 snake_case 到 camelCase 转换
         return CodeGenerationRules.snakeToCamelCase(name)
     }
-    
+
     /**
      * 应用注解规则
      */
@@ -161,7 +161,7 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
     ): List<KotlinDeclaration.Annotation> {
         val newAnnotations = mutableListOf<KotlinDeclaration.Annotation>()
         newAnnotations.addAll(annotations)
-        
+
         // 添加 @SerialName 注解（如果需要）
         val originalName = CodeGenerationRules.snakeToCamelCase(propertyName)
         if (originalName != propertyName) {
@@ -171,10 +171,10 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
             )
             newAnnotations.add(serialNameAnnotation)
         }
-        
+
         return newAnnotations
     }
-    
+
     /**
      * 获取声明名称
      */
@@ -184,6 +184,7 @@ class DefaultKotlinADTProcessorImpl : KotlinADTProcessor {
             is KotlinDeclaration.PropertyDecl -> declaration.name
             is KotlinDeclaration.FunctionDecl -> declaration.name
             is KotlinDeclaration.TypeAliasDecl -> declaration.name
+            is KotlinDeclaration.EnumEntry -> declaration.name
         }
     }
 }

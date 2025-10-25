@@ -1,0 +1,29 @@
+# SWC Generator 测试配置文件
+classModifiers:
+  toKotlinClass:
+    - "Span"
+  keepInterface:
+    - "HasDecorator"
+    - "HasSpan"
+    - "Node"
+    - "Fn"
+    - "PropBase"
+    - "ExpressionBase"
+    - "ClassPropertyBase"
+    - "PatternBase"
+    - "ClassMethodBase"
+    - "BaseModuleConfig"
+  sealedInterface:
+    - "Node"
+  propsToSnakeCase:
+    - "JsFormatOptions"
+  literalUnionToTypealias:
+    - "JscTarget"
+    - "TerserEcmaVersion"
+    - "TruePlusMinus"
+
+paths:
+  defaultInputPath: "/Users/yidafu/github/swc-binding/swc-generator/tests/swc-01-base-types.d.ts"
+  defaultOutputTypesPath: "/Users/yidafu/github/swc-binding/test-outputs/swc-validation/types.kt"
+  defaultOutputSerializerPath: "/Users/yidafu/github/swc-binding/test-outputs/swc-validation/serializer.kt"
+  defaultOutputDslDir: "/Users/yidafu/github/swc-binding/test-outputs/swc-validation/dsl"

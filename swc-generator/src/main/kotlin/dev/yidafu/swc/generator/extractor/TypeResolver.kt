@@ -10,8 +10,7 @@ import dev.yidafu.swc.generator.util.*
 
 /**
  * TypeScript 类型解析器
- * 
- * 使用 AstNode 解析 TypeScript 类型为 ADT
+ * * 使用 AstNode 解析 TypeScript 类型为 ADT
  * 专注于纯 TypeScript 类型提取，不包含 Kotlin 特定逻辑
  */
 object TypeResolver {
@@ -84,6 +83,7 @@ object TypeResolver {
             "unknown" -> KeywordKind.UNKNOWN
             "never" -> KeywordKind.NEVER
             "symbol" -> KeywordKind.SYMBOL
+            "object" -> KeywordKind.OBJECT
             "null" -> return GeneratorResultFactory.success(TypeScriptType.Null)
             else -> return GeneratorResultFactory.success(TypeScriptType.Any)
         }
@@ -152,13 +152,23 @@ object TypeResolver {
      */
     private fun extractLiteralType(type: AstNode): GeneratorResult<TypeScriptType> {
         val literal = type.getNode("literal") ?: return GeneratorResultFactory.success(TypeScriptType.Any)
-        val value = literal.getLiteralValue() ?: ""
 
         val literalValue = when {
-            literal.isStringLiteral() -> LiteralValue.StringLiteral(value)
-            literal.isNumericLiteral() -> LiteralValue.NumberLiteral(value.toDoubleOrNull() ?: 0.0)
-            literal.isBooleanLiteral() -> LiteralValue.BooleanLiteral(value.toBoolean())
-            else -> LiteralValue.StringLiteral(value)
+            literal.isStringLiteral() -> {
+                val value = literal.getStringLiteralValue() ?: ""
+                LiteralValue.StringLiteral(value)
+            }
+            literal.isNumericLiteral() -> {
+                val value = literal.getNumericLiteralValue() ?: 0.0
+                LiteralValue.NumberLiteral(value)
+            }
+            literal.isBooleanLiteral() -> {
+                val value = literal.getBooleanLiteralValue() ?: false
+                LiteralValue.BooleanLiteral(value)
+            }
+            else -> {
+                LiteralValue.StringLiteral("")
+            }
         }
 
         return GeneratorResultFactory.success(TypeScriptType.Literal(literalValue))

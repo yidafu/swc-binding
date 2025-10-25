@@ -80,10 +80,10 @@ export interface PatternBase extends Node, HasSpan {
     // 基础模式接口
 }
 
-export type TsFnParameter = any;
-export type TsTypeAnnotation = any;
-export type PropertyName = any;
-export type Pattern = any;
-export type Identifier = any;
-export type Expression = any;
+export type TsFnParameter = object;
+export type TsTypeAnnotation = object;
+export type PropertyName = object;
+export type Pattern = object;
+export type Identifier = object;
+export type Expression = object;
 

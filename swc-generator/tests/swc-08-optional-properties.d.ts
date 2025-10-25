@@ -85,12 +85,12 @@ export interface Span {
 
 export interface Decorator extends Node, HasSpan {
     type: "Decorator";
-    expression: any;
+    expression: object;
 }
 
-export type PropertyName = any;
-export type Expression = any;
-export type TsTypeAnnotation = any;
+export type PropertyName = object;
+export type Expression = object;
+export type TsTypeAnnotation = object;
 export type Accessibility = "public" | "private" | "protected";
 export type MethodKind = "method" | "getter" | "setter";
 export interface Fn extends HasSpan, HasDecorator {
@@ -99,6 +99,6 @@ export interface Fn extends HasSpan, HasDecorator {
     generator: boolean;
     async: boolean;
 }
-export type Param = any;
-export type BlockStatement = any;
+export type Param = object;
+export type BlockStatement = object;
 

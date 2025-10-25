@@ -1,7 +1,5 @@
 package dev.yidafu.swc.generator.adt.kotlin
 
-import dev.yidafu.swc.generator.config.HardcodedRules
-
 /**
  * PropertyDecl的扩展函数
  * 将KotlinProperty的业务逻辑迁移到这里
@@ -214,7 +212,7 @@ fun KotlinDeclaration.PropertyDecl.withNullableIfNeeded(): KotlinDeclaration.Pro
     if (type is KotlinType.Nullable) {
         return this
     }
-    
+
     // 所有属性都变为可空，保持原有默认值
     return copy(
         type = KotlinType.Nullable(type)

@@ -6,6 +6,7 @@ import dev.yidafu.swc.generator.adt.kotlin.KotlinTypeFactory
 import dev.yidafu.swc.generator.adt.result.ErrorCode
 import dev.yidafu.swc.generator.adt.result.GeneratorResult
 import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
 import dev.yidafu.swc.generator.adt.typescript.KeywordKind
 import dev.yidafu.swc.generator.adt.typescript.LiteralValue
 import dev.yidafu.swc.generator.adt.typescript.TypeScriptDeclaration
@@ -13,13 +14,11 @@ import dev.yidafu.swc.generator.adt.typescript.TypeScriptType
 import dev.yidafu.swc.generator.adt.typescript.getTypeName
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.GlobalConfig
-import dev.yidafu.swc.generator.config.HardcodedRules
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 
 /**
  * TypeScript 到 Kotlin 类型转换器
- * 
- * 在 ADT 转换过程中自动处理所有类型转换：
+ * * 在 ADT 转换过程中自动处理所有类型转换：
  * - 基础类型（string, number, boolean 等）
  * - 复杂类型（数组、联合、交叉等）
  * - 特殊类型（模板字面量、函数等）
@@ -31,7 +30,6 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
      */
     fun convertToKotlinType(tsType: TypeScriptType): GeneratorResult<KotlinType> {
         return try {
-
             val result = when (tsType) {
                 is TypeScriptType.Keyword -> convertKeyword(tsType.kind)
                 is TypeScriptType.Reference -> convertReference(tsType)
@@ -69,7 +67,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
     private fun convertKeyword(kind: KeywordKind): KotlinType {
         return when (kind) {
             KeywordKind.STRING -> KotlinTypeFactory.string()
-            KeywordKind.NUMBER -> KotlinTypeFactory.int()
+            KeywordKind.NUMBER -> KotlinTypeFactory.double()
             KeywordKind.BOOLEAN -> KotlinTypeFactory.boolean()
             KeywordKind.UNDEFINED -> KotlinTypeFactory.nothing()
             KeywordKind.NULL -> KotlinTypeFactory.nothing()
@@ -79,6 +77,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             KeywordKind.UNKNOWN -> KotlinTypeFactory.any()
             KeywordKind.NEVER -> KotlinTypeFactory.nothing()
             KeywordKind.SYMBOL -> KotlinTypeFactory.string() // Symbol 转换为 String
+            KeywordKind.OBJECT -> KotlinTypeFactory.generic("Map", KotlinTypeFactory.string(), KotlinTypeFactory.string()) // object 转换为 Map<String, String>
         }
     }
 
@@ -111,24 +110,22 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             convertToKotlinType(it).getOrNull()
         }
 
-        // 过滤 null
-        val nonNullTypes = kotlinTypes.filter {
-            it !is KotlinType.Nothing
-        }
+        // 保留所有类型，包括 Nothing（代表 null）
+        val validTypes = kotlinTypes
 
         return when {
-            nonNullTypes.isEmpty() -> KotlinTypeFactory.nothing()
-            nonNullTypes.size == 1 -> nonNullTypes.first()
-            nonNullTypes.size in 2..4 -> {
+            validTypes.isEmpty() -> KotlinTypeFactory.nothing()
+            validTypes.size == 1 -> validTypes.first()
+            validTypes.size in 2..4 -> {
                 // 检查是否是 Booleanable 类型
-                val booleanType = nonNullTypes.find { it is KotlinType.Boolean }
-                if (booleanType != null && nonNullTypes.size == 2) {
-                    val otherType = nonNullTypes.find { it !is KotlinType.Boolean } ?: KotlinTypeFactory.any()
+                val booleanType = validTypes.find { it is KotlinType.Boolean }
+                if (booleanType != null && validTypes.size == 2) {
+                    val otherType = validTypes.find { it !is KotlinType.Boolean } ?: KotlinTypeFactory.any()
                     return KotlinTypeFactory.booleanable(otherType)
                 }
 
                 // 转换为 Union 类型
-                KotlinTypeFactory.union(*nonNullTypes.toTypedArray())
+                KotlinTypeFactory.union(*validTypes.toTypedArray())
             }
             else -> KotlinTypeFactory.any()
         }
@@ -220,15 +217,15 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
     /**
      * 转换接口声明为 Kotlin 类声明
      */
-    fun convertInterfaceDeclaration(ts: TypeScriptDeclaration.InterfaceDeclaration): GeneratorResult<KotlinDeclaration.ClassDecl> {
-        return DeclarationConverter.convertInterfaceDeclaration(ts, config)
+    fun convertInterfaceDeclaration(ts: TypeScriptDeclaration.InterfaceDeclaration, inheritanceAnalyzer: InheritanceAnalyzer? = null): GeneratorResult<KotlinDeclaration.ClassDecl> {
+        return DeclarationConverter.convertInterfaceDeclaration(ts, config, inheritanceAnalyzer)
     }
 
     /**
      * 转换类型别名声明为 Kotlin 类型别名声明
      */
-    fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
-        return DeclarationConverter.convertTypeAliasDeclaration(ts, config)
+    fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration, inheritanceAnalyzer: InheritanceAnalyzer? = null): GeneratorResult<KotlinDeclaration> {
+        return DeclarationConverter.convertTypeAliasDeclaration(ts, config, inheritanceAnalyzer)
     }
 
     companion object {
@@ -251,7 +248,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
         /**
          * 便捷的类型别名声明转换方法
          */
-        fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
+        fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration): GeneratorResult<KotlinDeclaration> {
             val converter = TypeConverter(GlobalConfig.config)
             return converter.convertTypeAliasDeclaration(ts)
         }

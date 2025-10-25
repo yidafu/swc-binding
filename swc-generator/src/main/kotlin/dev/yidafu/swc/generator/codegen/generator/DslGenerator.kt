@@ -4,11 +4,11 @@ import com.squareup.kotlinpoet.*
 import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.kotlin.isValidKotlinTypeName
 import dev.yidafu.swc.generator.adt.kotlin.wrapReservedWord
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.codegen.model.KotlinExtensionFun
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.HardcodedRules
-import dev.yidafu.swc.generator.codegen.model.KotlinExtensionFun
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -46,9 +46,9 @@ class DslGenerator(
      */
     fun generateExtensionFunctions() {
         val needGenerateDslClassList = classDecls
-            .filter { 
+            .filter {
                 val analyzer = InheritanceAnalyzerHolder.get()
-                analyzer.findAllChildrenByParent(it.name).isNotEmpty() 
+                analyzer.findAllChildrenByParent(it.name).isNotEmpty()
             }
             .map { it.name }
 
@@ -63,7 +63,7 @@ class DslGenerator(
             addExtensionFunWrapper(extFun)
         }
     }
-    
+
     /**
      * 生成属性相关的扩展函数
      */
@@ -79,7 +79,7 @@ class DslGenerator(
                 }
             }
     }
-    
+
     /**
      * 为单个属性生成扩展函数
      */
@@ -90,7 +90,7 @@ class DslGenerator(
               * extension function for create ${prop.getTypeString()} -> {child}
               */
         """.trimIndent()
-        
+
         val analyzer = InheritanceAnalyzerHolder.get()
         return when (val type = prop.type) {
             is KotlinType.Union -> {
@@ -275,13 +275,13 @@ class DslGenerator(
      * 使用缓存优化重复清理
      */
     private val sanitizedTypeNameCache = mutableMapOf<String, String>()
-    
+
     private fun sanitizeTypeName(typeName: String): String {
         return sanitizedTypeNameCache.getOrPut(typeName) {
             sanitizeTypeNameInternal(typeName)
         }
     }
-    
+
     /**
      * 内部清理类型名称实现
      */
@@ -361,8 +361,10 @@ class DslGenerator(
      * 创建单个 create 函数（顶层函数）
      */
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
-        val interfaceName = removeGenerics(klass.name.replace("Impl", ""))
-        val klassName = removeGenerics(klass.name)
+        val interfaceName = klass.name.replace("Impl", "")
+        val klassName = klass.name
+
+        // 暂时生成非泛型版本，避免 KotlinPoet API 复杂性
         val interfaceType = ClassName(PoetConstants.PKG_TYPES, interfaceName)
         val implType = ClassName(PoetConstants.PKG_TYPES, klassName)
 

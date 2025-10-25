@@ -88,7 +88,8 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
             val typeParameters = extractTypeParameters(astNode)
 
             // 提取类型定义
-            val typeAnnotation = astNode.getNode("typeAnnotation")?.getNode("typeAnnotation")
+            val firstTypeAnnotation = astNode.getNode("typeAnnotation")
+            val typeAnnotation = firstTypeAnnotation?.getNode("typeAnnotation") ?: firstTypeAnnotation
             val type = TypeResolver.extractTypeScriptType(typeAnnotation)
                 .getOrDefault(TypeScriptType.Any)
 
@@ -117,22 +118,82 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
 
     /**
      * 提取类型参数
+     * 支持两种 AST 结构：
+     * 1. typeParameters -> params -> 直接参数
+     * 2. typeParams -> parameters -> Identifier 对象
      */
     private fun extractTypeParameters(astNode: AstNode): List<TypeParameter> {
-        val typeParams = astNode.getNode("typeParameters")?.getNodes("params") ?: emptyList()
+        Logger.debug("  AST 节点类型: ${astNode.type}", 10)
+
+        // 尝试不同的 AST 节点结构
+        val typeParams = when {
+            // 结构1: typeParameters -> params
+            astNode.getNode("typeParameters")?.getNodes("params")?.isNotEmpty() == true -> {
+                astNode.getNode("typeParameters")?.getNodes("params") ?: emptyList()
+            }
+            // 结构2: typeParams -> parameters (Identifier 对象)
+            astNode.getNode("typeParams")?.getNodes("parameters")?.isNotEmpty() == true -> {
+                astNode.getNode("typeParams")?.getNodes("parameters") ?: emptyList()
+            }
+            else -> emptyList()
+        }
+
+        Logger.debug("  找到类型参数数量: ${typeParams.size}", 8)
+
         return typeParams.mapNotNull { param ->
-            val name = param.getString("name") ?: return@mapNotNull null
-            val constraint = param.getNode("constraint")?.let { constraintNode ->
-                TypeResolver.extractTypeScriptType(constraintNode).getOrNull()
-            }
-            val default = param.getNode("default")?.let { defaultNode ->
-                TypeResolver.extractTypeScriptType(defaultNode).getOrNull()
-            }
+            extractSingleTypeParameter(param)
+        }
+    }
+
+    /**
+     * 提取单个类型参数
+     * 处理不同的参数节点结构
+     */
+    private fun extractSingleTypeParameter(param: AstNode): TypeParameter? {
+        Logger.debug("    处理类型参数节点: ${param.type}", 10)
+
+        return try {
+            // 尝试不同的名称提取方式
+            val name = when {
+                // 方式1: 直接字符串
+                param.getString("name") != null -> param.getString("name")
+                // 方式2: Identifier 对象的 value 字段
+                param.getNode("name")?.getString("value") != null -> param.getNode("name")?.getString("value")
+                else -> null
+            } ?: return null
+
+            Logger.debug("    类型参数: $name", 10)
+
+            // 提取约束和默认值
+            val constraint = extractTypeParameterConstraint(param)
+            val default = extractTypeParameterDefault(param)
+
             TypeParameter(
                 name = name,
                 constraint = constraint,
                 default = default
             )
+        } catch (e: Exception) {
+            Logger.debug("    获取类型参数失败: ${e.message}", 10)
+            null
+        }
+    }
+
+    /**
+     * 提取类型参数约束
+     */
+    private fun extractTypeParameterConstraint(param: AstNode): TypeScriptType? {
+        return param.getNode("constraint")?.let { constraintNode ->
+            TypeResolver.extractTypeScriptType(constraintNode).getOrNull()
+        }
+    }
+
+    /**
+     * 提取类型参数默认值
+     */
+    private fun extractTypeParameterDefault(param: AstNode): TypeScriptType? {
+        return param.getNode("default")?.let { defaultNode ->
+            TypeResolver.extractTypeScriptType(defaultNode).getOrNull()
         }
     }
 
@@ -148,20 +209,26 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
                     val name = expr.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         TypeReference(name)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 expr?.type == "TsQualifiedName" -> {
                     val name = expr.getNode("right")?.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         TypeReference(name)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 expr?.type == "TsTypeReference" -> {
                     val name = expr.getNode("typeName")?.getIdentifierValue()
                     if (name != null && name.isNotEmpty()) {
                         val typeArgs = extractTypeArguments(expr)
                         TypeReference(name, typeArgs)
-                    } else null
+                    } else {
+                        null
+                    }
                 }
                 else -> null
             }

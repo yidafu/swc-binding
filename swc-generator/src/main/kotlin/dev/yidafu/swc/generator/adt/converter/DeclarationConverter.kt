@@ -12,7 +12,10 @@ import dev.yidafu.swc.generator.util.Logger
  * TypeScript 声明到 Kotlin 声明的转换器
  * 处理特殊情况和配置规则
  */
-class DeclarationConverter(private val config: SwcGeneratorConfig) {
+class DeclarationConverter(
+    private val config: SwcGeneratorConfig,
+    private val inheritanceAnalyzer: InheritanceAnalyzer? = null
+) {
 
     private val typeConverter = TypeConverter(config)
 
@@ -25,8 +28,8 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
         return try {
             Logger.debug("转换接口声明: ${tsInterface.name}", 4)
 
-            // 转换类型参数（暂时未使用，保留用于未来扩展）
-            // val kotlinTypeParams = convertTypeParameters(tsInterface.typeParameters)
+            // 转换类型参数
+            val kotlinTypeParams = convertTypeParameters(tsInterface.typeParameters)
 
             // 转换继承关系
             val kotlinParents = tsInterface.extends.map { typeRef ->
@@ -39,7 +42,7 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
             }
 
             // 过滤掉重复声明的父接口属性
-            val filteredProperties = filterInheritedProperties(kotlinProperties, kotlinParents)
+            val filteredProperties = filterInheritedProperties(kotlinProperties, kotlinParents, tsInterface.name)
 
             // 确定修饰符
             val modifier = determineClassModifier(tsInterface)
@@ -52,6 +55,7 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
                 modifier = modifier,
                 properties = filteredProperties,
                 parents = kotlinParents,
+                typeParameters = kotlinTypeParams,
                 annotations = annotations,
                 kdoc = tsInterface.kdoc
             )
@@ -70,13 +74,30 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
     }
 
     /**
-     * 转换类型别名声明为 Kotlin 类型别名声明
+     * 转换类型别名声明为 Kotlin 类型别名声明或枚举类
      */
     fun convertTypeAliasDeclaration(
         tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration
-    ): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
+    ): GeneratorResult<KotlinDeclaration> {
         return try {
             Logger.debug("转换类型别名声明: ${tsTypeAlias.name}", 4)
+
+            // 检查是否为字面量联合类型
+            if (isLiteralUnionType(tsTypeAlias.type)) {
+                // 检查是否在 literalUnionToTypealias 配置中
+                if (config.classModifiers.literalUnionToTypealias.contains(tsTypeAlias.name)) {
+                    Logger.debug("  检测到字面量联合类型，但配置为生成 typealias", 6)
+                    // 继续生成 typealias
+                } else {
+                    Logger.debug("  检测到字面量联合类型，生成枚举类", 6)
+                    return convertLiteralUnionToEnumClass(tsTypeAlias)
+                }
+            }
+            // 检查是否为接口联合类型
+            else if (isInterfaceUnionType(tsTypeAlias.type)) {
+                Logger.debug("  检测到接口联合类型，生成密封接口", 6)
+                return convertInterfaceUnionToSealedInterface(tsTypeAlias)
+            }
 
             // 转换类型
             val kotlinType = typeConverter.convertToKotlinType(tsTypeAlias.type)
@@ -107,33 +128,13 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
     }
 
     /**
-     * 转换类型参数
-     */
-    private fun convertTypeParameters(tsTypeParams: List<TypeParameter>): List<KotlinDeclaration.TypeParameter> {
-        return tsTypeParams.map { tsParam ->
-            val constraint = tsParam.constraint?.let { constraint ->
-                typeConverter.convertToKotlinType(constraint).getOrNull()
-            }
-            // val default = tsParam.default?.let { default ->
-            //     typeConverter.convertToKotlinType(default).getOrNull()
-            // }
-
-            KotlinDeclaration.TypeParameter(
-                name = tsParam.name,
-                variance = convertVariance(tsParam.variance),
-                upperBounds = constraint?.let { listOf(it) } ?: emptyList()
-            )
-        }
-    }
-
-    /**
      * 转换变体
      */
-    private fun convertVariance(variance: dev.yidafu.swc.generator.adt.typescript.Variance): dev.yidafu.swc.generator.adt.kotlin.Variance {
+    private fun convertVariance(variance: dev.yidafu.swc.generator.adt.typescript.Variance): KotlinDeclaration.Variance {
         return when (variance) {
-            dev.yidafu.swc.generator.adt.typescript.Variance.INVARIANT -> dev.yidafu.swc.generator.adt.kotlin.Variance.INVARIANT
-            dev.yidafu.swc.generator.adt.typescript.Variance.COVARIANT -> dev.yidafu.swc.generator.adt.kotlin.Variance.COVARIANT
-            dev.yidafu.swc.generator.adt.typescript.Variance.CONTRAVARIANT -> dev.yidafu.swc.generator.adt.kotlin.Variance.CONTRAVARIANT
+            dev.yidafu.swc.generator.adt.typescript.Variance.INVARIANT -> KotlinDeclaration.Variance.INVARIANT
+            dev.yidafu.swc.generator.adt.typescript.Variance.COVARIANT -> KotlinDeclaration.Variance.COVARIANT
+            dev.yidafu.swc.generator.adt.typescript.Variance.CONTRAVARIANT -> KotlinDeclaration.Variance.CONTRAVARIANT
         }
     }
 
@@ -164,7 +165,7 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
 
         // 转换为驼峰命名（Kotlin 命名规范）
         val camelCaseName = snakeToCamelCase(actualName)
-        
+
         // 提取默认值
         val defaultValue = extractDefaultValue(member.type)
 
@@ -181,13 +182,10 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
             finalType is KotlinType.Nullable -> finalType
             else -> KotlinType.Nullable(finalType)
         }
-        
-        // 检查是否在 toKotlinClass 配置中，如果是，则属性应该有默认值
-        val isInToKotlinClass = config.toKotlinClass.contains(interfaceName)
-        val propertyDefaultValue = if (isInToKotlinClass) {
+
+        // 对于 toKotlinClass 中的类，属性应该有默认值 null
+        val propertyDefaultValue = if (interfaceName != null && config.toKotlinClass.contains(interfaceName)) {
             Expression.NullLiteral
-        } else if (defaultValue.isNotBlank()) {
-            Expression.StringLiteral(defaultValue)
         } else {
             null
         }
@@ -208,7 +206,7 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
     private fun extractDefaultValue(tsType: TypeScriptType): String {
         return when (tsType) {
             is TypeScriptType.Literal -> when (val value = tsType.value) {
-                is LiteralValue.StringLiteral -> value.value  // 不添加双引号，让 Expression.StringLiteral 处理
+                is LiteralValue.StringLiteral -> value.value // 不添加双引号，让 Expression.StringLiteral 处理
                 is LiteralValue.NumberLiteral -> value.value.toString()
                 is LiteralValue.BooleanLiteral -> value.value.toString()
                 else -> ""
@@ -222,30 +220,235 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
      */
     private fun filterInheritedProperties(
         properties: List<KotlinDeclaration.PropertyDecl>,
+        parents: List<KotlinType>,
+        interfaceName: String
+    ): List<KotlinDeclaration.PropertyDecl> {
+        // 使用专门的属性过滤器
+        return PropertyFilterer.filterInheritedProperties(properties, parents, interfaceName, inheritanceAnalyzer)
+    }
+
+    /**
+     * 后备的硬编码过滤逻辑
+     */
+    private fun filterInheritedPropertiesFallback(
+        properties: List<KotlinDeclaration.PropertyDecl>,
         parents: List<KotlinType>
     ): List<KotlinDeclaration.PropertyDecl> {
-        // 获取父接口的属性名集合
         val parentPropertyNames = mutableSetOf<String>()
-        
-        // 这里简化处理，只检查常见的父接口属性
-        // 在实际应用中，可能需要更复杂的继承关系分析
-        if (parents.any { it is KotlinType.Simple && it.name == "Node" }) {
+        val parentNames = parents.mapNotNull { it as? KotlinType.Simple }.map { it.name }
+
+        // 检查是否继承了 Node（直接或间接）
+        if (parentNames.contains("Node") || parentNames.contains("ExpressionBase") || parentNames.contains("PatternBase")) {
             parentPropertyNames.add("type")
         }
-        if (parents.any { it is KotlinType.Simple && it.name == "HasSpan" }) {
+        if (parentNames.contains("HasSpan")) {
             parentPropertyNames.add("span")
         }
-        if (parents.any { it is KotlinType.Simple && it.name == "HasDecorator" }) {
+        if (parentNames.contains("HasDecorator")) {
             parentPropertyNames.add("decorators")
         }
-        if (parents.any { it is KotlinType.Simple && it.name == "HasInterpreter" }) {
+        if (parentNames.contains("HasInterpreter")) {
             parentPropertyNames.add("interpreter")
         }
-        
-        // 过滤掉父接口中已存在的属性
+
         return properties.filter { prop ->
             !parentPropertyNames.contains(prop.name)
         }
+    }
+
+    /**
+     * 获取接口的属性名列表
+     * 从 TypeScript 声明中获取接口属性
+     */
+    private fun getInterfaceProperties(interfaceName: String): List<String> {
+        // 这里应该从 TypeScript 声明中获取接口属性
+        // 暂时使用硬编码的常见属性作为示例
+        // TODO: 实现从 TypeScript 声明中动态获取接口属性
+        return when (interfaceName) {
+            "Node" -> listOf("type")
+            "HasSpan" -> listOf("span")
+            "HasDecorator" -> listOf("decorators")
+            "HasInterpreter" -> listOf("interpreter")
+            "ExpressionBase" -> listOf("type") // ExpressionBase 继承了 Node
+            "PatternBase" -> listOf("type") // PatternBase 继承了 Node
+            else -> emptyList()
+        }
+    }
+
+    /**
+     * 检查是否为字面量联合类型
+     */
+    private fun isLiteralUnionType(tsType: TypeScriptType): Boolean {
+        return when (tsType) {
+            is TypeScriptType.Union -> {
+                tsType.types.all { it is TypeScriptType.Literal }
+            }
+            else -> false
+        }
+    }
+
+    /**
+     * 将字面量联合类型转换为枚举类
+     */
+    private fun convertLiteralUnionToEnumClass(
+        tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration
+    ): GeneratorResult<KotlinDeclaration.ClassDecl> {
+        return try {
+            val unionType = tsTypeAlias.type as TypeScriptType.Union
+            val enumEntries = mutableListOf<KotlinDeclaration.EnumEntry>()
+
+            unionType.types.forEach { literalType ->
+                if (literalType is TypeScriptType.Literal) {
+                    val entryName = when (val value = literalType.value) {
+                        is LiteralValue.StringLiteral -> {
+                            // 将字符串值转换为有效的枚举名称
+                            sanitizeEnumEntryName(value.value)
+                        }
+                        is LiteralValue.NumberLiteral -> {
+                            "NUMBER_${value.value.toString().replace(".", "_")}"
+                        }
+                        is LiteralValue.BooleanLiteral -> {
+                            "BOOL_${value.value.toString().uppercase()}"
+                        }
+                        else -> "UNKNOWN"
+                    }
+
+                    val entry = KotlinDeclaration.EnumEntry(
+                        name = entryName,
+                        arguments = listOf(
+                            Expression.StringLiteral(
+                                when (val value = literalType.value) {
+                                    is LiteralValue.StringLiteral -> value.value
+                                    is LiteralValue.NumberLiteral -> value.value.toString()
+                                    is LiteralValue.BooleanLiteral -> value.value.toString()
+                                    else -> value.toString()
+                                }
+                            )
+                        )
+                    )
+                    enumEntries.add(entry)
+                }
+            }
+
+            // 为枚举类添加构造函数参数
+            val constructorParam = KotlinDeclaration.PropertyDecl(
+                name = "value",
+                type = KotlinType.StringType,
+                modifier = PropertyModifier.Val,
+                defaultValue = null,
+                annotations = emptyList(),
+                kdoc = null
+            )
+
+            val enumClass = KotlinDeclaration.ClassDecl(
+                name = wrapReservedWord(tsTypeAlias.name),
+                modifier = ClassModifier.EnumClass,
+                parents = emptyList(),
+                properties = listOf(constructorParam),
+                functions = emptyList(),
+                nestedClasses = emptyList(),
+                enumEntries = enumEntries,
+                annotations = emptyList(),
+                kdoc = tsTypeAlias.kdoc
+            )
+
+            Logger.debug("  生成枚举类: ${enumClass.name}, 条目数: ${enumEntries.size}", 6)
+            GeneratorResultFactory.success(enumClass)
+        } catch (e: Exception) {
+            Logger.error("转换字面量联合类型为枚举类失败: ${tsTypeAlias.name}, ${e.message}")
+            GeneratorResultFactory.failure(
+                code = ErrorCode.TYPE_RESOLUTION_ERROR,
+                message = "Failed to convert literal union to enum class: ${tsTypeAlias.name}",
+                cause = e
+            )
+        }
+    }
+
+    /**
+     * 操作符名称映射表
+     */
+    private val literalNameMap = mapOf(
+        "+" to "Addition",
+        "+=" to "AdditionAssignment",
+        "=" to "Assignment",
+        "&" to "BitwiseAND",
+        "&=" to "BitwiseANDAssignment",
+        "~" to "BitwiseNOT",
+        "|" to "BitwiseOR",
+        "|=" to "BitwiseORAssignment",
+        "^" to "BitwiseXOR",
+        "^=" to "BitwiseXORAssignment",
+        "," to "CommaOperator",
+        "ternary" to "Conditional",
+        "--" to "Decrement",
+        "/" to "Division",
+        "/=" to "DivisionAssignment",
+        "==" to "Equality",
+        "**" to "Exponentiation",
+        "**=" to "ExponentiationAssignment",
+        ">" to "GreaterThan",
+        ">=" to "GreaterThanOrEqual",
+        " " to "GroupingOperator",
+        "++" to "Increment",
+        "!=" to "Inequality",
+        "<<" to "LeftShift",
+        "<<=" to "LeftShiftAssignment",
+        "<" to "LessThan",
+        "<=" to "LessThanOrEqual",
+        "&&" to "LogicalAND",
+        "&&=" to "LogicalANDAssignment",
+        "!" to "LogicalNOT",
+        "||" to "LogicalOR",
+        "||=" to "LogicalORAssignment",
+        "*" to "Multiplication",
+        "*=" to "MultiplicationAssignment",
+        "??=" to "NullishCoalescingAssignment",
+        "??" to "NullishCoalescingOperator",
+        "?." to "OptionalChaining",
+        "%" to "Remainder",
+        "%=" to "RemainderAssignment",
+        ">>" to "RightShift",
+        ">>=" to "RightShiftAssignment",
+        "..." to "SpreadSyntax",
+        "===" to "StrictEquality",
+        "!==" to "StrictInequality",
+        "-" to "Subtraction",
+        "-=" to "SubtractionAssignment",
+        ">>>" to "UnsignedRightShift",
+        ">>>=" to "UnsignedRightShiftAssignment"
+    )
+
+    /**
+     * 清理枚举条目名称，转换为有效的 Kotlin 标识符
+     */
+    private fun sanitizeEnumEntryName(value: String): String {
+        // 首先检查操作符映射表
+        if (literalNameMap.containsKey(value)) {
+            return literalNameMap[value]!!
+        }
+
+        // 处理 Kotlin 关键字
+        val keywordMap = CodeGenerationRules.getKotlinKeywordMap()
+        if (keywordMap.containsKey(value)) {
+            return keywordMap[value]!!.uppercase()
+        }
+
+        // 如果只包含字母数字，转为大写
+        if (value.matches(Regex("[a-zA-Z][a-zA-Z0-9]*"))) {
+            return value.uppercase()
+        }
+
+        // 对于包含特殊字符的，先尝试清理特殊字符
+        val cleaned = value.replace(Regex("[^a-zA-Z0-9]"), "_")
+            .replace(Regex("_+"), "_")
+            .trim('_')
+
+        if (cleaned.isNotEmpty() && cleaned.matches(Regex("[a-zA-Z][a-zA-Z0-9_]*"))) {
+            return cleaned.uppercase()
+        }
+
+        // 如果清理后仍然无效，生成一个基于内容的名称
+        return "LITERAL_${value.hashCode().toString().replace("-", "NEG")}"
     }
 
     /**
@@ -282,13 +485,77 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
     }
 
     /**
+     * 检查是否为接口联合类型
+     */
+    private fun isInterfaceUnionType(tsType: dev.yidafu.swc.generator.adt.typescript.TypeScriptType): Boolean {
+        return when (tsType) {
+            is dev.yidafu.swc.generator.adt.typescript.TypeScriptType.Union -> {
+                tsType.types.all { it is dev.yidafu.swc.generator.adt.typescript.TypeScriptType.Reference }
+            }
+            else -> false
+        }
+    }
+
+    /**
+     * 转换 TypeScript 类型参数为 Kotlin 类型参数
+     */
+    private fun convertTypeParameters(tsTypeParams: List<dev.yidafu.swc.generator.adt.typescript.TypeParameter>): List<KotlinDeclaration.TypeParameter> {
+        // 设置类型转换器
+        TypeParameterConverter.setTypeConverter(typeConverter)
+        
+        // 使用专门的类型参数转换器
+        return TypeParameterConverter.convertTypeParameters(tsTypeParams)
+    }
+
+    /**
+     * 将接口联合类型转换为密封接口
+     */
+    private fun convertInterfaceUnionToSealedInterface(
+        tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration
+    ): GeneratorResult<KotlinDeclaration.ClassDecl> {
+        return try {
+            val unionType = tsTypeAlias.type as dev.yidafu.swc.generator.adt.typescript.TypeScriptType.Union
+            val interfaceNames = unionType.types.mapNotNull { type ->
+                if (type is dev.yidafu.swc.generator.adt.typescript.TypeScriptType.Reference) {
+                    type.name
+                } else {
+                    null
+                }
+            }
+
+            val sealedInterface = KotlinDeclaration.ClassDecl(
+                name = wrapReservedWord(tsTypeAlias.name),
+                modifier = ClassModifier.SealedInterface,
+                parents = emptyList(),
+                properties = emptyList(),
+                functions = emptyList(),
+                nestedClasses = emptyList(),
+                enumEntries = emptyList(),
+                annotations = listOf(
+                    KotlinDeclaration.Annotation("SwcDslMarker")
+                ),
+                kdoc = tsTypeAlias.kdoc
+            )
+
+            Logger.debug("  生成密封接口: ${sealedInterface.name}, 包含接口: ${interfaceNames.joinToString(", ")}", 6)
+            GeneratorResultFactory.success(sealedInterface)
+        } catch (e: Exception) {
+            GeneratorResultFactory.failure(
+                code = ErrorCode.TYPE_RESOLUTION_ERROR,
+                message = "Failed to convert interface union to sealed interface: ${tsTypeAlias.name}",
+                cause = e
+            )
+        }
+    }
+
+    /**
      * 将 snake_case 转换为 camelCase
      */
     private fun snakeToCamelCase(name: String): String {
         if (!name.contains('_')) {
             return name
         }
-        
+
         return name.split('_')
             .mapIndexed { index, part ->
                 if (index == 0) {
@@ -306,17 +573,19 @@ class DeclarationConverter(private val config: SwcGeneratorConfig) {
          */
         fun convertInterfaceDeclaration(
             tsInterface: TypeScriptDeclaration.InterfaceDeclaration,
-            config: SwcGeneratorConfig
+            config: SwcGeneratorConfig,
+            inheritanceAnalyzer: InheritanceAnalyzer? = null
         ): GeneratorResult<KotlinDeclaration.ClassDecl> {
-            val converter = DeclarationConverter(config)
+            val converter = DeclarationConverter(config, inheritanceAnalyzer)
             return converter.convertInterfaceDeclaration(tsInterface)
         }
 
         fun convertTypeAliasDeclaration(
             tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration,
-            config: SwcGeneratorConfig
-        ): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
-            val converter = DeclarationConverter(config)
+            config: SwcGeneratorConfig,
+            inheritanceAnalyzer: InheritanceAnalyzer? = null
+        ): GeneratorResult<KotlinDeclaration> {
+            val converter = DeclarationConverter(config, inheritanceAnalyzer)
             return converter.convertTypeAliasDeclaration(tsTypeAlias)
         }
     }

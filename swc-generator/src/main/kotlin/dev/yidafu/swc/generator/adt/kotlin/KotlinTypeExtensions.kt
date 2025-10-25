@@ -81,7 +81,7 @@ private val kotlinTypeCache = mutableMapOf<String, KotlinType>()
 
 fun String.parseToKotlinType(): KotlinType {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
-    
+
     return kotlinTypeCache.getOrPut(cleanType) {
         parseToKotlinTypeInternal(cleanType)
     }

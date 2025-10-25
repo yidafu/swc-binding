@@ -5,16 +5,14 @@ import dev.yidafu.swc.generator.util.Logger
 
 /**
  * Kotlin 代码生成规则统一管理
- * 
- * 整合了所有代码生成相关的规则，包括：
+ * * 整合了所有代码生成相关的规则，包括：
  * - 特殊属性类型覆盖规则
  * - 命名规则（保留字映射）
  * - 修饰符规则
  * - 注解规则
  * - 验证规则
  * - 过滤规则
- * 
- * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
+ * * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
  */
 object CodeGenerationRules {
 
@@ -40,8 +38,7 @@ object CodeGenerationRules {
      */
     private val kotlinKeywordMap = mapOf(
         "object" to "jsObject",
-        "inline" to "jsInline", 
-        "in" to "jsIn",
+        "inline" to "jsInline", "in" to "jsIn",
         "super" to "jsSuper",
         "class" to "jsClass",
         "interface" to "jsInterface",
@@ -119,7 +116,8 @@ object CodeGenerationRules {
         // 检查是否以小写字母开头（但保留字例外）
         val keywordMap = getKotlinKeywordMap()
         if (typeName.isNotEmpty() && typeName[0].isLowerCase() &&
-            !keywordMap.containsKey(typeName.lowercase())) {
+            !keywordMap.containsKey(typeName.lowercase())
+        ) {
             Logger.debug("类型名称以小写字母开头: '$typeName'")
             return false
         }
@@ -132,11 +130,11 @@ object CodeGenerationRules {
      */
     fun isValidPropertyName(propertyName: String): Boolean {
         if (propertyName.isBlank()) return false
-        
+
         // 检查是否包含特殊字符
         val invalidChars = setOf('<', '>', ' ', '\n', '\t', '(', ')', '[', ']', '{', '}')
         if (propertyName.any { it in invalidChars }) return false
-        
+
         return true
     }
 
@@ -181,15 +179,15 @@ object CodeGenerationRules {
      */
     fun getSerializationAnnotations(originalName: String, kotlinName: String): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
-        
+
         // 添加 @Serializable 注解
         annotations.add(KotlinDeclaration.Annotation("Serializable"))
-        
+
         // 如果名称发生变化，添加 @SerialName 注解
         if (originalName != kotlinName) {
             annotations.add(KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(originalName))))
         }
-        
+
         return annotations
     }
 
@@ -234,7 +232,6 @@ object CodeGenerationRules {
 
     // ==================== 过滤规则 ====================
 
-
     /**
      * 跳过的 DSL 接收者
      */
@@ -252,7 +249,6 @@ object CodeGenerationRules {
     fun shouldSkipDslReceiver(receiverName: String): Boolean {
         return skipDslReceivers.contains(receiverName)
     }
-
 
     // ==================== 代码生成规则 ====================
 
@@ -272,7 +268,7 @@ object CodeGenerationRules {
         val finalType = makeNullableIfNeeded(type, isNullable)
         val modifier = getPropertyModifier(isOverride, false)
         val annotations = getSerializationAnnotations(actualOriginalName, kotlinName)
-        
+
         return KotlinDeclaration.PropertyDecl(
             name = kotlinName,
             type = finalType,

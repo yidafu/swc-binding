@@ -92,7 +92,7 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                 KotlinDeclaration.PropertyDecl(
                     name = propertyName,
                     type = KotlinType.StringType,
-                    modifier = PropertyModifier.Var,
+                    modifier = PropertyModifier.Val,
                     defaultValue = Expression.StringLiteral(value)
                 )
             }
@@ -101,7 +101,7 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                 KotlinDeclaration.PropertyDecl(
                     name = "BOOL_${value.toString().uppercase()}",
                     type = KotlinType.Boolean,
-                    modifier = PropertyModifier.Var,
+                    modifier = PropertyModifier.Val,
                     defaultValue = Expression.BooleanLiteral(value)
                 )
             }
@@ -111,7 +111,7 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                 KotlinDeclaration.PropertyDecl(
                     name = "NUMBER_$numValue",
                     type = KotlinType.Int,
-                    modifier = PropertyModifier.Var,
+                    modifier = PropertyModifier.Val,
                     defaultValue = Expression.NumberLiteral(numValue.toString())
                 )
             }

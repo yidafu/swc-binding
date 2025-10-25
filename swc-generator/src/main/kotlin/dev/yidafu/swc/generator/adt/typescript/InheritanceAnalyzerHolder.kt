@@ -6,7 +6,7 @@ package dev.yidafu.swc.generator.adt.typescript
  */
 object InheritanceAnalyzerHolder {
     private var analyzer: InheritanceAnalyzer? = null
-    
+
     /**
      * 初始化继承分析器
      * @param declarations TypeScript 声明列表
@@ -14,7 +14,7 @@ object InheritanceAnalyzerHolder {
     fun initialize(declarations: List<TypeScriptDeclaration>) {
         analyzer = InheritanceAnalyzer(declarations)
     }
-    
+
     /**
      * 获取继承分析器实例
      * @return InheritanceAnalyzer 实例
@@ -23,14 +23,14 @@ object InheritanceAnalyzerHolder {
     fun get(): InheritanceAnalyzer {
         return analyzer ?: throw IllegalStateException("InheritanceAnalyzer not initialized. Call initialize() first.")
     }
-    
+
     /**
      * 清理分析器实例
      */
     fun clear() {
         analyzer = null
     }
-    
+
     /**
      * 检查分析器是否已初始化
      */

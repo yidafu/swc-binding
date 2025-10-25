@@ -185,10 +185,9 @@ fun AstNode.getLiteralValue(): String? {
     if (!isLiteralType()) return null
     val literal = getNode("literal") ?: return null
     return when {
-        literal.isStringLiteral() -> literal.getStringLiteralValue()  // 不添加双引号，让调用方处理
+        literal.isStringLiteral() -> literal.getStringLiteralValue() // 不添加双引号，让调用方处理
         literal.isNumericLiteral() -> literal.getNumericLiteralValue()?.toString()
         literal.isBooleanLiteral() -> literal.getBooleanLiteralValue()?.toString()
         else -> null
     }
 }
-

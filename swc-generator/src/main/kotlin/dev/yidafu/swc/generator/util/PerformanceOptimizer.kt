@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
  * 提供缓存管理、性能监控等功能
  */
 object PerformanceOptimizer {
-    
+
     /**
      * 缓存统计信息
      */
@@ -19,9 +19,9 @@ object PerformanceOptimizer {
     ) {
         val hitRate: Double get() = if (hitCount + missCount > 0) hitCount.toDouble() / (hitCount + missCount) else 0.0
     }
-    
+
     private val cacheStats = ConcurrentHashMap<String, MutableCacheStats>()
-    
+
     /**
      * 可变的缓存统计信息
      */
@@ -29,7 +29,7 @@ object PerformanceOptimizer {
         var hitCount: Int = 0,
         var missCount: Int = 0
     )
-    
+
     /**
      * 带统计的缓存
      */
@@ -37,10 +37,10 @@ object PerformanceOptimizer {
         private val cacheName: String,
         private val computeFunction: (K) -> V
     ) : MutableMap<K, V> by ConcurrentHashMap<K, V>() {
-        
+
         override fun get(key: K): V? {
             val stats = cacheStats.getOrPut(cacheName) { MutableCacheStats() }
-            
+
             return if (containsKey(key)) {
                 stats.hitCount++
                 this[key]
@@ -51,10 +51,10 @@ object PerformanceOptimizer {
                 value
             }
         }
-        
+
         fun getOrPut(key: K, defaultValue: () -> V): V {
             val stats = cacheStats.getOrPut(cacheName) { MutableCacheStats() }
-            
+
             return if (containsKey(key)) {
                 stats.hitCount++
                 this[key]!!
@@ -65,7 +65,7 @@ object PerformanceOptimizer {
                 value
             }
         }
-        
+
         fun getStats(): CacheStats {
             val stats = cacheStats[cacheName] ?: MutableCacheStats()
             return CacheStats(
@@ -76,14 +76,14 @@ object PerformanceOptimizer {
             )
         }
     }
-    
+
     /**
      * 创建带统计的缓存
      */
     fun <K, V> createCache(cacheName: String, computeFunction: (K) -> V): CachedMap<K, V> {
         return CachedMap(cacheName, computeFunction)
     }
-    
+
     /**
      * 获取所有缓存统计信息
      */
@@ -100,7 +100,7 @@ object PerformanceOptimizer {
             )
         }
     }
-    
+
     /**
      * 打印缓存统计信息
      */
@@ -113,14 +113,14 @@ object PerformanceOptimizer {
             }
         }
     }
-    
+
     /**
      * 清理所有缓存统计
      */
     fun clearCacheStats() {
         cacheStats.clear()
     }
-    
+
     /**
      * 性能计时器
      */
@@ -133,7 +133,7 @@ object PerformanceOptimizer {
             Logger.debug("$operationName 耗时: ${duration}ms", 6)
         }
     }
-    
+
     /**
      * 批量处理优化
      */

@@ -37,8 +37,7 @@ sealed class ClassModifier {
 /**
  * 检查是否为接口类型
  */
-fun ClassModifier.isInterface(): Boolean = 
-    this is ClassModifier.Interface || this is ClassModifier.SealedInterface
+fun ClassModifier.isInterface(): Boolean = this is ClassModifier.Interface || this is ClassModifier.SealedInterface
 
 /**
  * 属性修饰符

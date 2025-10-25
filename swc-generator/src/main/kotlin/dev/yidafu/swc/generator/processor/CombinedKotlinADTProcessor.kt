@@ -8,24 +8,23 @@ import dev.yidafu.swc.generator.util.Logger
 
 /**
  * 组合 Kotlin ADT 处理器
- * 
- * 将多个处理器组合在一起，按顺序执行
+ * * 将多个处理器组合在一起，按顺序执行
  */
 class CombinedKotlinADTProcessor(
     private val processors: List<KotlinADTProcessor>
 ) : KotlinADTProcessor {
-    
+
     constructor(vararg processors: KotlinADTProcessor) : this(processors.toList())
-    
+
     override fun processDeclarations(
         declarations: List<KotlinDeclaration>,
         config: SwcGeneratorConfig
     ): GeneratorResult<List<KotlinDeclaration>> {
         var currentDeclarations = declarations
-        
+
         processors.forEachIndexed { index, processor ->
             Logger.debug("执行处理器 ${index + 1}/${processors.size}: ${processor::class.simpleName}")
-            
+
             val result = processor.processDeclarations(currentDeclarations, config)
             result.onSuccess { processedDeclarations ->
                 currentDeclarations = processedDeclarations
@@ -35,16 +34,16 @@ class CombinedKotlinADTProcessor(
                 // 继续使用当前声明，不中断处理链
             }
         }
-        
+
         return GeneratorResultFactory.success(currentDeclarations)
     }
-    
+
     override fun processDeclaration(
         declaration: KotlinDeclaration,
         config: SwcGeneratorConfig
     ): GeneratorResult<KotlinDeclaration> {
         var currentDeclaration = declaration
-        
+
         processors.forEachIndexed { index, processor ->
             val result = processor.processDeclaration(currentDeclaration, config)
             result.onSuccess { processedDeclaration ->
@@ -54,7 +53,7 @@ class CombinedKotlinADTProcessor(
                 // 继续使用当前声明，不中断处理链
             }
         }
-        
+
         return GeneratorResultFactory.success(currentDeclaration)
     }
 }

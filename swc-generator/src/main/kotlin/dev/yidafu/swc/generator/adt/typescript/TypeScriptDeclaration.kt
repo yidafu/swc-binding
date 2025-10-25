@@ -41,9 +41,9 @@ data class TypeParameter(
  * 类型参数变体
  */
 enum class Variance {
-    INVARIANT,  // 不变
-    COVARIANT,  // 协变 (out)
-    CONTRAVARIANT  // 逆变 (in)
+    INVARIANT, // 不变
+    COVARIANT, // 协变 (out)
+    CONTRAVARIANT // 逆变 (in)
 }
 
 /**
@@ -53,4 +53,3 @@ data class TypeReference(
     val name: String,
     val typeArguments: List<TypeScriptType> = emptyList()
 )
-

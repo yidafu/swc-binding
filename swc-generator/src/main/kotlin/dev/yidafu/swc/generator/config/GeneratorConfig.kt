@@ -14,6 +14,7 @@ data class SwcGeneratorConfig(
     // 便捷访问方法，保持向后兼容
     val toKotlinClass: List<String> get() = classModifiers.toKotlinClass
     val sealedInterface: List<String> get() = classModifiers.sealedInterface
+
     // kotlinKeywords 已移至 CodeGenerationRules.kt
     val literalNameMap: Map<String, String> get() = namingRules.literalOperators
     val propsToSnakeCase: List<String> get() = classModifiers.propsToSnakeCase

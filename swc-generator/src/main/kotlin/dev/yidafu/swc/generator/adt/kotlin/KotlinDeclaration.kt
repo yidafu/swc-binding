@@ -7,6 +7,23 @@ package dev.yidafu.swc.generator.adt.kotlin
 sealed class KotlinDeclaration {
 
     /**
+     * 类型参数
+     */
+    data class TypeParameter(
+        val name: String,
+        val variance: Variance = Variance.INVARIANT,
+        val constraint: KotlinType? = null,
+        val default: KotlinType? = null
+    )
+
+    /**
+     * 类型参数变体
+     */
+    enum class Variance {
+        INVARIANT, COVARIANT, CONTRAVARIANT
+    }
+
+    /**
      * 类声明
      */
     data class ClassDecl(
@@ -14,8 +31,20 @@ sealed class KotlinDeclaration {
         val modifier: ClassModifier,
         val properties: List<PropertyDecl>,
         val parents: List<KotlinType>,
+        val typeParameters: List<TypeParameter> = emptyList(),
+        val functions: List<FunctionDecl> = emptyList(),
+        val nestedClasses: List<ClassDecl> = emptyList(),
+        val enumEntries: List<EnumEntry> = emptyList(),
         val annotations: List<Annotation>,
         val kdoc: String? = null
+    ) : KotlinDeclaration()
+
+    /**
+     * 枚举条目
+     */
+    data class EnumEntry(
+        val name: String,
+        val arguments: List<Expression> = emptyList()
     ) : KotlinDeclaration()
 
     /**
@@ -62,15 +91,6 @@ sealed class KotlinDeclaration {
         val type: KotlinType,
         val defaultValue: Expression? = null,
         val annotations: List<Annotation> = emptyList()
-    )
-
-    /**
-     * 类型参数
-     */
-    data class TypeParameter(
-        val name: String,
-        val variance: Variance = Variance.INVARIANT,
-        val upperBounds: List<KotlinType> = emptyList()
     )
 
     /**

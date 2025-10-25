@@ -7,15 +7,15 @@ import dev.yidafu.swc.generator.util.Logger
  * 替代全局的 ExtendRelationship，提供更好的类型安全和可测试性
  */
 class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>) {
-    
+
     private val inheritanceMap = buildInheritanceMap()
-    
+
     /**
      * 构建继承关系映射
      */
     private fun buildInheritanceMap(): Map<String, List<String>> {
         val map = mutableMapOf<String, MutableList<String>>()
-        
+
         declarations.forEach { declaration ->
             when (declaration) {
                 is TypeScriptDeclaration.InterfaceDeclaration -> {
@@ -30,18 +30,18 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
                 }
             }
         }
-        
+
         Logger.debug("构建继承关系映射: ${map.size} 个父类型")
         return map
     }
-    
+
     /**
      * 查找所有子类型
      */
     fun findAllChildrenByParent(parentName: String): List<String> {
         return inheritanceMap[parentName] ?: emptyList()
     }
-    
+
     /**
      * 查找所有父类型
      */
@@ -51,51 +51,59 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
             .find { it.name == childName }
             ?.extends?.map { it.name } ?: emptyList()
     }
-    
+
+    /**
+     * 添加继承关系
+     */
+    fun addInheritance(parentName: String, childName: String) {
+        (inheritanceMap as MutableMap<String, MutableList<String>>).getOrPut(parentName) { mutableListOf() }.add(childName)
+        Logger.debug("添加继承关系: $childName -> $parentName", 6)
+    }
+
     /**
      * 查找所有后代类型（递归）
      */
     fun findAllGrandChildren(parentName: String): List<String> {
         val result = mutableSetOf<String>()
         val visited = mutableSetOf<String>()
-        
+
         fun collectChildren(name: String) {
             if (visited.contains(name)) return
             visited.add(name)
-            
+
             val children = inheritanceMap[name] ?: emptyList()
             children.forEach { child ->
                 result.add(child)
                 collectChildren(child)
             }
         }
-        
+
         collectChildren(parentName)
         return result.toList()
     }
-    
+
     /**
      * 查找所有祖先类型（递归）
      */
     fun findAllGrandParents(childName: String): List<String> {
         val result = mutableSetOf<String>()
         val visited = mutableSetOf<String>()
-        
+
         fun collectParents(name: String) {
             if (visited.contains(name)) return
             visited.add(name)
-            
+
             val parents = findAllParentsByChild(name)
             parents.forEach { parent ->
                 result.add(parent)
                 collectParents(parent)
             }
         }
-        
+
         collectParents(childName)
         return result.toList()
     }
-    
+
     /**
      * 查找根类型（没有父类型的类型）
      */
@@ -104,14 +112,14 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
             .filterIsInstance<TypeScriptDeclaration.InterfaceDeclaration>()
             .map { it.name }
             .toSet()
-            
+
         val typesWithParents = allTypes.filter { type ->
             findAllParentsByChild(type).isNotEmpty()
         }.toSet()
-        
+
         return allTypes.filter { it !in typesWithParents }
     }
-    
+
     /**
      * 检测循环继承
      */
@@ -119,7 +127,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
         val cycles = mutableListOf<List<String>>()
         val visited = mutableSetOf<String>()
         val recursionStack = mutableSetOf<String>()
-        
+
         declarations
             .filterIsInstance<TypeScriptDeclaration.InterfaceDeclaration>()
             .forEach { declaration ->
@@ -127,10 +135,10 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
                     detectCyclesDFS(declaration.name, visited, recursionStack, mutableListOf(), cycles)
                 }
             }
-        
+
         return cycles
     }
-    
+
     private fun detectCyclesDFS(
         current: String,
         visited: MutableSet<String>,
@@ -141,7 +149,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
         visited.add(current)
         recursionStack.add(current)
         path.add(current)
-        
+
         val children = inheritanceMap[current] ?: emptyList()
         children.forEach { child ->
             if (!visited.contains(child)) {
@@ -154,11 +162,11 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
                 Logger.warn("检测到循环继承: ${cycle.joinToString(" -> ")}")
             }
         }
-        
+
         recursionStack.remove(current)
         path.removeAt(path.size - 1)
     }
-    
+
     /**
      * 获取继承深度
      */
@@ -170,7 +178,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
             parents.maxOfOrNull { getInheritanceDepth(it) }?.plus(1) ?: 1
         }
     }
-    
+
     /**
      * 获取最大继承深度
      */
@@ -180,37 +188,37 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
             .map { getInheritanceDepth(it.name) }
             .maxOrNull() ?: 0
     }
-    
+
     /**
      * 检查是否有子类型
      */
     fun hasChildren(typeName: String): Boolean {
         return inheritanceMap[typeName]?.isNotEmpty() ?: false
     }
-    
+
     /**
      * 检查是否有父类型
      */
     fun hasParents(typeName: String): Boolean {
         return findAllParentsByChild(typeName).isNotEmpty()
     }
-    
+
     /**
      * 检查一个类型是否是另一个类型的后代
      */
     fun isDescendantOf(childName: String, ancestorName: String): Boolean {
         if (childName == ancestorName) return true
-        
+
         val parents = findAllParentsByChild(childName)
         if (parents.isEmpty()) return false
-        
+
         // 直接父类型中包含目标祖先
         if (parents.contains(ancestorName)) return true
-        
+
         // 递归检查所有父类型
         return parents.any { parent -> isDescendantOf(parent, ancestorName) }
     }
-    
+
     /**
      * 生成继承关系统计
      */
@@ -219,7 +227,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
         val rootTypes = findRootTypes()
         val maxDepth = getMaxDepth()
         val cycles = detectCycles()
-        
+
         return buildString {
             appendLine("继承关系统计:")
             appendLine("  总类型数: $totalTypes")

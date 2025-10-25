@@ -50,7 +50,7 @@ class TypeScriptParser(
             Logger.info("开始解析 TypeScript 文件: ${Path(inputPath).toFile().absolutePath}")
             val jsonString = swc.parseSync(sourceCode, optionsJson, inputPath)
             Logger.debug("解析成功，JSON 长度: ${jsonString.length}")
-
+            Logger.debug("AST JSON 内容: $jsonString")
             val program = AstNode.fromJson(jsonString)
             Logger.debug("Program 类型: ${program.type}")
 

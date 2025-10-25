@@ -1,6 +1,5 @@
 package dev.yidafu.swc.generator.adt.kotlin
 
-import dev.yidafu.swc.generator.config.GlobalConfig
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -143,7 +142,7 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
                 modifier = PropertyModifier.OverrideVar,
                 annotations = annotations
             )
-            
+
             // 如果是 type 属性，设置为不可空 String 类型并设置默认值为接口名称
             if (prop.name == "type") {
                 val innerType = when (updatedProp.type) {

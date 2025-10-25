@@ -1,8 +1,8 @@
 package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 

@@ -89,12 +89,12 @@ export interface Span {
 
 export interface Decorator extends Node, HasSpan {
     type: "Decorator";
-    expression: any;
+    expression: string;
 }
 
-export type ClassMember = any;
-export type Expression = any;
-export type Identifier = any;
-export type Param = any;
-export type BlockStatement = any;
+export type ClassMember = string;
+export type Expression = string;
+export type Identifier = string;
+export type Param = string;
+export type BlockStatement = string;
 

@@ -16,10 +16,10 @@ object KotlinPoetConverter {
      * 使用性能优化的缓存
      */
     private val typeCache = mutableMapOf<String, TypeName>()
-    
+
     fun convertType(kotlinType: KotlinType): TypeName {
         val typeString = kotlinType.toTypeString()
-        
+
         // 使用缓存避免重复转换
         return typeCache.getOrPut(typeString) {
             PerformanceOptimizer.measureTime("类型转换: $typeString") {
@@ -59,6 +59,10 @@ object KotlinPoetConverter {
                 // 类型别名声明不能直接转换为 TypeSpec，应该通过 convertTypeAliasDeclaration 处理
                 throw IllegalArgumentException("TypeAliasDecl cannot be converted to TypeSpec directly")
             }
+            is KotlinDeclaration.EnumEntry -> {
+                // 枚举条目不能直接转换为 TypeSpec，应该通过枚举类处理
+                throw IllegalArgumentException("EnumEntry cannot be converted to TypeSpec directly")
+            }
         }
     }
 
@@ -76,42 +80,86 @@ object KotlinPoetConverter {
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
 
+        // 添加类型参数
+        if (decl.typeParameters.isNotEmpty()) {
+            decl.typeParameters.forEach { typeParam ->
+                val typeVariable = TypeVariableName(typeParam.name)
+                builder.addTypeVariable(typeVariable)
+            }
+        }
+
         // 添加父类型
         if (decl.parents.isNotEmpty()) {
             addParents(builder, decl.parents, decl.modifier is ClassModifier.Interface, interfaceNames)
         }
 
         // 添加属性或构造函数参数
-        if (decl.modifier is ClassModifier.DataClass) {
-            // Data class: 属性作为构造函数参数
-            val constructorParams = decl.properties.map { prop ->
-                val typeName = convertType(prop.type)
-                val paramBuilder = ParameterSpec.builder(prop.name, typeName)
+        when (decl.modifier) {
+            is ClassModifier.DataClass -> {
+                // Data class: 属性作为构造函数参数
+                val constructorParams = decl.properties.map { prop ->
+                    val typeName = convertType(prop.type)
+                    val paramBuilder = ParameterSpec.builder(prop.name, typeName)
 
-                // 添加注解
-                prop.annotations.forEach { annotation ->
-                    convertAnnotation(annotation)?.let { paramBuilder.addAnnotation(it) }
+                    // 添加注解
+                    prop.annotations.forEach { annotation ->
+                        convertAnnotation(annotation)?.let { paramBuilder.addAnnotation(it) }
+                    }
+
+                    // 添加默认值
+                    prop.defaultValue?.let { defaultValue ->
+                        val defaultValueStr = defaultValue.toCodeString()
+                        if (defaultValueStr.isNotBlank()) {
+                            paramBuilder.defaultValue(defaultValueStr)
+                        }
+                    }
+
+                    paramBuilder.build()
+                }
+                builder.primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addParameters(constructorParams)
+                        .build()
+                )
+            }
+            is ClassModifier.EnumClass -> {
+                // 为枚举类添加构造函数参数
+                if (decl.properties.isNotEmpty()) {
+                    val constructorParams = decl.properties.map { prop ->
+                        val typeName = convertType(prop.type)
+                        ParameterSpec.builder(prop.name, typeName).build()
+                    }
+
+                    builder.primaryConstructor(
+                        FunSpec.constructorBuilder()
+                            .addParameters(constructorParams)
+                            .build()
+                    )
                 }
 
-                // 添加默认值
-                prop.defaultValue?.let { defaultValue ->
-                    val defaultValueStr = defaultValue.toCodeString()
-                    if (defaultValueStr.isNotBlank()) {
-                        paramBuilder.defaultValue(defaultValueStr)
+                // 添加枚举条目
+                decl.enumEntries.forEach { entry ->
+                    if (entry.arguments.isNotEmpty()) {
+                        // 有参数的枚举条目，使用匿名类
+                        val enumBuilder = TypeSpec.anonymousClassBuilder()
+
+                        // 添加枚举条目的参数
+                        entry.arguments.forEach { arg ->
+                            enumBuilder.addSuperclassConstructorParameter("%L", arg.toCodeString())
+                        }
+
+                        builder.addEnumConstant(entry.name, enumBuilder.build())
+                    } else {
+                        // 无参数的枚举条目
+                        builder.addEnumConstant(entry.name)
                     }
                 }
-
-                paramBuilder.build()
             }
-            builder.primaryConstructor(
-                FunSpec.constructorBuilder()
-                    .addParameters(constructorParams)
-                    .build()
-            )
-        } else {
-            // 普通类: 属性作为类属性
-            decl.properties.forEach { prop ->
-                convertProperty(prop)?.let { builder.addProperty(it) }
+            else -> {
+                // 普通类: 属性作为类属性
+                decl.properties.forEach { prop ->
+                    convertProperty(prop)?.let { builder.addProperty(it) }
+                }
             }
         }
 
@@ -214,8 +262,8 @@ object KotlinPoetConverter {
         // 添加类型参数
         alias.typeParameters.forEach { typeParam ->
             val typeVar = when (typeParam.variance) {
-                Variance.COVARIANT -> TypeVariableName(typeParam.name, KModifier.OUT)
-                Variance.CONTRAVARIANT -> TypeVariableName(typeParam.name, KModifier.IN)
+                KotlinDeclaration.Variance.COVARIANT -> TypeVariableName(typeParam.name, KModifier.OUT)
+                KotlinDeclaration.Variance.CONTRAVARIANT -> TypeVariableName(typeParam.name, KModifier.IN)
                 else -> TypeVariableName(typeParam.name)
             }
             builder.addTypeVariable(typeVar)
@@ -237,10 +285,10 @@ object KotlinPoetConverter {
      * 使用缓存优化重复转换
      */
     private val annotationCache = mutableMapOf<String, AnnotationSpec?>()
-    
+
     fun convertAnnotation(annotation: KotlinDeclaration.Annotation): AnnotationSpec? {
         val cacheKey = "${annotation.name}:${annotation.arguments.joinToString(",") { it.toCodeString() }}"
-        
+
         return annotationCache.getOrPut(cacheKey) {
             try {
                 val className = getAnnotationClassName(annotation.name)
@@ -258,7 +306,7 @@ object KotlinPoetConverter {
             }
         }
     }
-    
+
     /**
      * 获取注解类名（提取公共逻辑）
      */
@@ -272,7 +320,7 @@ object KotlinPoetConverter {
             else -> ClassName("", annotationName)
         }
     }
-    
+
     /**
      * 添加注解参数（提取公共逻辑）
      */
@@ -393,7 +441,7 @@ object KotlinPoetConverter {
      * 使用动态生成的接口名称集合
      */
     private val interfaceSuffixes = setOf("Interface", "Options", "Config")
-    
+
     private fun isInterfaceType(kotlinType: KotlinType, interfaceNames: Set<String>): Boolean {
         return when (kotlinType) {
             is KotlinType.Simple -> {

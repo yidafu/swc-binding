@@ -53,8 +53,7 @@ fun TypeScriptDeclaration.getReferencedTypeNames(): Set<String> = when (this) {
 /**
  * 检查是否引用特定类型
  */
-fun TypeScriptDeclaration.referencesType(typeName: String): Boolean = 
-    getReferencedTypeNames().contains(typeName)
+fun TypeScriptDeclaration.referencesType(typeName: String): Boolean = getReferencedTypeNames().contains(typeName)
 
 /**
  * 获取继承链深度
