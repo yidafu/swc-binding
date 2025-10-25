@@ -22,7 +22,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/build-plugin" />
             <option value="$PROJECT_DIR$/swc-binding" />
-            <option value="$PROJECT_DIR$/swc-generator-kt" />
+            <option value="$PROJECT_DIR$/swc-generator" />
           </set>
         </option>
       </GradleProjectSettings>
