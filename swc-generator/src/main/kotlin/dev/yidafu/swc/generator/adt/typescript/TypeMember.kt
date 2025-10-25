@@ -7,5 +7,6 @@ data class TypeMember(
     val name: String,
     val type: TypeScriptType,
     val optional: Boolean = false,
-    val readonly: Boolean = false
+    val readonly: Boolean = false,
+    val kdoc: String? = null
 )

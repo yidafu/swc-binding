@@ -38,8 +38,15 @@ object KotlinPoetConverter {
      * 转换 KotlinDeclaration 为 TypeSpec
      */
     fun convertDeclaration(decl: KotlinDeclaration): TypeSpec {
+        return convertDeclaration(decl, emptySet())
+    }
+
+    /**
+     * 转换 KotlinDeclaration 为 TypeSpec（带接口名称参数）
+     */
+    fun convertDeclaration(decl: KotlinDeclaration, interfaceNames: Set<String>): TypeSpec {
         return when (decl) {
-            is KotlinDeclaration.ClassDecl -> convertClassDeclaration(decl)
+            is KotlinDeclaration.ClassDecl -> convertClassDeclaration(decl, interfaceNames)
             is KotlinDeclaration.PropertyDecl -> {
                 // 属性声明不能直接转换为 TypeSpec，应该通过 convertProperty 处理
                 throw IllegalArgumentException("PropertyDecl cannot be converted to TypeSpec directly")
@@ -58,7 +65,7 @@ object KotlinPoetConverter {
     /**
      * 转换类声明为 TypeSpec
      */
-    fun convertClassDeclaration(decl: KotlinDeclaration.ClassDecl): TypeSpec {
+    fun convertClassDeclaration(decl: KotlinDeclaration.ClassDecl, interfaceNames: Set<String> = emptySet()): TypeSpec {
         val builder = createTypeBuilder(decl.name, decl.modifier)
 
         // 添加修饰符
@@ -71,7 +78,7 @@ object KotlinPoetConverter {
 
         // 添加父类型
         if (decl.parents.isNotEmpty()) {
-            addParents(builder, decl.parents, decl.modifier is ClassModifier.Interface)
+            addParents(builder, decl.parents, decl.modifier is ClassModifier.Interface, interfaceNames)
         }
 
         // 添加属性或构造函数参数
@@ -84,6 +91,14 @@ object KotlinPoetConverter {
                 // 添加注解
                 prop.annotations.forEach { annotation ->
                     convertAnnotation(annotation)?.let { paramBuilder.addAnnotation(it) }
+                }
+
+                // 添加默认值
+                prop.defaultValue?.let { defaultValue ->
+                    val defaultValueStr = defaultValue.toCodeString()
+                    if (defaultValueStr.isNotBlank()) {
+                        paramBuilder.defaultValue(defaultValueStr)
+                    }
                 }
 
                 paramBuilder.build()
@@ -253,7 +268,7 @@ object KotlinPoetConverter {
             "Serializable" -> ClassName("kotlinx.serialization", "Serializable")
             "JsonClassDiscriminator" -> ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
             "OptIn" -> ClassName("kotlin", "OptIn")
-            "SwcDslMarker" -> ClassName("dev.yidafu.swc.types", "SwcDslMarker")
+            "SwcDslMarker" -> ClassName("dev.yidafu.swc.generated", "SwcDslMarker")
             else -> ClassName("", annotationName)
         }
     }
@@ -350,7 +365,8 @@ object KotlinPoetConverter {
     private fun addParents(
         builder: TypeSpec.Builder,
         parents: List<KotlinType>,
-        isInterface: Boolean
+        isInterface: Boolean,
+        interfaceNames: Set<String>
     ) {
         if (parents.isEmpty()) return
 
@@ -363,7 +379,7 @@ object KotlinPoetConverter {
             parents.forEach { parent ->
                 val parentTypeName = convertType(parent)
                 // 检查父类型是否是接口（通过类型名称判断）
-                if (isInterfaceType(parent)) {
+                if (isInterfaceType(parent, interfaceNames)) {
                     builder.addSuperinterface(parentTypeName)
                 } else {
                     builder.superclass(parentTypeName)
@@ -374,26 +390,11 @@ object KotlinPoetConverter {
 
     /**
      * 判断类型是否是接口
-     * 使用预定义的接口名称集合优化性能
+     * 使用动态生成的接口名称集合
      */
-    private val interfaceNames = setOf(
-        "Node", "HasSpan", "HasDecorator", "Plugin", "MatchPattern",
-        "Identifier", "StringLiteral", "NumericLiteral", "ArrayPattern",
-        "ExpressionBase", "Pattern", "Expression",
-        // 添加更多接口类型
-        "Constructor", "StaticBlock", "ClassMethod", "PrivateMethod",
-        "TsIndexSignature", "ClassProperty", "PrivateProperty", "EmptyStatement",
-        "ExportDefaultExpression", "ExportDeclaration", "ImportDeclaration",
-        "ExportAllDeclaration", "ExportNamedDeclaration", "ExportDefaultDeclaration",
-        "BlockStatement", "ExpressionStatement", "DebuggerStatement", "WithStatement",
-        "ReturnStatement", "LabeledStatement", "BreakStatement", "ContinueStatement",
-        "IfStatement", "SwitchStatement", "ThrowStatement", "TryStatement",
-        "WhileStatement", "DoWhileStatement", "ForStatement", "ForInStatement", "ForOfStatement"
-    )
-    
     private val interfaceSuffixes = setOf("Interface", "Options", "Config")
     
-    private fun isInterfaceType(kotlinType: KotlinType): Boolean {
+    private fun isInterfaceType(kotlinType: KotlinType, interfaceNames: Set<String>): Boolean {
         return when (kotlinType) {
             is KotlinType.Simple -> {
                 val name = kotlinType.name

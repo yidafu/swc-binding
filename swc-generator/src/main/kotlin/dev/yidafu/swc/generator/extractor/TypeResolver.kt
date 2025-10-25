@@ -10,7 +10,9 @@ import dev.yidafu.swc.generator.util.*
 
 /**
  * TypeScript 类型解析器
- * * 使用 AstNode 解析 TypeScript 类型为 ADT
+ * 
+ * 使用 AstNode 解析 TypeScript 类型为 ADT
+ * 专注于纯 TypeScript 类型提取，不包含 Kotlin 特定逻辑
  */
 object TypeResolver {
     private val config by lazy { ConfigLoader.loadConfig() }

@@ -13,9 +13,8 @@ data class SwcGeneratorConfig(
 ) {
     // 便捷访问方法，保持向后兼容
     val toKotlinClass: List<String> get() = classModifiers.toKotlinClass
-    val keepInterface: List<String> get() = classModifiers.keepInterface
     val sealedInterface: List<String> get() = classModifiers.sealedInterface
-    val kotlinKeywordMap: Map<String, String> get() = namingRules.kotlinKeywords
+    // kotlinKeywords 已移至 CodeGenerationRules.kt
     val literalNameMap: Map<String, String> get() = namingRules.literalOperators
     val propsToSnakeCase: List<String> get() = classModifiers.propsToSnakeCase
 
@@ -34,9 +33,9 @@ data class SwcGeneratorConfig(
 @Serializable
 data class ClassModifiersConfig(
     val toKotlinClass: List<String> = emptyList(),
-    val keepInterface: List<String> = emptyList(),
     val sealedInterface: List<String> = emptyList(),
-    val propsToSnakeCase: List<String> = emptyList()
+    val propsToSnakeCase: List<String> = emptyList(),
+    val literalUnionToTypealias: List<String> = emptyList()
 )
 
 /**
@@ -44,7 +43,7 @@ data class ClassModifiersConfig(
  */
 @Serializable
 data class NamingRulesConfig(
-    val kotlinKeywords: Map<String, String> = emptyMap(),
+    // kotlinKeywords 已移至 CodeGenerationRules.kt
     val literalOperators: Map<String, String> = emptyMap()
 )
 

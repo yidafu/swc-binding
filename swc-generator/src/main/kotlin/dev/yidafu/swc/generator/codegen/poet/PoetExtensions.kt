@@ -277,13 +277,6 @@ fun TypeSpec.Builder.addParents(
     return this
 }
 
-/**
- * 为 TypeSpec.Builder 批量添加属性
- */
-fun TypeSpec.Builder.addPropertiesBatch(properties: List<PropertySpec>): TypeSpec.Builder {
-    properties.forEach { addProperty(it) }
-    return this
-}
 
 /**
  * 创建简单的扩展函数

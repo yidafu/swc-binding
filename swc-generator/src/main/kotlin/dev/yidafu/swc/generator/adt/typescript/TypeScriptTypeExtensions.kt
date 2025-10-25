@@ -43,3 +43,30 @@ fun TypeScriptType.getTypeName(): String = when (this) {
     is TypeScriptType.Null -> "null"
     is TypeScriptType.Undefined -> "undefined"
 }
+
+/**
+ * 获取引用的类型名称
+ */
+fun TypeScriptType.getReferencedTypeNames(): Set<String> = when (this) {
+    is TypeScriptType.Keyword -> emptySet()
+    is TypeScriptType.Reference -> {
+        val fromParams = typeParams.flatMap { it.getReferencedTypeNames() }.toSet()
+        setOf(name) + fromParams
+    }
+    is TypeScriptType.Union -> types.flatMap { it.getReferencedTypeNames() }.toSet()
+    is TypeScriptType.Intersection -> types.flatMap { it.getReferencedTypeNames() }.toSet()
+    is TypeScriptType.Array -> elementType.getReferencedTypeNames()
+    is TypeScriptType.Tuple -> types.flatMap { it.getReferencedTypeNames() }.toSet()
+    is TypeScriptType.Literal -> emptySet()
+    is TypeScriptType.TypeLiteral -> members.flatMap { it.type.getReferencedTypeNames() }.toSet()
+    is TypeScriptType.Function -> {
+        val fromParams = params.flatMap { it.type.getReferencedTypeNames() }.toSet()
+        val fromReturn = returnType.getReferencedTypeNames()
+        fromParams + fromReturn
+    }
+    is TypeScriptType.IndexSignature -> {
+        keyType.getReferencedTypeNames() + valueType.getReferencedTypeNames()
+    }
+    is TypeScriptType.Any, is TypeScriptType.Unknown, is TypeScriptType.Never,
+    is TypeScriptType.Void, is TypeScriptType.Null, is TypeScriptType.Undefined -> emptySet()
+}

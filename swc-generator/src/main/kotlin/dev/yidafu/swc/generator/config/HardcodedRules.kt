@@ -3,49 +3,14 @@ package dev.yidafu.swc.generator.config
 /**
  * 硬编码规则配置
  *
- * 包含固定的类型映射、过滤规则等，这些规则不需要通过配置文件修改
+ * 包含固定的过滤规则和重要接口列表，这些规则不需要通过配置文件修改
+ * 
+ * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
  */
 object HardcodedRules {
 
-    /**
-     * JS到Kotlin基础类型映射
-     */
-    val jsToKotlinTypeMap = mapOf(
-        "number" to "Int",
-        "boolean" to "Boolean",
-        "string" to "String",
-        "string[]" to "Array<String>"
-    )
+    // 注意：基础类型映射已移至 ADT 转换过程中自动处理
 
-    /**
-     * 属性类型覆盖映射（字符串形式，用于向后兼容）
-     */
-    private val propertyTypeOverrides = mapOf(
-        "global_defs" to "Map<String, String>",
-        "top_retain" to "BooleanableString",
-        "sequences" to "Boolean",
-        "pure_getters" to "BooleanableString",
-        "toplevel" to "BooleanableString",
-        "targets" to "Map<String, String>"
-    )
-
-    /**
-     * 重要接口列表
-     */
-    val importantInterfaces = listOf(
-        "Options", "Config", "CallerOptions", "Plugin",
-        "MatchPattern", "TerserCompressOptions", "TerserMangleOptions",
-        "JsMinifyOptions", "JsFormatOptions", "EnvConfig", "JscConfig", "ModuleConfig",
-        "TsParserConfig", "EsParserConfig", "ParserConfig"
-    )
-
-    /**
-     * 跳过的类模式
-     */
-    val skipClassPatterns = listOf(
-        "TsTemplateLiteralType.*",
-        "TemplateLiteral.*"
-    )
 
     /**
      * 跳过的DSL接收者
@@ -55,14 +20,8 @@ object HardcodedRules {
         "HasDecorator"
     )
 
-    /**
-     * 检查是否应该跳过某个类
-     */
-    fun shouldSkipClass(className: String): Boolean {
-        return skipClassPatterns.any { pattern ->
-            className.matches(pattern.replace("*", ".*").toRegex())
-        }
-    }
+    // 注意：skipClassPatterns 已移除
+    // 所有类型现在通过 ADT 转换过程自动处理
 
     /**
      * 检查是否应该跳过某个DSL接收者
@@ -79,12 +38,6 @@ object HardcodedRules {
         return true
     }
 
-    /**
-     * 检查是否为重要接口
-     */
-    fun isImportantInterface(interfaceName: String): Boolean {
-        return importantInterfaces.contains(interfaceName)
-    }
 
     /**
      * 获取属性类型覆盖

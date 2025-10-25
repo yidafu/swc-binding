@@ -221,3 +221,4 @@ swc-jni/*.sh
 swc-jni/coverage.json
 swc-jni/build.sh
 .DS_Store
+test-outputs/

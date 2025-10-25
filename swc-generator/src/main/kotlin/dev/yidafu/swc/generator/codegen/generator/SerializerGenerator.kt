@@ -2,7 +2,7 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
 import dev.yidafu.swc.generator.codegen.poet.*
-import dev.yidafu.swc.generator.core.relation.ExtendRelationship
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -49,7 +49,7 @@ class SerializerGenerator {
             fileSpec.writeTo(tempDir)
 
             // 找到生成的文件（KotlinPoet 会根据包名创建目录结构）
-            val generatedFile = File(tempDir, "dev/yidafu/swc/types/${fileSpec.name}.kt")
+            val generatedFile = File(tempDir, "dev/yidafu/swc/generated/${fileSpec.name}.kt")
             if (generatedFile.exists()) {
                 // 复制到目标位置
                 generatedFile.copyTo(file, overwrite = true)
@@ -76,7 +76,8 @@ class SerializerGenerator {
     private fun buildPolymorphicMap(astNodeList: List<String>): Map<String, List<String>> {
         return astNodeList
             .associateWith { key ->
-                ExtendRelationship.findAllGrandChildren(key).filter { it != key }
+                val analyzer = InheritanceAnalyzerHolder.get()
+                analyzer.findAllGrandChildren(key).filter { it != key }
             }
             .filterValues { it.isNotEmpty() }
             .also { map ->

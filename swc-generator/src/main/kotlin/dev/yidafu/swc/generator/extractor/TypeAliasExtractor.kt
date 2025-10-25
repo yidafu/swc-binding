@@ -1,6 +1,7 @@
 package dev.yidafu.swc.generator.extractor
 
 import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.GlobalConfig
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.Logger
@@ -79,7 +80,8 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                 val value = literal.getStringLiteralValue() ?: return null
 
                 // 先检查 literalNameMap（注意：key 是原始值，不是大写）
-                val propertyName = GlobalConfig.config.literalNameMap[value] ?: GlobalConfig.config.literalNameMap[value.uppercase()] ?: sanitizeLiteralName(value)
+                val literalNameMap = GlobalConfig.config.literalNameMap
+                val propertyName = literalNameMap[value] ?: literalNameMap[value.uppercase()] ?: sanitizeLiteralName(value)
 
                 // 验证生成的属性名是否有效
                 if (!isValidPropertyName(propertyName)) {
@@ -91,7 +93,7 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                     name = propertyName,
                     type = KotlinType.StringType,
                     modifier = PropertyModifier.Var,
-                    defaultValue = Expression.StringLiteral("\"$value\"")
+                    defaultValue = Expression.StringLiteral(value)
                 )
             }
             literal.isBooleanLiteral() -> {
@@ -122,8 +124,9 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     private fun sanitizeLiteralName(value: String): String {
         // 处理 Kotlin 关键字
-        if (GlobalConfig.config.kotlinKeywordMap.containsKey(value)) {
-            return GlobalConfig.config.kotlinKeywordMap[value]!!.uppercase()
+        val keywordMap = CodeGenerationRules.getKotlinKeywordMap()
+        if (keywordMap.containsKey(value)) {
+            return keywordMap[value]!!.uppercase()
         }
 
         // 如果只包含字母数字，转为大写

@@ -48,7 +48,7 @@ sealed class KotlinType {
                 "String", "Int", "Boolean", "Long", "Double", "Float", "Char", "Byte", "Short", "Any", "Unit", "Nothing" -> 
                     ClassName("", name)
                 else -> 
-                    ClassName("dev.yidafu.swc.types", name)
+                    ClassName("dev.yidafu.swc.generated", name)
             }
         }
         is Generic -> {

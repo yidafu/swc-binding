@@ -5,8 +5,10 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.kotlin.isValidKotlinTypeName
 import dev.yidafu.swc.generator.codegen.poet.*
+import dev.yidafu.swc.generator.config.GlobalConfig
 import dev.yidafu.swc.generator.config.HardcodedRules
-import dev.yidafu.swc.generator.core.relation.ExtendRelationship
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.util.PerformanceOptimizer
 import java.io.File
@@ -18,6 +20,15 @@ class TypesGenerator(
     private val classDecls: List<KotlinDeclaration.ClassDecl>
 ) {
     private val typeAliases = mutableListOf<KotlinDeclaration.TypeAliasDecl>()
+    
+    // 懒加载接口名称集合，避免重复计算
+    private val interfaceNames: Set<String> by lazy {
+        classDecls
+            .asSequence()
+            .filter { it.modifier.isInterface() }
+            .map { it.name }
+            .toSet()
+    }
 
     /**
      * 添加 typealias（使用 ADT）
@@ -27,106 +38,10 @@ class TypesGenerator(
         Logger.debug("添加 typealias: ${typeAlias.name} = ${typeAlias.type.toTypeString()}", 6)
     }
 
-    /**
-     * 添加 typealias（向后兼容的字符串方式）
-     */
-    @Deprecated("使用 addTypeAlias(KotlinDeclaration.TypeAliasDecl) 替代")
-    fun addTypeAlias(typeAlias: String) {
-        // 解析 typealias 字符串并添加
-        Logger.debug("添加 typealias: $typeAlias", 6)
 
-        // 解析 typealias 字符串，格式: "typealias Name = Type"
-        val regex = Regex("""typealias\s+(\w+)\s*=\s*(.+)""")
-        val match = regex.find(typeAlias)
-        if (match != null) {
-            val name = match.groupValues[1]
-            val typeStr = match.groupValues[2]
-
-            // 创建 TypeAliasDecl
-            val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
-                name = name,
-                type = typeStr.parseToKotlinType()
-            )
-
-            addTypeAlias(typeAliasDecl)
-            Logger.debug("成功添加 typealias: $name = $typeStr", 8)
-        } else {
-            Logger.warn("无法解析 typealias: $typeAlias")
-        }
-    }
-
-    /**
-     * 解析类型名称为 TypeName
-     * 使用缓存优化重复解析
-     */
-    private val typeNameCache = mutableMapOf<String, TypeName>()
-    
-    private fun parseTypeName(typeStr: String): TypeName {
-        return typeNameCache.getOrPut(typeStr) {
-            when {
-                typeStr.startsWith("Union.U") -> parseUnionType(typeStr)
-                typeStr.startsWith("Map<") -> parseMapType(typeStr)
-                typeStr.startsWith("Array<") -> parseArrayType(typeStr)
-                else -> parseBasicType(typeStr)
-            }
-        }
-    }
-    
-    /**
-     * 解析Union类型
-     */
-    private fun parseUnionType(typeStr: String): TypeName {
-        val match = Regex("""Union\.U(\d+)<(.+)>""").find(typeStr)
-        return if (match != null) {
-            val unionNum = match.groupValues[1].toInt()
-            val genericParams = match.groupValues[2].split(",").map { it.trim() }
-            val className = ClassName("dev.yidafu.swc", "Union.U$unionNum")
-            val typeParams = genericParams.map { TypeVariableName(it) }
-            className.parameterizedBy(typeParams)
-        } else {
-            ClassName("dev.yidafu.swc", typeStr)
-        }
-    }
-    
-    /**
-     * 解析Map类型
-     */
-    private fun parseMapType(typeStr: String): TypeName {
-        val match = Regex("""Map<(.+),\s*(.+)>""").find(typeStr)
-        return if (match != null) {
-            val keyType = parseTypeName(match.groupValues[1])
-            val valueType = parseTypeName(match.groupValues[2])
-            Map::class.asClassName().parameterizedBy(keyType, valueType)
-        } else {
-            ClassName("kotlin.collections", "Map")
-        }
-    }
-    
-    /**
-     * 解析Array类型
-     */
-    private fun parseArrayType(typeStr: String): TypeName {
-        val match = Regex("""Array<(.+)>""").find(typeStr)
-        return if (match != null) {
-            val elementType = parseTypeName(match.groupValues[1])
-            Array::class.asClassName().parameterizedBy(elementType)
-        } else {
-            ClassName("kotlin", "Array")
-        }
-    }
-    
-    /**
-     * 解析基本类型
-     */
-    private fun parseBasicType(typeStr: String): TypeName {
-        return when (typeStr) {
-            "String" -> String::class.asTypeName()
-            "Int" -> Int::class.asTypeName()
-            "Boolean" -> Boolean::class.asTypeName()
-            "Any" -> Any::class.asTypeName()
-            else -> ClassName("dev.yidafu.swc.types", typeStr)
-        }
-    }
+    // 注意：类型转换现在完全基于 ADT
+    // 使用 KotlinPoetConverter.convertType(kotlinType) 进行转换
+    // 不再使用基于字符串解析的方式
 
     /**
      * 生成代码并写入文件
@@ -134,6 +49,8 @@ class TypesGenerator(
     fun writeToFile(outputPath: String) {
         PerformanceOptimizer.measureTime("生成 types.kt 文件") {
             Logger.debug("使用 KotlinPoet 生成 types.kt...", 4)
+
+            // 使用懒加载的接口名称集合
 
             val fileBuilder = createFileBuilder(
                 PoetConstants.PKG_TYPES,
@@ -170,118 +87,196 @@ class TypesGenerator(
 
     /**
      * 生成类并添加到文件
-     * 优化：批量处理，减少重复计算
+     * 简化逻辑：所有接口 + 叶子节点实现类
      */
     private fun generateClasses(fileBuilder: FileSpec.Builder) {
         Logger.debug("  开始生成类，总类数: ${classDecls.size}", 4)
 
-        val filteredClasses = filterClasses()
-        Logger.debug("  过滤后的类数量: ${filteredClasses.size}", 4)
-
-        if (filteredClasses.isEmpty()) {
-            Logger.warn("⚠️  警告：所有类都被过滤掉了！")
-            Logger.debug("  原始类列表: ${classDecls.map { it.name }}", 6)
-            return
+        val analyzer = InheritanceAnalyzerHolder.get()
+        
+        // 1. 生成所有接口（保留继承关系）
+        val allInterfaces = classDecls.filter { 
+            it.modifier == ClassModifier.Interface || it.modifier == ClassModifier.SealedInterface 
         }
-
-        // 批量处理：自动设置 sealed 修饰符
-        val classesWithSealed = filteredClasses.map { klass ->
-            if (klass.shouldBeSealed(filteredClasses)) {
-                Logger.debug("  自动设置 sealed: ${klass.name}", 6)
-                klass.copy(modifier = ClassModifier.SealedInterface)
+        Logger.debug("  接口数量: ${allInterfaces.size}", 4)
+        
+        val sortedInterfaces = sortClassesByInheritance(allInterfaces)
+        generateInterfaces(fileBuilder, sortedInterfaces)
+        
+        // 2. 生成其他类型的类（如 FinalClass, DataClass 等）
+        val otherClasses = classDecls.filter { 
+            it.modifier !is ClassModifier.Interface && 
+            it.modifier !is ClassModifier.SealedInterface &&
+            !it.name.endsWith("Impl") // 排除实现类，它们会在后面处理
+        }
+        Logger.debug("  其他类数量: ${otherClasses.size}", 4)
+        
+        generateOtherClasses(fileBuilder, otherClasses)
+        
+        // 3. 生成叶子节点的实现类
+        val leafNodes = findLeafNodes(analyzer)
+        Logger.debug("  叶子节点数量: ${leafNodes.size}", 4)
+        
+        generateImplementationClasses(fileBuilder, leafNodes, analyzer)
+    }
+    
+    /**
+     * 生成所有接口（保留继承关系）
+     */
+    private fun generateInterfaces(fileBuilder: FileSpec.Builder, interfaces: List<KotlinDeclaration.ClassDecl>) {
+        Logger.debug("  生成接口...", 4)
+        
+        interfaces.forEach { interfaceDecl ->
+            try {
+                val typeSpec = KotlinPoetConverter.convertDeclaration(interfaceDecl, interfaceNames)
+                fileBuilder.addType(typeSpec)
+                Logger.verbose("  ✓ 接口: ${interfaceDecl.name}", 6)
+            } catch (e: Exception) {
+                Logger.warn("  生成接口失败: ${interfaceDecl.name}, ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 生成其他类型的类（如 FinalClass, DataClass 等）
+     */
+    private fun generateOtherClasses(fileBuilder: FileSpec.Builder, classes: List<KotlinDeclaration.ClassDecl>) {
+        Logger.debug("  生成其他类...", 4)
+        
+        classes.forEach { classDecl ->
+            try {
+                val typeSpec = KotlinPoetConverter.convertDeclaration(classDecl, interfaceNames)
+                fileBuilder.addType(typeSpec)
+                Logger.verbose("  ✓ 类: ${classDecl.name} (${classDecl.modifier})", 6)
+            } catch (e: Exception) {
+                Logger.warn("  生成类失败: ${classDecl.name}, ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 查找叶子节点（没有子类的接口）
+     * 只对 Node 继承树的叶子节点生成实现类
+     */
+    private fun findLeafNodes(analyzer: InheritanceAnalyzer): List<KotlinDeclaration.ClassDecl> {
+        val allInterfaces = classDecls.filter { it.modifier == ClassModifier.Interface }
+        
+        return allInterfaces.filter { interfaceDecl ->
+            val children = analyzer.findAllChildrenByParent(interfaceDecl.name)
+            val isNodeDescendant = analyzer.isDescendantOf(interfaceDecl.name, "Node")
+            
+            // Generate impl classes for leaf nodes that are descendants of Node
+            children.isEmpty() && isNodeDescendant
+        }
+    }
+    
+    /**
+     * 生成叶子节点的实现类
+     */
+    private fun generateImplementationClasses(
+        fileBuilder: FileSpec.Builder, 
+        leafNodes: List<KotlinDeclaration.ClassDecl>,
+        analyzer: InheritanceAnalyzer
+    ) {
+        Logger.debug("  生成实现类...", 4)
+        
+        leafNodes.forEach { leafNode ->
+            try {
+                val implClass = createImplementationClass(leafNode, analyzer)
+                val typeSpec = KotlinPoetConverter.convertDeclaration(implClass, interfaceNames)
+                fileBuilder.addType(typeSpec)
+                Logger.verbose("  ✓ 实现类: ${implClass.name}", 6)
+            } catch (e: Exception) {
+                Logger.warn("  生成实现类失败: ${leafNode.name}Impl, ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 创建实现类
+     */
+    private fun createImplementationClass(
+        interfaceDecl: KotlinDeclaration.ClassDecl,
+        analyzer: InheritanceAnalyzer
+    ): KotlinDeclaration.ClassDecl {
+        // 收集所有继承的属性（包括父接口的属性）
+        val allProperties = collectAllProperties(interfaceDecl, analyzer)
+        
+        // 添加实现类需要的注解
+        val discriminator = "type"
+        val serialName = interfaceDecl.name
+        
+        return interfaceDecl.copy(
+            name = "${interfaceDecl.name}Impl",
+            modifier = ClassModifier.FinalClass,
+            parents = listOf(KotlinType.Simple(interfaceDecl.name)),
+            annotations = listOf(
+                KotlinDeclaration.Annotation("SwcDslMarker"),
+                KotlinDeclaration.Annotation("Serializable"),
+                KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
+                KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+            ),
+            properties = allProperties
+        )
+    }
+    
+    /**
+     * 收集所有属性（包括继承的属性）
+     */
+    private fun collectAllProperties(
+        interfaceDecl: KotlinDeclaration.ClassDecl,
+        analyzer: InheritanceAnalyzer
+    ): List<KotlinDeclaration.PropertyDecl> {
+        val allProperties = mutableMapOf<String, KotlinDeclaration.PropertyDecl>()
+        
+        // 添加当前接口的属性
+        interfaceDecl.properties.forEach { prop ->
+            allProperties[prop.name] = prop
+        }
+        
+        // 递归添加父接口的属性
+        val parentInterfaces = analyzer.findAllParentsByChild(interfaceDecl.name)
+        parentInterfaces.forEach { parentName: String ->
+            val parentInterface = classDecls.find { it.name == parentName }
+            if (parentInterface != null) {
+                collectAllProperties(parentInterface, analyzer).forEach { prop ->
+                    // 如果属性名已存在，跳过（子接口的属性优先）
+                    if (!allProperties.containsKey(prop.name)) {
+                        allProperties[prop.name] = prop
+                    }
+                }
+            }
+        }
+        
+        // 将属性转换为可空且默认值为 null 的实现类属性
+        return allProperties.values.map { prop ->
+            val updatedProp = prop.withNullableIfNeeded().copy(
+                modifier = PropertyModifier.OverrideVar
+            )
+            
+            // 如果是 type 属性，设置为不可空 String 类型并设置默认值为接口名称
+            if (prop.name == "type") {
+                val innerType = when (updatedProp.type) {
+                    is KotlinType.Nullable -> updatedProp.type.innerType
+                    else -> updatedProp.type
+                }
+                if (innerType is KotlinType.StringType) {
+                    // type 属性应该是不可空的 String 类型
+                    updatedProp.copy(
+                        type = KotlinType.StringType,
+                        defaultValue = Expression.StringLiteral(interfaceDecl.name)
+                    )
+                } else {
+                    updatedProp.copy(defaultValue = Expression.NullLiteral)
+                }
             } else {
-                klass
+                // 其他属性设置默认值为 null
+                updatedProp.copy(defaultValue = Expression.NullLiteral)
             }
-        }
-
-        // 按继承关系排序和分组
-        val sortedClasses = sortClassesByInheritance(classesWithSealed)
-        Logger.debug("  排序后的类数量: ${sortedClasses.size}", 4)
-
-        // 批量生成类型规范
-        val generationResults = generateTypeSpecsBatch(sortedClasses)
-        
-        // 批量添加到文件
-        generationResults.successful.forEach { typeSpec ->
-            fileBuilder.addType(typeSpec)
-        }
-
-        // 生成汇总报告
-        logGenerationResults(generationResults, sortedClasses.size)
+        }.toList()
     }
-    
-    /**
-     * 批量生成类型规范
-     */
-    private data class GenerationResults(
-        val successful: List<TypeSpec>,
-        val failed: List<Pair<String, String>>
-    )
-    
-    private fun generateTypeSpecsBatch(classes: List<KotlinDeclaration.ClassDecl>): GenerationResults {
-        val successful = mutableListOf<TypeSpec>()
-        val failed = mutableListOf<Pair<String, String>>()
-        
-        classes.forEach { klass ->
-            runCatching {
-                KotlinPoetGenerator.createTypeSpec(klass)
-            }.onSuccess { typeSpec ->
-                successful.add(typeSpec)
-                Logger.verbose("  ✓ ${klass.name}", 6)
-            }.onFailure { e ->
-                val errorMsg = e.message ?: "未知错误"
-                failed.add(klass.name to errorMsg)
-                logClassGenerationFailure(klass, errorMsg)
-            }
-        }
-        
-        return GenerationResults(successful, failed)
-    }
-    
-    /**
-     * 记录类生成失败信息
-     */
-    private fun logClassGenerationFailure(klass: KotlinDeclaration.ClassDecl, errorMsg: String) {
-        Logger.warn("⚠️  生成失败: ${klass.name}")
-        Logger.verbose("  错误: $errorMsg", 8)
-        Logger.verbose("  类型: ${klass.modifier}, 属性数: ${klass.properties.size}", 8)
 
-        if (klass.properties.isNotEmpty()) {
-            Logger.verbose("  前3个属性:", 8)
-            klass.properties.take(3).forEach { prop ->
-                Logger.verbose("    - ${prop.modifier} ${prop.name}: ${prop.getTypeString()}", 10)
-            }
-        }
-    }
-    
-    /**
-     * 记录生成结果
-     */
-    private fun logGenerationResults(results: GenerationResults, totalClasses: Int) {
-        val successCount = results.successful.size
-        val failureCount = results.failed.size
-        
-        Logger.debug("  生成完成: 成功 $successCount，失败 $failureCount", 4)
-
-        if (failureCount > 0) {
-            Logger.separator()
-            Logger.warn("生成失败汇总 ($failureCount 个类):")
-            results.failed.take(10).forEach { (name, error) ->
-                Logger.info("  - $name: ${error.take(60)}", 2)
-            }
-            if (results.failed.size > 10) {
-                Logger.info("  ... 还有 ${results.failed.size - 10} 个失败", 2)
-            }
-        }
-
-        // 计算成功率
-        val successRate = if (totalClasses > 0) {
-            (successCount.toDouble() / totalClasses * 100).toInt()
-        } else {
-            0
-        }
-        Logger.info("  成功率: $successRate% ($successCount/$totalClasses)", 2)
-    }
+    // 注意：批量生成方法已简化，现在分别处理接口和实现类
 
     /**
      * 创建 SwcDslMarker 注解
@@ -301,7 +296,7 @@ class TypesGenerator(
 
         return TypeAliasSpec.builder(
             "Record",
-            MAP.parameterizedBy(tTypeVar, sTypeVar)
+            MAP.parameterizedBy(tTypeVar, STRING)
         )
             .addTypeVariable(tTypeVar)
             .addTypeVariable(sTypeVar)
@@ -328,7 +323,7 @@ class TypesGenerator(
             fileSpec.writeTo(tempDir)
 
             // 找到生成的文件（KotlinPoet 会根据包名创建目录结构）
-            val generatedFile = File(tempDir, "dev/yidafu/swc/types/${fileSpec.name}.kt")
+            val generatedFile = File(tempDir, "dev/yidafu/swc/generated/${fileSpec.name}.kt")
             if (generatedFile.exists()) {
                 // 复制到目标位置
                 generatedFile.copyTo(file, overwrite = true)
@@ -341,6 +336,9 @@ class TypesGenerator(
                     throw IllegalStateException("无法找到生成的文件: ${fileSpec.name}.kt")
                 }
             }
+            
+            // 后处理：移除不必要的 public 修饰符
+            postProcessFile(file)
         } finally {
             // 清理临时目录
             tempDir.deleteRecursively()
@@ -359,55 +357,7 @@ class TypesGenerator(
         }
     }
 
-    /**
-     * 过滤不需要的类
-     */
-    private fun filterClasses(): List<KotlinDeclaration.ClassDecl> {
-        Logger.debug("  开始过滤类...", 6)
-
-        val astNodeList = mutableSetOf<String>()
-        astNodeList.addAll(ExtendRelationship.findAllRelativeByName("Node"))
-        astNodeList.addAll(ExtendRelationship.findAllRelativeByName("HasSpan"))
-        Logger.debug("  AST节点列表大小: ${astNodeList.size}", 8)
-
-        // 从配置加载重要接口列表
-        val importantInterfaces = HardcodedRules.importantInterfaces.toSet()
-
-        // 找出那些只作为接口存在、不需要独立生成的类
-        // 只过滤掉那些是 interface 且有唯一 Impl 子类的
-        val notImplClassList = classDecls
-            .filter { !astNodeList.contains(it.name) }
-            .filter { klass ->
-                // 重要接口不过滤
-                if (importantInterfaces.contains(klass.name)) {
-                    return@filter false
-                }
-                // 只过滤 interface，不过滤 class
-                if (klass.modifier != ClassModifier.Interface) {
-                    return@filter false
-                }
-                val children = ExtendRelationship.findAllChildrenByParent(klass.name)
-                children.size == 1 && children[0] == "${klass.name}Impl"
-            }
-            .map { listOf(it.name, "${it.name}Impl") }
-            .flatten()
-        Logger.debug("  不需要的Impl类列表大小: ${notImplClassList.size}", 8)
-        Logger.debug("  不需要的Impl类列表: $notImplClassList", 8)
-
-        val filtered = classDecls
-            .filter { !notImplClassList.contains(it.name) }
-            .filter { klass: KotlinDeclaration.ClassDecl ->
-                // 使用配置的跳过模式进行过滤
-                !HardcodedRules.shouldSkipClass(klass.name)
-            }
-            .filter { klass: KotlinDeclaration.ClassDecl ->
-                // 验证类型名称是否有效
-                isValidKotlinTypeName(klass.name)
-            }
-
-        Logger.debug("  过滤完成，剩余类: ${filtered.map { it.name }}", 8)
-        return filtered
-    }
+    // 注意：过滤逻辑已简化，现在直接生成所有接口和叶子节点实现类
 
     /**
      * 按继承关系排序类声明
@@ -428,5 +378,13 @@ class TypesGenerator(
         }
         
         return result
+    }
+    
+    /**
+     * 后处理文件（当前为空，保留用于未来扩展）
+     */
+    private fun postProcessFile(file: File) {
+        // 当前不需要后处理，保留方法用于未来扩展
+        Logger.debug("  后处理完成", 6)
     }
 }

@@ -185,44 +185,10 @@ fun AstNode.getLiteralValue(): String? {
     if (!isLiteralType()) return null
     val literal = getNode("literal") ?: return null
     return when {
-        literal.isStringLiteral() -> "\"${literal.getStringLiteralValue()}\""
+        literal.isStringLiteral() -> literal.getStringLiteralValue()  // 不添加双引号，让调用方处理
         literal.isNumericLiteral() -> literal.getNumericLiteralValue()?.toString()
         literal.isBooleanLiteral() -> literal.getBooleanLiteralValue()?.toString()
         else -> null
     }
 }
 
-// ========== 遍历辅助 ==========
-
-/**
- * 遍历 Union Type 的所有类型
- */
-fun AstNode.forEachUnionType(block: (AstNode) -> Unit) {
-    if (!isUnionType()) return
-    getNodes("types").forEach(block)
-}
-
-/**
- * 遍历 Intersection Type 的所有类型
- */
-fun AstNode.forEachIntersectionType(block: (AstNode) -> Unit) {
-    if (!isIntersectionType()) return
-    getNodes("types").forEach(block)
-}
-
-/**
- * 遍历 Interface 的所有属性
- */
-fun AstNode.forEachInterfaceProperty(block: (AstNode) -> Unit) {
-    if (!isInterface()) return
-    val body = getNode("body") ?: return
-    body.getNodes("body").forEach(block)
-}
-
-/**
- * 遍历 Module/Script 的所有 body 项
- */
-fun AstNode.forEachBodyItem(block: (AstNode) -> Unit) {
-    if (!isModule() && !isScript()) return
-    getNodes("body").forEach(block)
-}

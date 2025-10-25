@@ -13,19 +13,9 @@ interface TypeProcessor {
     fun canProcess(typeAlias: AstNode): Boolean
 
     /**
-     * 处理类型别名（新方式，返回 ADT 声明）
+     * 处理类型别名（返回 ADT 声明）
      */
-    fun process(typeAlias: AstNode, context: TransformContext): KotlinDeclaration? {
-        // 默认实现调用旧方法，保持向后兼容
-        processLegacy(typeAlias, context)
-        return null
-    }
-
-    /**
-     * 处理类型别名（旧方式，直接修改 context）
-     */
-    @Deprecated("使用 process(AstNode, TransformContext): KotlinDeclaration? 替代")
-    fun processLegacy(typeAlias: AstNode, context: TransformContext)
+    fun process(typeAlias: AstNode, context: TransformContext): KotlinDeclaration?
 }
 
 /**
@@ -33,7 +23,8 @@ interface TypeProcessor {
  */
 data class TransformContext(
     private val classDeclMap: MutableMap<String, KotlinDeclaration.ClassDecl>,
-    private val propertiesMap: MutableMap<String, List<KotlinDeclaration.PropertyDecl>> = mutableMapOf()
+    private val propertiesMap: MutableMap<String, List<KotlinDeclaration.PropertyDecl>> = mutableMapOf(),
+    private val typeAliasList: MutableList<KotlinDeclaration.TypeAliasDecl> = mutableListOf()
 ) {
     fun addClassDecl(classDecl: KotlinDeclaration.ClassDecl) {
         classDeclMap[classDecl.name] = classDecl
@@ -42,10 +33,29 @@ data class TransformContext(
     fun addProperties(className: String, properties: List<KotlinDeclaration.PropertyDecl>) {
         propertiesMap[className] = properties
     }
+    
+    fun addTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
+        typeAliasList.add(typeAlias)
+    }
 
     fun getAllPropertiesMap(): Map<String, List<KotlinDeclaration.PropertyDecl>> = propertiesMap
 
     fun getClassDecl(name: String): KotlinDeclaration.ClassDecl? = classDeclMap[name]
 
     fun getAllClassDecls(): List<KotlinDeclaration.ClassDecl> = classDeclMap.values.toList()
+    
+    fun getAllTypeAliases(): List<KotlinDeclaration.TypeAliasDecl> = typeAliasList.toList()
+    
+    fun updateClassDecl(classDecl: KotlinDeclaration.ClassDecl) {
+        classDeclMap[classDecl.name] = classDecl
+    }
+    
+    fun updateTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
+        val index = typeAliasList.indexOfFirst { it.name == typeAlias.name }
+        if (index >= 0) {
+            typeAliasList[index] = typeAlias
+        } else {
+            typeAliasList.add(typeAlias)
+        }
+    }
 }

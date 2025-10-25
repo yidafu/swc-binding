@@ -5,10 +5,10 @@ import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.kotlin.isValidKotlinTypeName
 import dev.yidafu.swc.generator.adt.kotlin.wrapReservedWord
 import dev.yidafu.swc.generator.codegen.poet.*
-import dev.yidafu.swc.generator.config.GlobalConfig
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.HardcodedRules
-import dev.yidafu.swc.generator.core.model.KotlinExtensionFun
-import dev.yidafu.swc.generator.core.relation.ExtendRelationship
+import dev.yidafu.swc.generator.codegen.model.KotlinExtensionFun
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -46,7 +46,10 @@ class DslGenerator(
      */
     fun generateExtensionFunctions() {
         val needGenerateDslClassList = classDecls
-            .filter { ExtendRelationship.findAllChildrenByParent(it.name).isNotEmpty() }
+            .filter { 
+                val analyzer = InheritanceAnalyzerHolder.get()
+                analyzer.findAllChildrenByParent(it.name).isNotEmpty() 
+            }
             .map { it.name }
 
         // 批量创建扩展函数列表
@@ -88,16 +91,17 @@ class DslGenerator(
               */
         """.trimIndent()
         
+        val analyzer = InheritanceAnalyzerHolder.get()
         return when (val type = prop.type) {
             is KotlinType.Union -> {
                 type.types.flatMap { unionType ->
-                    ExtendRelationship.findAllGrandChildren(unionType.toTypeString()).map { child ->
+                    analyzer.findAllGrandChildren(unionType.toTypeString()).map { child ->
                         KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
                     }
                 }
             }
             else -> {
-                ExtendRelationship.findAllGrandChildren(type.toTypeString()).map { child ->
+                analyzer.findAllGrandChildren(type.toTypeString()).map { child ->
                     KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
                 }
             }
@@ -108,7 +112,8 @@ class DslGenerator(
      * 创建扩展函数列表
      */
     private fun createExtensionFunList(key: String) {
-        ExtendRelationship.findAllGrandChildren(key).forEach { child ->
+        val analyzer = InheritanceAnalyzerHolder.get()
+        analyzer.findAllGrandChildren(key).forEach { child ->
             addExtensionFunWrapper(
                 KotlinExtensionFun(
                     key,
@@ -155,7 +160,7 @@ class DslGenerator(
         return listOf(
             "package dev.yidafu.swc.dsl",
             "",
-            "import dev.yidafu.swc.types.*",
+            "import dev.yidafu.swc.generated.*",
             ""
         )
     }
@@ -323,7 +328,7 @@ class DslGenerator(
     private fun toFunName(str: String): String {
         val withoutGenerics = removeGenerics(str)
         val name = withoutGenerics.replaceFirstChar { it.lowercase() }
-        return GlobalConfig.config.kotlinKeywordMap[name] ?: name
+        return CodeGenerationRules.getKotlinKeywordMap()[name] ?: name
     }
 
     /**

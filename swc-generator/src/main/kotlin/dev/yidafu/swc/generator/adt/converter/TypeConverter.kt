@@ -1,5 +1,6 @@
 package dev.yidafu.swc.generator.adt.converter
 
+import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.kotlin.KotlinType
 import dev.yidafu.swc.generator.adt.kotlin.KotlinTypeFactory
 import dev.yidafu.swc.generator.adt.result.ErrorCode
@@ -7,14 +8,21 @@ import dev.yidafu.swc.generator.adt.result.GeneratorResult
 import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.adt.typescript.KeywordKind
 import dev.yidafu.swc.generator.adt.typescript.LiteralValue
+import dev.yidafu.swc.generator.adt.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.adt.typescript.TypeScriptType
 import dev.yidafu.swc.generator.adt.typescript.getTypeName
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.GlobalConfig
 import dev.yidafu.swc.generator.config.HardcodedRules
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 
 /**
  * TypeScript 到 Kotlin 类型转换器
+ * 
+ * 在 ADT 转换过程中自动处理所有类型转换：
+ * - 基础类型（string, number, boolean 等）
+ * - 复杂类型（数组、联合、交叉等）
+ * - 特殊类型（模板字面量、函数等）
  */
 class TypeConverter(private val config: SwcGeneratorConfig) {
 
@@ -23,9 +31,6 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
      */
     fun convertToKotlinType(tsType: TypeScriptType): GeneratorResult<KotlinType> {
         return try {
-            // TODO: 添加类型转换缓存
-            // val cacheKey = tsType.toString()
-            // val cached = StringCache.get(cacheKey)
 
             val result = when (tsType) {
                 is TypeScriptType.Keyword -> convertKeyword(tsType.kind)
@@ -59,13 +64,15 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
 
     /**
      * 转换关键字类型
+     * 直接在 ADT 转换过程中处理类型映射
      */
     private fun convertKeyword(kind: KeywordKind): KotlinType {
         return when (kind) {
             KeywordKind.STRING -> KotlinTypeFactory.string()
             KeywordKind.NUMBER -> KotlinTypeFactory.int()
             KeywordKind.BOOLEAN -> KotlinTypeFactory.boolean()
-            KeywordKind.UNDEFINED, KeywordKind.NULL -> KotlinTypeFactory.nothing()
+            KeywordKind.UNDEFINED -> KotlinTypeFactory.nothing()
+            KeywordKind.NULL -> KotlinTypeFactory.nothing()
             KeywordKind.BIGINT -> KotlinTypeFactory.long()
             KeywordKind.VOID -> KotlinTypeFactory.unit()
             KeywordKind.ANY -> KotlinTypeFactory.any()
@@ -87,10 +94,10 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
             return KotlinTypeFactory.generic(ref.name, *params.toTypedArray())
         }
 
-        // 特殊映射
-        val mapped = HardcodedRules.jsToKotlinTypeMap[ref.name]
-        if (mapped != null) {
-            return KotlinTypeFactory.simple(mapped)
+        // 检查特殊属性类型覆盖
+        val propertyOverride = CodeGenerationRules.getPropertyTypeOverride(ref.name)
+        if (propertyOverride != null) {
+            return propertyOverride
         }
 
         return KotlinTypeFactory.simple(ref.name)
@@ -210,6 +217,20 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
         return KotlinTypeFactory.generic("Map", keyType, valueType)
     }
 
+    /**
+     * 转换接口声明为 Kotlin 类声明
+     */
+    fun convertInterfaceDeclaration(ts: TypeScriptDeclaration.InterfaceDeclaration): GeneratorResult<KotlinDeclaration.ClassDecl> {
+        return DeclarationConverter.convertInterfaceDeclaration(ts, config)
+    }
+
+    /**
+     * 转换类型别名声明为 Kotlin 类型别名声明
+     */
+    fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
+        return DeclarationConverter.convertTypeAliasDeclaration(ts, config)
+    }
+
     companion object {
         /**
          * 便捷的转换方法
@@ -217,6 +238,22 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
         fun convert(tsType: TypeScriptType): GeneratorResult<KotlinType> {
             val converter = TypeConverter(GlobalConfig.config)
             return converter.convertToKotlinType(tsType)
+        }
+
+        /**
+         * 便捷的接口声明转换方法
+         */
+        fun convertInterfaceDeclaration(ts: TypeScriptDeclaration.InterfaceDeclaration): GeneratorResult<KotlinDeclaration.ClassDecl> {
+            val converter = TypeConverter(GlobalConfig.config)
+            return converter.convertInterfaceDeclaration(ts)
+        }
+
+        /**
+         * 便捷的类型别名声明转换方法
+         */
+        fun convertTypeAliasDeclaration(ts: TypeScriptDeclaration.TypeAliasDeclaration): GeneratorResult<KotlinDeclaration.TypeAliasDecl> {
+            val converter = TypeConverter(GlobalConfig.config)
+            return converter.convertTypeAliasDeclaration(ts)
         }
     }
 }

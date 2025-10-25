@@ -54,12 +54,12 @@ object ConfigLoader {
         return SwcGeneratorConfig(
             classModifiers = ClassModifiersConfig(
                 toKotlinClass = loadedConfig.classModifiers.toKotlinClass.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.toKotlinClass,
-                keepInterface = loadedConfig.classModifiers.keepInterface.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.keepInterface,
                 sealedInterface = loadedConfig.classModifiers.sealedInterface.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.sealedInterface,
-                propsToSnakeCase = loadedConfig.classModifiers.propsToSnakeCase.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.propsToSnakeCase
+                propsToSnakeCase = loadedConfig.classModifiers.propsToSnakeCase.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.propsToSnakeCase,
+                literalUnionToTypealias = loadedConfig.classModifiers.literalUnionToTypealias.takeIf { it.isNotEmpty() } ?: defaults.classModifiers.literalUnionToTypealias
             ),
             namingRules = NamingRulesConfig(
-                kotlinKeywords = loadedConfig.namingRules.kotlinKeywords.takeIf { it.isNotEmpty() } ?: defaults.namingRules.kotlinKeywords,
+                // kotlinKeywords 已移至 CodeGenerationRules.kt
                 literalOperators = loadedConfig.namingRules.literalOperators.takeIf { it.isNotEmpty() } ?: defaults.namingRules.literalOperators
             ),
             paths = PathsConfig(
@@ -78,29 +78,11 @@ object ConfigLoader {
         return SwcGeneratorConfig(
             classModifiers = ClassModifiersConfig(
                 toKotlinClass = listOf("Span"),
-                keepInterface = listOf(
-                    "HasDecorator",
-                    "HasSpan",
-                    "Node",
-                    "Fn",
-                    "PropBase",
-                    "ExpressionBase",
-                    "ClassPropertyBase",
-                    "PatternBase",
-                    "ClassMethodBase",
-                    "BaseModuleConfig"
-                ),
-                sealedInterface = listOf("Node"),
-                propsToSnakeCase = listOf("JsFormatOptions")
+                propsToSnakeCase = listOf("JsFormatOptions"),
+                literalUnionToTypealias = listOf("JscTarget", "TerserEcmaVersion", "TruePlusMinus")
             ),
             namingRules = NamingRulesConfig(
-                kotlinKeywords = mapOf(
-                    "object" to "jsObject",
-                    "inline" to "jsInline",
-                    "in" to "jsIn",
-                    "super" to "jsSuper",
-                    "class" to "jsClass"
-                ),
+                // kotlinKeywords 已移至 CodeGenerationRules.kt
                 literalOperators = mapOf(
                     "+" to "Addition",
                     "+=" to "AdditionAssignment",

@@ -1,7 +1,6 @@
 package dev.yidafu.swc.generator.adt.kotlin
 
 import dev.yidafu.swc.generator.config.GlobalConfig
-import dev.yidafu.swc.generator.core.relation.ExtendRelationship
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -76,19 +75,25 @@ fun isValidKotlinTypeName(typeName: String): Boolean {
 }
 
 /**
+ * 为属性添加 SerialName 注解（如果不存在）
+ */
+private fun KotlinDeclaration.PropertyDecl.withSerialNameAnnotation(): KotlinDeclaration.PropertyDecl {
+    val serialName = getPropertySerialName()
+    if (annotations.any { it.name == "SerialName" }) return this
+    return copy(annotations = annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))))
+}
+
+/**
  * 转换为 interface
  */
 fun KotlinDeclaration.ClassDecl.toInterface(): KotlinDeclaration.ClassDecl {
-    val discriminator = getDiscriminator()
     return copy(
         modifier = ClassModifier.Interface,
         annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
         properties = properties.map { prop ->
-            val serialName = prop.getPropertySerialName()
-            prop.withNullableIfNeeded().copy(
-                defaultValue = null,
-                annotations = prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
-            )
+            prop.withNullableIfNeeded()
+                .withSerialNameAnnotation()
+                .copy(defaultValue = null)
         }
     )
 }
@@ -97,19 +102,13 @@ fun KotlinDeclaration.ClassDecl.toInterface(): KotlinDeclaration.ClassDecl {
  * 转换为 class
  */
 fun KotlinDeclaration.ClassDecl.toClass(): KotlinDeclaration.ClassDecl {
-    val discriminator = getDiscriminator()
-    val modifier = if (GlobalConfig.config.toKotlinClass.contains(name)) {
-        ClassModifier.DataClass // 对于 Span 等类，使用 data class
-    } else {
-        ClassModifier.FinalClass
-    }
+    val modifier = ClassModifier.FinalClass // 所有类都使用普通 class
     return copy(
         modifier = modifier,
         properties = properties.map { prop ->
-            val serialName = prop.getPropertySerialName()
-            prop.withNullableIfNeeded().copy(
-                annotations = prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
-            )
+            prop.withNullableIfNeeded()
+                .withSerialNameAnnotation()
+                .copy(defaultValue = Expression.NullLiteral)
         }
     )
 }
@@ -127,7 +126,6 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
         modifier = ClassModifier.FinalClass,
         parents = listOf(KotlinType.Simple(interfaceName)),
         annotations = listOf(
-            KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi"))),
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
             KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
@@ -135,19 +133,29 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
         ),
         properties = properties.map { prop ->
             val serialName = prop.getPropertySerialName()
+            val existingSerialName = prop.annotations.find { it.name == "SerialName" }
+            val annotations = if (existingSerialName != null) {
+                prop.annotations
+            } else {
+                prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+            }
             val updatedProp = prop.withNullableIfNeeded().copy(
                 modifier = PropertyModifier.OverrideVar,
-                annotations = prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+                annotations = annotations
             )
             
-            // 如果是 type 属性，设置默认值为接口名称
+            // 如果是 type 属性，设置为不可空 String 类型并设置默认值为接口名称
             if (prop.name == "type") {
                 val innerType = when (updatedProp.type) {
                     is KotlinType.Nullable -> updatedProp.type.innerType
                     else -> updatedProp.type
                 }
                 if (innerType is KotlinType.StringType) {
-                    updatedProp.copy(defaultValue = Expression.StringLiteral(interfaceName))
+                    // type 属性应该是不可空的 String 类型
+                    updatedProp.copy(
+                        type = KotlinType.StringType,
+                        defaultValue = Expression.StringLiteral(interfaceName)
+                    )
                 } else {
                     updatedProp.copy(defaultValue = Expression.NullLiteral)
                 }
@@ -269,23 +277,34 @@ fun KotlinDeclaration.ClassDecl.getClassName(): String {
 
 /**
  * 检查是否应该是 sealed 类型（有子类型）
+ * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
+ * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
  */
 fun KotlinDeclaration.ClassDecl.shouldBeSealed(allClasses: List<KotlinDeclaration.ClassDecl>): Boolean {
     if (modifier != ClassModifier.Interface) return false
-    return ExtendRelationship.findAllDirectChildren(name).isNotEmpty()
+    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
+    // 暂时返回 false，建议使用 InheritanceAnalyzer 替代
+    return false
 }
 
 /**
  * 获取继承深度（距离根节点的距离）
+ * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
+ * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
  */
 fun KotlinDeclaration.ClassDecl.getInheritanceDepth(): Int {
-    val parents = ExtendRelationship.findAllParentByChild(name)
-    return parents.size
+    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
+    // 暂时返回 0，建议使用 InheritanceAnalyzer 替代
+    return 0
 }
 
 /**
  * 获取继承树根节点
+ * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
+ * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
  */
 fun KotlinDeclaration.ClassDecl.getInheritanceRoot(): String {
-    return ExtendRelationship.getRoot(name) ?: name
+    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
+    // 暂时返回自身名称，建议使用 InheritanceAnalyzer 替代
+    return name
 }

@@ -65,7 +65,7 @@ fun main(args: Array<String>) {
         val inputPath = input ?: inputFile ?: GlobalConfig.config.paths.defaultInputPath
 
         // 使用新架构
-        Logger.header("SWC Generator Kotlin")
+        Logger.header("SWC Generator Kotlin (TypeScript ADT Architecture)")
         Logger.separator()
 
         val generator = SwcGenerator()
@@ -125,22 +125,26 @@ class SwcGenerator {
             outputTypesPath = outputTypesPath,
             outputSerializerPath = outputSerializerPath,
             outputDslDir = outputDslDir,
-            dryRun = false,
-            typesOnly = false
+            dryRun = false
         )
     }
 
     fun run(inputPath: String): GeneratorResult<Unit> {
-        Logger.setTotalSteps(5)
+        Logger.setTotalSteps(6)
         Logger.startTimer("total")
 
         return parser.parse(inputPath)
             .flatMap { parseResult ->
-                Logger.step("提取类型...")
+                Logger.step("解析 TypeScript 文件...")
+                Logger.info("✓ 解析完成: ${parseResult.inputPath}")
+                GeneratorResultFactory.success(parseResult)
+            }
+            .flatMap { parseResult ->
+                Logger.step("提取 TypeScript ADT...")
                 transformer.transform(parseResult)
             }
             .flatMap { transformResult ->
-                Logger.step("生成代码...")
+                Logger.step("生成 Kotlin 代码...")
                 emitter.emit(transformResult)
             }
             .also {

@@ -2,32 +2,15 @@
 classModifiers:
   toKotlinClass:
     - "Span"
-  keepInterface:
-    - "HasDecorator"
-    - "HasSpan"
-    - "Node"
-    - "Fn"
-    - "PropBase"
-    - "ExpressionBase"
-    - "ClassPropertyBase"
-    - "PatternBase"
-    - "ClassMethodBase"
-    - "BaseModuleConfig"
-  sealedInterface:
-    - "Node"
   propsToSnakeCase:
     - "JsFormatOptions"
-
-namingRules:
-  kotlinKeywords:
-    "object": "jsObject"
-    "inline": "jsInline"
-    "in": "jsIn"
-    "super": "jsSuper"
-    "class": "jsClass"
+  literalUnionToTypealias:
+    - "JscTarget"
+    - "TerserEcmaVersion"
+    - "TruePlusMinus"
 
 paths:
-  defaultInputPath: "/Users/dovyih/github/swc-binding/swc-generator/node_modules/.pnpm/@swc+types@0.1.25/node_modules/@swc/types/index.d.ts"
-  defaultOutputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/types.kt"
-  defaultOutputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/types/serializer.kt"
-  defaultOutputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/dsl"
+  defaultInputPath: "/Users/yidafu/github/swc-binding/swc-generator/node_modules/.pnpm/@swc+types@0.1.25/node_modules/@swc/types/index.d.ts"
+  defaultOutputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types/types.kt"
+  defaultOutputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types/serializer.kt"
+  defaultOutputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
