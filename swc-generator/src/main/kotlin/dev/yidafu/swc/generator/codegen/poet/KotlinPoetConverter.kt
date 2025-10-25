@@ -363,7 +363,7 @@ object KotlinPoetConverter {
     private fun addClassModifiers(builder: TypeSpec.Builder, modifier: ClassModifier) {
         // 所有顶级声明都应该是 public
         builder.addModifiers(KModifier.PUBLIC)
-        
+
         when (modifier) {
             is ClassModifier.SealedInterface -> builder.addModifiers(KModifier.SEALED)
             is ClassModifier.SealedClass -> builder.addModifiers(KModifier.SEALED)
@@ -380,7 +380,7 @@ object KotlinPoetConverter {
     private fun addPropertyModifiers(builder: PropertySpec.Builder, modifier: PropertyModifier) {
         // 所有属性都应该是 public
         builder.addModifiers(KModifier.PUBLIC)
-        
+
         when (modifier) {
             is PropertyModifier.ConstVal -> {
                 builder.addModifiers(KModifier.CONST)

@@ -13,7 +13,6 @@ import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.processor.KotlinADTProcessorFactory
 import dev.yidafu.swc.generator.transformer.processors.TransformContext
 import dev.yidafu.swc.generator.util.Logger
-import kotlinx.serialization.json.Json
 
 /**
  * 类型转换器
@@ -22,7 +21,8 @@ import kotlinx.serialization.json.Json
 class TypeTransformer(
     private val config: SwcGeneratorConfig
 ) {
-    private val classDeclMap = mutableMapOf<String, KotlinDeclaration.ClassDecl>()
+    // 使用 LinkedHashMap 保持类声明顺序，确保生成代码的确定性
+    private val classDeclMap = LinkedHashMap<String, KotlinDeclaration.ClassDecl>()
 
     /**
      * 转换类型
@@ -42,10 +42,7 @@ class TypeTransformer(
                 // 调试：检查合并后的 AST 是否包含 Assumptions
                 val allBodies = parseResult.program.getNodes("body")
                 Logger.debug("合并后的 AST 包含 ${allBodies.size} 个声明")
-                val assumptionsNodes = allBodies.filter { 
-                    it.type == "TsInterfaceDeclaration" && 
-                    it.getNode("id")?.getString("value")?.contains("Assumptions") == true 
-                }
+                val assumptionsNodes = allBodies.filter { it.type == "TsInterfaceDeclaration" && it.getNode("id")?.getString("value")?.contains("Assumptions") == true }
                 Logger.debug("找到 ${assumptionsNodes.size} 个 Assumptions 接口节点")
 
                 // 新的 TypeScript ADT 提取阶段

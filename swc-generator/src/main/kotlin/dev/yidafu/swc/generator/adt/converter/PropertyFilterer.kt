@@ -10,7 +10,7 @@ import dev.yidafu.swc.generator.util.Logger
  * 从 TypeScriptDeclarationConverter 中分离出来的专门职责
  */
 object PropertyFilterer {
-    
+
     /**
      * 过滤掉从父接口继承的属性，避免重复声明
      * 动态查询继承链，而不是硬编码
@@ -28,7 +28,7 @@ object PropertyFilterer {
 
         // 获取所有祖先接口的属性名
         val inheritedPropertyNames = getAllInheritedPropertyNames(interfaceName, analyzer)
-        
+
         Logger.debug("  接口 $interfaceName 的祖先属性: $inheritedPropertyNames", 6)
         Logger.debug("  过滤前属性数: ${properties.size}, 过滤后属性数: ${properties.size - inheritedPropertyNames.size}", 6)
 
@@ -44,16 +44,17 @@ object PropertyFilterer {
         interfaceName: String,
         analyzer: InheritanceAnalyzer
     ): Set<String> {
-        val allPropertyNames = mutableSetOf<String>()
-        
+        // 使用 LinkedHashSet 保持属性名顺序，确保过滤的确定性
+        val allPropertyNames = LinkedHashSet<String>()
+
         // 获取直接父接口
         val directParents = analyzer.findAllParentsByChild(interfaceName)
-        
+
         directParents.forEach { parentName ->
             // 1. 递归获取父接口的属性
             val parentProperties = getAllInheritedPropertyNames(parentName, analyzer)
             allPropertyNames.addAll(parentProperties)
-            
+
             // 2. 获取当前父接口自己的属性
             val parentDecl = analyzer.getDeclaration(parentName)
             if (parentDecl is TypeScriptDeclaration.InterfaceDeclaration) {
@@ -61,7 +62,7 @@ object PropertyFilterer {
                 allPropertyNames.addAll(parentOwnProps)
             }
         }
-        
+
         return allPropertyNames
     }
 }

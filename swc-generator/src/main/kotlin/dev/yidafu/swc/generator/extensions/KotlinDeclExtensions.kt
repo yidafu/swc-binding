@@ -1,9 +1,9 @@
 package dev.yidafu.swc.generator.extensions
 
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl
 typealias PropertyDecl = KotlinDeclaration.PropertyDecl
@@ -54,12 +54,12 @@ fun ClassDecl.getAllProperties(
 ): List<PropertyDecl> {
     // Check cache first
     propertyCache[this.name]?.let { return it }
-    
-    val allProperties = mutableSetOf<PropertyDecl>()
-    
+
+    val allProperties = LinkedHashSet<PropertyDecl>()
+
     // Add current interface properties
     allProperties.addAll(this.properties)
-    
+
     // For interfaces, don't add inherited properties - they should only have their own properties
     // For implementation classes, add inherited properties
     if (this.modifier !is ClassModifier.Interface && this.modifier !is ClassModifier.SealedInterface) {
@@ -72,7 +72,7 @@ fun ClassDecl.getAllProperties(
             }
         }
     }
-    
+
     val result = allProperties.toList()
     propertyCache[this.name] = result
     return result
@@ -89,12 +89,12 @@ fun ClassDecl.getAllPropertiesForImpl(
 ): List<PropertyDecl> {
     // Check cache first
     propertyCache[this.name]?.let { return it }
-    
-    val allProperties = mutableSetOf<PropertyDecl>()
-    
+
+    val allProperties = LinkedHashSet<PropertyDecl>()
+
     // Add current interface properties
     allProperties.addAll(this.properties)
-    
+
     // Always add inherited properties for implementation class generation
     val parentInterfaces = analyzer.findAllParentsByChild(this.name)
     parentInterfaces.forEach { parentName ->
@@ -103,7 +103,7 @@ fun ClassDecl.getAllPropertiesForImpl(
             allProperties.addAll(parentInterface.getAllPropertiesForImpl(analyzer, allDecls, propertyCache))
         }
     }
-    
+
     val result = allProperties.toList()
     propertyCache[this.name] = result
     return result
@@ -120,12 +120,12 @@ fun ClassDecl.getAllProperties(
 ): List<PropertyDecl> {
     // Check cache first
     propertyCache[this.name]?.let { return it }
-    
-    val allProperties = mutableSetOf<PropertyDecl>()
-    
+
+    val allProperties = LinkedHashSet<PropertyDecl>()
+
     // Add current interface properties
     allProperties.addAll(this.properties)
-    
+
     // For interfaces, don't add inherited properties - they should only have their own properties
     // For implementation classes, add inherited properties
     if (this.modifier !is ClassModifier.Interface && this.modifier !is ClassModifier.SealedInterface) {
@@ -138,7 +138,7 @@ fun ClassDecl.getAllProperties(
             }
         }
     }
-    
+
     val result = allProperties.toList()
     propertyCache[this.name] = result
     return result

@@ -309,7 +309,8 @@ class DeclarationConverter(
         properties: List<KotlinDeclaration.PropertyDecl>,
         parents: List<KotlinType>
     ): List<KotlinDeclaration.PropertyDecl> {
-        val parentPropertyNames = mutableSetOf<String>()
+        // 使用 LinkedHashSet 保持属性名顺序，确保过滤的确定性
+        val parentPropertyNames = LinkedHashSet<String>()
         val parentNames = parents.mapNotNull { it as? KotlinType.Simple }.map { it.name }
 
         // 检查是否继承了 Node（直接或间接）
@@ -336,18 +337,12 @@ class DeclarationConverter(
      * 从 TypeScript 声明中获取接口属性
      */
     private fun getInterfaceProperties(interfaceName: String): List<String> {
-        // 这里应该从 TypeScript 声明中获取接口属性
-        // 暂时使用硬编码的常见属性作为示例
-        // TODO: 实现从 TypeScript 声明中动态获取接口属性
-        return when (interfaceName) {
-            "Node" -> listOf("type")
-            "HasSpan" -> listOf("span")
-            "HasDecorator" -> listOf("decorators")
-            "HasInterpreter" -> listOf("interpreter")
-            "ExpressionBase" -> listOf("type") // ExpressionBase 继承了 Node
-            "PatternBase" -> listOf("type") // PatternBase 继承了 Node
-            else -> emptyList()
-        }
+        return inheritanceAnalyzer?.getDeclaration(interfaceName)?.let { declaration ->
+            when (declaration) {
+                is TypeScriptDeclaration.InterfaceDeclaration -> declaration.members.map { it.name }
+                else -> emptyList()
+            }
+        } ?: emptyList()
     }
 
     /**
@@ -536,7 +531,7 @@ class DeclarationConverter(
             else -> ClassModifier.Interface
         }
     }
-    
+
     /**
      * 检查是否是密封接口
      */
@@ -601,7 +596,7 @@ class DeclarationConverter(
     private fun convertTypeParameters(tsTypeParams: List<dev.yidafu.swc.generator.adt.typescript.TypeParameter>): List<KotlinDeclaration.TypeParameter> {
         // 设置类型转换器
         TypeParameterConverter.setTypeConverter(typeConverter)
-        
+
         // 使用专门的类型参数转换器
         return TypeParameterConverter.convertTypeParameters(tsTypeParams)
     }
@@ -655,7 +650,7 @@ class DeclarationConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         return try {
             val typeLiteral = tsTypeAlias.type as TypeScriptType.TypeLiteral
-            
+
             // 转换类型字面量的成员为属性
             val properties = typeLiteral.members.mapNotNull { member ->
                 convertTypeMember(member, tsTypeAlias.name)
@@ -694,7 +689,7 @@ class DeclarationConverter(
             val typeLiteral = member.type as TypeScriptType.TypeLiteral
             val nestedInterfaceName = "${parentInterfaceName}${member.name.replaceFirstChar { it.uppercase() }}"
             val nestedShortName = member.name.replaceFirstChar { it.uppercase() }
-            
+
             // 转换嵌套接口的成员为属性
             val properties = typeLiteral.members.mapNotNull { nestedMember ->
                 convertTypeMember(nestedMember, nestedInterfaceName)
@@ -724,11 +719,12 @@ class DeclarationConverter(
      * 去重成员：优先保留 camelCase 版本，如果只有 snake_case 版本则保留
      */
     private fun deduplicateMembers(members: List<TypeMember>): List<TypeMember> {
-        val memberMap = mutableMapOf<String, TypeMember>()
-        
+        // 使用 LinkedHashMap 保持成员顺序，确保去重的确定性
+        val memberMap = LinkedHashMap<String, TypeMember>()
+
         for (member in members) {
             val camelCaseName = snakeToCamelCase(member.name)
-            
+
             when {
                 // 如果已经是 camelCase 版本，直接保留
                 member.name == camelCaseName -> {
@@ -744,7 +740,7 @@ class DeclarationConverter(
                 }
             }
         }
-        
+
         return memberMap.values.toList()
     }
 
@@ -790,4 +786,3 @@ class DeclarationConverter(
         }
     }
 }
-

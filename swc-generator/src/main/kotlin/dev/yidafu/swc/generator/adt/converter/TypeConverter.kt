@@ -120,7 +120,7 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
                 // 检查是否是特定类型的联合，应该简化为非布尔类型
                 val booleanType = validTypes.find { it is KotlinType.Boolean }
                 val nonBooleanType = validTypes.find { it !is KotlinType.Boolean }
-                
+
                 when {
                     booleanType != null && nonBooleanType != null -> {
                         // 对于 TerserCompressOptions | boolean 这样的联合，取非布尔类型

@@ -147,7 +147,7 @@ fun AstNode.getTypeReferenceName(): String? {
 private fun buildQualifiedName(node: AstNode): String? {
     val left = node.getNode("left")
     val right = node.getNode("right")?.getIdentifierValue() ?: return null
-    
+
     return when {
         left?.isIdentifier() == true -> {
             val leftName = left.getIdentifierValue() ?: return null

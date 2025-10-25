@@ -14,7 +14,8 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
      * 构建继承关系映射
      */
     private fun buildInheritanceMap(): Map<String, List<String>> {
-        val map = mutableMapOf<String, MutableList<String>>()
+        // 使用 LinkedHashMap 保持继承关系顺序，确保生成的确定性
+        val map = LinkedHashMap<String, MutableList<String>>()
 
         declarations.forEach { declaration ->
             when (declaration) {
@@ -64,8 +65,9 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
      * 查找所有后代类型（递归）
      */
     fun findAllGrandChildren(parentName: String): List<String> {
-        val result = mutableSetOf<String>()
-        val visited = mutableSetOf<String>()
+        // 使用 LinkedHashSet 保持遍历顺序，确保递归遍历的确定性
+        val result = LinkedHashSet<String>()
+        val visited = LinkedHashSet<String>()
 
         fun collectChildren(name: String) {
             if (visited.contains(name)) return
@@ -86,8 +88,9 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
      * 查找所有祖先类型（递归）
      */
     fun findAllGrandParents(childName: String): List<String> {
-        val result = mutableSetOf<String>()
-        val visited = mutableSetOf<String>()
+        // 使用 LinkedHashSet 保持遍历顺序，确保递归遍历的确定性
+        val result = LinkedHashSet<String>()
+        val visited = LinkedHashSet<String>()
 
         fun collectParents(name: String) {
             if (visited.contains(name)) return
@@ -223,7 +226,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
      * 根据名称获取声明
      */
     fun getDeclaration(name: String): TypeScriptDeclaration? {
-        return declarations.find { 
+        return declarations.find {
             when (it) {
                 is TypeScriptDeclaration.InterfaceDeclaration -> it.name == name
                 is TypeScriptDeclaration.TypeAliasDeclaration -> it.name == name

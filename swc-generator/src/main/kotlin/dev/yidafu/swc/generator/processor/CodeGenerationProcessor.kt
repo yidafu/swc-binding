@@ -4,8 +4,8 @@ import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.result.ErrorCode
 import dev.yidafu.swc.generator.adt.result.GeneratorResult
 import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
@@ -60,15 +60,14 @@ class CodeGenerationProcessor : KotlinADTProcessor {
      */
     private fun generateImplementationClasses(classDecls: List<KotlinDeclaration.ClassDecl>): List<KotlinDeclaration.ClassDecl> {
         val analyzer = InheritanceAnalyzerHolder.get()
-        
+
         // 只处理接口
         val interfaces = classDecls.filter { it.modifier == ClassModifier.Interface }
-        
+
         // 创建继承分析缓存
         val cache = InheritanceAnalysisCache(analyzer, interfaces)
-        
+
         // 使用共享工具类生成实现类
         return ImplementationClassGenerator.generateImplementationClasses(interfaces, cache, classDecls)
     }
-
 }

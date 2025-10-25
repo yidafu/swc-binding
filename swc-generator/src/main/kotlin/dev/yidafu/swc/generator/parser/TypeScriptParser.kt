@@ -9,7 +9,6 @@ import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.tsParseOptions
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import java.io.File
@@ -156,10 +155,10 @@ class TypeScriptParser(
 
         // 合并所有 AST JSON 字符串
         val allAstJsonStrings = listOf(mainResult.astJsonString) + importedResults.map { it.astJsonString }
-        
+
         // 合并所有源代码
         val allSourceCodes = listOf(mainResult.sourceCode) + importedResults.map { it.sourceCode }
-        
+
         // 合并所有文件路径
         val allInputPaths = listOf(mainResult.inputPath) + importedResults.map { it.inputPath }
 
@@ -181,11 +180,11 @@ class TypeScriptParser(
     private fun createMergedProgram(mainProgram: AstNode, importedPrograms: List<AstNode>): AstNode {
         // 合并所有程序的主体
         val allBodies = mutableListOf<AstNode>()
-        
+
         // 添加主程序的主体
         val mainBody = mainProgram.getNodes("body")
         allBodies.addAll(mainBody)
-        
+
         // 添加导入程序的主体
         for (importedProgram in importedPrograms) {
             val importedBody = importedProgram.getNodes("body")
@@ -200,7 +199,7 @@ class TypeScriptParser(
             }
         }
         mergedData["body"] = bodyArray
-        
+
         return AstNode(
             type = mainProgram.type,
             data = JsonObject(mergedData)

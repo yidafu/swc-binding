@@ -13,7 +13,7 @@ class InheritanceAnalysisCache(
     private val analyzer: InheritanceAnalyzer,
     private val allInterfaces: List<ClassDecl>
 ) {
-    
+
     // Cache for leaf nodes detection
     private val leafNodesCache: List<ClassDecl> by lazy {
         Logger.debug("构建叶子节点缓存...", 4)
@@ -23,19 +23,19 @@ class InheritanceAnalysisCache(
             isNodeDescendant && children.isEmpty()
         }
     }
-    
+
     // Cache for parent-child relationships
     private val childrenCache = mutableMapOf<String, List<String>>()
     private val parentsCache = mutableMapOf<String, List<String>>()
-    
+
     // Cache for descendant checks
     private val descendantCache = mutableMapOf<Pair<String, String>, Boolean>()
-    
+
     /**
      * Get all leaf nodes (Node descendants with no children)
      */
     fun getLeafNodes(): List<ClassDecl> = leafNodesCache
-    
+
     /**
      * Get children of a parent interface (cached)
      */
@@ -44,7 +44,7 @@ class InheritanceAnalysisCache(
             analyzer.findAllChildrenByParent(parentName)
         }
     }
-    
+
     /**
      * Get parents of a child interface (cached)
      */
@@ -53,7 +53,7 @@ class InheritanceAnalysisCache(
             analyzer.findAllParentsByChild(childName)
         }
     }
-    
+
     /**
      * Check if an interface is a descendant of another (cached)
      */
@@ -63,7 +63,7 @@ class InheritanceAnalysisCache(
             analyzer.isDescendantOf(childName, parentName)
         }
     }
-    
+
     /**
      * Check if an interface is a leaf node (Node descendant with no children)
      */
@@ -72,7 +72,7 @@ class InheritanceAnalysisCache(
         val isNodeDescendant = isDescendantOf(interfaceName, "Node")
         return isNodeDescendant && children.isEmpty()
     }
-    
+
     /**
      * Clear all caches (useful for testing or memory management)
      */

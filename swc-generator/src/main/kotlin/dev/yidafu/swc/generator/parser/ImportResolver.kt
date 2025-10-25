@@ -2,7 +2,6 @@ package dev.yidafu.swc.generator.parser
 
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -10,9 +9,9 @@ import java.nio.file.Paths
  * Handles detection and resolution of import statements from AST
  */
 class ImportResolver {
-    
+
     private val visitedFiles = mutableSetOf<String>()
-    
+
     /**
      * Resolve import paths from AST nodes
      * @param importNodes List of import AST nodes
@@ -22,10 +21,10 @@ class ImportResolver {
     fun resolveImports(importNodes: List<AstNode>, parentFile: String): List<String> {
         val resolvedPaths = mutableListOf<String>()
         val parentDir = File(parentFile).parentFile?.absolutePath ?: return emptyList()
-        
+
         Logger.debug("Resolving imports from: $parentFile")
         Logger.debug("Parent directory: $parentDir")
-        
+
         for (importNode in importNodes) {
             val sourcePath = extractImportSource(importNode)
             if (sourcePath != null) {
@@ -39,10 +38,10 @@ class ImportResolver {
                 }
             }
         }
-        
+
         return resolvedPaths
     }
-    
+
     /**
      * Extract import source path from AST node
      */
@@ -62,7 +61,7 @@ class ImportResolver {
             }
         }
     }
-    
+
     /**
      * Resolve relative import path to absolute file path
      */
@@ -76,7 +75,7 @@ class ImportResolver {
                     "$resolvedPath/index.d.ts",
                     resolvedPath.toString()
                 )
-                
+
                 candidateFiles.find { File(it).exists() }
             } else {
                 // Handle absolute or node_modules imports
@@ -89,21 +88,21 @@ class ImportResolver {
             null
         }
     }
-    
+
     /**
      * Check if a file has been visited to prevent circular imports
      */
     fun isVisited(filePath: String): Boolean {
         return visitedFiles.contains(filePath)
     }
-    
+
     /**
      * Mark a file as visited
      */
     fun markVisited(filePath: String) {
         visitedFiles.add(filePath)
     }
-    
+
     /**
      * Clear visited files (useful for testing)
      */

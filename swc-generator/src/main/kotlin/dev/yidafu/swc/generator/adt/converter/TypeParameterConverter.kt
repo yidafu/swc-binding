@@ -2,14 +2,13 @@ package dev.yidafu.swc.generator.adt.converter
 
 import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.typescript.*
-import dev.yidafu.swc.generator.util.Logger
 
 /**
  * 专门处理类型参数转换的转换器
  * 从 TypeScriptDeclarationConverter 中分离出来的专门职责
  */
 object TypeParameterConverter {
-    
+
     /**
      * 转换 TypeScript 类型参数为 Kotlin 类型参数
      */

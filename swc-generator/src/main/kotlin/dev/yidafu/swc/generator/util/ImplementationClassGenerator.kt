@@ -1,13 +1,12 @@
 package dev.yidafu.swc.generator.util
 
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
 import dev.yidafu.swc.generator.extensions.getAllProperties
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.extensions.isLeafNode
-import dev.yidafu.swc.generator.util.Logger
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl
 typealias PropertyDecl = KotlinDeclaration.PropertyDecl
@@ -17,7 +16,7 @@ typealias PropertyDecl = KotlinDeclaration.PropertyDecl
  * Eliminates code duplication between CodeGenerationProcessor and TypesGenerator
  */
 object ImplementationClassGenerator {
-    
+
     /**
      * Find leaf nodes using inheritance analyzer
      */
@@ -29,7 +28,7 @@ object ImplementationClassGenerator {
             interfaceDecl.isLeafNode(analyzer)
         }
     }
-    
+
     /**
      * Find leaf nodes using cached inheritance analysis
      */
@@ -39,7 +38,7 @@ object ImplementationClassGenerator {
     ): List<ClassDecl> {
         return cache.getLeafNodes()
     }
-    
+
     /**
      * Create implementation class with property collection
      */
@@ -51,7 +50,7 @@ object ImplementationClassGenerator {
         // Use memoization for property collection
         val propertyCache = mutableMapOf<String, List<PropertyDecl>>()
         val allProperties = interfaceDecl.getAllPropertiesForImpl(analyzer, allClassDecls, propertyCache)
-        
+
         return interfaceDecl.copy(
             name = "${interfaceDecl.name}Impl",
             modifier = ClassModifier.DataClass,
@@ -59,7 +58,7 @@ object ImplementationClassGenerator {
             typeParameters = interfaceDecl.typeParameters // Preserve type parameters
         )
     }
-    
+
     /**
      * Create implementation class with cached inheritance analysis
      */
@@ -71,7 +70,7 @@ object ImplementationClassGenerator {
         // Use memoization for property collection
         val propertyCache = mutableMapOf<String, List<PropertyDecl>>()
         val allProperties = interfaceDecl.getAllProperties(cache, allClassDecls, propertyCache)
-        
+
         return interfaceDecl.copy(
             name = "${interfaceDecl.name}Impl",
             modifier = ClassModifier.DataClass,
@@ -79,7 +78,7 @@ object ImplementationClassGenerator {
             typeParameters = interfaceDecl.typeParameters // Preserve type parameters
         )
     }
-    
+
     /**
      * Generate implementation classes for all leaf nodes
      */
@@ -90,7 +89,7 @@ object ImplementationClassGenerator {
     ): List<ClassDecl> {
         val leafNodes = findLeafNodes(allInterfaces, analyzer)
         val implementationClasses = mutableListOf<ClassDecl>()
-        
+
         leafNodes.forEach { interfaceDecl ->
             try {
                 val implClass = createImplementationClass(interfaceDecl, analyzer, allClassDecls)
@@ -100,10 +99,10 @@ object ImplementationClassGenerator {
                 Logger.warn("  生成实现类失败: ${interfaceDecl.name}Impl, ${e.message}")
             }
         }
-        
+
         return implementationClasses
     }
-    
+
     /**
      * Generate implementation classes for all leaf nodes (cached version)
      */
@@ -114,7 +113,7 @@ object ImplementationClassGenerator {
     ): List<ClassDecl> {
         val leafNodes = findLeafNodes(allInterfaces, cache)
         val implementationClasses = mutableListOf<ClassDecl>()
-        
+
         leafNodes.forEach { interfaceDecl ->
             try {
                 val implClass = createImplementationClass(interfaceDecl, cache, allClassDecls)
@@ -124,7 +123,7 @@ object ImplementationClassGenerator {
                 Logger.warn("  生成实现类失败: ${interfaceDecl.name}Impl, ${e.message}")
             }
         }
-        
+
         return implementationClasses
     }
 }

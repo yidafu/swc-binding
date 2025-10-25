@@ -13,8 +13,9 @@ class TsAstVisitor(jsonString: String) {
     private val imports = mutableListOf<AstNode>()
 
     // 性能优化：添加索引映射，将 O(n) 查找优化为 O(1)
-    private val interfaceMap = mutableMapOf<String, AstNode>()
-    private val typeAliasMap = mutableMapOf<String, AstNode>()
+    // 使用 LinkedHashMap 保持声明顺序，确保生成代码的确定性
+    private val interfaceMap = LinkedHashMap<String, AstNode>()
+    private val typeAliasMap = LinkedHashMap<String, AstNode>()
 
     /**
      * 遍历 AST 提取所有 interface 和 type alias

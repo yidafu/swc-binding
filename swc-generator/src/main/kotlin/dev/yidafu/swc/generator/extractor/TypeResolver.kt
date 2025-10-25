@@ -195,7 +195,7 @@ object TypeResolver {
                     val valueType = member.getNode("typeAnnotation")?.getNode("typeAnnotation")?.let { valueNode ->
                         extractTypeScriptType(valueNode).getOrDefault(TypeScriptType.Any)
                     } ?: TypeScriptType.Any
-                    
+
                     // 返回索引签名类型而不是 TypeMember
                     return GeneratorResultFactory.success(TypeScriptType.IndexSignature(keyType, valueType))
                 }
