@@ -27,6 +27,7 @@ fun KotlinType.isGeneric(): Boolean = when (this) {
 
 fun KotlinType.getTypeName(): String = when (this) {
     is KotlinType.Simple -> name
+    is KotlinType.Nested -> "$parent.$name"
     is KotlinType.Generic -> name
     is KotlinType.Nullable -> innerType.getTypeName()
     is KotlinType.Function -> "Function"
@@ -65,6 +66,7 @@ object KotlinTypeFactory {
     fun nothing() = KotlinType.Nothing
 
     fun simple(name: String) = KotlinType.Simple(name)
+    fun nested(parent: String, name: String) = KotlinType.Nested(parent, name)
     fun generic(name: String, vararg params: KotlinType) = KotlinType.Generic(name, params.toList())
     fun nullable(type: KotlinType) = KotlinType.Nullable(type)
     fun booleanable(type: KotlinType) = KotlinType.Booleanable(type)

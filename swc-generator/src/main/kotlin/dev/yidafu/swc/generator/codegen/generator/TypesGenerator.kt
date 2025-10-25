@@ -10,6 +10,8 @@ import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.util.PerformanceOptimizer
+import dev.yidafu.swc.generator.extensions.getAllProperties
+import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import java.io.File
 
 /**
@@ -61,25 +63,21 @@ class TypesGenerator(
             val fileBuilder = createFileBuilder(
                 PoetConstants.PKG_TYPES,
                 "types",
-                PoetConstants.PKG_BOOLEANABLE to "*",
-                "kotlinx.serialization" to "*",
-                "kotlinx.serialization.json" to "JsonClassDiscriminator",
-                "dev.yidafu.swc" to "Union"
+                "dev.yidafu.swc" to "Union",
+                "dev.yidafu.swc" to "Union.U2",
+                "dev.yidafu.swc" to "Union.U3", 
+                "dev.yidafu.swc" to "Union.U4",
+                "kotlinx.serialization" to "SerialName",
+                "kotlinx.serialization" to "Serializable",
+                "kotlinx.serialization.json" to "JsonClassDiscriminator"
             )
 
             // 添加注解类和类型别名
             fileBuilder.addType(createSwcDslMarkerAnnotation())
             fileBuilder.addTypeAlias(createRecordTypeAlias())
-
-            // 使用 KotlinPoetConverter 添加类型别名
-            typeAliases.forEach { typeAlias ->
-                try {
-                    val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
-                    fileBuilder.addTypeAlias(typeAliasSpec)
-                } catch (e: Exception) {
-                    Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
-                }
-            }
+            
+            // 添加所有类型别名（包括硬编码的实用工具类型）
+            addAllTypeAliases(fileBuilder)
 
             // 生成并添加类
             generateClasses(fileBuilder)
@@ -198,22 +196,105 @@ class TypesGenerator(
         interfaceDecl: KotlinDeclaration.ClassDecl,
         analyzer: InheritanceAnalyzer
     ): KotlinDeclaration.ClassDecl {
-        // 使用共享工具类创建基础实现类
-        val baseImplClass = ImplementationClassGenerator.createImplementationClass(interfaceDecl, analyzer, classDecls)
+        // 收集所有属性（包括继承的）
+        val propertyCache = mutableMapOf<String, List<KotlinDeclaration.PropertyDecl>>()
+        val allProperties = interfaceDecl.getAllPropertiesForImpl(analyzer, classDecls, propertyCache)
+        
+        // 重新组织属性：自有属性 → type → 继承属性
+        val reorderedProperties = reorderImplementationProperties(allProperties, interfaceDecl.name)
+        
+        // 为所有属性添加 override 修饰符和默认值
+        val processedProperties = reorderedProperties.map { prop ->
+            processImplementationProperty(prop, interfaceDecl.name)
+        }
 
         // 添加实现类需要的注解
         val discriminator = "type"
         val serialName = interfaceDecl.name
 
-        return baseImplClass.copy(
+        return interfaceDecl.copy(
+            name = "${interfaceDecl.name}Impl",
             modifier = ClassModifier.FinalClass,
             parents = listOf(KotlinType.Simple(interfaceDecl.name)),
+            properties = processedProperties,
             annotations = listOf(
                 KotlinDeclaration.Annotation("SwcDslMarker"),
                 KotlinDeclaration.Annotation("Serializable"),
                 KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
                 KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
             )
+        )
+    }
+
+    /**
+     * 重新排序实现类属性：自有属性 → 继承属性 → type → span → decorators
+     */
+    private fun reorderImplementationProperties(
+        allProperties: List<KotlinDeclaration.PropertyDecl>,
+        interfaceName: String
+    ): List<KotlinDeclaration.PropertyDecl> {
+        val ownProperties = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val inheritedProperties = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val typeProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val spanProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val decoratorsProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        
+        allProperties.forEach { prop ->
+            when (prop.name) {
+                "type" -> typeProperty.add(prop)
+                "span" -> spanProperty.add(prop)
+                "decorators" -> decoratorsProperty.add(prop)
+                else -> {
+                    // 判断是否为自有属性（接口直接声明的属性）
+                    // 这里简化处理：如果属性名在接口的原始属性中，则为自有属性
+                    if (isOwnProperty(prop.name, interfaceName)) {
+                        ownProperties.add(prop)
+                    } else {
+                        inheritedProperties.add(prop)
+                    }
+                }
+            }
+        }
+        
+        return ownProperties + inheritedProperties + typeProperty + spanProperty + decoratorsProperty
+    }
+    
+    /**
+     * 判断属性是否为接口的自有属性
+     * 这里简化处理，实际应该从接口声明中获取
+     */
+    private fun isOwnProperty(propertyName: String, interfaceName: String): Boolean {
+        // 常见的自有属性名模式
+        val commonOwnProps = setOf("key", "isAbstract", "declare", "value", "typeAnnotation", 
+                                  "isStatic", "accessibility", "isOptional", "isOverride", 
+                                  "readonly", "definite")
+        return propertyName in commonOwnProps
+    }
+    
+    /**
+     * 处理实现类属性：添加 override 修饰符和默认值
+     */
+    private fun processImplementationProperty(
+        prop: KotlinDeclaration.PropertyDecl,
+        interfaceName: String
+    ): KotlinDeclaration.PropertyDecl {
+        // 添加 override 修饰符
+        val newModifier = when (prop.modifier) {
+            is PropertyModifier.Var -> PropertyModifier.OverrideVar
+            is PropertyModifier.Val -> PropertyModifier.OverrideVal
+            else -> prop.modifier
+        }
+        
+        // 添加默认值
+        val defaultValue = when {
+            prop.name == "type" -> Expression.StringLiteral(interfaceName)
+            prop.type is KotlinType.Nullable -> Expression.NullLiteral
+            else -> prop.defaultValue
+        }
+        
+        return prop.copy(
+            modifier = newModifier,
+            defaultValue = defaultValue
         )
     }
 
@@ -261,7 +342,7 @@ class TypesGenerator(
         }
 
         try {
-            // 写入到临时目录
+            // 写入到临时目录，使用4空格缩进
             fileSpec.writeTo(tempDir)
 
             // 找到生成的文件（KotlinPoet 会根据包名创建目录结构）
@@ -323,10 +404,212 @@ class TypesGenerator(
     }
 
     /**
-     * 后处理文件（当前为空，保留用于未来扩展）
+     * 添加所有类型别名（包括硬编码的实用工具类型）
+     */
+    private fun addAllTypeAliases(fileBuilder: FileSpec.Builder) {
+        Logger.debug("  添加所有类型别名...", 6)
+        
+        // 创建硬编码的实用工具类型
+        val hardcodedTypeAliases = listOf(
+            TypeAliasSpec.builder("ToSnakeCase", Any::class)
+                .addTypeVariable(TypeVariableName("T"))
+                .build(),
+            TypeAliasSpec.builder("ToSnakeCaseProperties", Any::class)
+                .addTypeVariable(TypeVariableName("T"))
+                .build()
+        )
+        
+        // 创建所有类型别名的映射（名称 -> TypeAliasSpec）
+        val allTypeAliases = mutableMapOf<String, TypeAliasSpec>()
+        
+        // 添加硬编码的类型别名
+        hardcodedTypeAliases.forEach { typeAlias ->
+            allTypeAliases[typeAlias.name] = typeAlias
+        }
+        
+        // 添加从 TypeScript 提取的类型别名（跳过硬编码的类型）
+        typeAliases.forEach { typeAlias ->
+            // 跳过硬编码的类型，它们已经在上面添加了
+            if (typeAlias.name in listOf("ToSnakeCase", "ToSnakeCaseProperties")) {
+                Logger.debug("  跳过硬编码类型: ${typeAlias.name}", 8)
+                return@forEach
+            }
+            
+            try {
+                val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
+                allTypeAliases[typeAliasSpec.name] = typeAliasSpec
+            } catch (e: Exception) {
+                Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
+            }
+        }
+        
+        // 按照期望的顺序添加类型别名，而不是按名称排序
+        val expectedOrder = listOf(
+            "Record", "ParseOptions", "TerserEcmaVersion", "ToSnakeCase", 
+            "ToSnakeCaseProperties", "Swcrc", "JscTarget", "TruePlusMinus", "WasmPlugin"
+        )
+        
+        // 首先添加按期望顺序的类型别名
+        expectedOrder.forEach { name ->
+            allTypeAliases[name]?.let { typeAliasSpec ->
+                fileBuilder.addTypeAlias(typeAliasSpec)
+            }
+        }
+        
+        // 然后添加其他类型别名（按名称排序）
+        val remainingTypeAliases = allTypeAliases.filterKeys { it !in expectedOrder }
+        remainingTypeAliases.toSortedMap().values.forEach { typeAliasSpec ->
+            fileBuilder.addTypeAlias(typeAliasSpec)
+        }
+        
+        Logger.debug("  ✓ 添加 ${allTypeAliases.size} 个类型别名", 8)
+    }
+
+    /**
+     * 后处理文件：修复导入顺序、缩进和格式
      */
     private fun postProcessFile(file: File) {
-        // 当前不需要后处理，保留方法用于未来扩展
-        Logger.debug("  后处理完成", 6)
+        try {
+            val content = file.readText()
+            val lines = content.lines()
+            
+            // 1. 分离包声明、导入语句和其他内容
+            val packageLine = lines.find { it.startsWith("package ") } ?: ""
+            val importLines = lines.filter { it.startsWith("import ") }
+            val otherLines = lines.filter { 
+                !it.startsWith("import ") && !it.startsWith("package ")
+            }
+            
+            // 2. 重新排序导入语句
+            val reorderedImports = reorderImports(importLines)
+            
+            // 3. 处理其他行的缩进和格式
+            val processedOtherLines = processOtherLines(otherLines)
+            
+            // 4. 合并并写入文件
+            val finalLines = mutableListOf<String>()
+            if (packageLine.isNotEmpty()) {
+                finalLines.add(packageLine)
+                finalLines.add("")
+            }
+            if (reorderedImports.isNotEmpty()) {
+                finalLines.addAll(reorderedImports)
+                finalLines.add("")
+            }
+            finalLines.addAll(processedOtherLines)
+            
+            // 5. 移除多余的空行（特别是在注解前）
+            val cleanedLines = removeExtraEmptyLines(finalLines)
+            
+            val finalContent = cleanedLines.joinToString("\n")
+            file.writeText(finalContent)
+            
+            Logger.debug("  后处理完成：导入顺序、缩进和格式修复", 6)
+        } catch (e: Exception) {
+            Logger.warn("后处理文件失败: ${e.message}")
+        }
+    }
+    
+    /**
+     * 重新排序导入语句
+     */
+    private fun reorderImports(importLines: List<String>): List<String> {
+        val devYidafuImports = importLines.filter { it.startsWith("import dev.yidafu.swc") }
+        val kotlinxImports = importLines.filter { it.startsWith("import kotlinx.serialization") }
+        val kotlinImports = importLines.filter { it.startsWith("import kotlin") && !it.startsWith("import kotlinx") }
+        val otherImports = importLines.filter { 
+            !it.startsWith("import dev.yidafu.swc") && 
+            !it.startsWith("import kotlinx.serialization") && 
+            !it.startsWith("import kotlin") &&
+            !it.startsWith("import Record") // 移除不需要的 Record 导入
+        }
+        
+        return devYidafuImports + kotlinxImports + kotlinImports + otherImports
+    }
+    
+    /**
+     * 移除多余的空行
+     */
+    private fun removeExtraEmptyLines(lines: List<String>): List<String> {
+        val result = mutableListOf<String>()
+        var i = 0
+        
+        while (i < lines.size) {
+            val line = lines[i]
+            
+            if (line.trim().isEmpty()) {
+                // 找到空行，检查是否在注解前
+                if (i + 1 < lines.size && lines[i + 1].trim().startsWith("@")) {
+                    // 如果下一行是注解，移除这个空行
+                    i++
+                    continue
+                }
+                // 保留其他空行
+                result.add(line)
+            } else {
+                result.add(line)
+            }
+            i++
+        }
+        
+        return result
+    }
+
+    /**
+     * 处理其他行的缩进和格式
+     */
+    private fun processOtherLines(lines: List<String>): List<String> {
+        val processedLines = mutableListOf<String>()
+        var i = 0
+        
+        while (i < lines.size) {
+            val line = lines[i]
+            
+            // 处理多行属性声明的缩进
+            if (line.trimEnd().endsWith(":") && i + 1 < lines.size) {
+                val nextLine = lines[i + 1]
+                if (nextLine.trim().isNotEmpty()) {
+                    val indentCount = nextLine.takeWhile { it == ' ' }.length
+                    if (indentCount == 12) {
+                        // 修复12空格缩进为8空格
+                        val fixedNextLine = "        " + nextLine.trim()
+                        processedLines.add(line)
+                        processedLines.add(fixedNextLine)
+                        i += 2
+                        continue
+                    }
+                }
+            }
+            
+            // 保留必要的空行，只移除连续的空行
+            if (line.trim().isEmpty()) {
+                // 如果下一行也是空行，则跳过这一行
+                if (i + 1 < lines.size && lines[i + 1].trim().isEmpty()) {
+                    i++
+                    continue
+                }
+                // 否则保留这个空行
+            }
+            
+            // 处理普通缩进转换（2空格转4空格）
+            var processedLine = line
+            var indentCount = 0
+            
+            while (indentCount < line.length && line[indentCount] == ' ') {
+                indentCount++
+            }
+            
+            if (indentCount > 0 && indentCount % 2 == 0) {
+                val newIndentCount = indentCount * 2
+                val indent = " ".repeat(newIndentCount)
+                val content = line.substring(indentCount)
+                processedLine = indent + content
+            }
+            
+            processedLines.add(processedLine)
+            i++
+        }
+        
+        return processedLines
     }
 }

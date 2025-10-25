@@ -102,13 +102,13 @@ fun main(args: Array<String>) {
 /**
  * 新架构的 swc-generator 主类
  */
-class SwcGenerator {
+class SwcGenerator(customEmitterConfig: GeneratorConfig? = null) {
     private val swc = SwcNative()
 
     private val parser = TypeScriptParser(swc, GlobalConfig.config)
     private val transformer = TypeTransformer(GlobalConfig.config)
     private val emitter = CodeEmitter(
-        createEmitterConfig(),
+        customEmitterConfig ?: createEmitterConfig(),
         GlobalConfig.config
     )
 

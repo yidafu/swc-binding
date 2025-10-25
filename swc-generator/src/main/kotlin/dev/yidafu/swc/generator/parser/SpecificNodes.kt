@@ -51,7 +51,7 @@ class InterfaceNode(private val node: AstNode) {
                 when {
                     expr.isIdentifier() -> expr.getIdentifierValue()
                     expr.type == "TsQualifiedName" -> {
-                        expr.getNode("right")?.getIdentifierValue()
+                        expr.getTypeReferenceName()
                     }
                     else -> null
                 }

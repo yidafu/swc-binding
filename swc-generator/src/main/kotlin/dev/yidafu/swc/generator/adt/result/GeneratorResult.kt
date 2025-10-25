@@ -103,6 +103,7 @@ enum class ErrorCode {
     CONFIG_ERROR,
     FILE_IO_ERROR,
     VALIDATION_ERROR,
+    CIRCULAR_IMPORT_ERROR,
     UNKNOWN
 }
 

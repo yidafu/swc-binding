@@ -121,7 +121,7 @@ class DeclarationExtractor(private val visitor: TsAstVisitor) {
                     }
                 }
                 expr?.type == "TsQualifiedName" -> {
-                    val name = expr.getNode("right")?.getIdentifierValue()
+                    val name = expr.getTypeReferenceName()
                     if (name != null && name.isNotEmpty()) {
                         TypeReference(name)
                     } else {

@@ -2,6 +2,7 @@ package dev.yidafu.swc.generator.adt.converter
 
 import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.adt.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -49,9 +50,16 @@ object PropertyFilterer {
         val directParents = analyzer.findAllParentsByChild(interfaceName)
         
         directParents.forEach { parentName ->
-            // 递归获取父接口的属性
+            // 1. 递归获取父接口的属性
             val parentProperties = getAllInheritedPropertyNames(parentName, analyzer)
             allPropertyNames.addAll(parentProperties)
+            
+            // 2. 获取当前父接口自己的属性
+            val parentDecl = analyzer.getDeclaration(parentName)
+            if (parentDecl is TypeScriptDeclaration.InterfaceDeclaration) {
+                val parentOwnProps = parentDecl.members.map { it.name }
+                allPropertyNames.addAll(parentOwnProps)
+            }
         }
         
         return allPropertyNames

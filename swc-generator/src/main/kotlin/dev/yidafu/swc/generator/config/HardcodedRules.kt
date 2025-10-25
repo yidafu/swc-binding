@@ -49,10 +49,8 @@ object HardcodedRules {
                     dev.yidafu.swc.generator.adt.kotlin.KotlinType.StringType
                 )
             )
-            "top_retain", "pure_getters", "toplevel" -> dev.yidafu.swc.generator.adt.kotlin.KotlinType.Booleanable(
-                dev.yidafu.swc.generator.adt.kotlin.KotlinType.StringType
-            )
             "sequences" -> dev.yidafu.swc.generator.adt.kotlin.KotlinType.Boolean
+            "toplevel", "pureGetters", "topRetain" -> dev.yidafu.swc.generator.adt.kotlin.KotlinType.Nullable(dev.yidafu.swc.generator.adt.kotlin.KotlinType.StringType)
             else -> null
         }
     }

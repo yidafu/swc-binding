@@ -180,13 +180,26 @@ object TypeResolver {
     private fun extractTypeLiteralType(type: AstNode): GeneratorResult<TypeScriptType> {
         val members = type.getNodes("members")
         val typeMembers = members.mapNotNull { member ->
-            if (member.isPropertySignature()) {
-                val propName = member.getPropertyName() ?: return@mapNotNull null
-                val typeAnnotation = member.getNode("typeAnnotation")?.getNode("typeAnnotation")
-                val memberType = extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
-                TypeMember(propName, memberType, optional = false, readonly = false)
-            } else {
-                null
+            when {
+                member.isPropertySignature() -> {
+                    val propName = member.getPropertyName() ?: return@mapNotNull null
+                    val typeAnnotation = member.getNode("typeAnnotation")?.getNode("typeAnnotation")
+                    val memberType = extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
+                    TypeMember(propName, memberType, optional = false, readonly = false)
+                }
+                member.type == "TsIndexSignature" -> {
+                    // 处理索引签名 { [key: string]: value }
+                    val keyType = member.getNode("key")?.let { keyNode ->
+                        extractTypeScriptType(keyNode).getOrDefault(TypeScriptType.Keyword(KeywordKind.STRING))
+                    } ?: TypeScriptType.Keyword(KeywordKind.STRING)
+                    val valueType = member.getNode("typeAnnotation")?.getNode("typeAnnotation")?.let { valueNode ->
+                        extractTypeScriptType(valueNode).getOrDefault(TypeScriptType.Any)
+                    } ?: TypeScriptType.Any
+                    
+                    // 返回索引签名类型而不是 TypeMember
+                    return GeneratorResultFactory.success(TypeScriptType.IndexSignature(keyType, valueType))
+                }
+                else -> null
             }
         }
 

@@ -5,6 +5,7 @@ import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
 import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
 import dev.yidafu.swc.generator.extensions.getAllProperties
+import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.extensions.isLeafNode
 import dev.yidafu.swc.generator.util.Logger
 
@@ -49,7 +50,7 @@ object ImplementationClassGenerator {
     ): ClassDecl {
         // Use memoization for property collection
         val propertyCache = mutableMapOf<String, List<PropertyDecl>>()
-        val allProperties = interfaceDecl.getAllProperties(analyzer, allClassDecls, propertyCache)
+        val allProperties = interfaceDecl.getAllPropertiesForImpl(analyzer, allClassDecls, propertyCache)
         
         return interfaceDecl.copy(
             name = "${interfaceDecl.name}Impl",

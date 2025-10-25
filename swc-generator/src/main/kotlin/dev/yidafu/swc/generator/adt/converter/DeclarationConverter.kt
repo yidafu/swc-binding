@@ -37,8 +37,30 @@ class DeclarationConverter(
             }
 
             // 转换成员为属性（只转换接口自己的成员，不包括继承的）
-            val kotlinProperties = tsInterface.members.mapNotNull { member ->
+            // 去重：优先保留 camelCase 版本，如果只有 snake_case 版本则转换
+            val deduplicatedMembers = deduplicateMembers(tsInterface.members)
+            val kotlinProperties = deduplicatedMembers.mapNotNull { member ->
                 convertTypeMember(member, tsInterface.name)
+            }
+
+            // 收集嵌套接口（从 TypeLiteral 成员和包含 TypeLiteral 的联合类型）
+            val nestedInterfaces = tsInterface.members.mapNotNull { member ->
+                when {
+                    member.type is TypeScriptType.TypeLiteral -> {
+                        createNestedInterface(member, tsInterface.name)
+                    }
+                    member.type is TypeScriptType.Union && member.type.types.any { it is TypeScriptType.TypeLiteral } -> {
+                        // 从联合类型中提取类型字面量创建嵌套接口
+                        val typeLiteral = member.type.types.find { it is TypeScriptType.TypeLiteral } as? TypeScriptType.TypeLiteral
+                        if (typeLiteral != null) {
+                            val typeMember = TypeMember(member.name, typeLiteral, member.optional, member.readonly, member.kdoc)
+                            createNestedInterface(typeMember, tsInterface.name)
+                        } else {
+                            null
+                        }
+                    }
+                    else -> null
+                }
             }
 
             // 过滤掉重复声明的父接口属性
@@ -56,6 +78,7 @@ class DeclarationConverter(
                 properties = filteredProperties,
                 parents = kotlinParents,
                 typeParameters = kotlinTypeParams,
+                nestedClasses = nestedInterfaces,
                 annotations = annotations,
                 kdoc = tsInterface.kdoc
             )
@@ -97,6 +120,11 @@ class DeclarationConverter(
             else if (isInterfaceUnionType(tsTypeAlias.type)) {
                 Logger.debug("  检测到接口联合类型，生成密封接口", 6)
                 return convertInterfaceUnionToSealedInterface(tsTypeAlias)
+            }
+            // 检查是否为类型字面量（应该生成接口）
+            else if (tsTypeAlias.type is TypeScriptType.TypeLiteral) {
+                Logger.debug("  检测到类型字面量，生成接口", 6)
+                return convertTypeLiteralToInterface(tsTypeAlias)
             }
 
             // 转换类型
@@ -156,8 +184,55 @@ class DeclarationConverter(
      * 转换类型成员为属性
      */
     private fun convertTypeMember(member: TypeMember, interfaceName: String): KotlinDeclaration.PropertyDecl? {
-        val kotlinType = typeConverter.convertToKotlinType(member.type)
-            .getOrDefault(KotlinType.Any)
+        val kotlinType = when (member.type) {
+            is TypeScriptType.TypeLiteral -> {
+                // 检查是否包含索引签名
+                val hasIndexSignature = member.type.members.any { it.type is TypeScriptType.IndexSignature }
+                if (hasIndexSignature) {
+                    // 如果有索引签名，转换为 Map 类型
+                    val indexSignature = member.type.members.find { it.type is TypeScriptType.IndexSignature }
+                    if (indexSignature?.type is TypeScriptType.IndexSignature) {
+                        val indexSig = indexSignature.type as TypeScriptType.IndexSignature
+                        val keyType = typeConverter.convertToKotlinType(indexSig.keyType).getOrDefault(KotlinTypeFactory.string())
+                        val valueType = typeConverter.convertToKotlinType(indexSig.valueType).getOrDefault(KotlinTypeFactory.any())
+                        KotlinTypeFactory.generic("Map", keyType, valueType)
+                    } else {
+                        KotlinTypeFactory.generic("Map", KotlinTypeFactory.string(), KotlinTypeFactory.any())
+                    }
+                } else {
+                    // 对于普通类型字面量，生成嵌套接口名称
+                    val nestedPart = member.name.replaceFirstChar { it.uppercase() }
+                    KotlinTypeFactory.nested(interfaceName, nestedPart)
+                }
+            }
+            is TypeScriptType.Union -> {
+                // 检查联合类型是否包含类型字面量
+                val hasTypeLiteral = member.type.types.any { it is TypeScriptType.TypeLiteral }
+                if (hasTypeLiteral) {
+                    // 如果有类型字面量，生成嵌套接口名称并替换联合类型中的类型字面量
+                    val nestedPart = member.name.replaceFirstChar { it.uppercase() }
+                    val updatedTypes = member.type.types.map { type ->
+                        if (type is TypeScriptType.TypeLiteral) {
+                            // 直接创建嵌套类型，而不是通过 TypeScriptType.Reference
+                            KotlinTypeFactory.nested(interfaceName, nestedPart)
+                        } else {
+                            typeConverter.convertToKotlinType(type).getOrDefault(KotlinType.Any)
+                        }
+                    }
+                    // 过滤掉非 KotlinType 的元素，只保留 KotlinType
+                    val kotlinTypes = updatedTypes.filterIsInstance<KotlinType>()
+                    if (kotlinTypes.size == 1) {
+                        kotlinTypes.first()
+                    } else {
+                        KotlinTypeFactory.union(*kotlinTypes.toTypedArray())
+                    }
+                } else {
+                    typeConverter.convertToKotlinType(member.type).getOrDefault(KotlinType.Any)
+                }
+            }
+            else -> typeConverter.convertToKotlinType(member.type)
+                .getOrDefault(KotlinType.Any)
+        }
 
         // 应用配置重写
         val actualName = CodeGenerationRules.getKotlinKeywordMap()[member.name] ?: member.name
@@ -457,8 +532,29 @@ class DeclarationConverter(
     private fun determineClassModifier(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): ClassModifier {
         return when {
             config.toKotlinClass.contains(tsInterface.name) -> ClassModifier.FinalClass
+            isSealedInterface(tsInterface.name) -> ClassModifier.SealedInterface
             else -> ClassModifier.Interface
         }
+    }
+    
+    /**
+     * 检查是否是密封接口
+     */
+    private fun isSealedInterface(interfaceName: String): Boolean {
+        val sealedInterfaces = setOf(
+            "Config", "BaseModuleConfig", "Node", "HasSpan", "HasDecorator", "Class",
+            "ClassPropertyBase", "ClassMethodBase", "ExpressionBase", "ParserConfig",
+            "ModuleConfig", "ClassMember", "Declaration", "Expression", "JSXObject",
+            "JSXExpression", "JSXElementName", "JSXAttributeOrSpread", "JSXAttributeName",
+            "JSXAttrValue", "JSXElementChild", "Literal", "ModuleDeclaration", "DefaultDecl",
+            "ImportSpecifier", "ModuleExportName", "ExportSpecifier", "Program", "ModuleItem",
+            "Pattern", "ObjectPatternProperty", "Property", "PropertyName", "Statement",
+            "TsParameterPropertyParameter", "TsEntityName", "TsTypeElement", "TsType",
+            "TsFnOrConstructorType", "TsFnParameter", "TsThisTypeOrIdent", "TsTypeQueryExpr",
+            "TsUnionOrIntersectionType", "TsLiteral", "TsEnumMemberId", "TsNamespaceBody",
+            "TsModuleName", "TsModuleReference"
+        )
+        return sealedInterfaces.contains(interfaceName)
     }
 
     /**
@@ -471,6 +567,9 @@ class DeclarationConverter(
         when {
             config.toKotlinClass.contains(tsInterface.name) -> {
                 annotations.add(KotlinDeclaration.Annotation("Serializable"))
+            }
+            isSealedInterface(tsInterface.name) -> {
+                annotations.add(KotlinDeclaration.Annotation("SwcDslMarker"))
             }
         }
 
@@ -549,6 +648,107 @@ class DeclarationConverter(
     }
 
     /**
+     * 将类型字面量转换为接口
+     */
+    private fun convertTypeLiteralToInterface(
+        tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration
+    ): GeneratorResult<KotlinDeclaration.ClassDecl> {
+        return try {
+            val typeLiteral = tsTypeAlias.type as TypeScriptType.TypeLiteral
+            
+            // 转换类型字面量的成员为属性
+            val properties = typeLiteral.members.mapNotNull { member ->
+                convertTypeMember(member, tsTypeAlias.name)
+            }
+
+            val interfaceDecl = KotlinDeclaration.ClassDecl(
+                name = wrapReservedWord(tsTypeAlias.name),
+                modifier = ClassModifier.Interface,
+                parents = emptyList(),
+                properties = properties,
+                functions = emptyList(),
+                nestedClasses = emptyList(),
+                enumEntries = emptyList(),
+                annotations = listOf(
+                    KotlinDeclaration.Annotation("SwcDslMarker")
+                ),
+                kdoc = tsTypeAlias.kdoc
+            )
+
+            Logger.debug("  生成接口: ${interfaceDecl.name}, 属性数量: ${properties.size}", 6)
+            GeneratorResultFactory.success(interfaceDecl)
+        } catch (e: Exception) {
+            GeneratorResultFactory.failure(
+                code = ErrorCode.TYPE_RESOLUTION_ERROR,
+                message = "Failed to convert type literal to interface: ${tsTypeAlias.name}",
+                cause = e
+            )
+        }
+    }
+
+    /**
+     * 创建嵌套接口
+     */
+    private fun createNestedInterface(member: TypeMember, parentInterfaceName: String): KotlinDeclaration.ClassDecl? {
+        return try {
+            val typeLiteral = member.type as TypeScriptType.TypeLiteral
+            val nestedInterfaceName = "${parentInterfaceName}${member.name.replaceFirstChar { it.uppercase() }}"
+            val nestedShortName = member.name.replaceFirstChar { it.uppercase() }
+            
+            // 转换嵌套接口的成员为属性
+            val properties = typeLiteral.members.mapNotNull { nestedMember ->
+                convertTypeMember(nestedMember, nestedInterfaceName)
+            }
+
+            val nestedInterface = KotlinDeclaration.ClassDecl(
+                name = wrapReservedWord(nestedShortName),
+                modifier = ClassModifier.Interface,
+                parents = emptyList(),
+                properties = properties,
+                functions = emptyList(),
+                nestedClasses = emptyList(),
+                enumEntries = emptyList(),
+                annotations = emptyList(),
+                kdoc = null
+            )
+
+            Logger.debug("  生成嵌套接口: ${nestedInterface.name}, 属性数量: ${properties.size}", 6)
+            nestedInterface
+        } catch (e: Exception) {
+            Logger.warn("创建嵌套接口失败: ${member.name}, ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * 去重成员：优先保留 camelCase 版本，如果只有 snake_case 版本则保留
+     */
+    private fun deduplicateMembers(members: List<TypeMember>): List<TypeMember> {
+        val memberMap = mutableMapOf<String, TypeMember>()
+        
+        for (member in members) {
+            val camelCaseName = snakeToCamelCase(member.name)
+            
+            when {
+                // 如果已经是 camelCase 版本，直接保留
+                member.name == camelCaseName -> {
+                    memberMap[camelCaseName] = member
+                }
+                // 如果是 snake_case 版本
+                else -> {
+                    // 如果还没有 camelCase 版本，保留这个 snake_case 版本
+                    if (!memberMap.containsKey(camelCaseName)) {
+                        memberMap[camelCaseName] = member
+                    }
+                    // 如果已经有 camelCase 版本，忽略这个 snake_case 版本
+                }
+            }
+        }
+        
+        return memberMap.values.toList()
+    }
+
+    /**
      * 将 snake_case 转换为 camelCase
      */
     private fun snakeToCamelCase(name: String): String {
@@ -590,3 +790,4 @@ class DeclarationConverter(
         }
     }
 }
+

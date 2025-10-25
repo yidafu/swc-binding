@@ -9,6 +9,9 @@ import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.tsParseOptions
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
 import java.io.File
 import kotlin.io.path.Path
 
@@ -20,14 +23,30 @@ class TypeScriptParser(
     private val swc: SwcNative,
     private val config: SwcGeneratorConfig
 ) {
+    private val importResolver = ImportResolver()
 
     /**
-     * 解析 TypeScript 文件
+     * 解析 TypeScript 文件（支持导入解析）
      */
     fun parse(inputPath: String): GeneratorResult<ParseResult> {
-        return try {
-            val file = File(inputPath)
+        return parseWithImports(inputPath, mutableSetOf())
+    }
 
+    /**
+     * 递归解析 TypeScript 文件及其导入
+     */
+    private fun parseWithImports(inputPath: String, visitedFiles: MutableSet<String>): GeneratorResult<ParseResult> {
+        return try {
+            // 检查是否已访问过此文件
+            if (visitedFiles.contains(inputPath)) {
+                Logger.debug("跳过已访问的文件: $inputPath")
+                return GeneratorResultFactory.failure(
+                    code = ErrorCode.CIRCULAR_IMPORT_ERROR,
+                    message = "Circular import detected: $inputPath"
+                )
+            }
+
+            val file = File(inputPath)
             if (!file.exists()) {
                 return GeneratorResultFactory.failure(
                     code = ErrorCode.FILE_IO_ERROR,
@@ -35,6 +54,7 @@ class TypeScriptParser(
                 )
             }
 
+            visitedFiles.add(inputPath)
             val sourceCode = file.readText()
             Logger.debug("文件大小: ${sourceCode.length} 字符")
 
@@ -50,18 +70,51 @@ class TypeScriptParser(
             Logger.info("开始解析 TypeScript 文件: ${Path(inputPath).toFile().absolutePath}")
             val jsonString = swc.parseSync(sourceCode, optionsJson, inputPath)
             Logger.debug("解析成功，JSON 长度: ${jsonString.length}")
-            Logger.debug("AST JSON 内容: $jsonString")
+
             val program = AstNode.fromJson(jsonString)
             Logger.debug("Program 类型: ${program.type}")
 
-            GeneratorResultFactory.success(
+            // 创建 AST 访问器来提取导入
+            val visitor = TsAstVisitor(jsonString)
+            visitor.visit()
+            val imports = visitor.getImports()
+
+            Logger.info("发现 ${imports.size} 个导入声明")
+
+            // 解析导入的文件
+            val importedResults = mutableListOf<ParseResult>()
+            if (imports.isNotEmpty()) {
+                val importPaths = importResolver.resolveImports(imports, inputPath)
+                Logger.info("解析 ${importPaths.size} 个导入文件")
+
+                for (importPath in importPaths) {
+                    val importResult = parseWithImports(importPath, visitedFiles)
+                    if (importResult.isSuccess()) {
+                        importResult.onSuccess { result ->
+                            importedResults.add(result)
+                        }
+                    } else {
+                        Logger.warn("导入文件解析失败: $importPath")
+                        // 继续处理其他导入，不因单个导入失败而停止
+                    }
+                }
+            }
+
+            // 合并所有解析结果
+            val mergedResult = mergeParseResults(
                 ParseResult(
                     astJsonString = jsonString,
                     program = program,
                     inputPath = inputPath,
                     sourceCode = sourceCode
-                )
+                ),
+                importedResults
             )
+
+            Logger.debug("合并后的程序包含 ${mergedResult.program.getNodes("body").size} 个声明")
+            Logger.debug("导入的文件数量: ${importedResults.size}")
+
+            GeneratorResultFactory.success(mergedResult)
         } catch (e: kotlinx.serialization.SerializationException) {
             Logger.error("序列化错误: ${e.message}")
             handleSerializationError(e, inputPath)
@@ -90,6 +143,67 @@ class TypeScriptParser(
         ).replace(
             "}",
             ",\"syntax\":\"typescript\"}"
+        )
+    }
+
+    /**
+     * 合并多个解析结果
+     */
+    private fun mergeParseResults(mainResult: ParseResult, importedResults: List<ParseResult>): ParseResult {
+        if (importedResults.isEmpty()) {
+            return mainResult
+        }
+
+        // 合并所有 AST JSON 字符串
+        val allAstJsonStrings = listOf(mainResult.astJsonString) + importedResults.map { it.astJsonString }
+        
+        // 合并所有源代码
+        val allSourceCodes = listOf(mainResult.sourceCode) + importedResults.map { it.sourceCode }
+        
+        // 合并所有文件路径
+        val allInputPaths = listOf(mainResult.inputPath) + importedResults.map { it.inputPath }
+
+        // 创建合并的 AST 程序
+        val mergedProgram = createMergedProgram(mainResult.program, importedResults.map { it.program })
+
+        return ParseResult(
+            astJsonString = mainResult.astJsonString, // 使用主文件的 AST JSON
+            program = mergedProgram,
+            inputPath = mainResult.inputPath,
+            sourceCode = mainResult.sourceCode,
+            importedFiles = importedResults
+        )
+    }
+
+    /**
+     * 创建合并的 AST 程序
+     */
+    private fun createMergedProgram(mainProgram: AstNode, importedPrograms: List<AstNode>): AstNode {
+        // 合并所有程序的主体
+        val allBodies = mutableListOf<AstNode>()
+        
+        // 添加主程序的主体
+        val mainBody = mainProgram.getNodes("body")
+        allBodies.addAll(mainBody)
+        
+        // 添加导入程序的主体
+        for (importedProgram in importedPrograms) {
+            val importedBody = importedProgram.getNodes("body")
+            allBodies.addAll(importedBody)
+        }
+
+        // 创建新的合并程序
+        val mergedData = mainProgram.toJsonObject().toMutableMap()
+        val bodyArray = buildJsonArray {
+            allBodies.forEach { body ->
+                add(body.toJsonObject())
+            }
+        }
+        mergedData["body"] = bodyArray
+        
+        return AstNode(
+            type = mainProgram.type,
+            data = JsonObject(mergedData)
         )
     }
 
@@ -146,5 +260,6 @@ data class ParseResult(
     val astJsonString: String,
     val program: AstNode,
     val inputPath: String,
-    val sourceCode: String
+    val sourceCode: String,
+    val importedFiles: List<ParseResult> = emptyList()
 )

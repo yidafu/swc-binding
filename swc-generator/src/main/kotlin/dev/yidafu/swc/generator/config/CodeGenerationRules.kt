@@ -25,10 +25,10 @@ object CodeGenerationRules {
     val propertyTypeOverrides = mapOf(
         "global_defs" to KotlinType.Generic("Map", listOf(KotlinType.StringType, KotlinType.StringType)),
         "targets" to KotlinType.Generic("Map", listOf(KotlinType.StringType, KotlinType.StringType)),
-        "top_retain" to KotlinType.Booleanable(KotlinType.StringType),
-        "pure_getters" to KotlinType.Booleanable(KotlinType.StringType),
-        "toplevel" to KotlinType.Booleanable(KotlinType.StringType),
-        "sequences" to KotlinType.Boolean
+        "sequences" to KotlinType.Boolean,
+        "toplevel" to KotlinType.Nullable(KotlinType.StringType),
+        "pureGetters" to KotlinType.Nullable(KotlinType.StringType),
+        "topRetain" to KotlinType.Nullable(KotlinType.StringType)
     )
 
     // ==================== 命名规则 ====================

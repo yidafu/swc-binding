@@ -134,10 +134,30 @@ fun AstNode.getTypeReferenceName(): String? {
     return when {
         typeName.isIdentifier() -> typeName.getIdentifierValue()
         typeName.type == "TsQualifiedName" -> {
-            // 对于 qualified name，获取最右侧的标识符
-            typeName.getNode("right")?.getIdentifierValue()
+            // 对于 qualified name，递归构建完整的限定名
+            buildQualifiedName(typeName)
         }
         else -> null
+    }
+}
+
+/**
+ * 构建 TsQualifiedName 的完整限定名
+ */
+private fun buildQualifiedName(node: AstNode): String? {
+    val left = node.getNode("left")
+    val right = node.getNode("right")?.getIdentifierValue() ?: return null
+    
+    return when {
+        left?.isIdentifier() == true -> {
+            val leftName = left.getIdentifierValue() ?: return null
+            "$leftName.$right"
+        }
+        left?.type == "TsQualifiedName" -> {
+            val leftQualified = buildQualifiedName(left) ?: return null
+            "$leftQualified.$right"
+        }
+        else -> right
     }
 }
 

@@ -163,6 +163,12 @@ object KotlinPoetConverter {
             }
         }
 
+        // 添加嵌套类
+        decl.nestedClasses.forEach { nestedClass ->
+            val nestedTypeSpec = convertClassDeclaration(nestedClass, interfaceNames)
+            builder.addType(nestedTypeSpec)
+        }
+
         // 添加文档
         decl.kdoc?.let { builder.addKdoc(it.cleanKdoc()) }
 
@@ -355,6 +361,9 @@ object KotlinPoetConverter {
      * 添加类修饰符
      */
     private fun addClassModifiers(builder: TypeSpec.Builder, modifier: ClassModifier) {
+        // 所有顶级声明都应该是 public
+        builder.addModifiers(KModifier.PUBLIC)
+        
         when (modifier) {
             is ClassModifier.SealedInterface -> builder.addModifiers(KModifier.SEALED)
             is ClassModifier.SealedClass -> builder.addModifiers(KModifier.SEALED)
@@ -369,6 +378,9 @@ object KotlinPoetConverter {
      * 添加属性修饰符
      */
     private fun addPropertyModifiers(builder: PropertySpec.Builder, modifier: PropertyModifier) {
+        // 所有属性都应该是 public
+        builder.addModifiers(KModifier.PUBLIC)
+        
         when (modifier) {
             is PropertyModifier.ConstVal -> {
                 builder.addModifiers(KModifier.CONST)

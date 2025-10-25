@@ -13,6 +13,7 @@ import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.processor.KotlinADTProcessorFactory
 import dev.yidafu.swc.generator.transformer.processors.TransformContext
 import dev.yidafu.swc.generator.util.Logger
+import kotlinx.serialization.json.Json
 
 /**
  * 类型转换器
@@ -31,10 +32,21 @@ class TypeTransformer(
             try {
                 Logger.debug("开始类型转换...")
 
-                // 创建 AST 访问器
+                // 创建 AST 访问器 - 使用合并后的 AST
                 val visitor = PerformanceMonitor.measure("ast_visitor_creation") {
-                    TsAstVisitor(parseResult.astJsonString).apply { visit() }
+                    // 将合并后的程序转换回 JSON 字符串
+                    val mergedJsonString = parseResult.program.toJsonObject().toString()
+                    TsAstVisitor(mergedJsonString).apply { visit() }
                 }
+
+                // 调试：检查合并后的 AST 是否包含 Assumptions
+                val allBodies = parseResult.program.getNodes("body")
+                Logger.debug("合并后的 AST 包含 ${allBodies.size} 个声明")
+                val assumptionsNodes = allBodies.filter { 
+                    it.type == "TsInterfaceDeclaration" && 
+                    it.getNode("id")?.getString("value")?.contains("Assumptions") == true 
+                }
+                Logger.debug("找到 ${assumptionsNodes.size} 个 Assumptions 接口节点")
 
                 // 新的 TypeScript ADT 提取阶段
                 val tsAdtExtractor = TypeScriptADTExtractor(visitor)

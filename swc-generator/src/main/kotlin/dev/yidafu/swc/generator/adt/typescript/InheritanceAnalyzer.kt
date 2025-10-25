@@ -220,6 +220,18 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration>)
     }
 
     /**
+     * 根据名称获取声明
+     */
+    fun getDeclaration(name: String): TypeScriptDeclaration? {
+        return declarations.find { 
+            when (it) {
+                is TypeScriptDeclaration.InterfaceDeclaration -> it.name == name
+                is TypeScriptDeclaration.TypeAliasDeclaration -> it.name == name
+            }
+        }
+    }
+
+    /**
      * 生成继承关系统计
      */
     fun generateStats(): String {

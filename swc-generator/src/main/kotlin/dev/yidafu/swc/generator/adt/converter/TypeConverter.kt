@@ -116,14 +116,23 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
         return when {
             validTypes.isEmpty() -> KotlinTypeFactory.nothing()
             validTypes.size == 1 -> validTypes.first()
-            validTypes.size in 2..4 -> {
-                // 检查是否是 Booleanable 类型
+            validTypes.size == 2 -> {
+                // 检查是否是特定类型的联合，应该简化为非布尔类型
                 val booleanType = validTypes.find { it is KotlinType.Boolean }
-                if (booleanType != null && validTypes.size == 2) {
-                    val otherType = validTypes.find { it !is KotlinType.Boolean } ?: KotlinTypeFactory.any()
-                    return KotlinTypeFactory.booleanable(otherType)
+                val nonBooleanType = validTypes.find { it !is KotlinType.Boolean }
+                
+                when {
+                    booleanType != null && nonBooleanType != null -> {
+                        // 对于 TerserCompressOptions | boolean 这样的联合，取非布尔类型
+                        nonBooleanType
+                    }
+                    else -> {
+                        // 其他情况转换为 Union 类型
+                        KotlinTypeFactory.union(*validTypes.toTypedArray())
+                    }
                 }
-
+            }
+            validTypes.size in 3..4 -> {
                 // 转换为 Union 类型
                 KotlinTypeFactory.union(*validTypes.toTypedArray())
             }
@@ -184,8 +193,10 @@ class TypeConverter(private val config: SwcGeneratorConfig) {
      * 转换类型字面量
      */
     private fun convertTypeLiteral(typeLiteral: TypeScriptType.TypeLiteral): KotlinType {
-        // 对于类型字面量，通常需要创建新的类型
-        // 这里返回一个占位符，实际处理在其他地方
+        // 对于类型字面量，需要根据上下文决定如何处理
+        // 1. 如果是顶级类型别名，应该生成接口
+        // 2. 如果是属性类型，应该生成嵌套接口
+        // 这里返回一个占位符，实际处理在 DeclarationConverter 中
         return KotlinTypeFactory.simple("TypeLiteral")
     }
 

@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
  */
 sealed class KotlinType {
     data class Simple(val name: String) : KotlinType()
+    data class Nested(val parent: String, val name: String) : KotlinType()
     data class Generic(
         val name: String,
         val params: List<KotlinType>
@@ -48,6 +49,10 @@ sealed class KotlinType {
                 "String", "Int", "Boolean", "Long", "Double", "Float", "Char", "Byte", "Short", "Any", "Unit", "Nothing" -> ClassName("", name)
                 else -> ClassName("dev.yidafu.swc.generated", name)
             }
+        }
+        is Nested -> {
+            // 嵌套类型使用父类型.子类型格式
+            ClassName("dev.yidafu.swc.generated", parent, name)
         }
         is Generic -> {
             val baseClassName = when (name) {
@@ -98,6 +103,7 @@ sealed class KotlinType {
      */
     fun toTypeString(): String = when (this) {
         is Simple -> name
+        is Nested -> "$parent.$name"
         is Generic -> buildString {
             append(name)
             append('<')

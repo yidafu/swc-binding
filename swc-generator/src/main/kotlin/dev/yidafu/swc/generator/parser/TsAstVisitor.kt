@@ -10,6 +10,7 @@ class TsAstVisitor(jsonString: String) {
     private val program = AstNode.fromJson(jsonString)
     private val interfaces = mutableListOf<AstNode>()
     private val typeAliases = mutableListOf<AstNode>()
+    private val imports = mutableListOf<AstNode>()
 
     // 性能优化：添加索引映射，将 O(n) 查找优化为 O(1)
     private val interfaceMap = mutableMapOf<String, AstNode>()
@@ -54,6 +55,11 @@ class TsAstVisitor(jsonString: String) {
                     typeAliasMap[name] = item
                 }
                 Logger.verbose("发现 type alias: $name", 8)
+            }
+            "ImportDeclaration", "TsImportDeclaration" -> {
+                imports.add(item)
+                val source = extractImportSource(item)
+                Logger.verbose("发现 import: $source", 8)
             }
             // 增强: 支持多种 export 形式
             "ExportDeclaration", "TsExportDeclaration", "ExportNamedDeclaration" -> {
@@ -179,5 +185,29 @@ class TsAstVisitor(jsonString: String) {
      */
     fun findTypeAlias(name: String): AstNode? {
         return typeAliasMap[name]
+    }
+
+    /**
+     * 获取所有 import 声明
+     */
+    fun getImports(): List<AstNode> {
+        return imports
+    }
+
+    /**
+     * 提取 import 源路径
+     */
+    private fun extractImportSource(importNode: AstNode): String? {
+        return when (importNode.type) {
+            "ImportDeclaration" -> {
+                val source = importNode.getNode("source")
+                source?.getString("value")
+            }
+            "TsImportDeclaration" -> {
+                val source = importNode.getNode("source")
+                source?.getString("value")
+            }
+            else -> null
+        }
     }
 }
