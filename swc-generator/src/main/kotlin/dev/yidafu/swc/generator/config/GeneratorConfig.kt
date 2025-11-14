@@ -45,7 +45,56 @@ data class ClassModifiersConfig(
 @Serializable
 data class NamingRulesConfig(
     // kotlinKeywords 已移至 CodeGenerationRules.kt
-    val literalOperators: Map<String, String> = emptyMap()
+    val literalOperators: Map<String, String> = mapOf(
+        "+" to "Addition",
+        "+=" to "AdditionAssignment",
+        "=" to "Assignment",
+        "&" to "BitwiseAND",
+        "&=" to "BitwiseANDAssignment",
+        "~" to "BitwiseNOT",
+        "|" to "BitwiseOR",
+        "|=" to "BitwiseORAssignment",
+        "^" to "BitwiseXOR",
+        "^=" to "BitwiseXORAssignment",
+        "," to "CommaOperator",
+        "ternary" to "Conditional",
+        "--" to "Decrement",
+        "/" to "Division",
+        "/=" to "DivisionAssignment",
+        "==" to "Equality",
+        "**" to "Exponentiation",
+        "**=" to "ExponentiationAssignment",
+        ">" to "GreaterThan",
+        ">=" to "GreaterThanOrEqual",
+        " " to "GroupingOperator",
+        "++" to "Increment",
+        "!=" to "Inequality",
+        "<<" to "LeftShift",
+        "<<=" to "LeftShiftAssignment",
+        "<" to "LessThan",
+        "<=" to "LessThanOrEqual",
+        "&&" to "LogicalAND",
+        "&&=" to "LogicalANDAssignment",
+        "!" to "LogicalNOT",
+        "||" to "LogicalOR",
+        "||=" to "LogicalORAssignment",
+        "*" to "Multiplication",
+        "*=" to "MultiplicationAssignment",
+        "??=" to "NullishCoalescingAssignment",
+        "??" to "NullishCoalescingOperator",
+        "?." to "OptionalChaining",
+        "%" to "Remainder",
+        "%=" to "RemainderAssignment",
+        ">>" to "RightShift",
+        ">>=" to "RightShiftAssignment",
+        "..." to "SpreadSyntax",
+        "===" to "StrictEquality",
+        "!==" to "StrictInequality",
+        "-" to "Subtraction",
+        "-=" to "SubtractionAssignment",
+        ">>>" to "UnsignedRightShift",
+        ">>>=" to "UnsignedRightShiftAssignment"
+    )
 )
 
 /**

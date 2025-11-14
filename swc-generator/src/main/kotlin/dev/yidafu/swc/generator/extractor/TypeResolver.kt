@@ -1,10 +1,10 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.adt.converter.TypeConverter
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.adt.typescript.*
-import dev.yidafu.swc.generator.config.ConfigLoader
+import dev.yidafu.swc.generator.converter.type.TypeConverter
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.result.*
+import dev.yidafu.swc.generator.model.typescript.*
+import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.*
 
@@ -14,7 +14,7 @@ import dev.yidafu.swc.generator.util.*
  * 专注于纯 TypeScript 类型提取，不包含 Kotlin 特定逻辑
  */
 object TypeResolver {
-    private val config by lazy { ConfigLoader.loadConfig() }
+    private val config by lazy { Configuration.default() }
 
     val typeAliasMap = mutableMapOf<String, String>()
 
@@ -59,7 +59,8 @@ object TypeResolver {
     fun resolveType(tsType: AstNode?): String {
         return extractTypeScriptType(tsType)
             .flatMap { tsType ->
-                TypeConverter.convert(tsType)
+                val converter = TypeConverter(Configuration.default())
+                converter.convert(tsType)
             }
             .map { it.toTypeString() }
             .getOrDefault("Any")
@@ -230,7 +231,8 @@ object TypeResolver {
 
         val typeAnnotation = propSig.getNode("typeAnnotation")?.getNode("typeAnnotation")
         val tsType = extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
-        val kotlinType = TypeConverter.convert(tsType).getOrDefault(KotlinType.Any)
+        val converter = TypeConverter(Configuration.default())
+        val kotlinType = converter.convert(tsType).getOrDefault(KotlinType.Any)
 
         return KotlinDeclaration.PropertyDecl(
             name = propName,

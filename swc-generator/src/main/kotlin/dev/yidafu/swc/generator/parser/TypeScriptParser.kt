@@ -1,9 +1,9 @@
 package dev.yidafu.swc.generator.parser
 
 import dev.yidafu.swc.SwcNative
-import dev.yidafu.swc.generator.adt.result.ErrorCode
-import dev.yidafu.swc.generator.adt.result.GeneratorResult
-import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.result.ErrorCode
+import dev.yidafu.swc.generator.result.GeneratorResult
+import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.tsParseOptions

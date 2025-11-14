@@ -1,12 +1,10 @@
 package dev.yidafu.swc.generator.cli
 
 import dev.yidafu.swc.SwcNative
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.codegen.CodeEmitter
-import dev.yidafu.swc.generator.codegen.GeneratorConfig
-import dev.yidafu.swc.generator.config.GlobalConfig
-import dev.yidafu.swc.generator.parser.TypeScriptParser
-import dev.yidafu.swc.generator.transformer.TypeTransformer
+import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.ConfigurationLoader
+import dev.yidafu.swc.generator.core.GeneratorPipeline
+import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.util.*
 import kotlinx.cli.*
 import java.nio.file.Paths
@@ -59,16 +57,25 @@ fun main(args: Array<String>) {
         if (debug) {
             System.setProperty("DEBUG", "true")
         }
-        GlobalConfig.reload(configFile)
+        // 加载配置
+        val configLoader = ConfigurationLoader()
+        val configResult = configLoader.loadFromFile(configFile)
+        
+        configResult.onFailure { error ->
+            Logger.error("配置加载失败: ${error.message}")
+            exitProcess(1)
+        }
+        
+        val configuration = configResult.getOrThrow()
 
         // 确定输入文件（优先级：-i 参数 > 位置参数 > 配置文件默认值）
-        val inputPath = input ?: inputFile ?: GlobalConfig.config.paths.defaultInputPath
+        val inputPath = input ?: inputFile ?: configuration.input.inputPath
 
         // 使用新架构
-        Logger.header("SWC Generator Kotlin (TypeScript ADT Architecture)")
+        Logger.header("SWC Generator Kotlin (New Pipeline Architecture)")
         Logger.separator()
 
-        val generator = SwcGenerator()
+        val generator = SwcGenerator(configuration)
         val result = generator.run(inputPath ?: "test-simple.d.ts")
 
         if (result.isSuccess()) {
@@ -102,51 +109,15 @@ fun main(args: Array<String>) {
 /**
  * 新架构的 swc-generator 主类
  */
-class SwcGenerator(customEmitterConfig: GeneratorConfig? = null) {
-    private val swc = SwcNative()
-
-    private val parser = TypeScriptParser(swc, GlobalConfig.config)
-    private val transformer = TypeTransformer(GlobalConfig.config)
-    private val emitter = CodeEmitter(
-        customEmitterConfig ?: createEmitterConfig(),
-        GlobalConfig.config
-    )
-
-    /**
-     * 创建发射器配置
-     */
-    private fun createEmitterConfig(): GeneratorConfig {
-        val projectRoot = Paths.get("").toAbsolutePath().parent.toString()
-        val outputTypesPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt"
-        val outputSerializerPath = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt"
-        val outputDslDir = "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
-
-        return GeneratorConfig(
-            outputTypesPath = outputTypesPath,
-            outputSerializerPath = outputSerializerPath,
-            outputDslDir = outputDslDir,
-            dryRun = false
-        )
-    }
+class SwcGenerator(private val configuration: Configuration) {
+    
+    private val pipeline = GeneratorPipeline.createDefault(configuration)
 
     fun run(inputPath: String): GeneratorResult<Unit> {
         Logger.setTotalSteps(6)
         Logger.startTimer("total")
 
-        return parser.parse(inputPath)
-            .flatMap { parseResult ->
-                Logger.step("解析 TypeScript 文件...")
-                Logger.info("✓ 解析完成: ${parseResult.inputPath}")
-                GeneratorResultFactory.success(parseResult)
-            }
-            .flatMap { parseResult ->
-                Logger.step("提取 TypeScript ADT...")
-                transformer.transform(parseResult)
-            }
-            .flatMap { transformResult ->
-                Logger.step("生成 Kotlin 代码...")
-                emitter.emit(transformResult)
-            }
+        return pipeline.execute(inputPath)
             .also {
                 val totalTime = Logger.endTimer("total")
                 Logger.info("总耗时: ${totalTime}ms")

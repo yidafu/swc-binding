@@ -1,9 +1,9 @@
 package dev.yidafu.swc.generator.util
 
-import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.extensions.getAllProperties
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.extensions.isLeafNode

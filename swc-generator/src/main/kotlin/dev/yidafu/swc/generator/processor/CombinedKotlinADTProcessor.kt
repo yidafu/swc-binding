@@ -1,8 +1,8 @@
 package dev.yidafu.swc.generator.processor
 
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.adt.result.GeneratorResult
-import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.result.GeneratorResult
+import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.Logger
 

@@ -26,6 +26,9 @@ dependencies {
 
     // YAML 配置解析
     implementation("com.charleskorn.kaml:kaml:0.55.0")
+    
+    // Kotlin 反射支持（kaml 需要）
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")

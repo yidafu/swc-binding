@@ -1,8 +1,9 @@
 package dev.yidafu.swc.generator.codegen
 
-import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.result.*
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.generator.DslGenerator
 import dev.yidafu.swc.generator.codegen.generator.SerializerGenerator
 import dev.yidafu.swc.generator.codegen.generator.TypesGenerator
@@ -19,6 +20,7 @@ class CodeEmitter(
     private val config: GeneratorConfig,
     private val generatorConfig: SwcGeneratorConfig
 ) {
+    private val inheritanceAnalyzer = InheritanceAnalyzer()
 
     /**
      * 生成代码文件
@@ -66,7 +68,7 @@ class CodeEmitter(
             config.outputTypesPath?.let { path ->
                 val generator = TypesGenerator(transformResult.classDecls.toMutableList())
                 // 添加类型别名
-                transformResult.typeAliases.forEach { typeAlias ->
+                transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->
                     generator.addTypeAlias(typeAlias)
                 }
                 generator.writeToFile(path)
@@ -81,7 +83,7 @@ class CodeEmitter(
     private fun emitSerializer(transformResult: TransformResult) {
         Logger.debug("生成 serializer.kt...")
 
-        val analyzer = InheritanceAnalyzerHolder.get()
+        val analyzer = inheritanceAnalyzer
         val nodeTypes = analyzer.findAllGrandChildren("Node") + listOf("Node")
         val hasSpanTypes = analyzer.findAllGrandChildren("HasSpan") + listOf("HasSpan")
         val astNodeList = (nodeTypes + hasSpanTypes).distinct()

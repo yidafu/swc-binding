@@ -1,9 +1,9 @@
 package dev.yidafu.swc.generator.extensions
 
-import dev.yidafu.swc.generator.adt.kotlin.ClassModifier
-import dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl
 typealias PropertyDecl = KotlinDeclaration.PropertyDecl
@@ -27,12 +27,12 @@ fun ClassDecl.isNodeDescendant(cache: InheritanceAnalysisCache): Boolean {
 }
 
 /**
- * Check if this class declaration is a leaf node (Node descendant with no children)
+ * Check if this class declaration is a leaf node (interface with no children)
+ * 修复：移除 Node 后代的限制，为所有没有子类的接口生成实现类
  */
 fun ClassDecl.isLeafNode(analyzer: InheritanceAnalyzer): Boolean {
     val children = analyzer.findAllChildrenByParent(this.name)
-    val isNodeDescendant = analyzer.isDescendantOf(this.name, "Node")
-    return isNodeDescendant && children.isEmpty()
+    return children.isEmpty()
 }
 
 /**

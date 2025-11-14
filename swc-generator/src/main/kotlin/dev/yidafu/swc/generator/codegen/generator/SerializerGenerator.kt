@@ -1,7 +1,7 @@
 package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
@@ -76,7 +76,7 @@ class SerializerGenerator {
     private fun buildPolymorphicMap(astNodeList: List<String>): Map<String, List<String>> {
         return astNodeList
             .associateWith { key ->
-                val analyzer = InheritanceAnalyzerHolder.get()
+                val analyzer = InheritanceAnalyzer()
                 analyzer.findAllGrandChildren(key).filter { it != key }
             }
             .filterValues { it.isNotEmpty() }

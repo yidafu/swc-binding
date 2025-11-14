@@ -27,7 +27,7 @@ object KotlinPoetGenerator {
     /**
      * 从 ClassDecl 创建 TypeSpec
      */
-    fun createTypeSpec(classDecl: dev.yidafu.swc.generator.adt.kotlin.KotlinDeclaration.ClassDecl): TypeSpec {
+    fun createTypeSpec(classDecl: dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration.ClassDecl): TypeSpec {
         return try {
             KotlinPoetConverter.convertDeclaration(classDecl)
         } catch (e: Exception) {

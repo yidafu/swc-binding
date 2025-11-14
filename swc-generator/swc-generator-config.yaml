@@ -1,16 +1,27 @@
 # SWC Generator 配置文件
-classModifiers:
-  toKotlinClass:
-    - "Span"
-  propsToSnakeCase:
-    - "JsFormatOptions"
-  literalUnionToTypealias:
-    - "JscTarget"
-    - "TerserEcmaVersion"
-    - "TruePlusMinus"
+# 仅包含常用配置项，其他使用默认值
 
-paths:
-  defaultInputPath: "/Users/yidafu/github/swc-binding/swc-generator/node_modules/.pnpm/@swc+types@0.1.25/node_modules/@swc/types/index.d.ts"
-  defaultOutputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types/types.kt"
-  defaultOutputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types/serializer.kt"
-  defaultOutputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
+# 输入配置
+input:
+  inputPath: "node_modules/@swc/types/index.d.ts"
+
+# 输出配置
+output:
+  outputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt"
+  outputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt"
+  outputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
+
+# 类型映射规则（仅保留实际需要覆盖的属性类型）
+rules:
+  classModifiers:
+    literalUnionToTypealias:
+      - "JscTarget"
+      - "TruePlusMinus"
+  typeMapping:
+    propertyTypeOverrides:
+      global_defs: "Map<String, String>"
+      targets: "Map<String, String>"
+      sequences: "Boolean"
+      toplevel: "String?"
+      pureGetters: "String?"
+      topRetain: "String?"

@@ -1,6 +1,6 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.adt.typescript.*
+import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.Logger
 

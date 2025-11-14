@@ -1,14 +1,13 @@
 package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.adt.kotlin.isValidKotlinTypeName
-import dev.yidafu.swc.generator.adt.kotlin.wrapReservedWord
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.model.kotlin.isValidKotlinTypeName
+import dev.yidafu.swc.generator.model.kotlin.wrapReservedWord
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.model.KotlinExtensionFun
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.config.CodeGenerationRules
-import dev.yidafu.swc.generator.config.HardcodedRules
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -27,7 +26,7 @@ class DslGenerator(
      */
     private fun addExtensionFun(extFun: KotlinExtensionFun) {
         if (extFun.receiver != extFun.funName) {
-            if (HardcodedRules.shouldSkipDslReceiver(extFun.receiver)) return
+            if (CodeGenerationRules.shouldSkipDslReceiver(extFun.receiver)) return
             if (extFun.receiver == extFun.funName.replace("Impl", "")) return
 
             // 验证类型名称
@@ -47,7 +46,7 @@ class DslGenerator(
     fun generateExtensionFunctions() {
         val needGenerateDslClassList = classDecls
             .filter {
-                val analyzer = InheritanceAnalyzerHolder.get()
+                val analyzer = InheritanceAnalyzer()
                 analyzer.findAllChildrenByParent(it.name).isNotEmpty()
             }
             .map { it.name }
@@ -91,7 +90,7 @@ class DslGenerator(
               */
         """.trimIndent()
 
-        val analyzer = InheritanceAnalyzerHolder.get()
+        val analyzer = InheritanceAnalyzer()
         return when (val type = prop.type) {
             is KotlinType.Union -> {
                 type.types.flatMap { unionType ->
@@ -112,7 +111,7 @@ class DslGenerator(
      * 创建扩展函数列表
      */
     private fun createExtensionFunList(key: String) {
-        val analyzer = InheritanceAnalyzerHolder.get()
+        val analyzer = InheritanceAnalyzer()
         analyzer.findAllGrandChildren(key).forEach { child ->
             addExtensionFunWrapper(
                 KotlinExtensionFun(
@@ -132,7 +131,7 @@ class DslGenerator(
      * 添加扩展函数（带包装逻辑）
      */
     private fun addExtensionFunWrapper(extFun: KotlinExtensionFun) {
-        if (HardcodedRules.shouldSkipDslReceiver(extFun.receiver)) return
+        if (CodeGenerationRules.shouldSkipDslReceiver(extFun.receiver)) return
         if (extFun.receiver == extFun.funName.replace("Impl", "")) return
 
         // 过滤掉包含非法字符的类型名称

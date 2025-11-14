@@ -1,7 +1,7 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.adt.result.*
-import dev.yidafu.swc.generator.adt.typescript.*
+import dev.yidafu.swc.generator.result.*
+import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.Logger
 
@@ -59,6 +59,9 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
             )
 
             Logger.debug("  类型参数: ${typeParameters.size}, 继承: ${extends.size}, 成员: ${members.size}", 6)
+            if (name == "Constructor") {
+                Logger.debug("  Constructor 接口的 extends: ${extends.map { it.name }}", 8)
+            }
 
             GeneratorResultFactory.success(interfaceDecl)
         } catch (e: Exception) {
@@ -159,6 +162,10 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
                 param.getString("name") != null -> param.getString("name")
                 // 方式2: Identifier 对象的 value 字段
                 param.getNode("name")?.getString("value") != null -> param.getNode("name")?.getString("value")
+                // 方式3: 尝试从 type 字段获取
+                param.getString("type") != null -> param.getString("type")
+                // 方式4: 尝试从 value 字段获取
+                param.getString("value") != null -> param.getString("value")
                 else -> null
             } ?: return null
 
@@ -175,6 +182,7 @@ class TypeScriptADTExtractor(private val visitor: TsAstVisitor) {
             )
         } catch (e: Exception) {
             Logger.debug("    获取类型参数失败: ${e.message}", 10)
+            Logger.debug("    错误详情: ${e.stackTraceToString()}", 12)
             null
         }
     }

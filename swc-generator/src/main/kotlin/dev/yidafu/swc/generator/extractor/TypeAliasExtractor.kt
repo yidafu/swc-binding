@@ -1,8 +1,8 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.config.CodeGenerationRules
-import dev.yidafu.swc.generator.config.GlobalConfig
+import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.Logger
 
@@ -79,8 +79,8 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
             literal.isStringLiteral() -> {
                 val value = literal.getStringLiteralValue() ?: return null
 
-                // 先检查 literalNameMap（注意：key 是原始值，不是大写）
-                val literalNameMap = GlobalConfig.config.literalNameMap
+                // 使用字面量名称映射
+                val literalNameMap = SwcGeneratorConfig().literalNameMap
                 val propertyName = literalNameMap[value] ?: literalNameMap[value.uppercase()] ?: sanitizeLiteralName(value)
 
                 // 验证生成的属性名是否有效

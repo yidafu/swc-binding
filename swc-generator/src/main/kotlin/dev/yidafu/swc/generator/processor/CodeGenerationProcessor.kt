@@ -1,11 +1,11 @@
 package dev.yidafu.swc.generator.processor
 
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.adt.result.ErrorCode
-import dev.yidafu.swc.generator.adt.result.GeneratorResult
-import dev.yidafu.swc.generator.adt.result.GeneratorResultFactory
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalysisCache
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.result.ErrorCode
+import dev.yidafu.swc.generator.result.GeneratorResult
+import dev.yidafu.swc.generator.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
@@ -59,7 +59,7 @@ class CodeGenerationProcessor : KotlinADTProcessor {
      * 使用缓存优化性能
      */
     private fun generateImplementationClasses(classDecls: List<KotlinDeclaration.ClassDecl>): List<KotlinDeclaration.ClassDecl> {
-        val analyzer = InheritanceAnalyzerHolder.get()
+        val analyzer = InheritanceAnalyzer()
 
         // 只处理接口
         val interfaces = classDecls.filter { it.modifier == ClassModifier.Interface }

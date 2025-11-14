@@ -2,9 +2,8 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import dev.yidafu.swc.generator.adt.kotlin.*
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzer
-import dev.yidafu.swc.generator.adt.typescript.InheritanceAnalyzerHolder
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
@@ -66,7 +65,9 @@ class TypesGenerator(
                 "dev.yidafu.swc" to "Union.U3", "dev.yidafu.swc" to "Union.U4",
                 "kotlinx.serialization" to "SerialName",
                 "kotlinx.serialization" to "Serializable",
-                "kotlinx.serialization.json" to "JsonClassDiscriminator"
+                "kotlinx.serialization.json" to "JsonClassDiscriminator",
+                "kotlin" to "Int",
+                "kotlin" to "Nothing"
             )
 
             // 添加注解类和类型别名
@@ -94,7 +95,7 @@ class TypesGenerator(
     private fun generateClasses(fileBuilder: FileSpec.Builder) {
         Logger.debug("  开始生成类，总类数: ${classDecls.size}", 4)
 
-        val analyzer = InheritanceAnalyzerHolder.get()
+        val analyzer = InheritanceAnalyzer()
 
         // 1. 生成所有接口（保留继承关系）
         val allInterfaces = classDecls.filter { it.modifier == ClassModifier.Interface || it.modifier == ClassModifier.SealedInterface }
@@ -215,6 +216,7 @@ class TypesGenerator(
             modifier = ClassModifier.FinalClass,
             parents = listOf(KotlinType.Simple(interfaceDecl.name)),
             properties = processedProperties,
+            nestedClasses = emptyList(), // 实现类不应该包含嵌套接口
             annotations = listOf(
                 KotlinDeclaration.Annotation("SwcDslMarker"),
                 KotlinDeclaration.Annotation("Serializable"),
@@ -399,47 +401,22 @@ class TypesGenerator(
     }
 
     /**
-     * 添加所有类型别名（包括硬编码的实用工具类型）
+     * 添加所有类型别名（仅从 TypeScript 提取的类型别名）
      */
     private fun addAllTypeAliases(fileBuilder: FileSpec.Builder) {
         Logger.debug("  添加所有类型别名...", 6)
 
-        // 创建硬编码的实用工具类型
-        val hardcodedTypeAliases = listOf(
-            TypeAliasSpec.builder("ToSnakeCase", Any::class)
-                .addTypeVariable(TypeVariableName("T"))
-                .build(),
-            TypeAliasSpec.builder("ToSnakeCaseProperties", Any::class)
-                .addTypeVariable(TypeVariableName("T"))
-                .build()
-        )
-
-        // 创建所有类型别名的映射（名称 -> TypeAliasSpec）
-        // 使用 LinkedHashMap 保持类型别名顺序，确保生成代码的确定性
-        val allTypeAliases = LinkedHashMap<String, TypeAliasSpec>()
-
-        // 添加硬编码的类型别名
-        hardcodedTypeAliases.forEach { typeAlias ->
-            allTypeAliases[typeAlias.name] = typeAlias
-        }
-
-        // 添加从 TypeScript 提取的类型别名
+        // 只添加从 TypeScript 提取的类型别名
         typeAliases.forEach { typeAlias ->
             try {
                 val typeAliasSpec = KotlinPoetConverter.convertTypeAliasDeclaration(typeAlias)
-                // 如果类型别名已存在，会覆盖（硬编码的优先）
-                allTypeAliases[typeAliasSpec.name] = typeAliasSpec
+                fileBuilder.addTypeAlias(typeAliasSpec)
             } catch (e: Exception) {
                 Logger.warn("转换类型别名失败: ${typeAlias.name}, ${e.message}")
             }
         }
 
-        // 所有类型别名按名称排序，去掉硬编码顺序
-        allTypeAliases.toSortedMap().values.forEach { typeAliasSpec ->
-            fileBuilder.addTypeAlias(typeAliasSpec)
-        }
-
-        Logger.debug("  ✓ 添加 ${allTypeAliases.size} 个类型别名", 8)
+        Logger.debug("  ✓ 添加 ${typeAliases.size} 个类型别名", 8)
     }
 
     /**

@@ -1,6 +1,6 @@
 package dev.yidafu.swc.generator.config
 
-import dev.yidafu.swc.generator.adt.kotlin.*
+import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.util.Logger
 
 /**
