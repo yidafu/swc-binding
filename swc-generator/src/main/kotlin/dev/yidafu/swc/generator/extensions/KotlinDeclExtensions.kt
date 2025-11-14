@@ -1,9 +1,10 @@
 package dev.yidafu.swc.generator.extensions
 
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
-import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl
 typealias PropertyDecl = KotlinDeclaration.PropertyDecl
@@ -90,21 +91,31 @@ fun ClassDecl.getAllPropertiesForImpl(
     // Check cache first
     propertyCache[this.name]?.let { return it }
 
-    val allProperties = LinkedHashSet<PropertyDecl>()
+    val allProperties = LinkedHashMap<String, PropertyDecl>()
 
-    // Add current interface properties
-    allProperties.addAll(this.properties)
-
-    // Always add inherited properties for implementation class generation
-    val parentInterfaces = analyzer.findAllParentsByChild(this.name)
-    parentInterfaces.forEach { parentName ->
-        val parentInterface = allDecls.find { it.name == parentName }
-        if (parentInterface != null) {
-            allProperties.addAll(parentInterface.getAllPropertiesForImpl(analyzer, allDecls, propertyCache))
+    fun addProperty(property: PropertyDecl) {
+        val normalizedName = property.name.removeSurrounding("`")
+        if (!allProperties.containsKey(normalizedName)) {
+            allProperties[normalizedName] = property
         }
     }
 
-    val result = allProperties.toList()
+    // Add current interface properties first (preferred)
+    this.properties.forEach { addProperty(it) }
+
+    // Always add inherited properties for implementation class generation
+    val parentInterfaces = parents.mapNotNull { parentType ->
+        when (parentType) {
+            is KotlinType.Simple -> allDecls.find { it.name == parentType.name }
+            else -> null
+        }
+    }
+    parentInterfaces.forEach { parentInterface ->
+        parentInterface.getAllPropertiesForImpl(analyzer, allDecls, propertyCache)
+            .forEach { addProperty(it) }
+    }
+
+    val result = allProperties.values.toList()
     propertyCache[this.name] = result
     return result
 }

@@ -1,13 +1,12 @@
 package dev.yidafu.swc.generator.codegen
 
-import dev.yidafu.swc.generator.model.kotlin.ClassModifier
-import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.result.*
-import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.generator.DslGenerator
 import dev.yidafu.swc.generator.codegen.generator.SerializerGenerator
 import dev.yidafu.swc.generator.codegen.generator.TypesGenerator
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.result.*
 import dev.yidafu.swc.generator.transformer.TransformResult
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
@@ -20,7 +19,6 @@ class CodeEmitter(
     private val config: GeneratorConfig,
     private val generatorConfig: SwcGeneratorConfig
 ) {
-    private val inheritanceAnalyzer = InheritanceAnalyzer()
 
     /**
      * 生成代码文件
@@ -83,19 +81,12 @@ class CodeEmitter(
     private fun emitSerializer(transformResult: TransformResult) {
         Logger.debug("生成 serializer.kt...")
 
-        val analyzer = inheritanceAnalyzer
-        val nodeTypes = analyzer.findAllGrandChildren("Node") + listOf("Node")
-        val hasSpanTypes = analyzer.findAllGrandChildren("HasSpan") + listOf("HasSpan")
-        val astNodeList = (nodeTypes + hasSpanTypes).distinct()
-
-        Logger.debug("  AST 节点类型数: ${astNodeList.size}")
-
         if (config.dryRun) {
             Logger.info("  [DRY-RUN] 将生成到: ${config.outputSerializerPath}", 2)
-            Logger.info("  [DRY-RUN] AST 节点数: ${astNodeList.size}", 2)
+            Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
         } else {
             config.outputSerializerPath?.let { path ->
-                SerializerGenerator().writeToFile(path, astNodeList)
+                SerializerGenerator().writeToFile(path, transformResult.classDecls)
                 Logger.success("  ✓ 生成 serializer.kt")
             }
         }

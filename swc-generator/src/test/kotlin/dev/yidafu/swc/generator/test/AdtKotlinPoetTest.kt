@@ -1,8 +1,8 @@
 package dev.yidafu.swc.generator.test
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.adt.kotlin.*
 import dev.yidafu.swc.generator.codegen.poet.KotlinPoetConverter
+import dev.yidafu.swc.generator.model.kotlin.*
 
 /**
  * ADT + KotlinPoet 代码生成测试

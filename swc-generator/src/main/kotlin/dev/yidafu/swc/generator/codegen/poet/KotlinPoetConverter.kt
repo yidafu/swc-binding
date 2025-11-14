@@ -139,18 +139,21 @@ object KotlinPoetConverter {
 
                 // 添加枚举条目
                 decl.enumEntries.forEach { entry ->
-                    if (entry.arguments.isNotEmpty()) {
-                        // 有参数的枚举条目，使用匿名类
+                    val hasArgs = entry.arguments.isNotEmpty()
+                    val hasAnnotations = entry.annotations.isNotEmpty()
+                    if (hasArgs || hasAnnotations) {
                         val enumBuilder = TypeSpec.anonymousClassBuilder()
 
-                        // 添加枚举条目的参数
                         entry.arguments.forEach { arg ->
                             enumBuilder.addSuperclassConstructorParameter("%L", arg.toCodeString())
                         }
 
+                        entry.annotations.forEach { annotation ->
+                            convertAnnotation(annotation)?.let { enumBuilder.addAnnotation(it) }
+                        }
+
                         builder.addEnumConstant(entry.name, enumBuilder.build())
                     } else {
-                        // 无参数的枚举条目
                         builder.addEnumConstant(entry.name)
                     }
                 }

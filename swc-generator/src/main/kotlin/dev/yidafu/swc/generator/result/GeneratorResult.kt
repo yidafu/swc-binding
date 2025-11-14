@@ -92,7 +92,6 @@ data class GeneratorError(
     }
 }
 
-
 /**
  * 生成器异常
  */

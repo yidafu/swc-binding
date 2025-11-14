@@ -1,8 +1,10 @@
 package dev.yidafu.swc.generator.converter.declaration
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.converter.type.TypeConverter
+import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeParameter
@@ -18,11 +20,14 @@ import dev.yidafu.swc.generator.util.Logger
  */
 class TypeAliasConverter(
     private val config: Configuration,
-    private val inheritanceAnalyzer: InheritanceAnalyzer? = null
+    private val inheritanceAnalyzer: InheritanceAnalyzer? = null,
+    private val unionParentRegistry: MutableMap<String, MutableSet<String>> = mutableMapOf(),
+    private val nestedTypeRegistry: MutableMap<String, String> = mutableMapOf()
 ) {
-    
-    private val typeConverter = TypeConverter(config)
-    
+    private val literalNameMap = SwcGeneratorConfig().literalNameMap
+    private val typeConverter = TypeConverter(config, nestedTypeRegistry)
+    private val forceNullableInterfaces = setOf("WasmAnalysisOptions")
+
     /**
      * 转换类型别名声明
      */
@@ -32,26 +37,18 @@ class TypeAliasConverter(
         return try {
             Logger.debug("转换类型别名声明: ${tsTypeAlias.name}", 4)
 
-            // 特殊处理：为 ToSnakeCase 和 ToSnakeCaseProperties 添加泛型参数
-            if (tsTypeAlias.name in listOf("ToSnakeCase", "ToSnakeCaseProperties")) {
-                Logger.debug("  特殊处理复杂类型别名: ${tsTypeAlias.name}", 6)
-                val kotlinTypeParams = listOf(
-                    KotlinDeclaration.TypeParameter(
-                        name = "T",
-                        variance = KotlinDeclaration.Variance.INVARIANT,
-                        constraint = null
-                    )
-                )
-                
+            val mappedAliasName = CodeGenerationRules.mapTypeName(tsTypeAlias.name)
+
+            // 特殊处理：TerserEcmaVersion 直接映射为 String
+            if (tsTypeAlias.name == "TerserEcmaVersion") {
+                Logger.debug("  特殊处理 TerserEcmaVersion -> String", 6)
                 val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
-                    name = wrapReservedWord(tsTypeAlias.name),
-                    type = KotlinTypeFactory.any(),
-                    typeParameters = kotlinTypeParams,
+                    name = wrapReservedWord(mappedAliasName),
+                    type = KotlinType.StringType,
+                    typeParameters = emptyList(),
                     annotations = emptyList(),
                     kdoc = tsTypeAlias.kdoc
                 )
-
-                Logger.debug("  类型: Any, 类型参数: ${kotlinTypeParams.size}", 6)
                 return GeneratorResultFactory.success(typeAliasDecl)
             }
 
@@ -85,7 +82,7 @@ class TypeAliasConverter(
             val kotlinTypeParams = convertTypeParameters(tsTypeAlias.typeParameters)
 
             val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
-                name = wrapReservedWord(tsTypeAlias.name),
+                name = wrapReservedWord(mappedAliasName),
                 type = kotlinType,
                 typeParameters = kotlinTypeParams,
                 annotations = emptyList(),
@@ -104,7 +101,7 @@ class TypeAliasConverter(
             )
         }
     }
-    
+
     /**
      * 转换类型参数
      */
@@ -119,7 +116,7 @@ class TypeAliasConverter(
             )
         }
     }
-    
+
     /**
      * 转换变体
      */
@@ -130,21 +127,21 @@ class TypeAliasConverter(
             Variance.CONTRAVARIANT -> KotlinDeclaration.Variance.CONTRAVARIANT
         }
     }
-    
+
     /**
      * 检查是否为字面量联合类型
      */
     private fun isLiteralUnionType(type: TypeScriptType): Boolean {
         return type is TypeScriptType.Union && type.types.all { it is TypeScriptType.Literal }
     }
-    
+
     /**
      * 检查是否为接口联合类型
      */
     private fun isInterfaceUnionType(type: TypeScriptType): Boolean {
         return type is TypeScriptType.Union && type.types.all { it is TypeScriptType.Reference }
     }
-    
+
     /**
      * 转换字面量联合类型为枚举类
      */
@@ -153,19 +150,17 @@ class TypeAliasConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         val union = tsTypeAlias.type as TypeScriptType.Union
         val enumValues = union.types.mapNotNull { type ->
-            when (type) {
-                is TypeScriptType.Literal -> {
-                    when (type.value) {
-                        is LiteralValue.StringLiteral -> type.value.value
-                        is LiteralValue.NumberLiteral -> type.value.value.toString()
-                        is LiteralValue.BooleanLiteral -> type.value.value.toString()
-                        else -> null
-                    }
-                }
-                else -> null
-            }
+            (type as? TypeScriptType.Literal)?.value
         }
-        
+        if (enumValues.size != union.types.size) {
+            Logger.warn("  字面量联合包含非字面量项，跳过枚举生成: ${tsTypeAlias.name}")
+            return GeneratorResultFactory.failure(
+                code = ErrorCode.UNSUPPORTED_TYPE,
+                message = "Literal union contains unsupported members"
+            )
+        }
+
+        val enumEntries = createEnumEntries(enumValues)
         val enumClass = KotlinDeclaration.ClassDecl(
             name = wrapReservedWord(tsTypeAlias.name),
             modifier = ClassModifier.EnumClass,
@@ -173,13 +168,71 @@ class TypeAliasConverter(
             parents = emptyList(),
             typeParameters = emptyList(),
             nestedClasses = emptyList(),
+            enumEntries = enumEntries,
             annotations = listOf(KotlinDeclaration.Annotation("Serializable")),
             kdoc = tsTypeAlias.kdoc
         )
-        
+
         return GeneratorResultFactory.success(enumClass)
     }
-    
+
+    private fun createEnumEntries(values: List<LiteralValue>): List<KotlinDeclaration.EnumEntry> {
+        val usedNames = mutableSetOf<String>()
+        return values.map { value ->
+            val serialValue = literalValueToString(value)
+            val baseName = resolveEnumEntryName(serialValue)
+            val uniqueName = generateUniqueName(baseName, usedNames)
+            KotlinDeclaration.EnumEntry(
+                name = uniqueName,
+                annotations = listOf(
+                    KotlinDeclaration.Annotation(
+                        name = "SerialName",
+                        arguments = listOf(Expression.StringLiteral(serialValue))
+                    )
+                )
+            )
+        }
+    }
+
+    private fun resolveEnumEntryName(serialValue: String): String {
+        val mapping = literalNameMap[serialValue] ?: literalNameMap[serialValue.lowercase()]
+        return mapping ?: formatEnumEntryName(serialValue)
+    }
+
+    private fun literalValueToString(value: LiteralValue): String {
+        return when (value) {
+            is LiteralValue.StringLiteral -> value.value
+            is LiteralValue.NumberLiteral -> value.value.toString()
+            is LiteralValue.BooleanLiteral -> value.value.toString()
+            is LiteralValue.NullLiteral -> "null"
+            is LiteralValue.UndefinedLiteral -> "undefined"
+        }
+    }
+
+    private fun generateUniqueName(base: String, usedNames: MutableSet<String>): String {
+        var candidate = if (base.isEmpty()) "VALUE" else base
+        var index = 1
+        while (!usedNames.add(candidate)) {
+            candidate = "${base}_${index++}"
+        }
+        return candidate
+    }
+
+    private fun formatEnumEntryName(value: String): String {
+        if (value.isEmpty()) return "VALUE"
+        val builder = StringBuilder()
+        value.forEach { ch ->
+            when {
+                ch.isLetterOrDigit() -> builder.append(ch.uppercaseChar())
+                else -> builder.append('_')
+            }
+        }
+        var result = builder.toString().trim('_')
+        if (result.isEmpty()) result = "VALUE"
+        if (result.first().isDigit()) result = "_$result"
+        return result
+    }
+
     /**
      * 转换接口联合类型为密封接口
      */
@@ -190,21 +243,31 @@ class TypeAliasConverter(
         val interfaceNames = union.types.mapNotNull { type ->
             if (type is TypeScriptType.Reference) type.name else null
         }
-        
+
+        interfaceNames.forEach { child ->
+            unionParentRegistry.getOrPut(child) { mutableSetOf() }.add(tsTypeAlias.name)
+        }
+
+        val parentTypes = unionParentRegistry[tsTypeAlias.name]
+            ?.map { parentName ->
+                KotlinTypeFactory.simple(CodeGenerationRules.mapTypeName(parentName))
+            }
+            ?: emptyList()
+
         val sealedInterface = KotlinDeclaration.ClassDecl(
             name = wrapReservedWord(tsTypeAlias.name),
             modifier = ClassModifier.SealedInterface,
             properties = emptyList(),
-            parents = emptyList(),
+            parents = parentTypes,
             typeParameters = emptyList(),
             nestedClasses = emptyList(),
             annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
             kdoc = tsTypeAlias.kdoc
         )
-        
+
         return GeneratorResultFactory.success(sealedInterface)
     }
-    
+
     /**
      * 转换类型字面量为接口
      */
@@ -213,9 +276,14 @@ class TypeAliasConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         val typeLiteral = tsTypeAlias.type as TypeScriptType.TypeLiteral
         val properties = typeLiteral.members.mapNotNull { member ->
-            convertTypeMember(member, tsTypeAlias.name)
+            val adjustedMember = if (forceNullableInterfaces.contains(tsTypeAlias.name)) {
+                member.copy(optional = true)
+            } else {
+                member
+            }
+            convertTypeMember(adjustedMember, tsTypeAlias.name)
         }
-        
+
         val interfaceDecl = KotlinDeclaration.ClassDecl(
             name = wrapReservedWord(tsTypeAlias.name),
             modifier = ClassModifier.Interface,
@@ -226,33 +294,33 @@ class TypeAliasConverter(
             annotations = emptyList(),
             kdoc = tsTypeAlias.kdoc
         )
-        
+
         return GeneratorResultFactory.success(interfaceDecl)
     }
-    
+
     /**
      * 转换类型成员为属性
      */
     private fun convertTypeMember(member: TypeMember, interfaceName: String): KotlinDeclaration.PropertyDecl? {
         val kotlinType = typeConverter.convert(member.type).getOrDefault(KotlinTypeFactory.any())
-        
+
         // 处理可空性
         val finalType = if (member.optional) {
             kotlinType.makeNullable()
         } else {
             kotlinType
         }
-        
+
         // 处理属性名
         val propertyName = wrapReservedWord(member.name)
-        
+
         // 处理只读属性
         val modifier = if (member.readonly) {
             PropertyModifier.Val
         } else {
             PropertyModifier.Var
         }
-        
+
         return KotlinDeclaration.PropertyDecl(
             name = propertyName,
             type = finalType,
@@ -261,16 +329,16 @@ class TypeAliasConverter(
             kdoc = member.kdoc
         )
     }
-    
+
     /**
      * 包装保留字
      */
     private fun wrapReservedWord(name: String): String {
         val reservedWords = setOf(
             "object", "inline", "in", "super", "class", "interface", "fun",
-            "val", "var", "when", "is", "as", "type", "import", "package"
+            "val", "var", "when", "is", "as", "import", "package"
         )
-        
+
         return if (reservedWords.contains(name.lowercase())) {
             "`$name`"
         } else {

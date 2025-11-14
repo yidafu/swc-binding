@@ -1,19 +1,11 @@
 package dev.yidafu.swc.generator.config
 
+import com.charleskorn.kaml.Yaml
 import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.util.Logger
-import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.decodeStructure
-import kotlinx.serialization.encoding.encodeStructure
 import java.io.File
 import java.nio.file.Paths
 
@@ -22,7 +14,7 @@ import java.nio.file.Paths
  * 负责从各种源加载配置
  */
 class ConfigurationLoader {
-    
+
     /**
      * YAML 配置数据类
      * 用于序列化/反序列化 YAML 配置文件
@@ -34,14 +26,14 @@ class ConfigurationLoader {
         val rules: YamlRulesConfig? = null,
         val behavior: YamlBehaviorConfig? = null
     )
-    
+
     @Serializable
     data class YamlInputConfig(
         val inputPath: String? = null,
         val verbose: Boolean? = null,
         val debug: Boolean? = null
     )
-    
+
     @Serializable
     data class YamlOutputConfig(
         val outputTypesPath: String? = null,
@@ -49,7 +41,7 @@ class ConfigurationLoader {
         val outputDslDir: String? = null,
         val dryRun: Boolean? = null
     )
-    
+
     @Serializable
     data class YamlRulesConfig(
         val classModifiers: YamlClassModifierRules? = null,
@@ -57,7 +49,7 @@ class ConfigurationLoader {
         val naming: YamlNamingRules? = null,
         val modifiers: YamlModifierRules? = null
     )
-    
+
     @Serializable
     data class YamlClassModifierRules(
         val toKotlinClass: List<String>? = null,
@@ -66,32 +58,32 @@ class ConfigurationLoader {
         val propsToSnakeCase: List<String>? = null,
         val literalUnionToTypealias: List<String>? = null
     )
-    
+
     @Serializable
     data class YamlTypeMappingRules(
         val jsToKotlinTypeMap: Map<String, String>? = null,
         val propertyTypeOverrides: Map<String, String>? = null
     )
-    
+
     @Serializable
     data class YamlNamingRules(
         val kotlinKeywordMap: Map<String, String>? = null,
         val reservedWords: List<String>? = null
     )
-    
+
     @Serializable
     data class YamlModifierRules(
         val importantInterfaces: List<String>? = null,
         val skipClassPatterns: List<String>? = null,
         val skipDslReceivers: List<String>? = null
     )
-    
+
     @Serializable
     data class YamlBehaviorConfig(
         val enableCaching: Boolean? = null,
         val enableParallelProcessing: Boolean? = null
     )
-    
+
     /**
      * 从文件加载配置
      */
@@ -101,12 +93,12 @@ class ConfigurationLoader {
                 configPath != null -> File(configPath)
                 else -> findDefaultConfigFile()
             }
-            
+
             if (!configFile.exists()) {
                 Logger.warn("配置文件不存在: ${configFile.absolutePath}，使用默认配置")
                 return GeneratorResultFactory.success(Configuration.default())
             }
-            
+
             Logger.info("加载配置文件: ${configFile.absolutePath}")
             val config = loadYamlConfiguration(configFile)
             GeneratorResultFactory.success(config)
@@ -119,7 +111,7 @@ class ConfigurationLoader {
             )
         }
     }
-    
+
     /**
      * 从命令行参数创建配置
      */
@@ -133,7 +125,7 @@ class ConfigurationLoader {
         dryRun: Boolean = false
     ): Configuration {
         val projectRoot = Paths.get("").toAbsolutePath().parent.toString()
-        
+
         return Configuration(
             input = InputConfig(
                 inputPath = inputPath ?: "node_modules/@swc/types/index.d.ts",
@@ -150,7 +142,7 @@ class ConfigurationLoader {
             behavior = BehaviorConfig.default()
         )
     }
-    
+
     /**
      * 查找默认配置文件
      */
@@ -161,18 +153,18 @@ class ConfigurationLoader {
             "config/swc-generator.yaml",
             "config/swc-generator.yml"
         )
-        
+
         for (path in possiblePaths) {
             val file = File(path)
             if (file.exists()) {
                 return file
             }
         }
-        
+
         // 如果找不到配置文件，返回一个不存在的文件
         return File("swc-generator-config.yaml")
     }
-    
+
     /**
      * 加载 YAML 配置文件
      * 使用 kaml 库进行完整的结构化解析
@@ -181,26 +173,25 @@ class ConfigurationLoader {
         return try {
             val yamlContent = configFile.readText()
             val yaml = Yaml.default
-            
+
             // 使用 kaml 解析 YAML
             val yamlConfig = yaml.decodeFromString(YamlConfiguration.serializer(), yamlContent)
-            
+
             // 转换为内部 Configuration 对象
             convertYamlToConfiguration(yamlConfig)
-            
         } catch (e: Exception) {
             Logger.warn("YAML 解析失败: ${e.message}，使用默认配置")
             Logger.debug("YAML 解析错误详情: ${e.stackTraceToString()}")
             Configuration.default()
         }
     }
-    
+
     /**
      * 将 YAML 配置转换为内部 Configuration 对象
      */
     private fun convertYamlToConfiguration(yamlConfig: YamlConfiguration): Configuration {
         val defaults = Configuration.default()
-        
+
         return Configuration(
             input = yamlConfig.input?.let { yamlInput ->
                 InputConfig(
@@ -209,7 +200,7 @@ class ConfigurationLoader {
                     debug = yamlInput.debug ?: defaults.input.debug
                 )
             } ?: defaults.input,
-            
+
             output = yamlConfig.output?.let { yamlOutput ->
                 OutputConfig(
                     outputTypesPath = yamlOutput.outputTypesPath ?: defaults.output.outputTypesPath,
@@ -218,7 +209,7 @@ class ConfigurationLoader {
                     dryRun = yamlOutput.dryRun ?: defaults.output.dryRun
                 )
             } ?: defaults.output,
-            
+
             rules = yamlConfig.rules?.let { yamlRules ->
                 RulesConfig(
                     classModifiers = yamlRules.classModifiers?.let { yamlClassModifiers ->
@@ -230,21 +221,21 @@ class ConfigurationLoader {
                             literalUnionToTypealias = yamlClassModifiers.literalUnionToTypealias ?: defaults.rules.classModifiers.literalUnionToTypealias
                         )
                     } ?: defaults.rules.classModifiers,
-                    
+
                     typeMapping = yamlRules.typeMapping?.let { yamlTypeMapping ->
                         TypeMappingRules(
                             jsToKotlinTypeMap = yamlTypeMapping.jsToKotlinTypeMap ?: defaults.rules.typeMapping.jsToKotlinTypeMap,
                             propertyTypeOverrides = yamlTypeMapping.propertyTypeOverrides ?: defaults.rules.typeMapping.propertyTypeOverrides
                         )
                     } ?: defaults.rules.typeMapping,
-                    
+
                     naming = yamlRules.naming?.let { yamlNaming ->
                         NamingRules(
                             kotlinKeywordMap = yamlNaming.kotlinKeywordMap ?: defaults.rules.naming.kotlinKeywordMap,
                             reservedWords = yamlNaming.reservedWords?.toSet() ?: defaults.rules.naming.reservedWords
                         )
                     } ?: defaults.rules.naming,
-                    
+
                     modifiers = yamlRules.modifiers?.let { yamlModifiers ->
                         ModifierRules(
                             importantInterfaces = yamlModifiers.importantInterfaces ?: defaults.rules.modifiers.importantInterfaces,
@@ -254,7 +245,7 @@ class ConfigurationLoader {
                     } ?: defaults.rules.modifiers
                 )
             } ?: defaults.rules,
-            
+
             behavior = yamlConfig.behavior?.let { yamlBehavior ->
                 BehaviorConfig(
                     enableCaching = yamlBehavior.enableCaching ?: defaults.behavior.enableCaching,
@@ -263,7 +254,7 @@ class ConfigurationLoader {
             } ?: defaults.behavior
         )
     }
-    
+
     /**
      * 生成示例配置文件
      * 将默认配置写入 YAML 文件
@@ -331,16 +322,15 @@ class ConfigurationLoader {
                     enableParallelProcessing = false
                 )
             )
-            
+
             val yaml = Yaml.default
             val yamlContent = yaml.encodeToString(YamlConfiguration.serializer(), sampleConfig)
-            
+
             val outputFile = File(outputPath)
             outputFile.writeText(yamlContent)
-            
+
             Logger.success("示例配置文件已生成: ${outputFile.absolutePath}")
             GeneratorResultFactory.success(Unit)
-            
         } catch (e: Exception) {
             Logger.error("生成示例配置文件失败: ${e.message}")
             GeneratorResultFactory.failure(
@@ -356,13 +346,9 @@ class ConfigurationLoader {
     ): Configuration {
         return Configuration(
             input = argsConfig.input.takeIf { it.inputPath != "node_modules/@swc/types/index.d.ts" } ?: fileConfig.input,
-            output = argsConfig.output.takeIf { 
-                it.outputTypesPath != null || it.outputSerializerPath != null || it.outputDslDir != null 
-            } ?: fileConfig.output,
+            output = argsConfig.output.takeIf { it.outputTypesPath != null || it.outputSerializerPath != null || it.outputDslDir != null } ?: fileConfig.output,
             rules = fileConfig.rules, // 规则配置优先使用文件配置
-            behavior = argsConfig.behavior.takeIf { 
-                it.enableCaching != true || it.enableParallelProcessing != true 
-            } ?: fileConfig.behavior
+            behavior = argsConfig.behavior.takeIf { it.enableCaching != true || it.enableParallelProcessing != true } ?: fileConfig.behavior
         )
     }
 }

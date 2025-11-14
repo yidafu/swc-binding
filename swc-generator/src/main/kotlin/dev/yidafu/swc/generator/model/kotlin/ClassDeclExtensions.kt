@@ -2,6 +2,11 @@ package dev.yidafu.swc.generator.model.kotlin
 
 import dev.yidafu.swc.generator.util.Logger
 
+private val parserSyntaxLiteral = mapOf(
+    "TsParserConfig" to "typescript",
+    "EsParserConfig" to "ecmascript"
+)
+
 /**
  * ClassDecl的扩展函数
  * 将KotlinClass的业务逻辑迁移到这里
@@ -128,7 +133,8 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
             KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
-            KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+            KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))),
+            KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi")))
         ),
         properties = properties.map { prop ->
             val serialName = prop.getPropertySerialName()
@@ -170,6 +176,10 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
  * 获取判别器
  */
 fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
+    val baseName = if (name.endsWith("Impl")) name.removeSuffix("Impl") else name
+    if (parserSyntaxLiteral.containsKey(baseName)) {
+        return "syntax"
+    }
     return when {
         name.endsWith("Impl") -> {
             val baseName = name.removeSuffix("Impl")
@@ -182,11 +192,11 @@ fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
                 else -> "type"
             }
         }
-        name.endsWith("Expr") -> "type"
-        name.endsWith("Stmt") -> "type"
-        name.endsWith("Pat") -> "type"
-        name.endsWith("Decl") -> "type"
-        name.endsWith("ModuleItem") -> "type"
+        baseName.endsWith("Expr") -> "type"
+        baseName.endsWith("Stmt") -> "type"
+        baseName.endsWith("Pat") -> "type"
+        baseName.endsWith("Decl") -> "type"
+        baseName.endsWith("ModuleItem") -> "type"
         else -> "type"
     }
 }
@@ -211,6 +221,10 @@ fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String
                 }
                 else -> name
             }
+        }
+        "syntax" -> {
+            val baseName = if (name.endsWith("Impl")) name.removeSuffix("Impl") else name
+            parserSyntaxLiteral[baseName] ?: baseName
         }
         else -> name
     }

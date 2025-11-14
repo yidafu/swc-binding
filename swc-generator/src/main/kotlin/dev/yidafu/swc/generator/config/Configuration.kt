@@ -26,7 +26,7 @@ data class Configuration(
             behavior = BehaviorConfig.default()
         )
     }
-    
+
     /**
      * 验证配置有效性
      */
@@ -38,7 +38,7 @@ data class Configuration(
                 "输入路径不能为空"
             )
         }
-        
+
         // 验证输入文件存在
         val inputFile = File(input.inputPath)
         if (!inputFile.exists()) {
@@ -47,19 +47,20 @@ data class Configuration(
                 "输入文件不存在: ${input.inputPath}"
             )
         }
-        
+
         // 验证输出路径
         if (!output.dryRun) {
             if (output.outputTypesPath.isNullOrBlank() &&
                 output.outputSerializerPath.isNullOrBlank() &&
-                output.outputDslDir.isNullOrBlank()) {
+                output.outputDslDir.isNullOrBlank()
+            ) {
                 return GeneratorResultFactory.failure(
                     ErrorCode.CONFIG_INVALID_PATH,
                     "至少需要指定一个输出路径"
                 )
             }
         }
-        
+
         return GeneratorResultFactory.success(Unit)
     }
 }

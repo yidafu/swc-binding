@@ -1,5 +1,6 @@
 package dev.yidafu.swc.generator.converter.type
 
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.model.typescript.*
@@ -15,7 +16,10 @@ import dev.yidafu.swc.generator.util.Logger
  * TypeScript 到 Kotlin 类型转换器
  * 在 ADT 转换过程中自动处理所有类型转换
  */
-class TypeConverter(private val config: Configuration) {
+class TypeConverter(
+    private val config: Configuration,
+    private val nestedTypeRegistry: Map<String, String> = emptyMap()
+) {
 
     /**
      * 将 TypeScript 类型转换为 Kotlin 类型
@@ -77,11 +81,13 @@ class TypeConverter(private val config: Configuration) {
      */
     private fun convertReference(ref: TypeScriptType.Reference): KotlinType {
         // 处理泛型参数
+        val mappedName = CodeGenerationRules.mapTypeName(ref.name)
+
         if (ref.typeParams.isNotEmpty()) {
             val params = ref.typeParams.mapNotNull {
                 convert(it).getOrNull()
             }
-            return KotlinTypeFactory.generic(ref.name, *params.toTypedArray())
+            return KotlinTypeFactory.generic(mappedName, *params.toTypedArray())
         }
 
         // 检查特殊属性类型覆盖
@@ -92,7 +98,12 @@ class TypeConverter(private val config: Configuration) {
             return propertyOverride
         }
 
-        return KotlinTypeFactory.simple(ref.name)
+        nestedTypeRegistry[ref.name]?.let { parent ->
+            val mappedParent = CodeGenerationRules.mapTypeName(parent)
+            return KotlinTypeFactory.nested(mappedParent, mappedName)
+        }
+
+        return KotlinTypeFactory.simple(mappedName)
     }
 
     /**
@@ -100,7 +111,7 @@ class TypeConverter(private val config: Configuration) {
      */
     private fun convertUnion(union: TypeScriptType.Union): KotlinType {
         Logger.debug("转换联合类型: ${union.types.size} 个类型", 6)
-        
+
         // 检查是否为字面量联合类型
         if (isLiteralUnion(union)) {
             Logger.debug("  字面量联合类型", 6)
@@ -123,6 +134,19 @@ class TypeConverter(private val config: Configuration) {
         if (isMixedUnion(union)) {
             Logger.debug("  混合类型联合", 6)
             return convertMixedUnion(union)
+        }
+
+        // 尝试将所有类型转换为 Union.U2/U3/U4（适用于基础类型与字面量组合）
+        val convertedTypes = union.types.map { convert(it).getOrNull() }
+        if (convertedTypes.all { it != null } && union.types.size in 2..4) {
+            val typeParams = convertedTypes.filterNotNull().toTypedArray()
+            Logger.debug("  通用联合类型 -> Union.U${typeParams.size}", 6)
+            return when (typeParams.size) {
+                2 -> KotlinTypeFactory.generic("Union.U2", *typeParams)
+                3 -> KotlinTypeFactory.generic("Union.U3", *typeParams)
+                4 -> KotlinTypeFactory.generic("Union.U4", *typeParams)
+                else -> KotlinTypeFactory.any()
+            }
         }
 
         Logger.debug("  其他联合类型 -> Any", 6)
@@ -154,9 +178,7 @@ class TypeConverter(private val config: Configuration) {
      * 转换元组类型
      */
     private fun convertTuple(tuple: TypeScriptType.Tuple): KotlinType {
-        val elementTypes = tuple.types.mapNotNull { 
-            convert(it).getOrNull() 
-        }
+        val elementTypes = tuple.types.mapNotNull { convert(it).getOrNull() }
         // Convert 2-element tuples to Union.U2 for better type safety
         return when (elementTypes.size) {
             2 -> KotlinTypeFactory.generic("Union.U2", *elementTypes.toTypedArray())
@@ -222,11 +244,11 @@ class TypeConverter(private val config: Configuration) {
     private fun isMixedUnion(union: TypeScriptType.Union): Boolean {
         val typeCount = union.types.size
         if (typeCount !in 2..4) return false
-        
+
         val hasLiteral = union.types.any { it is TypeScriptType.Literal }
         val hasObjectType = union.types.any { it is TypeScriptType.TypeLiteral }
         val hasReference = union.types.any { it is TypeScriptType.Reference }
-        
+
         // 混合类型：包含字面量 + (对象类型 或 引用类型)
         return hasLiteral && (hasObjectType || hasReference)
     }
@@ -236,10 +258,8 @@ class TypeConverter(private val config: Configuration) {
      */
     private fun convertLiteralUnion(union: TypeScriptType.Union): KotlinType {
         // 检查字面量类型
-        val literalTypes = union.types.mapNotNull { 
-            if (it is TypeScriptType.Literal) it.value else null 
-        }
-        
+        val literalTypes = union.types.mapNotNull { if (it is TypeScriptType.Literal) it.value else null }
+
         // 如果都是字符串字面量，转换为 Union.U2/U3/U4 或 Any
         if (literalTypes.all { it is LiteralValue.StringLiteral }) {
             val typeCount = union.types.size
@@ -250,7 +270,7 @@ class TypeConverter(private val config: Configuration) {
                 else -> KotlinTypeFactory.any() // 超过 4 个类型转换为 Any
             }
         }
-        
+
         // 如果都是布尔字面量，转换为 Union.U2/U3/U4
         if (literalTypes.all { it is LiteralValue.BooleanLiteral }) {
             val typeCount = union.types.size
@@ -261,13 +281,24 @@ class TypeConverter(private val config: Configuration) {
                 else -> KotlinTypeFactory.boolean()
             }
         }
-        
+
+        // 如果都是数字字面量，直接提升为 Int 或 Double
+        if (literalTypes.all { it is LiteralValue.NumberLiteral }) {
+            val hasFraction = literalTypes.any {
+                val value = (it as LiteralValue.NumberLiteral).value
+                value % 1.0 != 0.0
+            }
+            return if (hasFraction) {
+                KotlinTypeFactory.double()
+            } else {
+                KotlinTypeFactory.int()
+            }
+        }
+
         // 混合类型，尝试转换为 Union.U2/U3/U4
         val typeCount = union.types.size
         if (typeCount in 2..4) {
-            val typeParams = union.types.mapNotNull { 
-                convert(it).getOrNull() 
-            }
+            val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
             return when (typeCount) {
                 2 -> KotlinTypeFactory.generic("Union.U2", *typeParams.toTypedArray())
                 3 -> KotlinTypeFactory.generic("Union.U3", *typeParams.toTypedArray())
@@ -275,7 +306,7 @@ class TypeConverter(private val config: Configuration) {
                 else -> KotlinTypeFactory.any()
             }
         }
-        
+
         // 超过 4 个类型，转换为 Any
         return KotlinTypeFactory.any()
     }
@@ -286,12 +317,10 @@ class TypeConverter(private val config: Configuration) {
     private fun convertInterfaceUnion(union: TypeScriptType.Union): KotlinType {
         val typeCount = union.types.size
         Logger.debug("  转换接口联合类型: $typeCount 个类型", 8)
-        
+
         // 尝试转换所有类型
-        val typeParams = union.types.mapNotNull { 
-            convert(it).getOrNull() 
-        }
-        
+        val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
+
         // 如果成功转换了所有类型，生成 Union.U2/U3/U4
         if (typeParams.size == typeCount) {
             return when (typeCount) {
@@ -301,7 +330,7 @@ class TypeConverter(private val config: Configuration) {
                 else -> KotlinTypeFactory.any()
             }
         }
-        
+
         // 如果转换失败，返回 Any
         Logger.debug("  接口联合类型转换失败，返回 Any", 8)
         return KotlinTypeFactory.any()
@@ -313,12 +342,10 @@ class TypeConverter(private val config: Configuration) {
     private fun convertMixedUnion(union: TypeScriptType.Union): KotlinType {
         val typeCount = union.types.size
         Logger.debug("  转换混合联合类型: $typeCount 个类型", 8)
-        
+
         // 尝试转换所有类型
-        val typeParams = union.types.mapNotNull { 
-            convert(it).getOrNull() 
-        }
-        
+        val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
+
         // 如果成功转换了所有类型，生成 Union.U2/U3/U4
         if (typeParams.size == typeCount) {
             return when (typeCount) {
@@ -328,7 +355,7 @@ class TypeConverter(private val config: Configuration) {
                 else -> KotlinTypeFactory.any()
             }
         }
-        
+
         // 如果转换失败，返回 Any
         Logger.debug("  混合联合类型转换失败，返回 Any", 8)
         return KotlinTypeFactory.any()
@@ -339,9 +366,7 @@ class TypeConverter(private val config: Configuration) {
      */
     private fun isUnionType(union: TypeScriptType.Union): Boolean {
         val typeCount = union.types.size
-        return typeCount in 2..4 && union.types.all { 
-            it is TypeScriptType.Reference || it is TypeScriptType.Array 
-        }
+        return typeCount in 2..4 && union.types.all { it is TypeScriptType.Reference || it is TypeScriptType.Array }
     }
 
     /**
@@ -349,10 +374,8 @@ class TypeConverter(private val config: Configuration) {
      */
     private fun convertUnionType(union: TypeScriptType.Union): KotlinType {
         val typeCount = union.types.size
-        val typeParams = union.types.mapNotNull { 
-            convert(it).getOrNull() 
-        }
-        
+        val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
+
         return when (typeCount) {
             2 -> KotlinTypeFactory.generic("Union.U2", *typeParams.toTypedArray())
             3 -> KotlinTypeFactory.generic("Union.U3", *typeParams.toTypedArray())

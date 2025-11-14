@@ -1,8 +1,8 @@
 package dev.yidafu.swc.generator.extractor
 
-import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
+import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.parser.*
 import dev.yidafu.swc.generator.util.Logger
 

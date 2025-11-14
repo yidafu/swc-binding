@@ -1,8 +1,12 @@
 package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
-import dev.yidafu.swc.generator.codegen.poet.*
+import dev.yidafu.swc.generator.codegen.poet.PoetConstants
+import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.kotlin.getClassName
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -14,10 +18,10 @@ class SerializerGenerator {
     /**
      * 写入文件
      */
-    fun writeToFile(outputPath: String, astNodeList: List<String>) {
+    fun writeToFile(outputPath: String, classDecls: List<KotlinDeclaration.ClassDecl>) {
         Logger.debug("使用 KotlinPoet 生成 serializer.kt...", 4)
 
-        val polymorphicMap = buildPolymorphicMap(astNodeList)
+        val polymorphicMap = buildPolymorphicMap(classDecls)
         Logger.debug("  多态类型数: ${polymorphicMap.size}", 4)
 
         val fileBuilder = createFileBuilder(
@@ -67,24 +71,144 @@ class SerializerGenerator {
             tempDir.deleteRecursively()
         }
 
-        Logger.success("Generated: $outputPath (${astNodeList.size} 个类型)")
+        Logger.success("Generated: $outputPath (${classDecls.size} 个类型)")
     }
 
     /**
      * 构建多态映射
      */
-    private fun buildPolymorphicMap(astNodeList: List<String>): Map<String, List<String>> {
-        return astNodeList
-            .associateWith { key ->
-                val analyzer = InheritanceAnalyzer()
-                analyzer.findAllGrandChildren(key).filter { it != key }
+    private fun buildPolymorphicMap(classDecls: List<KotlinDeclaration.ClassDecl>): Map<String, List<String>> {
+        val normalizedToRaw = LinkedHashMap<String, String>()
+        val childToParents = LinkedHashMap<String, List<String>>()
+        val interfaceNames = LinkedHashSet<String>()
+        val concreteClasses = mutableListOf<KotlinDeclaration.ClassDecl>()
+
+        classDecls.forEach { decl ->
+            val normalized = decl.getClassName()
+            normalizedToRaw[normalized] = decl.name
+            childToParents[normalized] = decl.parents.mapNotNull { it.extractSimpleName() }
+            if (decl.modifier is ClassModifier.Interface || decl.modifier is ClassModifier.SealedInterface) {
+                interfaceNames.add(normalized)
+            } else {
+                concreteClasses.add(decl)
             }
-            .filterValues { it.isNotEmpty() }
-            .also { map ->
-                map.forEach { (key, children) ->
-                    Logger.verbose("  $key -> ${children.size} 个子类型", 6)
+        }
+
+        val parentToChildren = mutableMapOf<String, LinkedHashSet<String>>()
+
+        // 现有具体类（如果存在）直接参与多态映射
+        concreteClasses.forEach { concrete ->
+            val childName = concrete.getClassName()
+            val rawChildName = normalizedToRaw[childName] ?: concrete.name
+            val ancestors = collectAncestors(childName, childToParents)
+            ancestors.filter { it in interfaceNames }.forEach { ancestor ->
+                val rawParent = normalizedToRaw[ancestor] ?: ancestor
+                parentToChildren.getOrPut(rawParent) { LinkedHashSet() }.add(rawChildName)
+            }
+        }
+
+        // 基于接口继承关系推导应生成的 Impl 类
+        val interfaceChildrenMap = buildInterfaceChildrenMap(childToParents, interfaceNames)
+        val leafInterfaces = interfaceNames.filter { interfaceChildrenMap[it].isNullOrEmpty() }
+
+        leafInterfaces.forEach { leaf ->
+            val rawLeaf = normalizedToRaw[leaf] ?: leaf
+            val implRawName = rawLeaf.appendImplSuffix()
+            collectAncestorsIncludingSelf(leaf, childToParents)
+                .filter { it in interfaceNames }
+                .forEach { ancestor ->
+                    val rawParent = normalizedToRaw[ancestor] ?: ancestor
+                    parentToChildren.getOrPut(rawParent) { LinkedHashSet() }.add(implRawName)
+                }
+        }
+
+        val orderedResult = LinkedHashMap<String, List<String>>()
+        classDecls.forEach { decl ->
+            val rawParent = decl.name
+            parentToChildren[rawParent]?.takeIf { it.isNotEmpty() }?.let { children ->
+                orderedResult[rawParent] = children.toList()
+                Logger.verbose("  $rawParent -> ${children.size} 个子类型", 6)
+            }
+        }
+
+        return orderedResult
+    }
+
+    private fun buildInterfaceChildrenMap(
+        childToParents: Map<String, List<String>>,
+        interfaceNames: Set<String>
+    ): Map<String, LinkedHashSet<String>> {
+        val map = mutableMapOf<String, LinkedHashSet<String>>()
+        childToParents.forEach { (child, parents) ->
+            if (child in interfaceNames) {
+                parents.filter { it in interfaceNames }.forEach { parent ->
+                    map.getOrPut(parent) { LinkedHashSet() }.add(child)
                 }
             }
+        }
+        return map
+    }
+
+    private fun collectAncestors(
+        childName: String,
+        childToParents: Map<String, List<String>>
+    ): List<String> {
+        val visited = LinkedHashSet<String>()
+        val queue = ArrayDeque<String>()
+
+        childToParents[childName].orEmpty().forEach { parent ->
+            if (visited.add(parent)) {
+                queue.add(parent)
+            }
+        }
+
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            childToParents[current].orEmpty().forEach { parent ->
+                if (visited.add(parent)) {
+                    queue.add(parent)
+                }
+            }
+        }
+
+        return visited.toList()
+    }
+
+    private fun collectAncestorsIncludingSelf(
+        startName: String,
+        childToParents: Map<String, List<String>>
+    ): List<String> {
+        val visited = LinkedHashSet<String>()
+        val queue = ArrayDeque<String>()
+        if (visited.add(startName)) {
+            queue.add(startName)
+        }
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            childToParents[current].orEmpty().forEach { parent ->
+                if (visited.add(parent)) {
+                    queue.add(parent)
+                }
+            }
+        }
+        return visited.toList()
+    }
+
+    private fun KotlinType.extractSimpleName(): String? {
+        return when (this) {
+            is KotlinType.Simple -> this.name.removeSurrounding("`", "`")
+            is KotlinType.Nullable -> this.innerType.extractSimpleName()
+            else -> null
+        }
+    }
+
+    private fun String.appendImplSuffix(): String {
+        return if (startsWith("`") && endsWith("`")) {
+            val core = substring(1, length - 1)
+            "`$core" + "Impl`"
+        } else {
+            this + "Impl"
+        }
     }
 
     /**

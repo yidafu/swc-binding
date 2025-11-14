@@ -1,0 +1,141 @@
+package dev.yidafu.swc.generator.converter.declaration
+
+import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.typescript.*
+import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.annotation.Test
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+
+class TypeAliasConverterTest : AnnotationSpec() {
+
+    private val config = Configuration.default()
+    private val converter = TypeAliasConverter(config)
+
+    @Test
+    fun `test converter creation`() {
+        converter.shouldNotBeNull()
+    }
+
+    @Test
+    fun `test convert simple type alias`() {
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "SimpleAlias",
+            type = TypeScriptType.Keyword(KeywordKind.STRING),
+            typeParameters = emptyList()
+        )
+
+        val result = converter.convert(tsTypeAlias)
+
+        result.shouldNotBeNull()
+        if (result.isSuccess()) {
+            val kotlinTypeAlias = result.getOrThrow() as KotlinDeclaration.TypeAliasDecl
+            kotlinTypeAlias.name shouldBe "SimpleAlias"
+        }
+    }
+
+    @Test
+    fun `test convert type alias with generic`() {
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "GenericAlias",
+            type = TypeScriptType.Reference(
+                name = "Array",
+                typeParams = listOf(TypeScriptType.Keyword(KeywordKind.STRING))
+            ),
+            typeParameters = emptyList()
+        )
+
+        val result = converter.convert(tsTypeAlias)
+
+        result.shouldNotBeNull()
+    }
+
+    @Test
+    fun `test convert union type alias`() {
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "UnionAlias",
+            type = TypeScriptType.Union(
+                types = listOf(
+                    TypeScriptType.Keyword(KeywordKind.STRING),
+                    TypeScriptType.Keyword(KeywordKind.NUMBER)
+                )
+            ),
+            typeParameters = emptyList()
+        )
+
+        val result = converter.convert(tsTypeAlias)
+
+        result.shouldNotBeNull()
+    }
+
+    @Test
+    fun `literal unions generate enum classes`() {
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "JsMode",
+            type = TypeScriptType.Union(
+                types = listOf(
+                    TypeScriptType.Literal(LiteralValue.StringLiteral("esm")),
+                    TypeScriptType.Literal(LiteralValue.StringLiteral("cjs"))
+                )
+            )
+        )
+
+        val result = converter.convert(tsTypeAlias)
+
+        val enumDecl = result.getOrThrow() as KotlinDeclaration.ClassDecl
+        enumDecl.modifier shouldBe ClassModifier.EnumClass
+        enumDecl.enumEntries.map { it.name }.shouldContainAll(listOf("ESM", "CJS"))
+    }
+
+    @Test
+    fun `interface unions become sealed interfaces and register parents`() {
+        val registry = mutableMapOf<String, MutableSet<String>>()
+        val customConverter = TypeAliasConverter(
+            config = config,
+            unionParentRegistry = registry
+        )
+
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "NodeLike",
+            type = TypeScriptType.Union(
+                listOf(
+                    TypeScriptType.Reference("Foo"),
+                    TypeScriptType.Reference("Bar")
+                )
+            )
+        )
+
+        val result = customConverter.convert(tsTypeAlias)
+        val sealedDecl = result.getOrThrow() as KotlinDeclaration.ClassDecl
+        sealedDecl.modifier shouldBe ClassModifier.SealedInterface
+        registry["Foo"]?.shouldContainAll(listOf("NodeLike"))
+        registry["Bar"]?.shouldContainAll(listOf("NodeLike"))
+    }
+
+    @Test
+    fun `type literal aliases become interfaces`() {
+        val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "InlineOptions",
+            type = TypeScriptType.TypeLiteral(
+                members = listOf(
+                    TypeMember(
+                        name = "enabled",
+                        type = TypeScriptType.Keyword(KeywordKind.BOOLEAN),
+                        optional = true
+                    )
+                )
+            )
+        )
+
+        val result = converter.convert(tsTypeAlias)
+        val interfaceDecl = result.getOrThrow() as KotlinDeclaration.ClassDecl
+        interfaceDecl.modifier shouldBe ClassModifier.Interface
+        val property = interfaceDecl.properties.first { it.name == "enabled" }
+        property.type.shouldNotBeNull()
+        property.type shouldBe KotlinType.Nullable(KotlinType.Boolean)
+    }
+}

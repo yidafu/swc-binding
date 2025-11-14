@@ -15,7 +15,6 @@ output:
 rules:
   classModifiers:
     literalUnionToTypealias:
-      - "JscTarget"
       - "TruePlusMinus"
   typeMapping:
     propertyTypeOverrides:

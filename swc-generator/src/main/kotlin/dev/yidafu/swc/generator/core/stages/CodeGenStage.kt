@@ -18,40 +18,39 @@ class CodeGenStage(
     private val config: Configuration,
     private val container: DependencyContainer
 ) : AbstractStage<List<KotlinDeclaration>, Unit>() {
-    
+
     override val name: String = "CodeGen"
-    
+
     override fun doExecute(input: List<KotlinDeclaration>, context: PipelineContext): GeneratorResult<Unit> {
         Logger.debug("开始生成 Kotlin 代码文件")
-        
+
         // 从上下文中获取处理后的声明
         val processedDeclarations = context.getMetadata<List<KotlinDeclaration>>("processedDeclarations") ?: input
-        
+
         // 分离类声明和类型别名
         val classDecls = processedDeclarations.filterIsInstance<KotlinDeclaration.ClassDecl>()
         val typeAliases = processedDeclarations.filterIsInstance<KotlinDeclaration.TypeAliasDecl>()
-        
+
         // 创建属性映射（从上下文中获取或创建空的）
-        val classAllPropertiesMap = context.getMetadata<Map<String, List<KotlinDeclaration.PropertyDecl>>>("classAllPropertiesMap") 
-            ?: emptyMap()
-        
+        val classAllPropertiesMap = context.getMetadata<Map<String, List<KotlinDeclaration.PropertyDecl>>>("classAllPropertiesMap") ?: emptyMap()
+
         // 创建TransformResult
         val transformResult = TransformResult(
             classDecls = classDecls,
             classAllPropertiesMap = classAllPropertiesMap,
             typeAliases = typeAliases
         )
-        
+
         // 使用CodeEmitter生成代码
         val result = container.codeEmitter.emit(transformResult)
-        
+
         if (result.isFailure()) {
             result.onFailure { error ->
                 Logger.error("代码生成失败: ${error.message}")
             }
             return result
         }
-        
+
         Logger.success("代码生成完成")
         return GeneratorResultFactory.success(Unit)
     }

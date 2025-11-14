@@ -23,12 +23,16 @@ object CodeGenerationRules {
      * 用于处理某些属性需要特殊类型映射的情况
      */
     val propertyTypeOverrides = mapOf(
-        "global_defs" to KotlinType.Generic("Map", listOf(KotlinType.StringType, KotlinType.StringType)),
-        "targets" to KotlinType.Generic("Map", listOf(KotlinType.StringType, KotlinType.StringType)),
-        "sequences" to KotlinType.Boolean,
-        "toplevel" to KotlinType.Nullable(KotlinType.StringType),
-        "pureGetters" to KotlinType.Nullable(KotlinType.StringType),
-        "topRetain" to KotlinType.Nullable(KotlinType.StringType)
+        // 某些 Any 类型目前仅用 String 作为占位（暂不完全支持）
+        "global_defs" to KotlinType.StringType.makeNullable(),
+        "globalDefs" to KotlinType.StringType.makeNullable(),
+        "targets" to KotlinType.StringType.makeNullable(),
+        "sequences" to KotlinType.StringType.makeNullable(),
+        "pure_getters" to KotlinType.StringType.makeNullable(),
+        "pureGetters" to KotlinType.StringType.makeNullable(),
+        "top_retain" to KotlinType.StringType.makeNullable(),
+        "topRetain" to KotlinType.StringType.makeNullable(),
+        "toplevel" to KotlinType.StringType.makeNullable()
     )
 
     // ==================== 命名规则 ====================
@@ -54,10 +58,26 @@ object CodeGenerationRules {
     )
 
     /**
+     * 类型名称覆盖，避免与 Kotlin 内置或保留名称冲突
+     */
+    private val typeNameOverrides = mapOf(
+        "Class" to "JsClass",
+        "Super" to "JsSuper",
+        "Import" to "JsImport"
+    )
+
+    /**
      * 获取 Kotlin 保留字映射
      */
     fun getKotlinKeywordMap(): Map<String, String> {
         return kotlinKeywordMap
+    }
+
+    /**
+     * 映射类型名称，避免命名冲突
+     */
+    fun mapTypeName(name: String): String {
+        return typeNameOverrides[name] ?: name
     }
 
     /**

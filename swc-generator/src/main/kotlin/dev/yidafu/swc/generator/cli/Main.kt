@@ -1,13 +1,11 @@
 package dev.yidafu.swc.generator.cli
 
-import dev.yidafu.swc.SwcNative
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.config.ConfigurationLoader
 import dev.yidafu.swc.generator.core.GeneratorPipeline
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.util.*
 import kotlinx.cli.*
-import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -60,12 +58,12 @@ fun main(args: Array<String>) {
         // 加载配置
         val configLoader = ConfigurationLoader()
         val configResult = configLoader.loadFromFile(configFile)
-        
+
         configResult.onFailure { error ->
             Logger.error("配置加载失败: ${error.message}")
             exitProcess(1)
         }
-        
+
         val configuration = configResult.getOrThrow()
 
         // 确定输入文件（优先级：-i 参数 > 位置参数 > 配置文件默认值）
@@ -110,7 +108,7 @@ fun main(args: Array<String>) {
  * 新架构的 swc-generator 主类
  */
 class SwcGenerator(private val configuration: Configuration) {
-    
+
     private val pipeline = GeneratorPipeline.createDefault(configuration)
 
     fun run(inputPath: String): GeneratorResult<Unit> {

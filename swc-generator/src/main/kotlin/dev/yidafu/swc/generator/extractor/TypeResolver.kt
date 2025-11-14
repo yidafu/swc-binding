@@ -1,11 +1,11 @@
 package dev.yidafu.swc.generator.extractor
 
+import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
-import dev.yidafu.swc.generator.result.*
 import dev.yidafu.swc.generator.model.typescript.*
-import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.parser.*
+import dev.yidafu.swc.generator.result.*
 import dev.yidafu.swc.generator.util.*
 
 /**
@@ -186,7 +186,9 @@ object TypeResolver {
                     val propName = member.getPropertyName() ?: return@mapNotNull null
                     val typeAnnotation = member.getNode("typeAnnotation")?.getNode("typeAnnotation")
                     val memberType = extractTypeScriptType(typeAnnotation).getOrDefault(TypeScriptType.Any)
-                    TypeMember(propName, memberType, optional = false, readonly = false)
+                    val optional = member.getBoolean("optional") ?: false
+                    val readonly = member.getBoolean("readonly") ?: false
+                    TypeMember(propName, memberType, optional = optional, readonly = readonly)
                 }
                 member.type == "TsIndexSignature" -> {
                     // 处理索引签名 { [key: string]: value }

@@ -16,26 +16,26 @@ import dev.yidafu.swc.generator.util.Logger
 class AnalyzerStage(
     private val config: Configuration
 ) : AbstractStage<List<TypeScriptDeclaration>, List<TypeScriptDeclaration>>() {
-    
+
     override val name: String = "Analyzer"
-    
+
     private val inheritanceAnalyzer = InheritanceAnalyzer(emptyList())
-    
+
     override fun doExecute(input: List<TypeScriptDeclaration>, context: PipelineContext): GeneratorResult<List<TypeScriptDeclaration>> {
         Logger.debug("开始分析继承关系")
-        
+
         // 分析继承关系
         val analysisResult = AnalysisResult(
             inheritanceRelationships = emptyMap(),
             typeDependencies = emptyMap(),
             circularDependencies = emptyList()
         )
-        
+
         Logger.success("分析完成")
-        
+
         // 将分析结果存储到上下文中
         context.setMetadata("analysisResult", analysisResult)
-        
+
         // 返回原始输入，不改变类型
         return GeneratorResultFactory.success(input)
     }

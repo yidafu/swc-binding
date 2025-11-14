@@ -16,9 +16,9 @@ class GeneratorPipeline(
     private val configuration: Configuration,
     private val container: DependencyContainer
 ) {
-    
+
     private val stages = mutableListOf<Stage<*, *>>()
-    
+
     /**
      * 添加处理阶段
      */
@@ -26,19 +26,19 @@ class GeneratorPipeline(
         stages.add(stage)
         return this
     }
-    
+
     /**
      * 执行管道处理
      */
     fun execute(input: String): GeneratorResult<Unit> {
         Logger.debug("开始执行生成器管道，共 ${stages.size} 个阶段")
-        
+
         var currentInput: Any = input
         val context = PipelineContext(configuration)
-        
+
         for ((index, stage) in stages.withIndex()) {
             Logger.debug("执行阶段 ${index + 1}/${stages.size}: ${stage.name}")
-            
+
             @Suppress("UNCHECKED_CAST")
             val result = try {
                 (stage as Stage<Any, Any>).execute(currentInput, context)
@@ -51,21 +51,21 @@ class GeneratorPipeline(
                     cause = e
                 )
             }
-            
+
             if (result.isFailure()) {
                 result.onFailure { error ->
                     Logger.error("阶段 ${stage.name} 返回错误: ${error.message}")
                 }
                 return result as GeneratorResult<Unit>
             }
-            
+
             currentInput = result.getOrThrow()
         }
-        
+
         Logger.success("生成器管道执行完成")
         return GeneratorResultFactory.success(Unit)
     }
-    
+
     /**
      * 创建默认管道
      */

@@ -63,6 +63,9 @@ sealed class KotlinType {
                 "MutableSet" -> ClassName("kotlin.collections", "MutableSet")
                 "Map" -> ClassName("kotlin.collections", "Map")
                 "MutableMap" -> ClassName("kotlin.collections", "MutableMap")
+                "Union.U2" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U2")
+                "Union.U3" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U3")
+                "Union.U4" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U4")
                 else -> ClassName("", name)
             }
             baseClassName.parameterizedBy(params.map { it.toTypeName() })
@@ -164,22 +167,11 @@ sealed class KotlinType {
      * 转换联合类型为 TypeName
      */
     private fun convertUnionType(union: Union): TypeName {
+        val base = ClassName("dev.yidafu.swc", "Union")
         return when (union.types.size) {
-            2 -> {
-                val className = ClassName("dev.yidafu.swc", "Union.U2")
-                val typeParams = union.types.map { it.toTypeName() }
-                className.parameterizedBy(typeParams)
-            }
-            3 -> {
-                val className = ClassName("dev.yidafu.swc", "Union.U3")
-                val typeParams = union.types.map { it.toTypeName() }
-                className.parameterizedBy(typeParams)
-            }
-            4 -> {
-                val className = ClassName("dev.yidafu.swc", "Union.U4")
-                val typeParams = union.types.map { it.toTypeName() }
-                className.parameterizedBy(typeParams)
-            }
+            2 -> base.nestedClass("U2").parameterizedBy(union.types.map { it.toTypeName() })
+            3 -> base.nestedClass("U3").parameterizedBy(union.types.map { it.toTypeName() })
+            4 -> base.nestedClass("U4").parameterizedBy(union.types.map { it.toTypeName() })
             else -> ANY
         }
     }

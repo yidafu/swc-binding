@@ -1,12 +1,12 @@
 package dev.yidafu.swc.generator.util
 
-import dev.yidafu.swc.generator.model.kotlin.ClassModifier
-import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.extensions.getAllProperties
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.extensions.isLeafNode
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl
 typealias PropertyDecl = KotlinDeclaration.PropertyDecl

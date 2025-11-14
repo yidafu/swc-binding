@@ -44,7 +44,8 @@ sealed class KotlinDeclaration {
      */
     data class EnumEntry(
         val name: String,
-        val arguments: List<Expression> = emptyList()
+        val arguments: List<Expression> = emptyList(),
+        val annotations: List<Annotation> = emptyList()
     ) : KotlinDeclaration()
 
     /**

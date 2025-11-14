@@ -1,13 +1,13 @@
 package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
-import dev.yidafu.swc.generator.model.kotlin.*
-import dev.yidafu.swc.generator.model.kotlin.isValidKotlinTypeName
-import dev.yidafu.swc.generator.model.kotlin.wrapReservedWord
-import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.model.KotlinExtensionFun
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.config.CodeGenerationRules
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.model.kotlin.isValidKotlinTypeName
+import dev.yidafu.swc.generator.model.kotlin.wrapReservedWord
+import dev.yidafu.swc.generator.model.kotlin.isInterface
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 
@@ -20,6 +20,17 @@ class DslGenerator(
 ) {
     private val extFunMap = mutableMapOf<String, KotlinExtensionFun>()
     private val generatedClassNameList = classDecls.map { it.name }
+    private val classInfoByName = classDecls.associateBy { it.name.removeSurrounding("`") }
+    private val hierarchy = KotlinTypeHierarchy(classDecls)
+    private val leafInterfaceNames: Set<String> = classDecls
+        .filter { it.modifier.isInterface() }
+        .map { it.name.removeSurrounding("`") }
+        .filter { interfaceName ->
+            hierarchy.findChildren(interfaceName).none { child ->
+                classInfoByName[child]?.modifier?.isInterface() == true
+            }
+        }
+        .toSet()
 
     /**
      * 添加扩展函数
@@ -44,39 +55,21 @@ class DslGenerator(
      * 优化：批量处理，减少重复计算
      */
     fun generateExtensionFunctions() {
-        val needGenerateDslClassList = classDecls
-            .filter {
-                val analyzer = InheritanceAnalyzer()
-                analyzer.findAllChildrenByParent(it.name).isNotEmpty()
-            }
-            .map { it.name }
+        val receivers = LinkedHashSet<String>()
+        receivers.addAll(classAllPropertiesMap.keys)
+        classDecls.filter { it.modifier.isInterface() }.forEach { receivers.add(it.name) }
 
-        // 批量创建扩展函数列表
-        needGenerateDslClassList.forEach { key ->
-            createExtensionFunList(key)
+        receivers.forEach { receiver ->
+            if (CodeGenerationRules.shouldSkipDslReceiver(receiver)) return@forEach
+            val props = getProperties(receiver)
+            if (props.isEmpty()) return@forEach
+
+            props.flatMap { prop ->
+                generatePropertyExtensionFunctions(receiver, prop)
+            }.forEach { extFun ->
+                addExtensionFunWrapper(extFun)
+            }
         }
-
-        // 批量处理属性相关的扩展函数
-        val propertyExtensionFuns = generatePropertyExtensionFunctions(needGenerateDslClassList)
-        propertyExtensionFuns.forEach { extFun ->
-            addExtensionFunWrapper(extFun)
-        }
-    }
-
-    /**
-     * 生成属性相关的扩展函数
-     */
-    private fun generatePropertyExtensionFunctions(needGenerateDslClassList: List<String>): List<KotlinExtensionFun> {
-        return needGenerateDslClassList
-            .mapNotNull { klass ->
-                val props = classAllPropertiesMap[klass]
-                if (props != null) klass to props else null
-            }
-            .flatMap { (klass, props) ->
-                props.flatMap { prop ->
-                    generatePropertyExtensionFunctions(klass, prop)
-                }
-            }
     }
 
     /**
@@ -90,40 +83,10 @@ class DslGenerator(
               */
         """.trimIndent()
 
-        val analyzer = InheritanceAnalyzer()
-        return when (val type = prop.type) {
-            is KotlinType.Union -> {
-                type.types.flatMap { unionType ->
-                    analyzer.findAllGrandChildren(unionType.toTypeString()).map { child ->
-                        KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
-                    }
-                }
-            }
-            else -> {
-                analyzer.findAllGrandChildren(type.toTypeString()).map { child ->
-                    KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
-                }
-            }
-        }
-    }
-
-    /**
-     * 创建扩展函数列表
-     */
-    private fun createExtensionFunList(key: String) {
-        val analyzer = InheritanceAnalyzer()
-        analyzer.findAllGrandChildren(key).forEach { child ->
-            addExtensionFunWrapper(
-                KotlinExtensionFun(
-                    key,
-                    child,
-                    """
-                /**
-                  * subtype of $key
-                  */
-                    """.trimIndent()
-                )
-            )
+        val candidateTypes = collectReferenceTypes(prop.type)
+        val instantiableTypes = candidateTypes.flatMap { resolveInstantiableTypes(it) }.distinct()
+        return instantiableTypes.map { child ->
+            KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
         }
     }
 
@@ -139,6 +102,8 @@ class DslGenerator(
             Logger.debug("跳过无效类型名称: ${extFun.receiver}.${extFun.funName}")
             return
         }
+
+        if (!hasConcreteImplementation(extFun.funName)) return
 
         if (extFun.funName.endsWith("Impl")) {
             if (generatedClassNameList.contains(extFun.funName)) {
@@ -222,34 +187,7 @@ class DslGenerator(
      * 创建 DSL 扩展函数（使用 ADT）
      */
     private fun createDslExtensionFun(extFun: KotlinExtensionFun, receiver: String): FunSpec {
-        val funName = toFunName(extFun.funName.replace("Impl", ""))
-        val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
-        val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
-
-        // 使用 ADT 创建函数声明
-        val functionDecl = KotlinDeclaration.FunctionDecl(
-            name = funName,
-            receiver = KotlinTypeFactory.simple(receiverTypeName),
-            parameters = listOf(
-                KotlinDeclaration.ParameterDecl(
-                    name = "block",
-                    type = KotlinTypeFactory.receiverFunction(
-                        receiver = KotlinTypeFactory.simple(receiverTypeName),
-                        returnType = KotlinTypeFactory.unit()
-                    )
-                )
-            ),
-            returnType = KotlinTypeFactory.simple(returnTypeName),
-            modifier = FunctionModifier.Fun,
-            kdoc = extFun.comments.takeIf { it.isNotEmpty() }
-        )
-
-        return try {
-            KotlinPoetConverter.convertFunctionDeclaration(functionDecl)
-        } catch (e: Exception) {
-            Logger.warn("使用 KotlinPoetConverter 转换函数失败，回退到手动构建: ${e.message}")
-            createDslExtensionFunLegacy(extFun, receiver)
-        }
+        return createDslExtensionFunLegacy(extFun, receiver)
     }
 
     /**
@@ -259,12 +197,14 @@ class DslGenerator(
         val funName = toFunName(extFun.funName.replace("Impl", ""))
         val returnTypeName = sanitizeTypeName(removeGenerics(extFun.funName.replace("Impl", "")))
         val receiverTypeName = sanitizeTypeName(removeGenerics(receiver))
+        val implTypeName = resolveImplClassName(extFun.funName)
+            ?: throw IllegalStateException("No concrete implementation for ${extFun.funName}")
 
         return createExtensionFun(
             funName = funName,
             receiverType = ClassName(PoetConstants.PKG_TYPES, receiverTypeName),
             returnType = ClassName(PoetConstants.PKG_TYPES, returnTypeName),
-            implType = ClassName(PoetConstants.PKG_TYPES, sanitizeTypeName(removeGenerics(extFun.funName))),
+            implType = ClassName(PoetConstants.PKG_TYPES, implTypeName),
             kdoc = extFun.comments.takeIf { it.isNotEmpty() }
         )
     }
@@ -321,6 +261,92 @@ class DslGenerator(
         return str.replace(Regex("<[^>]*>"), "")
     }
 
+    private fun collectReferenceTypes(type: KotlinType): List<String> {
+        return type.collectRawTypeNames()
+            .map { normalizeTypeName(it) }
+            .filter { it.isNotEmpty() && classInfoByName.containsKey(it) }
+            .distinct()
+    }
+
+    private fun KotlinType.collectRawTypeNames(): List<String> {
+        return when (this) {
+            is KotlinType.Simple -> listOf(this.name)
+            is KotlinType.Nullable -> this.innerType.collectRawTypeNames()
+            is KotlinType.Generic -> when (this.name) {
+                "Array", "List", "MutableList", "MutableSet", "Set" -> this.params.flatMap { it.collectRawTypeNames() }
+                else -> if (this.name.startsWith("Union.U")) {
+                    this.params.flatMap { it.collectRawTypeNames() }
+                } else {
+                    listOf(this.name)
+                }
+            }
+            is KotlinType.Union -> this.types.flatMap { it.collectRawTypeNames() }
+            is KotlinType.Booleanable -> this.innerType.collectRawTypeNames()
+            is KotlinType.Nested -> listOf("${this.parent}.${this.name}")
+            is KotlinType.ReceiverFunction -> emptyList()
+            is KotlinType.Function -> emptyList()
+            is KotlinType.Any,
+            is KotlinType.Unit,
+            is KotlinType.Nothing,
+            is KotlinType.StringType,
+            is KotlinType.Int,
+            is KotlinType.Boolean,
+            is KotlinType.Long,
+            is KotlinType.Double,
+            is KotlinType.Float,
+            is KotlinType.Char,
+            is KotlinType.Byte,
+            is KotlinType.Short -> emptyList()
+        }
+    }
+
+    private fun resolveInstantiableTypes(typeName: String): List<String> {
+        val normalized = normalizeTypeName(typeName)
+        if (normalized.isEmpty()) return emptyList()
+        val descendants = hierarchy.findDescendants(normalized)
+        val interfaceDescendants = descendants.filter { classInfoByName[it]?.modifier?.isInterface() == true }
+        val leafDescendants = interfaceDescendants.filter { leafInterfaceNames.contains(it) }
+        if (leafDescendants.isNotEmpty()) {
+            return leafDescendants
+        }
+        val baseDecl = classInfoByName[normalized]
+        return if (baseDecl != null && (!baseDecl.modifier.isInterface() || leafInterfaceNames.contains(normalized))) {
+            listOf(baseDecl.name.removeSurrounding("`"))
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun normalizeTypeName(typeName: String): String {
+        return typeName.removeSurrounding("`").trim()
+    }
+
+    private fun getProperties(receiver: String): List<KotlinDeclaration.PropertyDecl> {
+        classAllPropertiesMap[receiver]?.let { return it }
+        val sanitized = receiver.removeSurrounding("`")
+        return classInfoByName[sanitized]?.properties.orEmpty()
+    }
+
+    private fun hasConcreteImplementation(typeName: String): Boolean {
+        val normalized = sanitizeTypeName(removeGenerics(typeName)).removeSurrounding("`")
+        val decl = classInfoByName[normalized]
+        return when {
+            decl == null -> leafInterfaceNames.contains(normalized)
+            decl.modifier.isInterface() -> leafInterfaceNames.contains(normalized)
+            else -> true
+        }
+    }
+
+    private fun resolveImplClassName(typeName: String): String? {
+        val normalized = sanitizeTypeName(removeGenerics(typeName)).removeSurrounding("`")
+        val decl = classInfoByName[normalized]
+        return when {
+            decl == null -> if (leafInterfaceNames.contains(normalized)) "${normalized}Impl" else null
+            decl.modifier.isInterface() -> if (leafInterfaceNames.contains(normalized)) "${decl.name}Impl" else null
+            else -> decl.name
+        }
+    }
+
     /**
      * 转换函数名（首字母小写，避免关键字，移除泛型参数）
      */
@@ -372,5 +398,51 @@ class DslGenerator(
             .returns(interfaceType)
             .addStatement("return %T().apply(block)", implType)
             .build()
+    }
+
+    private class KotlinTypeHierarchy(
+        classDecls: List<KotlinDeclaration.ClassDecl>
+    ) {
+        private val parentToChildren = LinkedHashMap<String, LinkedHashSet<String>>()
+
+        init {
+            classDecls.forEach { decl ->
+                val childName = decl.name.removeSurrounding("`")
+                decl.parents.mapNotNull { it.extractSimpleName() }.forEach { parent ->
+                    parentToChildren.getOrPut(parent) { LinkedHashSet() }.add(childName)
+                }
+            }
+        }
+
+        fun findDescendants(typeName: String): List<String> {
+            val normalized = typeName.removeSurrounding("`")
+            val visited = LinkedHashSet<String>()
+            val queue = ArrayDeque<String>()
+
+            parentToChildren[normalized]?.forEach { queue.add(it) }
+
+            while (queue.isNotEmpty()) {
+                val current = queue.removeFirst()
+                if (visited.add(current)) {
+                    parentToChildren[current]?.forEach { queue.add(it) }
+                }
+            }
+
+            return visited.toList()
+        }
+
+        fun findChildren(typeName: String): List<String> {
+            val normalized = typeName.removeSurrounding("`")
+            return parentToChildren[normalized]?.toList() ?: emptyList()
+        }
+
+        private fun KotlinType.extractSimpleName(): String? {
+            return when (this) {
+                is KotlinType.Simple -> this.name.removeSurrounding("`")
+                is KotlinType.Nullable -> this.innerType.extractSimpleName()
+                is KotlinType.Nested -> "${this.parent.removeSurrounding("`")}.${this.name.removeSurrounding("`")}"
+                else -> null
+            }
+        }
     }
 }

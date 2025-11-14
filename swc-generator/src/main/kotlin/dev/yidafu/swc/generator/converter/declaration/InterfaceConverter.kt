@@ -1,6 +1,7 @@
 package dev.yidafu.swc.generator.converter.declaration
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
@@ -18,11 +19,60 @@ import dev.yidafu.swc.generator.util.Logger
  */
 class InterfaceConverter(
     private val config: Configuration,
-    private val inheritanceAnalyzer: InheritanceAnalyzer? = null
+    private val inheritanceAnalyzer: InheritanceAnalyzer? = null,
+    private val unionParentRegistry: MutableMap<String, MutableSet<String>> = mutableMapOf(),
+    private val nestedTypeRegistry: MutableMap<String, String> = mutableMapOf()
 ) {
-    
-    private val typeConverter = TypeConverter(config)
-    
+    private val syntaxLiteralMap = mapOf(
+        "TsParserConfig" to "typescript",
+        "EsParserConfig" to "ecmascript"
+    )
+
+    private val typeConverter = TypeConverter(config, nestedTypeRegistry)
+    private val fallbackParentProperties = mapOf(
+        "Node" to setOf("type"),
+        "ExpressionBase" to setOf("type"),
+        "PropBase" to setOf("type"),
+        "PatternBase" to setOf("type"),
+        "ClassPropertyBase" to setOf("type"),
+        "ClassMember" to setOf("type"),
+        "ClassMethodBase" to setOf("type"),
+        "HasSpan" to setOf("span"),
+        "HasDecorator" to setOf("decorators"),
+        "ClassMember" to emptySet(),
+        "Expression" to emptySet(),
+        "Statement" to emptySet(),
+        "Declaration" to emptySet(),
+        "Pattern" to emptySet(),
+        "Property" to emptySet(),
+        "PropertyName" to emptySet(),
+        "JSXObject" to emptySet(),
+        "JSXElementName" to emptySet(),
+        "JSXAttributeName" to emptySet(),
+        "JSXExpression" to emptySet(),
+        "JSXAttrValue" to emptySet(),
+        "JSXElementChild" to emptySet(),
+        "JSXAttributeOrSpread" to emptySet(),
+        "ModuleExportName" to emptySet(),
+        "TsEntityName" to emptySet(),
+        "TsThisTypeOrIdent" to emptySet(),
+        "TsEnumMemberId" to emptySet(),
+        "TsModuleName" to emptySet(),
+        "TsLiteral" to emptySet(),
+        "TsTypeQueryExpr" to emptySet(),
+        "TsModuleReference" to emptySet(),
+        "TsNamespaceBody" to emptySet(),
+        "TsTypeElement" to emptySet(),
+        "TsFnParameter" to emptySet(),
+        "TsParameterPropertyParameter" to emptySet(),
+        "ObjectPatternProperty" to emptySet(),
+        "ImportSpecifier" to emptySet(),
+        "ExportSpecifier" to emptySet(),
+        "DefaultDecl" to emptySet(),
+        "ModuleItem" to emptySet(),
+        "SealedInterface" to emptySet()
+    )
+
     /**
      * 转换接口声明为 Kotlin 类声明
      */
@@ -38,37 +88,30 @@ class InterfaceConverter(
             // 转换继承关系
             val kotlinParents = tsInterface.extends.map { typeRef ->
                 convertTypeReference(typeRef)
+            }.toMutableList()
+
+            unionParentRegistry[tsInterface.name]?.forEach { parentName ->
+                kotlinParents.add(
+                    KotlinTypeFactory.simple(CodeGenerationRules.mapTypeName(parentName))
+                )
             }
+
+            val parentPropertyNames = collectParentPropertyNamesForParents(kotlinParents, tsInterface.name)
+
+            val nestedInterfaces = mutableListOf<KotlinDeclaration.ClassDecl>()
 
             // 转换成员为属性（只转换接口自己的成员，不包括继承的）
             // 去重：优先保留 camelCase 版本，如果只有 snake_case 版本则转换
             val deduplicatedMembers = deduplicateMembers(tsInterface.members)
+            val mappedInterfaceName = CodeGenerationRules.mapTypeName(tsInterface.name)
             val kotlinProperties = deduplicatedMembers.mapNotNull { member ->
-                convertTypeMember(member, tsInterface.name)
+                convertTypeMember(member, mappedInterfaceName, nestedInterfaces)
             }
 
-            // 收集嵌套接口（从 TypeLiteral 成员和包含 TypeLiteral 的联合类型）
-            val nestedInterfaces = tsInterface.members.mapNotNull { member ->
-                when {
-                    member.type is TypeScriptType.TypeLiteral -> {
-                        createNestedInterface(member, tsInterface.name)
-                    }
-                    member.type is TypeScriptType.Union && member.type.types.any { it is TypeScriptType.TypeLiteral } -> {
-                        // 从联合类型中提取类型字面量创建嵌套接口
-                        val typeLiteral = member.type.types.find { it is TypeScriptType.TypeLiteral } as? TypeScriptType.TypeLiteral
-                        if (typeLiteral != null) {
-                            val typeMember = TypeMember(member.name, typeLiteral, member.optional, member.readonly, member.kdoc)
-                            createNestedInterface(typeMember, tsInterface.name)
-                        } else {
-                            null
-                        }
-                    }
-                    else -> null
-                }
-            }
+            val propertiesWithOverride = applyOverrideModifiers(kotlinProperties, parentPropertyNames)
 
             // 过滤掉重复声明的父接口属性
-            val filteredProperties = filterInheritedProperties(kotlinProperties, kotlinParents, tsInterface.name)
+            val filteredProperties = filterInheritedProperties(propertiesWithOverride, parentPropertyNames, tsInterface.name)
 
             // 确定修饰符
             val modifier = determineClassModifier(tsInterface)
@@ -77,7 +120,7 @@ class InterfaceConverter(
             val annotations = buildAnnotations(tsInterface)
 
             val classDecl = KotlinDeclaration.ClassDecl(
-                name = wrapReservedWord(tsInterface.name),
+                name = wrapReservedWord(mappedInterfaceName),
                 modifier = modifier,
                 properties = filteredProperties,
                 parents = kotlinParents,
@@ -99,7 +142,7 @@ class InterfaceConverter(
             )
         }
     }
-    
+
     /**
      * 转换类型参数
      */
@@ -114,7 +157,7 @@ class InterfaceConverter(
             )
         }
     }
-    
+
     /**
      * 转换变体
      */
@@ -125,31 +168,37 @@ class InterfaceConverter(
             Variance.CONTRAVARIANT -> KotlinDeclaration.Variance.CONTRAVARIANT
         }
     }
-    
+
     /**
      * 转换类型引用
      */
     private fun convertTypeReference(typeRef: TypeReference): KotlinType {
+        val mappedName = CodeGenerationRules.mapTypeName(typeRef.name)
         val typeArgs = typeRef.typeArguments.mapNotNull { typeArg ->
             typeConverter.convert(typeArg).getOrNull()
         }
         return if (typeArgs.isNotEmpty()) {
-            KotlinTypeFactory.generic(typeRef.name, *typeArgs.toTypedArray())
+            KotlinTypeFactory.generic(mappedName, *typeArgs.toTypedArray())
         } else {
-            KotlinTypeFactory.simple(typeRef.name)
+            KotlinTypeFactory.simple(mappedName)
         }
     }
-    
+
     /**
      * 转换类型成员为属性
      */
-    private fun convertTypeMember(member: TypeMember, interfaceName: String): KotlinDeclaration.PropertyDecl? {
+    private fun convertTypeMember(
+        member: TypeMember,
+        interfaceName: String,
+        nestedInterfaces: MutableList<KotlinDeclaration.ClassDecl>
+    ): KotlinDeclaration.PropertyDecl? {
+        val isTypeProperty = member.name == "type"
+        val syntaxLiteral = syntaxLiteralMap[interfaceName]
+        val isSyntaxProperty = member.name == "syntax" && syntaxLiteral != null
         val kotlinType = when (member.type) {
             is TypeScriptType.TypeLiteral -> {
-                // 检查是否包含索引签名
                 val hasIndexSignature = member.type.members.any { it.type is TypeScriptType.IndexSignature }
                 if (hasIndexSignature) {
-                    // 如果有索引签名，转换为 Map 类型
                     val indexSignature = member.type.members.find { it.type is TypeScriptType.IndexSignature }
                     if (indexSignature?.type is TypeScriptType.IndexSignature) {
                         val indexSig = indexSignature.type as TypeScriptType.IndexSignature
@@ -160,10 +209,8 @@ class InterfaceConverter(
                         KotlinTypeFactory.generic("Map", KotlinTypeFactory.string(), KotlinTypeFactory.any())
                     }
                 } else {
-                    // 普通类型字面量，生成嵌套接口引用
-                    // 使用驼峰命名：JsFormatOptions + Comments = JsFormatOptionsComments
-                    val nestedInterfaceName = "${interfaceName}${member.name.replaceFirstChar { it.uppercase() }}"
-                    KotlinTypeFactory.simple(nestedInterfaceName)
+                    val nestedInterfaceName = ensureNestedInterface(member, interfaceName, nestedInterfaces)
+                    KotlinTypeFactory.nested(interfaceName, nestedInterfaceName)
                 }
             }
             is TypeScriptType.Union -> {
@@ -174,7 +221,8 @@ class InterfaceConverter(
                     val modifiedTypes = member.type.types.map { type ->
                         if (type is TypeScriptType.TypeLiteral) {
                             // 生成嵌套接口引用
-                            val nestedInterfaceName = "${interfaceName}${member.name.replaceFirstChar { it.uppercase() }}"
+                            val typeMember = TypeMember(member.name, type, member.optional, member.readonly, member.kdoc)
+                            val nestedInterfaceName = ensureNestedInterface(typeMember, interfaceName, nestedInterfaces)
                             TypeScriptType.Reference(nestedInterfaceName)
                         } else {
                             type
@@ -190,24 +238,18 @@ class InterfaceConverter(
                 typeConverter.convert(member.type).getOrDefault(KotlinTypeFactory.any())
             }
         }
-        
+
         // 处理可空性
-        val finalType = if (member.optional) {
-            kotlinType.makeNullable()
-        } else {
-            kotlinType
-        }
-        
-        // 处理属性名
         val propertyName = wrapReservedWord(member.name)
-        
-        // 处理只读属性
-        val modifier = if (member.readonly) {
-            PropertyModifier.Val
-        } else {
-            PropertyModifier.Var
+        val modifier = if (member.readonly) PropertyModifier.Val else PropertyModifier.Var
+        val shouldForceNullable = !isTypeProperty && !isSyntaxProperty
+        val finalType = when {
+            isTypeProperty -> KotlinType.StringType
+            isSyntaxProperty -> KotlinType.StringType
+            member.optional || shouldForceNullable -> kotlinType.makeNullable()
+            else -> kotlinType
         }
-        
+
         return KotlinDeclaration.PropertyDecl(
             name = propertyName,
             type = finalType,
@@ -216,15 +258,15 @@ class InterfaceConverter(
             kdoc = member.kdoc
         )
     }
-    
+
     /**
      * 去重成员
      */
     private fun deduplicateMembers(members: List<TypeMember>): List<TypeMember> {
         val memberMap = mutableMapOf<String, TypeMember>()
-        
+
         for (member in members) {
-            val key = member.name.lowercase()
+            val key = member.name.replace("_", "").lowercase()
             if (!memberMap.containsKey(key)) {
                 memberMap[key] = member
             } else {
@@ -235,237 +277,175 @@ class InterfaceConverter(
                 }
             }
         }
-        
+
         return memberMap.values.toList()
     }
-    
+
     /**
      * 检查是否为 camelCase
      */
     private fun isCamelCase(name: String): Boolean {
         return name.matches(Regex("[a-z][a-zA-Z0-9]*"))
     }
-    
+
     /**
-     * 创建嵌套接口
+     * 确保嵌套接口存在
      */
-    private fun createNestedInterface(member: TypeMember, parentName: String): KotlinDeclaration.ClassDecl? {
-        if (member.type !is TypeScriptType.TypeLiteral) return null
-        
-        val typeLiteral = member.type as TypeScriptType.TypeLiteral
-        val nestedMembers = typeLiteral.members.mapNotNull { nestedMember ->
-            convertTypeMember(nestedMember, "${parentName}${member.name.capitalize()}")
+    private fun ensureNestedInterface(
+        member: TypeMember,
+        parentName: String,
+        nestedInterfaces: MutableList<KotlinDeclaration.ClassDecl>
+    ): String {
+        val nestedInterfaceName = "${parentName}${member.name.replaceFirstChar { it.uppercase() }}"
+        if (nestedTypeRegistry.containsKey(nestedInterfaceName)) {
+            return nestedInterfaceName
         }
-        
-        // 使用驼峰命名：JsFormatOptions + Comments = JsFormatOptionsComments
-        val nestedInterfaceName = "${parentName}${member.name.capitalize()}"
-        
-        return KotlinDeclaration.ClassDecl(
-            name = nestedInterfaceName,
-            modifier = ClassModifier.Interface,
-            properties = nestedMembers,
-            parents = emptyList(),
-            typeParameters = emptyList(),
-            nestedClasses = emptyList(),
-            annotations = emptyList(),
-            kdoc = null
+
+        val typeLiteral = member.type as? TypeScriptType.TypeLiteral ?: return nestedInterfaceName
+
+        val nestedMembers = typeLiteral.members.mapNotNull { nestedMember ->
+            convertTypeMember(nestedMember, nestedInterfaceName, nestedInterfaces)
+        }
+
+        nestedTypeRegistry[nestedInterfaceName] = parentName
+        nestedInterfaces.add(
+            KotlinDeclaration.ClassDecl(
+                name = nestedInterfaceName,
+                modifier = ClassModifier.Interface,
+                properties = nestedMembers,
+                parents = emptyList(),
+                typeParameters = emptyList(),
+                nestedClasses = emptyList(),
+                annotations = emptyList(),
+                kdoc = null
+            )
         )
+
+        return nestedInterfaceName
     }
-    
+
+    private fun collectParentPropertyNamesForParents(
+        parents: List<KotlinType>,
+        interfaceName: String
+    ): Set<String> {
+        if (parents.isEmpty()) return emptySet()
+
+        val parentPropertyNames = mutableSetOf<String>()
+
+        for (parent in parents) {
+            val parentTypeName = parent.toTypeString()
+            Logger.debug("检查父接口 $parentTypeName 的属性", 6)
+            val parentProps = collectParentPropertyNamesFromType(parentTypeName)
+            if (parentProps.isEmpty()) {
+                Logger.debug("  $parentTypeName 未提供可过滤属性", 8)
+            } else {
+                Logger.debug("  $parentTypeName 属性: $parentProps", 8)
+            }
+            parentPropertyNames.addAll(parentProps)
+        }
+
+        Logger.debug("  接口 $interfaceName 的父属性: $parentPropertyNames", 6)
+        return parentPropertyNames
+    }
+
+    private fun applyOverrideModifiers(
+        properties: List<KotlinDeclaration.PropertyDecl>,
+        parentPropertyNames: Set<String>
+    ): List<KotlinDeclaration.PropertyDecl> {
+        if (parentPropertyNames.isEmpty()) return properties
+
+        return properties.map { property ->
+            val propertyName = property.name
+            val cleanName = propertyName.removeSurrounding("`")
+            val shouldOverride = parentPropertyNames.contains(propertyName) || parentPropertyNames.contains(cleanName)
+            if (!shouldOverride) {
+                property
+            } else {
+                val newModifier = when (property.modifier) {
+                    is PropertyModifier.Var -> PropertyModifier.OverrideVar
+                    is PropertyModifier.Val -> PropertyModifier.OverrideVal
+                    is PropertyModifier.OverrideVar,
+                    is PropertyModifier.OverrideVal -> property.modifier
+                    else -> property.modifier
+                }
+                property.copy(modifier = newModifier)
+            }
+        }
+    }
+
     /**
      * 过滤继承的属性
      * 避免重复声明父接口已有的属性
      */
     private fun filterInheritedProperties(
         properties: List<KotlinDeclaration.PropertyDecl>,
-        parents: List<KotlinType>,
+        parentPropertyNames: Set<String>,
         interfaceName: String
     ): List<KotlinDeclaration.PropertyDecl> {
-        if (parents.isEmpty()) return properties
-        
-        // 获取所有父类型的属性名
-        val parentPropertyNames = mutableSetOf<String>()
-        
-        for (parent in parents) {
-            val parentTypeName = parent.toTypeString()
-            Logger.debug("检查父接口 $parentTypeName 的属性", 6)
-            
-            // 根据父接口名称添加已知的属性
-            when (parentTypeName) {
-                "Node" -> {
-                    parentPropertyNames.add("type")
-                    Logger.debug("  Node 接口包含属性: type", 8)
-                }
-                "HasSpan" -> {
-                    parentPropertyNames.add("span")
-                    Logger.debug("  HasSpan 接口包含属性: span", 8)
-                }
-                "HasDecorator" -> {
-                    parentPropertyNames.add("decorators")
-                    Logger.debug("  HasDecorator 接口包含属性: decorators", 8)
-                }
-                "ClassMember" -> {
-                    // ClassMember 是标记接口，没有属性
-                    Logger.debug("  ClassMember 是标记接口，无属性", 8)
-                }
-                "Expression" -> {
-                    // Expression 是标记接口，没有属性
-                    Logger.debug("  Expression 是标记接口，无属性", 8)
-                }
-                "Statement" -> {
-                    // Statement 是标记接口，没有属性
-                    Logger.debug("  Statement 是标记接口，无属性", 8)
-                }
-                "Declaration" -> {
-                    // Declaration 是标记接口，没有属性
-                    Logger.debug("  Declaration 是标记接口，无属性", 8)
-                }
-                "Pattern" -> {
-                    // Pattern 是标记接口，没有属性
-                    Logger.debug("  Pattern 是标记接口，无属性", 8)
-                }
-                "Property" -> {
-                    // Property 是标记接口，没有属性
-                    Logger.debug("  Property 是标记接口，无属性", 8)
-                }
-                "PropertyName" -> {
-                    // PropertyName 是标记接口，没有属性
-                    Logger.debug("  PropertyName 是标记接口，无属性", 8)
-                }
-                "JSXObject" -> {
-                    // JSXObject 是标记接口，没有属性
-                    Logger.debug("  JSXObject 是标记接口，无属性", 8)
-                }
-                "JSXElementName" -> {
-                    // JSXElementName 是标记接口，没有属性
-                    Logger.debug("  JSXElementName 是标记接口，无属性", 8)
-                }
-                "JSXAttributeName" -> {
-                    // JSXAttributeName 是标记接口，没有属性
-                    Logger.debug("  JSXAttributeName 是标记接口，无属性", 8)
-                }
-                "JSXExpression" -> {
-                    // JSXExpression 是标记接口，没有属性
-                    Logger.debug("  JSXExpression 是标记接口，无属性", 8)
-                }
-                "JSXAttrValue" -> {
-                    // JSXAttrValue 是标记接口，没有属性
-                    Logger.debug("  JSXAttrValue 是标记接口，无属性", 8)
-                }
-                "JSXElementChild" -> {
-                    // JSXElementChild 是标记接口，没有属性
-                    Logger.debug("  JSXElementChild 是标记接口，无属性", 8)
-                }
-                "JSXAttributeOrSpread" -> {
-                    // JSXAttributeOrSpread 是标记接口，没有属性
-                    Logger.debug("  JSXAttributeOrSpread 是标记接口，无属性", 8)
-                }
-                "ModuleExportName" -> {
-                    // ModuleExportName 是标记接口，没有属性
-                    Logger.debug("  ModuleExportName 是标记接口，无属性", 8)
-                }
-                "TsEntityName" -> {
-                    // TsEntityName 是标记接口，没有属性
-                    Logger.debug("  TsEntityName 是标记接口，无属性", 8)
-                }
-                "TsThisTypeOrIdent" -> {
-                    // TsThisTypeOrIdent 是标记接口，没有属性
-                    Logger.debug("  TsThisTypeOrIdent 是标记接口，无属性", 8)
-                }
-                "TsEnumMemberId" -> {
-                    // TsEnumMemberId 是标记接口，没有属性
-                    Logger.debug("  TsEnumMemberId 是标记接口，无属性", 8)
-                }
-                "TsModuleName" -> {
-                    // TsModuleName 是标记接口，没有属性
-                    Logger.debug("  TsModuleName 是标记接口，无属性", 8)
-                }
-                "TsLiteral" -> {
-                    // TsLiteral 是标记接口，没有属性
-                    Logger.debug("  TsLiteral 是标记接口，无属性", 8)
-                }
-                "TsTypeQueryExpr" -> {
-                    // TsTypeQueryExpr 是标记接口，没有属性
-                    Logger.debug("  TsTypeQueryExpr 是标记接口，无属性", 8)
-                }
-                "TsModuleReference" -> {
-                    // TsModuleReference 是标记接口，没有属性
-                    Logger.debug("  TsModuleReference 是标记接口，无属性", 8)
-                }
-                "TsNamespaceBody" -> {
-                    // TsNamespaceBody 是标记接口，没有属性
-                    Logger.debug("  TsNamespaceBody 是标记接口，无属性", 8)
-                }
-                "TsTypeElement" -> {
-                    // TsTypeElement 是标记接口，没有属性
-                    Logger.debug("  TsTypeElement 是标记接口，无属性", 8)
-                }
-                "TsFnParameter" -> {
-                    // TsFnParameter 是标记接口，没有属性
-                    Logger.debug("  TsFnParameter 是标记接口，无属性", 8)
-                }
-                "TsParameterPropertyParameter" -> {
-                    // TsParameterPropertyParameter 是标记接口，没有属性
-                    Logger.debug("  TsParameterPropertyParameter 是标记接口，无属性", 8)
-                }
-                "ObjectPatternProperty" -> {
-                    // ObjectPatternProperty 是标记接口，没有属性
-                    Logger.debug("  ObjectPatternProperty 是标记接口，无属性", 8)
-                }
-                "ImportSpecifier" -> {
-                    // ImportSpecifier 是标记接口，没有属性
-                    Logger.debug("  ImportSpecifier 是标记接口，无属性", 8)
-                }
-                "ExportSpecifier" -> {
-                    // ExportSpecifier 是标记接口，没有属性
-                    Logger.debug("  ExportSpecifier 是标记接口，无属性", 8)
-                }
-                "DefaultDecl" -> {
-                    // DefaultDecl 是标记接口，没有属性
-                    Logger.debug("  DefaultDecl 是标记接口，无属性", 8)
-                }
-                "ModuleItem" -> {
-                    // ModuleItem 是标记接口，没有属性
-                    Logger.debug("  ModuleItem 是标记接口，无属性", 8)
-                }
-                "SealedInterface" -> {
-                    // SealedInterface 是标记接口，没有属性
-                    Logger.debug("  SealedInterface 是标记接口，无属性", 8)
-                }
-                else -> {
-                    Logger.debug("  未知父接口 $parentTypeName，跳过属性过滤", 8)
-                }
-            }
-        }
-        
+        if (parentPropertyNames.isEmpty()) return properties
+
         // 过滤掉从父接口继承的属性
         val filteredProperties = properties.filter { property ->
             // 检查属性名（带反引号）和去掉反引号的版本
             val propertyNameWithoutBackticks = property.name.removeSurrounding("`")
-            val shouldKeep = !parentPropertyNames.contains(property.name) && 
-                           !parentPropertyNames.contains(propertyNameWithoutBackticks)
+            val isTypeProperty = propertyNameWithoutBackticks == "type"
+            val shouldKeep = isTypeProperty || (
+                !parentPropertyNames.contains(property.name) &&
+                    !parentPropertyNames.contains(propertyNameWithoutBackticks)
+                )
             if (!shouldKeep) {
                 Logger.debug("  过滤掉继承的属性: ${property.name}", 8)
             }
             shouldKeep
         }
-        
+
         Logger.debug("  接口 $interfaceName: 原始属性 ${properties.size} 个，过滤后 ${filteredProperties.size} 个", 6)
         if (interfaceName == "Constructor" || interfaceName == "ForStatement") {
-            Logger.debug("  $interfaceName 接口的父类型: ${parents.map { it.toTypeString() }}", 8)
             Logger.debug("  $interfaceName 接口的父属性: $parentPropertyNames", 8)
             Logger.debug("  $interfaceName 接口的原始属性: ${properties.map { it.name }}", 8)
             Logger.debug("  $interfaceName 接口的过滤后属性: ${filteredProperties.map { it.name }}", 8)
         }
         return filteredProperties
     }
-    
+
+    private fun collectParentPropertyNamesFromType(
+        parentTypeName: String,
+        visited: MutableSet<String> = mutableSetOf()
+    ): Set<String> {
+        if (!visited.add(parentTypeName)) return emptySet()
+        val analyzer = inheritanceAnalyzer
+        val result = mutableSetOf<String>()
+
+        val declaration = analyzer?.getDeclaration(parentTypeName) as? TypeScriptDeclaration.InterfaceDeclaration
+        if (declaration != null) {
+            declaration.members.forEach { member ->
+                val wrapped = wrapReservedWord(member.name)
+                result.add(wrapped)
+                result.add(wrapped.removeSurrounding("`"))
+            }
+            declaration.extends.forEach { parentRef ->
+                result.addAll(collectParentPropertyNamesFromType(parentRef.name, visited))
+            }
+        }
+
+        if (result.isEmpty()) {
+            val fallback = fallbackParentProperties[parentTypeName].orEmpty()
+            fallback.forEach { name ->
+                val wrapped = wrapReservedWord(name)
+                result.add(wrapped)
+                result.add(wrapped.removeSurrounding("`"))
+            }
+        }
+
+        return result
+    }
+
     /**
      * 确定类修饰符
      */
     private fun determineClassModifier(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): ClassModifier {
         val name = tsInterface.name
-        
+
         return when {
             config.rules.classModifiers.toKotlinClass.contains(name) -> ClassModifier.FinalClass
             config.rules.classModifiers.keepInterface.contains(name) -> ClassModifier.Interface
@@ -473,30 +453,30 @@ class InterfaceConverter(
             else -> ClassModifier.Interface
         }
     }
-    
+
     /**
      * 构建注解
      */
     private fun buildAnnotations(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
-        
+
         // 添加 SwcDslMarker 注解
         if (config.rules.classModifiers.sealedInterface.contains(tsInterface.name)) {
             annotations.add(KotlinDeclaration.Annotation("SwcDslMarker"))
         }
-        
+
         return annotations
     }
-    
+
     /**
      * 包装保留字
      */
     private fun wrapReservedWord(name: String): String {
         val reservedWords = setOf(
             "object", "inline", "in", "super", "class", "interface", "fun",
-            "val", "var", "when", "is", "as", "type", "import", "package"
+            "val", "var", "when", "is", "as", "import", "package"
         )
-        
+
         return if (reservedWords.contains(name.lowercase())) {
             "`$name`"
         } else {

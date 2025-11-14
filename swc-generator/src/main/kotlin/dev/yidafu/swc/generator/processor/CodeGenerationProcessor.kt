@@ -1,12 +1,12 @@
 package dev.yidafu.swc.generator.processor
 
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
+import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
 import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
-import dev.yidafu.swc.generator.model.typescript.InheritanceAnalysisCache
-import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
-import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
 

@@ -2,10 +2,10 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.poet.*
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
+import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.util.PerformanceOptimizer
@@ -18,6 +18,10 @@ class TypesGenerator(
     private val classDecls: MutableList<KotlinDeclaration.ClassDecl>
 ) {
     private val typeAliases = mutableListOf<KotlinDeclaration.TypeAliasDecl>()
+    private val parserSyntaxLiteral = mapOf(
+        "TsParserConfig" to "typescript",
+        "EsParserConfig" to "ecmascript"
+    )
 
     // 懒加载接口名称集合，避免重复计算
     private val interfaceNames: Set<String> by lazy {
@@ -60,9 +64,6 @@ class TypesGenerator(
             val fileBuilder = createFileBuilder(
                 PoetConstants.PKG_TYPES,
                 "types",
-                "dev.yidafu.swc" to "Union",
-                "dev.yidafu.swc" to "Union.U2",
-                "dev.yidafu.swc" to "Union.U3", "dev.yidafu.swc" to "Union.U4",
                 "kotlinx.serialization" to "SerialName",
                 "kotlinx.serialization" to "Serializable",
                 "kotlinx.serialization.json" to "JsonClassDiscriminator",
@@ -208,8 +209,10 @@ class TypesGenerator(
         }
 
         // 添加实现类需要的注解
-        val discriminator = "type"
-        val serialName = interfaceDecl.name
+        val interfaceCleanName = interfaceDecl.name.removeSurrounding("`")
+        val syntaxLiteral = parserSyntaxLiteral[interfaceCleanName]
+        val discriminator = if (syntaxLiteral != null) "syntax" else "type"
+        val serialName = syntaxLiteral ?: interfaceCleanName
 
         return interfaceDecl.copy(
             name = "${interfaceDecl.name}Impl",
@@ -221,7 +224,8 @@ class TypesGenerator(
                 KotlinDeclaration.Annotation("SwcDslMarker"),
                 KotlinDeclaration.Annotation("Serializable"),
                 KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
-                KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+                KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))),
+                KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi")))
             )
         )
     }
@@ -283,15 +287,31 @@ class TypesGenerator(
             else -> prop.modifier
         }
 
+        val normalizedName = prop.name.removeSurrounding("`")
+        val interfaceCleanName = interfaceName.removeSurrounding("`")
+        val isTypeProperty = normalizedName == "type"
+        val syntaxLiteral = parserSyntaxLiteral[interfaceCleanName]
+        val isSyntaxProperty = normalizedName == "syntax" && syntaxLiteral != null
+
+        // 使实现类属性（除 type 外）默认为可空，便于 DSL 构建时逐步赋值
+        val updatedType = when {
+            isTypeProperty -> KotlinType.StringType
+            isSyntaxProperty -> KotlinType.StringType
+            prop.type is KotlinType.Nullable -> prop.type
+            else -> KotlinType.Nullable(prop.type)
+        }
+
         // 添加默认值
         val defaultValue = when {
-            prop.name == "type" -> Expression.StringLiteral(interfaceName)
-            prop.type is KotlinType.Nullable -> Expression.NullLiteral
+            isTypeProperty -> Expression.StringLiteral(interfaceCleanName)
+            isSyntaxProperty -> Expression.StringLiteral(syntaxLiteral!!)
+            updatedType is KotlinType.Nullable -> Expression.NullLiteral
             else -> prop.defaultValue
         }
 
         return prop.copy(
             modifier = newModifier,
+            type = updatedType,
             defaultValue = defaultValue
         )
     }

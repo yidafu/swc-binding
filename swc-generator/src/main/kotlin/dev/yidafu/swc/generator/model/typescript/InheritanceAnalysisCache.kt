@@ -1,7 +1,7 @@
 package dev.yidafu.swc.generator.model.typescript
 
-import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.util.Logger
 
 typealias ClassDecl = KotlinDeclaration.ClassDecl

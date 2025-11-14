@@ -26,12 +26,16 @@ dependencies {
 
     // YAML 配置解析
     implementation("com.charleskorn.kaml:kaml:0.55.0")
-    
+
     // Kotlin 反射支持（kaml 需要）
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
 
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
+    testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
+    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
+    testImplementation("io.kotest:kotest-framework-api:5.9.1")
+    testImplementation("io.kotest:kotest-framework-engine:5.9.1")
+    testImplementation("io.kotest:kotest-property:5.9.1")
+    testImplementation("io.mockk:mockk:1.13.9")
 }
 
 application {
