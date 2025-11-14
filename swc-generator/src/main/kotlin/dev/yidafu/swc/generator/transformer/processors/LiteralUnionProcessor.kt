@@ -46,7 +46,7 @@ class LiteralUnionProcessor(
             properties = properties,
             parents = emptyList(),
             annotations = emptyList(),
-            kdoc = "/**\n  * ${typeAliasExtractor.getTypeString(typeAlias)}\n  */"
+            kdoc = "/**\n  * $name: ${typeAliasExtractor.getTypeString(typeAlias)}\n  */"
         )
 
         context.addClassDecl(classDecl)
