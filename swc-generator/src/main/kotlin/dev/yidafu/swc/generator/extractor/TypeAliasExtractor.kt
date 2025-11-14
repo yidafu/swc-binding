@@ -17,9 +17,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun isLiteralUnion(typeAlias: AstNode): Boolean {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
-        if (!typeAnnotation.isUnionType()) return false
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return false
+        if (!actualType.isUnionType()) return false
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         return types.all { it.isLiteralType() }
     }
 
@@ -28,13 +29,13 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun isMixedUnion(typeAlias: AstNode): Boolean {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
-        if (!typeAnnotation.isUnionType()) return false
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return false
+        if (!actualType.isUnionType()) return false
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         val hasLiteral = types.any { it.isLiteralType() }
         val hasBasicType = types.any {
-            val kind = it.getString("kind")
-            kind in listOf("string", "number", "boolean")
+            it.isKeywordType() && it.getKeywordKind() in listOf("string", "number", "boolean")
         }
         return hasLiteral && hasBasicType
     }
@@ -44,9 +45,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun isRefUnion(typeAlias: AstNode): Boolean {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
-        if (!typeAnnotation.isUnionType()) return false
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return false
+        if (!actualType.isUnionType()) return false
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         return types.all { it.isTypeReference() }
     }
 
@@ -55,7 +57,8 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun isIntersectionType(typeAlias: AstNode): Boolean {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
-        return typeAnnotation.isIntersectionType()
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return false
+        return actualType.isIntersectionType()
     }
 
     /**
@@ -63,9 +66,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun extractLiteralUnionProperties(typeAlias: AstNode): List<KotlinDeclaration.PropertyDecl> {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return emptyList()
-        if (!typeAnnotation.isUnionType()) return emptyList()
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return emptyList()
+        if (!actualType.isUnionType()) return emptyList()
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         return types
             .mapNotNull { it.getNode("literal") }
             .mapNotNull { literal -> createPropertyFromLiteral(literal) }
@@ -152,9 +156,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun getUnionTypeNames(typeAlias: AstNode): List<String> {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return emptyList()
-        if (!typeAnnotation.isUnionType()) return emptyList()
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return emptyList()
+        if (!actualType.isUnionType()) return emptyList()
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         return types
             .mapNotNull { it.getTypeReferenceName() }
             .filter { it.isNotEmpty() }
@@ -166,9 +171,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun extractIntersectionInfo(typeAlias: AstNode): Pair<String, AstNode>? {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return null
-        if (!typeAnnotation.isIntersectionType()) return null
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return null
+        if (!actualType.isIntersectionType()) return null
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
         if (types.size < 2) return null
 
         val first = types[0]
@@ -187,9 +193,15 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun isAllLiteralTypeSame(typeAlias: AstNode): Boolean {
         val typeAnnotation = typeAlias.getNode("typeAnnotation") ?: return false
-        if (!typeAnnotation.isUnionType()) return false
+        val actualType = typeAnnotation.getNode("typeAnnotation") ?: return false
+        if (!actualType.isUnionType()) return false
 
-        val types = typeAnnotation.getNodes("types")
+        val types = actualType.getNodes("types")
+        
+        // 如果类型中包含了非字面量类型，返回 false
+        if (!types.all { it.isLiteralType() }) return false
+        
+        val literalTypes = types
             .mapNotNull {
                 val literal = it.getNode("literal")
                 when {
@@ -200,7 +212,7 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
                 }
             }
 
-        return types.isNotEmpty() && types.distinct().size == 1
+        return literalTypes.isNotEmpty() && literalTypes.distinct().size == 1
     }
 
     /**
@@ -208,7 +220,8 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
      */
     fun getTypeString(typeAlias: AstNode): String {
         val typeAnnotation = typeAlias.getNode("typeAnnotation")
-        return TypeResolver.resolveType(typeAnnotation)
+        val actualType = typeAnnotation?.getNode("typeAnnotation")
+        return TypeResolver.resolveType(actualType)
     }
 
     /**

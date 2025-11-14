@@ -81,23 +81,25 @@ class TypeAliasNode(private val node: AstNode) {
      * 是否为 Union Type
      */
     fun isUnionType(): Boolean {
-        return typeAnnotation?.isUnionType() == true
+        val actualType = typeAnnotation?.getNode("typeAnnotation") ?: return false
+        return actualType.isUnionType()
     }
 
     /**
      * 是否为 Intersection Type
      */
     fun isIntersectionType(): Boolean {
-        return typeAnnotation?.isIntersectionType() == true
+        val actualType = typeAnnotation?.getNode("typeAnnotation") ?: return false
+        return actualType.isIntersectionType()
     }
 
     /**
      * 是否为 Literal Union（所有成员都是字面量）
      */
     fun isLiteralUnion(): Boolean {
-        val annotation = typeAnnotation ?: return false
-        if (!annotation.isUnionType()) return false
-        val types = annotation.getNodes("types")
+        val actualType = typeAnnotation?.getNode("typeAnnotation") ?: return false
+        if (!actualType.isUnionType()) return false
+        val types = actualType.getNodes("types")
         return types.isNotEmpty() && types.all { it.isLiteralType() }
     }
 
@@ -105,18 +107,18 @@ class TypeAliasNode(private val node: AstNode) {
      * 获取 Union Type 的所有类型
      */
     fun getUnionTypes(): List<AstNode> {
-        val annotation = typeAnnotation ?: return emptyList()
-        if (!annotation.isUnionType()) return emptyList()
-        return annotation.getNodes("types")
+        val actualType = typeAnnotation?.getNode("typeAnnotation") ?: return emptyList()
+        if (!actualType.isUnionType()) return emptyList()
+        return actualType.getNodes("types")
     }
 
     /**
      * 获取 Intersection Type 的所有类型
      */
     fun getIntersectionTypes(): List<AstNode> {
-        val annotation = typeAnnotation ?: return emptyList()
-        if (!annotation.isIntersectionType()) return emptyList()
-        return annotation.getNodes("types")
+        val actualType = typeAnnotation?.getNode("typeAnnotation") ?: return emptyList()
+        if (!actualType.isIntersectionType()) return emptyList()
+        return actualType.getNodes("types")
     }
 }
 
