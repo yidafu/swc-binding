@@ -12,7 +12,8 @@ use swc_common::FileName;
 use swc_ecma_ast::Program;
 
 use crate::async_utils::callback_java;
-use crate::util::{deserialize_json, get_deserialized, process_output, try_with, MapErr};
+use crate::util::{deserialize_json, get_deserialized, process_output, try_with, MapErr, SwcResult};
+use swc::TransformOutput;
 
 use crate::get_compiler;
 
@@ -32,16 +33,23 @@ pub fn transformSync(
         .get_string(&options)
         .expect("Couldn't get java string!")
         .into();
+    let is_module = is_module == 1;
+    let result = perform_transform_sync_work(&s, is_module, &opts);
+    process_output(env, result)
+}
+
+/// 执行同步转换工作的辅助函数
+fn perform_transform_sync_work(code: &str, is_module: bool, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
-    let mut options: Options = get_deserialized(&opts).unwrap();
+    let mut options: Options = get_deserialized(opts)?;
 
     if !options.filename.is_empty() {
         options.config.adjust(Path::new(&options.filename));
     }
 
     let error_format = options.experimental.error_format.unwrap_or_default();
-    let is_module = is_module == 1;
+
     let result = try_with(
         c.cm.clone(),
         !options.config.error.filename.into_bool(),
@@ -50,7 +58,7 @@ pub fn transformSync(
             c.run(|| {
                 if is_module {
                     let program: Program =
-                        deserialize_json(s.as_str()).context("failed to deserialize Program")?;
+                        deserialize_json(code).context("failed to deserialize Program")?;
                     c.process_js(handler, program, &options)
                 } else {
                     let fm = c.cm.new_source_file(
@@ -59,7 +67,7 @@ pub fn transformSync(
                         } else {
                             FileName::Real(options.filename.clone().into()).into()
                         },
-                        s,
+                        code.to_string(),
                     );
                     c.process_js_file(fm, handler, &options)
                 }
@@ -68,7 +76,7 @@ pub fn transformSync(
     )
     .convert_err();
 
-    process_output(env, result)
+    result
 }
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
@@ -87,16 +95,22 @@ pub fn transformFileSync(
         .get_string(&options)
         .expect("Couldn't get java string!")
         .into();
+    let is_module = is_module == 1;
+    let result = perform_transform_file_sync_work(&s, is_module, &opts);
+    process_output(env, result)
+}
+
+/// 执行同步文件转换工作的辅助函数
+fn perform_transform_file_sync_work(filepath: &str, is_module: bool, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
-    let mut options: Options = get_deserialized(&opts).unwrap();
+    let mut options: Options = get_deserialized(opts)?;
 
     if !options.filename.is_empty() {
         options.config.adjust(Path::new(&options.filename));
     }
 
     let error_format = options.experimental.error_format.unwrap_or_default();
-    let is_module = is_module == 1;
 
     let result = try_with(
         c.cm.clone(),
@@ -106,10 +120,10 @@ pub fn transformFileSync(
             c.run(|| {
                 if is_module {
                     let program: Program =
-                        deserialize_json(s.as_str()).context("failed to deserialize Program")?;
+                        deserialize_json(filepath).context("failed to deserialize Program")?;
                     c.process_js(handler, program, &options)
                 } else {
-                    let fm = c.cm.load_file(Path::new(&s)).expect("failed to load file");
+                    let fm = c.cm.load_file(Path::new(filepath))?;
                     c.process_js_file(fm, handler, &options)
                 }
             })
@@ -117,7 +131,7 @@ pub fn transformFileSync(
     )
     .convert_err();
 
-    process_output(env, result)
+    result
 }
 
 /// 异步转换方法 - 使用回调

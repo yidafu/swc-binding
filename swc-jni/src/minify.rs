@@ -15,7 +15,8 @@ use swc_common::{sync::Lrc, FileName, SourceFile, SourceMap};
 use crate::async_utils::callback_java;
 use crate::{get_compiler, util::process_output};
 
-use crate::util::{get_deserialized, try_with, MapErr};
+use crate::util::{get_deserialized, try_with, MapErr, SwcResult};
+use swc::TransformOutput;
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -56,8 +57,14 @@ pub fn minifySync(mut env: JNIEnv, _: JClass, code: JString, opts: JString) -> j
         .expect("Couldn't get java string!")
         .into();
     // crate::util::init_default_trace_subscriber();
-    let code: MinifyTarget = get_deserialized(code.as_bytes()).unwrap();
-    let opts = get_deserialized(opts.as_bytes()).unwrap();
+    let result = perform_minify_sync_work(&code, &opts);
+    process_output(env, result)
+}
+
+/// 执行同步压缩工作的辅助函数
+fn perform_minify_sync_work(code: &str, opts: &str) -> SwcResult<TransformOutput> {
+    let code: MinifyTarget = get_deserialized(code.as_bytes())?;
+    let opts = get_deserialized(opts.as_bytes())?;
 
     let c = get_compiler();
 
@@ -72,7 +79,7 @@ pub fn minifySync(mut env: JNIEnv, _: JClass, code: JString, opts: JString) -> j
     )
     .convert_err();
 
-    process_output(env, result)
+    result
 }
 
 /// 异步压缩方法 - 使用回调

@@ -6,12 +6,13 @@ use jni::JNIEnv;
 use jni_fn::jni_fn;
 
 use swc::config::{Options, SourceMapsConfig};
-use swc::PrintArgs;
+use swc::{PrintArgs, TransformOutput};
 use swc_common::GLOBALS;
 use swc_ecma_ast::Program;
 
+use anyhow::Context;
 use crate::async_utils::callback_java;
-use crate::util::{deserialize_json, get_deserialized, process_output, MapErr};
+use crate::util::{deserialize_json, get_deserialized, process_output, MapErr, SwcResult};
 
 use crate::get_compiler;
 
@@ -27,11 +28,19 @@ pub fn printSync(mut env: JNIEnv, _: JClass, program: JString, options: JString)
         .into();
     // crate::util::init_default_trace_subscriber();
 
+    let result = perform_print_sync_work(&program, &opts);
+    process_output(env, result)
+}
+
+/// 执行同步打印工作的辅助函数
+fn perform_print_sync_work(program_str: &str, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
-    let program: Program = deserialize_json(program.as_str()).unwrap();
+    let program: Program = deserialize_json(program_str)
+        .context("Failed to deserialize program")
+        .convert_err()?;
 
-    let options: Options = get_deserialized(&opts).unwrap();
+    let options: Options = get_deserialized(opts)?;
 
     // Defaults to es3
     let _codegen_target = options.codegen_target().unwrap_or_default();
@@ -48,7 +57,7 @@ pub fn printSync(mut env: JNIEnv, _: JClass, program: JString, options: JString)
         };
         c.print(&program, print_args).convert_err()
     });
-    process_output(env, result)
+    result
 }
 
 /// 异步打印方法 - 使用回调

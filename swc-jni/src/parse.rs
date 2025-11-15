@@ -16,7 +16,8 @@ use swc_ecma_visit::VisitMutWith;
 use crate::async_utils::callback_java;
 use crate::get_compiler;
 
-use crate::util::{get_deserialized, process_result, try_with, MapErr};
+use crate::util::{get_deserialized, process_result, try_with, MapErr, SwcResult};
+use swc_ecma_ast::Program;
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn parseSync(
@@ -39,9 +40,15 @@ pub fn parseSync(
         .expect("Couldn't get java string!")
         .into();
     // crate::util::init_default_trace_subscriber();
+    let result = perform_parse_sync_work(&src, &opts, &filename);
+    process_result(env, result)
+}
+
+/// 执行同步解析工作的辅助函数
+fn perform_parse_sync_work(src: &str, opts: &str, filename: &str) -> SwcResult<Program> {
     let c = get_compiler();
 
-    let options: ParseOptions = get_deserialized(&opts).unwrap();
+    let options: ParseOptions = get_deserialized(opts)?;
     let filename = if filename.is_empty() {
         FileName::Anon
     } else {
@@ -50,7 +57,7 @@ pub fn parseSync(
 
     let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
         c.run(|| {
-            let fm = c.cm.new_source_file(filename.into(), src);
+            let fm = c.cm.new_source_file(filename.into(), src.to_string());
 
             let comments = if options.comments {
                 Some(c.comments() as &dyn Comments)
@@ -78,7 +85,7 @@ pub fn parseSync(
     })
     .convert_err();
 
-    process_result(env, result)
+    result
 }
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
@@ -93,42 +100,43 @@ pub fn parseFileSync(mut env: JNIEnv, _: JClass, filepath: JString, options: JSt
         .into();
 
     // crate::util::init_default_trace_subscriber();
+    let result = perform_parse_file_sync_work(&path, &opts);
+    process_result(env, result)
+}
 
+/// 执行同步文件解析工作的辅助函数
+fn perform_parse_file_sync_work(path: &str, opts: &str) -> SwcResult<Program> {
     let c = get_compiler();
-    let options: ParseOptions = get_deserialized(&opts).unwrap();
+    let options: ParseOptions = get_deserialized(opts)?;
 
-    let result = {
-        try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
-            let fm =
-                c.cm.load_file(Path::new(path.as_str()))
-                    .expect("failed to read program file");
+    let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
+        let fm = c.cm.load_file(Path::new(path))?;
 
-            let comments = if options.comments {
-                Some(c.comments() as &dyn Comments)
-            } else {
-                None
-            };
+        let comments = if options.comments {
+            Some(c.comments() as &dyn Comments)
+        } else {
+            None
+        };
 
-            let mut p = c.parse_js(
-                fm,
-                handler,
-                options.target,
-                options.syntax,
-                options.is_module,
-                comments,
-            )?;
-            p.visit_mut_with(&mut resolver(
-                Mark::new(),
-                Mark::new(),
-                options.syntax.typescript(),
-            ));
+        let mut p = c.parse_js(
+            fm,
+            handler,
+            options.target,
+            options.syntax,
+            options.is_module,
+            comments,
+        )?;
+        p.visit_mut_with(&mut resolver(
+            Mark::new(),
+            Mark::new(),
+            options.syntax.typescript(),
+        ));
 
-            Ok(p)
-        })
-    }
+        Ok(p)
+    })
     .convert_err();
 
-    process_result(env, result)
+    result
 }
 
 /// 异步解析方法 - 使用回调
