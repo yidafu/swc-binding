@@ -1,8 +1,8 @@
 package dev.yidafu.swc
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -28,14 +28,14 @@ sealed class Union {
         fun isA(): Boolean = a != null
         fun isB(): Boolean = b != null
 
-        fun getA(): A? = a
-        fun getB(): B? = b
+        fun valueOfA(): A? = a
+        fun valueOfB(): B? = b
 
         companion object {
             fun <A, B> ofA(value: A): U2<A, B> = U2(a = value)
             fun <A, B> ofB(value: B): U2<A, B> = U2(b = value)
 
-            fun <A, B> serializer(
+            fun <A, B> serializerFor(
                 aSerializer: KSerializer<A>,
                 bSerializer: KSerializer<B>
             ): KSerializer<U2<A, B>> = U2Serializer(aSerializer, bSerializer)
@@ -91,16 +91,16 @@ sealed class Union {
         fun isB(): Boolean = b != null
         fun isC(): Boolean = c != null
 
-        fun getA(): A? = a
-        fun getB(): B? = b
-        fun getC(): C? = c
+        fun valueOfA(): A? = a
+        fun valueOfB(): B? = b
+        fun valueOfC(): C? = c
 
         companion object {
             fun <A, B, C> ofA(value: A): U3<A, B, C> = U3(a = value)
             fun <A, B, C> ofB(value: B): U3<A, B, C> = U3(b = value)
             fun <A, B, C> ofC(value: C): U3<A, B, C> = U3(c = value)
 
-            fun <A, B, C> serializer(
+            fun <A, B, C> serializerFor(
                 aSerializer: KSerializer<A>,
                 bSerializer: KSerializer<B>,
                 cSerializer: KSerializer<C>
@@ -165,10 +165,10 @@ sealed class Union {
         fun isC(): Boolean = c != null
         fun isD(): Boolean = d != null
 
-        fun getA(): A? = a
-        fun getB(): B? = b
-        fun getC(): C? = c
-        fun getD(): D? = d
+        fun valueOfA(): A? = a
+        fun valueOfB(): B? = b
+        fun valueOfC(): C? = c
+        fun valueOfD(): D? = d
 
         companion object {
             fun <A, B, C, D> ofA(value: A): U4<A, B, C, D> = U4(a = value)
@@ -176,7 +176,7 @@ sealed class Union {
             fun <A, B, C, D> ofC(value: C): U4<A, B, C, D> = U4(c = value)
             fun <A, B, C, D> ofD(value: D): U4<A, B, C, D> = U4(d = value)
 
-            fun <A, B, C, D> serializer(
+            fun <A, B, C, D> serializerFor(
                 aSerializer: KSerializer<A>,
                 bSerializer: KSerializer<B>,
                 cSerializer: KSerializer<C>,
@@ -252,11 +252,11 @@ sealed class Union {
         fun isD(): Boolean = d != null
         fun isE(): Boolean = e != null
 
-        fun getA(): A? = a
-        fun getB(): B? = b
-        fun getC(): C? = c
-        fun getD(): D? = d
-        fun getE(): E? = e
+        fun valueOfA(): A? = a
+        fun valueOfB(): B? = b
+        fun valueOfC(): C? = c
+        fun valueOfD(): D? = d
+        fun valueOfE(): E? = e
 
         companion object {
             fun <A, B, C, D, E> ofA(value: A): U5<A, B, C, D, E> = U5(a = value)
@@ -265,7 +265,7 @@ sealed class Union {
             fun <A, B, C, D, E> ofD(value: D): U5<A, B, C, D, E> = U5(d = value)
             fun <A, B, C, D, E> ofE(value: E): U5<A, B, C, D, E> = U5(e = value)
 
-            fun <A, B, C, D, E> serializer(
+            fun <A, B, C, D, E> serializerFor(
                 aSerializer: KSerializer<A>,
                 bSerializer: KSerializer<B>,
                 cSerializer: KSerializer<C>,

@@ -1,8 +1,8 @@
 package dev.yidafu.swc.sample // ktlint-disable filename
 
 import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 
 fun parseSyncBasicUsage() {
     SwcNative().parseSync(
@@ -29,7 +29,7 @@ fun parseSyncEsSample() {
           console.log(foo);
         """.trimIndent(),
         esParseOptions {
-            target = "es5"
+            allowReturnOutsideFunction = true
         },
         "temp.js"
     )
@@ -44,7 +44,6 @@ fun parseSyncJsxSample() {
         """.trimIndent(),
         esParseOptions {
             jsx = true
-            target = "es5"
         },
         "temp.js"
     )
@@ -57,7 +56,7 @@ fun parseSyncTsSample() {
           console.log(foo);
         """.trimIndent(),
         tsParseOptions {
-            target = "es5"
+            tsx = true
         },
         "temp.js"
     )
@@ -67,7 +66,7 @@ fun parseFileSyncEsSample() {
     SwcNative().parseFileSync(
         "path/to/js/code.js",
         esParseOptions {
-            target = "es5"
+            dynamicImport = true
         }
     )
 }
@@ -78,7 +77,7 @@ fun createExampleDsl() {
             importDeclaration {
                 specifiers = arrayOf(
                     importDefaultSpecifier {
-                        local = createIdentifier {
+                        local = identifier {
                             span = emptySpan()
                             value = "x"
                         }
@@ -94,7 +93,7 @@ fun createExampleDsl() {
             },
 
             classDeclaration {
-                identifier = createIdentifier { }
+                identifier = identifier { }
                 span = emptySpan()
                 body = arrayOf(
                     classProperty {
