@@ -75,7 +75,44 @@ ZIGBUILD_VERSION=$(cargo-zigbuild --version 2>/dev/null || echo "unknown")
 echo "✅ cargo-zigbuild version: $ZIGBUILD_VERSION"
 
 # =============================================================================
-# 4. Verify build environment
+# 4. Install Zig (required by cargo-zigbuild)
+# =============================================================================
+echo "🧱 Installing Zig..."
+
+if ! command -v zig &> /dev/null; then
+    if command -v brew &> /dev/null; then
+        echo "  Using Homebrew to install Zig..."
+        brew install zig || {
+            echo "❌ Failed to install Zig via Homebrew"
+            exit 1
+        }
+    elif command -v apt-get &> /dev/null; then
+        echo "  Using apt-get to install Zig..."
+        sudo apt-get update
+        sudo apt-get install -y zig || {
+            echo "❌ Failed to install Zig via apt-get"
+            exit 1
+        }
+    elif command -v pacman &> /dev/null; then
+        echo "  Using pacman to install Zig..."
+        sudo pacman -S --noconfirm zig || {
+            echo "❌ Failed to install Zig via pacman"
+            exit 1
+        }
+    else
+        echo "❌ Zig 未安装且无法检测到受支持的包管理器，请手动安装 Zig："
+        echo "   https://ziglang.org/download/"
+        exit 1
+    fi
+else
+    echo "✅ Zig 已安装"
+fi
+
+ZIG_VERSION=$(zig version 2>/dev/null || echo "unknown")
+echo "✅ Zig version: $ZIG_VERSION"
+
+# =============================================================================
+# 5. Verify build environment
 # =============================================================================
 echo "🔍 Verifying build environment..."
 
@@ -95,7 +132,7 @@ fi
 echo "✅ Build environment verified"
 
 # =============================================================================
-# 5. Display build configuration
+# 6. Display build configuration
 # =============================================================================
 echo "📋 Build Configuration Summary"
 echo "==============================="
@@ -112,7 +149,7 @@ echo "Output directory: swc-binding/src/main/resources/"
 echo ""
 
 # =============================================================================
-# 6. Optional: Test build (if requested)
+# 7. Optional: Test build (if requested)
 # =============================================================================
 if [ "$1" = "--test-build" ]; then
     echo "🧪 Running test build..."
@@ -123,7 +160,7 @@ if [ "$1" = "--test-build" ]; then
 fi
 
 # =============================================================================
-# 7. Final instructions
+# 8. Final instructions
 # =============================================================================
 echo "🎉 Setup completed successfully!"
 echo ""
@@ -143,7 +180,7 @@ echo "  • Documentation: docs/"
 echo ""
 
 # =============================================================================
-# 8. Environment variables (optional)
+# 9. Environment variables (optional)
 # =============================================================================
 echo "💡 Optional environment variables:"
 echo "  • RUST_LOG=debug          # Enable debug logging"

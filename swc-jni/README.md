@@ -1,5 +1,7 @@
 # swc-jni
 
+[Read this in Chinese: README.zh-CN.md](README.zh-CN.md)
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![SWC](https://img.shields.io/badge/SWC-43.0.0-green.svg)](https://github.com/swc-project/swc)
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org/)
@@ -136,4 +138,4 @@ swc-jni/
 
 ## License
 
-Apache-2.0
+MIT
