@@ -10,7 +10,6 @@ import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.shouldBe
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
@@ -77,4 +76,3 @@ class CodeEmitterTest : AnnotationSpec() {
         File(config.outputDslDir!!, "create.kt").exists().shouldBeTrue()
     }
 }
-

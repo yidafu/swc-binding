@@ -20,4 +20,3 @@ annotation class AfterTest(
     val enabled: Boolean = true,
     val tags: Array<String> = []
 )
-

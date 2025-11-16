@@ -3,6 +3,7 @@ package dev.yidafu.swc.generator.core.stages
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.core.PipelineContext
 import dev.yidafu.swc.generator.di.DependencyContainer
+import dev.yidafu.swc.generator.extractor.TypeScriptADTExtractor
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.model.typescript.TypeScriptType
 import dev.yidafu.swc.generator.parser.AstNode
@@ -32,7 +33,7 @@ class ExtractorStageTest : AnnotationSpec() {
             inputPath = "test.d.ts",
             sourceCode = ""
         )
-        val extractor = mockk<dev.yidafu.swc.generator.extractor.TypeScriptADTExtractor>()
+        val extractor = mockk<TypeScriptADTExtractor>()
         val interfaceNode = mockk<AstNode>()
         val aliasNode = mockk<AstNode>()
 
@@ -65,4 +66,3 @@ class ExtractorStageTest : AnnotationSpec() {
         } shouldBe listOf("Foo", "Bar")
     }
 }
-

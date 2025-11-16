@@ -75,4 +75,3 @@ class CodeGenerationRulesTest : AnnotationSpec() {
         CodeGenerationRules.shouldSkipDslReceiver("Expression").shouldBeFalse()
     }
 }
-

@@ -3,6 +3,7 @@ package dev.yidafu.swc.generator.core.stages
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.core.PipelineContext
 import dev.yidafu.swc.generator.di.DependencyContainer
+import dev.yidafu.swc.generator.parser.ParseResult
 import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertNotNull
 import dev.yidafu.swc.generator.test.assertTrue
@@ -64,7 +65,7 @@ class ParserStageTest : AnnotationSpec() {
         val result = stage.execute(testFile.absolutePath, context)
 
         if (result.isSuccess()) {
-            val parseResult = context.getMetadata<dev.yidafu.swc.generator.parser.ParseResult>("parseResult")
+            val parseResult = context.getMetadata<ParseResult>("parseResult")
             assertNotNull(parseResult)
         }
     }

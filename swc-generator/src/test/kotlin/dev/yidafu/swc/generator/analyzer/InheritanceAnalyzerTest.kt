@@ -45,4 +45,3 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         analyzer.detectCycles().isNotEmpty() shouldBe true
     }
 }
-

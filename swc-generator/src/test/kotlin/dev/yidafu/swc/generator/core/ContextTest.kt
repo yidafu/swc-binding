@@ -3,9 +3,9 @@ package dev.yidafu.swc.generator.core
 import dev.yidafu.swc.generator.config.Configuration
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 
 class ContextTest : AnnotationSpec() {
 

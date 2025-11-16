@@ -1,5 +1,6 @@
 package dev.yidafu.swc.generator.codegen.generator
 
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.model.kotlin.*
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
@@ -92,10 +93,10 @@ class TypesGeneratorTest : AnnotationSpec() {
         val method = TypesGenerator::class.java.getDeclaredMethod(
             "createImplementationClass",
             KotlinDeclaration.ClassDecl::class.java,
-            dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer::class.java
+            InheritanceAnalyzer::class.java
         ).apply { isAccessible = true }
 
-        val analyzer = dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer()
+        val analyzer = InheritanceAnalyzer()
         val implClass = method.invoke(generator, metaPropertyInterface, analyzer) as KotlinDeclaration.ClassDecl
 
         val propertyNames = implClass.properties.map { it.name.removeSurrounding("`") }
@@ -153,10 +154,10 @@ class TypesGeneratorTest : AnnotationSpec() {
         val method = TypesGenerator::class.java.getDeclaredMethod(
             "createImplementationClass",
             KotlinDeclaration.ClassDecl::class.java,
-            dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer::class.java
+            InheritanceAnalyzer::class.java
         ).apply { isAccessible = true }
 
-        val analyzer = dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer()
+        val analyzer = InheritanceAnalyzer()
         val implClass = method.invoke(generator, awaitExpressionInterface, analyzer) as KotlinDeclaration.ClassDecl
 
         val typeCount = implClass.properties.count { it.name.removeSurrounding("`") == "type" }
@@ -188,10 +189,10 @@ class TypesGeneratorTest : AnnotationSpec() {
         val method = TypesGenerator::class.java.getDeclaredMethod(
             "createImplementationClass",
             KotlinDeclaration.ClassDecl::class.java,
-            dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer::class.java
+            InheritanceAnalyzer::class.java
         ).apply { isAccessible = true }
 
-        val analyzer = dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer()
+        val analyzer = InheritanceAnalyzer()
         val implClass = method.invoke(generator, tsParserInterface, analyzer) as KotlinDeclaration.ClassDecl
 
         val syntaxProp = implClass.properties.first { it.name == "syntax" }

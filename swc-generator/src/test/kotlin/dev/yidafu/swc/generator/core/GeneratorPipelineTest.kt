@@ -2,12 +2,12 @@ package dev.yidafu.swc.generator.core
 
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.di.DependencyContainer
+import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -72,7 +72,7 @@ class GeneratorPipelineTest : AnnotationSpec() {
             override val name: String = "FailingStage"
             override fun doExecute(input: String, context: PipelineContext): GeneratorResult<String> {
                 return GeneratorResultFactory.failure(
-                    dev.yidafu.swc.generator.result.ErrorCode.UNKNOWN,
+                    ErrorCode.UNKNOWN,
                     "Test failure"
                 )
             }

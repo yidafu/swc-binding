@@ -13,6 +13,8 @@ import dev.yidafu.swc.generator.test.assertNotNull
 import dev.yidafu.swc.generator.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
 
 class TypeScriptToKotlinConverterTest : AnnotationSpec() {
 
@@ -27,7 +29,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
     @Test
     fun `test convert empty declaration list`() {
         val result = converter.convertDeclarations(emptyList())
-        
+
         assertTrue(result.isSuccess())
         val declarations = result.getOrThrow()
         assertTrue(declarations.isEmpty())
@@ -41,9 +43,9 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
             typeParameters = emptyList(),
             extends = emptyList()
         )
-        
+
         val result = converter.convertDeclaration(tsInterface)
-        
+
         // 转换应该成功或失败，取决于具体实现
         assertNotNull(result)
     }
@@ -55,9 +57,9 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
             type = TypeScriptType.Keyword(KeywordKind.STRING),
             typeParameters = emptyList()
         )
-        
+
         val result = converter.convertDeclaration(tsTypeAlias)
-        
+
         assertNotNull(result)
     }
 
@@ -76,9 +78,9 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
                 typeParameters = emptyList()
             )
         )
-        
+
         val result = converter.convertDeclarations(declarations)
-        
+
         assertNotNull(result)
         if (result.isSuccess()) {
             val converted = result.getOrThrow()
@@ -633,6 +635,43 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         val classPropertyDecl = kotlinDecls.first { it.name == "ClassProperty" }
         val typeProperty = classPropertyDecl.properties.first { it.name == "type" }
         assertTrue(typeProperty.modifier is PropertyModifier.OverrideVar)
+    }
+
+    @Test
+    fun `parse options alias injects base interface and parser config parent`() {
+        val parseOptions = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "ParseOptions",
+            type = TypeScriptType.Intersection(
+                listOf(
+                    TypeScriptType.Reference("ParserConfig"),
+                    TypeScriptType.TypeLiteral(
+                        members = listOf(
+                            TypeMember("comments", TypeScriptType.Keyword(KeywordKind.BOOLEAN), optional = true),
+                            TypeMember("script", TypeScriptType.Keyword(KeywordKind.BOOLEAN), optional = true),
+                            TypeMember("target", TypeScriptType.Reference("JscTarget"), optional = true)
+                        )
+                    )
+                )
+            )
+        )
+        val parserConfig = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "ParserConfig",
+            type = TypeScriptType.Union(listOf(TypeScriptType.Reference("TsParserConfig")))
+        )
+        val tsParserConfig = TypeScriptDeclaration.InterfaceDeclaration(
+            name = "TsParserConfig",
+            members = emptyList()
+        )
+
+        val result = converter.convertDeclarations(listOf(parseOptions, parserConfig, tsParserConfig)).getOrThrow()
+        val baseInterface = result.filterIsInstance<KotlinDeclaration.ClassDecl>().first { it.name == "BaseParseOptions" }
+        baseInterface.properties.map { it.name }.shouldContainAll(listOf("comments", "script", "target"))
+
+        val parserConfigDecl = result.filterIsInstance<KotlinDeclaration.ClassDecl>().first { it.name == "ParserConfig" }
+        parserConfigDecl.parents.map { it.toTypeString() } shouldContain "BaseParseOptions"
+
+        val tsParserInterface = result.filterIsInstance<KotlinDeclaration.ClassDecl>().first { it.name == "TsParserConfig" }
+        tsParserInterface.parents.map { it.toTypeString() } shouldContain "ParserConfig"
     }
 
     private fun assertEnumSerialNames(enumDecl: KotlinDeclaration.ClassDecl, expected: List<String>) {

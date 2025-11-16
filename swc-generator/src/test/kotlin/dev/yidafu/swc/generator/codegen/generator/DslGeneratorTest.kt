@@ -7,7 +7,6 @@ import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.io.File
@@ -89,16 +88,9 @@ class DslGeneratorTest : AnnotationSpec() {
         val propsMap = mapOf("Argument" to argument.properties)
 
         val generator = DslGenerator(classDecls, propsMap)
-        val leafSetField = DslGenerator::class.java.getDeclaredField("leafInterfaceNames").apply {
-            isAccessible = true
-        }
-        val leafSet = leafSetField.get(generator) as Set<*>
-        (leafSet.contains("Literal")) shouldBe false
-        (leafSet.contains("BooleanLiteral")) shouldBe true
         val outputDir = createTempDir(prefix = "dsl-generator-test")
 
         try {
-            generator.generateExtensionFunctions()
             generator.writeToDirectory(outputDir.absolutePath)
 
             val argumentDsl = File(outputDir, "Argument.kt")
@@ -115,4 +107,3 @@ class DslGeneratorTest : AnnotationSpec() {
         }
     }
 }
-

@@ -138,4 +138,39 @@ class TypeAliasConverterTest : AnnotationSpec() {
         property.type.shouldNotBeNull()
         property.type shouldBe KotlinType.Nullable(KotlinType.Boolean)
     }
+
+    @Test
+    fun `parse options intersection produces base interface and alias`() {
+        val registry = mutableMapOf<String, MutableSet<String>>()
+        val customConverter = TypeAliasConverter(
+            config = config,
+            unionParentRegistry = registry
+        )
+        val parseOptions = TypeScriptDeclaration.TypeAliasDeclaration(
+            name = "ParseOptions",
+            type = TypeScriptType.Intersection(
+                listOf(
+                    TypeScriptType.Reference("ParserConfig"),
+                    TypeScriptType.TypeLiteral(
+                        members = listOf(
+                            TypeMember("comments", TypeScriptType.Keyword(KeywordKind.BOOLEAN), optional = true),
+                            TypeMember("script", TypeScriptType.Keyword(KeywordKind.BOOLEAN), optional = true),
+                            TypeMember("target", TypeScriptType.Reference("JscTarget"), optional = true)
+                        )
+                    )
+                )
+            )
+        )
+
+        val aliasDecl = customConverter.convert(parseOptions).getOrThrow() as KotlinDeclaration.TypeAliasDecl
+        aliasDecl.type shouldBe KotlinType.Simple("ParserConfig")
+
+        val extras = customConverter.drainExtraDeclarations()
+        extras.size shouldBe 1
+        val baseInterface = extras.first() as KotlinDeclaration.ClassDecl
+        baseInterface.name shouldBe "BaseParseOptions"
+        baseInterface.modifier shouldBe ClassModifier.SealedInterface
+        baseInterface.properties.map { it.name }.shouldContainAll(listOf("comments", "script", "target"))
+        registry["ParserConfig"]?.shouldContainAll(listOf("BaseParseOptions"))
+    }
 }

@@ -27,4 +27,3 @@ class AnalyzerStageTest : AnnotationSpec() {
         analysis.circularDependencies.isEmpty() shouldBe true
     }
 }
-

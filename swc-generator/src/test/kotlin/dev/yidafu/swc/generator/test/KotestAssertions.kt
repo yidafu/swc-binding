@@ -2,8 +2,6 @@ package dev.yidafu.swc.generator.test
 
 import io.kotest.assertions.fail
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -37,4 +35,3 @@ fun <T : Any> assertNull(actual: T?, message: String? = null) {
 inline fun <reified T : Throwable> assertFailsWith(noinline block: () -> Unit): T {
     return shouldThrow<T> { block() }
 }
-

@@ -3,6 +3,7 @@ package dev.yidafu.swc.generator.core.stages
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.core.PipelineContext
 import dev.yidafu.swc.generator.di.DependencyContainer
+import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertNotNull
@@ -47,7 +48,7 @@ class ConverterStageTest : AnnotationSpec() {
 
         assertNotNull(result)
         if (result.isSuccess()) {
-            val kotlinDeclarations = context.getMetadata<List<dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration>>("kotlinDeclarations")
+            val kotlinDeclarations = context.getMetadata<List<KotlinDeclaration>>("kotlinDeclarations")
             assertNotNull(kotlinDeclarations)
         }
     }
@@ -66,7 +67,7 @@ class ConverterStageTest : AnnotationSpec() {
         val result = stage.execute(tsDeclarations, context)
 
         if (result.isSuccess()) {
-            val kotlinDeclarations = context.getMetadata<List<dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration>>("kotlinDeclarations")
+            val kotlinDeclarations = context.getMetadata<List<KotlinDeclaration>>("kotlinDeclarations")
             assertNotNull(kotlinDeclarations)
         }
     }

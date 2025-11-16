@@ -44,6 +44,34 @@ class SerializerGeneratorTest : AnnotationSpec() {
         content.shouldContain("polymorphic(ModuleItem::class)")
         content.shouldContain("polymorphic(ModuleDeclaration::class)")
         content.shouldContain("subclass(ImportDeclarationImpl::class)")
+
+        // UnionSerializer.kt 应生成在同目录
+        val unionFile = File(tempFile.parentFile, "UnionSerializer.kt")
+        unionFile.exists().shouldBeTrue()
+    }
+
+    private fun implDecl(name: String, parent: String): KotlinDeclaration.ClassDecl {
+        return KotlinDeclaration.ClassDecl(
+            name = name,
+            modifier = ClassModifier.FinalClass,
+            properties = emptyList(),
+            parents = listOf(KotlinType.Simple(parent)),
+            annotations = emptyList()
+        )
+    }
+
+    @Test
+    fun `span impl uses custom serializer`() {
+        val tempFile = File.createTempFile("serializer-span", ".kt").apply { deleteOnExit() }
+        val generator = SerializerGenerator()
+        val declarations = listOf(
+            interfaceDecl("Span"),
+            implDecl("SpanImpl", "Span")
+        )
+
+        generator.writeToFile(tempFile.absolutePath, declarations)
+
+        val content = tempFile.readText()
+        content.shouldContain("polymorphic(Span::class)")
     }
 }
-

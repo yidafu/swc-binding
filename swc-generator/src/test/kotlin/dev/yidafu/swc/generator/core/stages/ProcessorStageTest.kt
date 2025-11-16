@@ -52,4 +52,3 @@ class ProcessorStageTest : AnnotationSpec() {
         processed.name shouldBe "Sample"
     }
 }
-

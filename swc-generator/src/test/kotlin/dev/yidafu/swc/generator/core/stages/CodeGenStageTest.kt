@@ -9,6 +9,7 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.transformer.TransformResult
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.shouldBe
@@ -48,7 +49,7 @@ class CodeGenStageTest : AnnotationSpec() {
             setMetadata("processedDeclarations", declarations)
             setMetadata("classAllPropertiesMap", mapOf("Sample" to (declarations[0] as KotlinDeclaration.ClassDecl).properties))
         }
-        val transformSlot = slot<dev.yidafu.swc.generator.transformer.TransformResult>()
+        val transformSlot = slot<TransformResult>()
         every { container.codeEmitter } returns emitter
         every { emitter.emit(capture(transformSlot)) } returns GeneratorResultFactory.success(Unit)
 
@@ -60,4 +61,3 @@ class CodeGenStageTest : AnnotationSpec() {
         transformSlot.captured.classAllPropertiesMap.keys shouldBe setOf("Sample")
     }
 }
-
