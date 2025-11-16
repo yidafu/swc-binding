@@ -77,10 +77,11 @@ class DslExtensionCollectorTest : AnnotationSpec() {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
 
-        val leafNames = result.nodeLeafInterfaces.map { it.name }
-        leafNames.shouldContainExactly("Literal")
-        leafNames.shouldNotContain("Expr")
-        leafNames.shouldNotContain("Outside")
+        val creatableNames = result.nodeCreatableClasses.map { it.name }
+        // 只有具体类（实现类）会被认为是可实例化的 Node 类
+        creatableNames.shouldContainExactly("`LiteralImpl`")
+        creatableNames.shouldNotContain("Expr")
+        creatableNames.shouldNotContain("Outside")
     }
 
     @Test

@@ -74,8 +74,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         val result = collector.collect()
         val nodeFns = result.groups["Node"].orEmpty()
 
-        nodeFns.shouldHaveSize(1)
-        nodeFns.first().funName shouldBe "Literal"
+        // 新逻辑：没有具体实现类时不再回落到接口，故不生成扩展
+        nodeFns.shouldHaveSize(0)
     }
 
     @Test
@@ -92,7 +92,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         val createFile = files.first { it.outputPath.fileName.toString() == "create.kt" }
 
         nodeFile.fileSpec!!.toString().shouldContain("fun Node.literal")
-        createFile.fileSpec!!.toString().shouldContain("fun createLiteral")
+        // 新逻辑：仅为具体类生成 create 函数
+        createFile.fileSpec!!.toString().shouldContain("fun createLiteralImpl")
     }
 
     @Test

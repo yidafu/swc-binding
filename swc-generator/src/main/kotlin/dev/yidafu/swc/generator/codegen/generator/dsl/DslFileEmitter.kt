@@ -24,7 +24,7 @@ class DslFileEmitter(
         collection.groups.forEach { (receiver, funList) ->
             files += emitReceiverDslFile(outputDir, receiver, funList)
         }
-        files += emitCreateFile(outputDir, collection.nodeLeafInterfaces)
+        files += emitCreateFile(outputDir, collection.nodeCreatableClasses)
         return files
     }
 
@@ -55,7 +55,7 @@ class DslFileEmitter(
 
     private fun emitCreateFile(
         outputDir: Path,
-        nodeLeafInterfaces: List<KotlinDeclaration.ClassDecl>
+        nodeCreatableClasses: List<KotlinDeclaration.ClassDecl>
     ): GeneratedFile {
         Logger.debug("生成 create.kt", 6)
         val fileBuilder = createFileBuilder(
@@ -64,12 +64,12 @@ class DslFileEmitter(
             PoetConstants.PKG_TYPES to "*"
         )
 
-        nodeLeafInterfaces.forEach { klass ->
+        nodeCreatableClasses.forEach { klass ->
             val funSpec = createCreateFunction(klass)
             fileBuilder.addFunction(funSpec)
         }
         val fileSpec = poet.buildFile(fileBuilder)
-        Logger.verbose("  生成了 ${nodeLeafInterfaces.size} 个 create 函数", 6)
+        Logger.verbose("  生成了 ${nodeCreatableClasses.size} 个 create 函数", 6)
         return GeneratedFile(outputDir.resolve("create.kt"), fileSpec = fileSpec)
     }
 
@@ -97,18 +97,26 @@ class DslFileEmitter(
         val normalized = DslNamingRules.sanitizeTypeName(DslNamingRules.removeGenerics(typeName)).removeSurrounding("`")
         val decl = modelContext.classInfoByName[normalized]
         return when {
-            // 对于叶子接口，生成器已产出同名具体类，直接返回同名类
-            decl == null -> if (modelContext.leafInterfaceNames.contains(normalized)) normalized else null
-            decl.modifier.isInterface() -> if (modelContext.leafInterfaceNames.contains(normalized)) decl.name else null
-            else -> decl.name
+            // 若本身是具体类，直接返回
+            decl != null && !decl.modifier.isInterface() -> decl.name
+            // 若是接口名，则查找其具体类后代；优先选择 `${name}Impl` 命名的具体类
+            decl != null && decl.modifier.isInterface() -> {
+                val descendants = modelContext.hierarchy.findDescendants(normalized)
+                val concrete = descendants.firstOrNull { name ->
+                    modelContext.classInfoByName[name]?.modifier?.isInterface() == false
+                }
+                val preferred = descendants.firstOrNull { it == "${normalized}Impl" && modelContext.classInfoByName[it]?.modifier?.isInterface() == false }
+                preferred ?: concrete
+            }
+            else -> null
         }
     }
 
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
-        val interfaceName = klass.name.removeSurrounding("`")
-        val classType = ClassName(PoetConstants.PKG_TYPES, interfaceName)
+        val className = klass.name.removeSurrounding("`")
+        val classType = ClassName(PoetConstants.PKG_TYPES, className)
 
-        return FunSpec.builder("create$interfaceName")
+        return FunSpec.builder("create$className")
             .addParameter("block", createDslLambdaType(classType as TypeName))
             .returns(classType)
             .addStatement("return %T().apply(block)", classType)

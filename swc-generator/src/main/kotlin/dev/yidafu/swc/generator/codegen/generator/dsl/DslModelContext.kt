@@ -31,7 +31,7 @@ class DslModelContext(
         return inheritsNode(normalized)
     }
 
-    private fun inheritsNode(interfaceName: String): Boolean {
+    fun inheritsNode(interfaceName: String): Boolean {
         val visited = LinkedHashSet<String>()
         val queue = ArrayDeque<String>()
         queue.add(interfaceName)

@@ -10,7 +10,7 @@ import dev.yidafu.swc.generator.util.Logger
 
 data class DslExtensionCollection(
     val groups: Map<String, List<KotlinExtensionFun>>,
-    val nodeLeafInterfaces: List<KotlinDeclaration.ClassDecl>
+    val nodeCreatableClasses: List<KotlinDeclaration.ClassDecl>
 )
 
 class DslExtensionCollector(
@@ -19,8 +19,9 @@ class DslExtensionCollector(
     fun collect(): DslExtensionCollection {
         val extFunMap = linkedMapOf<String, KotlinExtensionFun>()
         val receivers = LinkedHashSet<String>()
+        // 作为接收者的候选集合应尽可能全面：所有声明 + 聚合的属性表 + 接口
         receivers.addAll(modelContext.classAllPropertiesMap.keys)
-        modelContext.classDecls.filter { it.modifier.isInterface() }.forEach { receivers.add(it.name) }
+        modelContext.classDecls.forEach { receivers.add(it.name) }
 
         receivers.forEach { receiver ->
             if (CodeGenerationRules.shouldSkipDslReceiver(receiver)) return@forEach
@@ -34,14 +35,15 @@ class DslExtensionCollector(
             }
         }
 
-        val nodeLeafInterfaces = modelContext.classDecls.filter { klass ->
-            klass.modifier.isInterface() && modelContext.isNodeLeafInterface(klass.name)
+        // 仅对可实例化的 Node 实现类生成 create 函数（避免对接口实例化）
+        val nodeCreatableClasses = modelContext.classDecls.filter { klass ->
+            !klass.modifier.isInterface() && modelContext.inheritsNode(klass.name.removeSurrounding("`"))
         }
-        Logger.debug("DSL create 函数候选: ${nodeLeafInterfaces.size}", 5)
+        Logger.debug("DSL create 函数候选(实现类): ${nodeCreatableClasses.size}", 5)
 
         return DslExtensionCollection(
             groups = extFunMap.values.groupBy { it.receiver },
-            nodeLeafInterfaces = nodeLeafInterfaces
+            nodeCreatableClasses = nodeCreatableClasses
         )
     }
 
@@ -53,11 +55,8 @@ class DslExtensionCollector(
         if (!CodeGenerationRules.canRegisterDslExtension(extFun.receiver, sanitizedFunName)) return
         if (!hasConcreteImplementation(extFun.funName)) return
 
-        val finalFun = if (extFun.funName.endsWith("Impl") && !modelContext.generatedClassNameList.contains(extFun.funName)) {
-            KotlinExtensionFun(extFun.receiver, sanitizedFunName, extFun.comments)
-        } else {
-            extFun
-        }
+        // 统一对外暴露去掉 Impl 的函数名；实现类型在发射阶段解析
+        val finalFun = KotlinExtensionFun(extFun.receiver, sanitizedFunName, extFun.comments)
         val key = "${finalFun.receiver} - ${finalFun.funName}"
         extFunMap[key] = finalFun
     }
@@ -126,14 +125,15 @@ class DslExtensionCollector(
     private fun resolveInstantiableTypes(typeName: String): List<String> {
         val normalized = normalizeTypeName(typeName)
         if (normalized.isEmpty()) return emptyList()
-        val descendants = modelContext.hierarchy.findDescendants(normalized)
-        val interfaceDescendants = descendants.filter { modelContext.classInfoByName[it]?.modifier?.isInterface() == true }
-        val leafDescendants = interfaceDescendants.filter { modelContext.leafInterfaceNames.contains(it) }
-        if (leafDescendants.isNotEmpty()) {
-            return leafDescendants
+        val descendants = modelContext.hierarchy.findDescendants(normalized).distinct()
+        // 优先返回可实例化的具体类后代
+        val classDescendants = descendants.filter { name ->
+            modelContext.classInfoByName[name]?.modifier?.isInterface() == false
         }
+        if (classDescendants.isNotEmpty()) return classDescendants
         val baseDecl = modelContext.classInfoByName[normalized]
-        return if (baseDecl != null && (!baseDecl.modifier.isInterface() || modelContext.leafInterfaceNames.contains(normalized))) {
+        // 若自身就是具体类，则返回自身；否则不返回接口，避免生成对接口的构造
+        return if (baseDecl != null && !baseDecl.modifier.isInterface()) {
             listOf(baseDecl.name.removeSurrounding("`"))
         } else {
             emptyList()
