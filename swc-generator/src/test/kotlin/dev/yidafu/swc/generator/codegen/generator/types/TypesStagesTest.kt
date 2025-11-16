@@ -143,7 +143,8 @@ class TypesStagesTest : AnnotationSpec() {
         override fun emitType(
             fileBuilder: FileSpec.Builder,
             declaration: KotlinDeclaration.ClassDecl,
-            interfaceNames: Set<String>
+            interfaceNames: Set<String>,
+            declLookup: Map<String, KotlinDeclaration.ClassDecl>
         ): Boolean {
             emitted += declaration.name
             return true

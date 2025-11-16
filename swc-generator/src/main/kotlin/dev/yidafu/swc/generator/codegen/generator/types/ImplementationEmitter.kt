@@ -23,14 +23,15 @@ class ImplementationEmitter(
         classDecls: List<KotlinDeclaration.ClassDecl>,
         analyzer: InheritanceAnalyzer,
         propertyCache: MutableMap<String, List<KotlinDeclaration.PropertyDecl>>,
-        poet: PoetGenerator
+        poet: PoetGenerator,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ) {
         val leafNodes = findLeafNodes(classDecls, analyzer)
         Logger.debug("  叶子节点数量: ${leafNodes.size}", 4)
         leafNodes.forEach { leaf ->
             val implClass = createImplementationClass(leaf, analyzer, classDecls, propertyCache)
             val builder = builderSelector(leaf)
-            if (poet.emitType(builder, implClass, interfaceRegistry.names)) {
+            if (poet.emitType(builder, implClass, interfaceRegistry.names, declLookup)) {
                 Logger.verbose("  ✓ 实现类: ${leaf.name}Impl", 6)
             }
         }

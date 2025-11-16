@@ -156,9 +156,8 @@ class TypeConverterTest : AnnotationSpec() {
 
         val result = converter.convert(literalUnion)
         result.shouldNotBeNull()
-        val kotlinType = result.getOrThrow().shouldBeInstanceOf<KotlinType.Generic>()
-        kotlinType.name shouldBe "Union.U2"
-        kotlinType.params.size shouldBe 2
+        val kotlinType = result.getOrThrow()
+        kotlinType.toTypeString() shouldBe "String"
     }
 
     @Test

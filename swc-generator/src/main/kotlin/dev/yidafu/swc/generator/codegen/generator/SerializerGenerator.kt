@@ -60,7 +60,22 @@ class SerializerGenerator(
 
     private fun createSerializerFile(classDecls: List<KotlinDeclaration.ClassDecl>): FileSpec {
         Logger.debug("使用 KotlinPoet 生成 serializer.kt...", 4)
-        val polymorphicGroups = buildPolymorphicGroups(classDecls)
+        // 允许作为多态基类的集合：
+        // 1) 所有 sealed interface
+        // 2) 额外白名单中的非 sealed 接口（作为外部 API 入口需要直接反序列化）
+        val sealedBases = classDecls
+            .filter { it.modifier is ClassModifier.SealedInterface }
+            .map { it.name.removeSurrounding("`") }
+            .toSet()
+        val additionalOpenBases = setOf(
+            "Identifier",
+            "BindingIdentifier",
+            "VariableDeclarator",
+            "Module",
+            "Script"
+        )
+        val serializableBases: Set<String> = sealedBases + additionalOpenBases
+        val polymorphicGroups = buildPolymorphicGroups(classDecls, serializableBases)
         Logger.debug("  多态类型数: ${polymorphicGroups.values.sumOf { it.size }}", 4)
         val fileBuilder = createFileBuilder(
             PoetConstants.PKG_TYPES, "serializer",
@@ -77,7 +92,8 @@ class SerializerGenerator(
                 fileBuilder.addProperty(
                     createSerializersModuleProperty(
                         resolveModulePropertyName(discriminator),
-                        map
+                        map,
+                        serializableBases
                     )
                 )
             }
@@ -242,7 +258,8 @@ class SerializerGenerator(
      * 构建多态映射
      */
     private fun buildPolymorphicGroups(
-        classDecls: List<KotlinDeclaration.ClassDecl>
+        classDecls: List<KotlinDeclaration.ClassDecl>,
+        serializableBases: Set<String>
     ): Map<String, LinkedHashMap<String, List<String>>> {
         val snapshot = collectDeclarations(classDecls)
         val normalizedToRaw = snapshot.normalizedToRaw
@@ -320,9 +337,56 @@ class SerializerGenerator(
             }
         }
 
-        val orderedResult = orderParents(classDecls, parentToChildren, rawToNormalized)
+        // 将子接口的注册“提升”到最近的可序列化祖先（例如 TsParserConfig/EsParserConfig -> ParserConfig）
+        val remappedToSerializableAncestor = LinkedHashMap<String, LinkedHashSet<String>>()
+        parentToChildren.forEach { (rawParent, childrenSet) ->
+            val parentNorm = (rawToNormalized[rawParent] ?: rawParent).removeSurrounding("`")
+            val ancestors = collectAncestorsIncludingSelf(parentNorm, childToParents)
+            val serializableAncestor = ancestors.firstOrNull { anc -> serializableBases.contains(anc.removeSurrounding("`")) }
+            val targetRaw = if (serializableAncestor != null) {
+                normalizedToRaw[serializableAncestor] ?: serializableAncestor
+            } else {
+                rawParent
+            }
+            val set = remappedToSerializableAncestor.getOrPut(targetRaw) { LinkedHashSet() }
+            set.addAll(childrenSet)
+        }
+        // 过滤无关注册（如无法证明祖先关系且 child 可追踪）
+        val compact = LinkedHashMap<String, List<String>>().apply {
+            remappedToSerializableAncestor.forEach { (rawParent, childrenSet) ->
+                val parentNorm = (rawToNormalized[rawParent] ?: rawParent).removeSurrounding("`")
+                val filtered = childrenSet.filter { childRaw ->
+                    val childNorm = (rawToNormalized[childRaw] ?: childRaw).removeSurrounding("`")
+                    if (!childToParents.containsKey(childNorm)) return@filter true
+                    val ancestors = collectAncestorsIncludingSelf(childNorm, childToParents).map { it.removeSurrounding("`") }.toSet()
+                    ancestors.contains(parentNorm)
+                }
+                if (filtered.isNotEmpty()) put(rawParent, filtered)
+            }
+        }
+        // 向上扩散到所有可序列化祖先（例如 ModuleItem <- Statement/ModuleDeclaration）
+        val expanded = LinkedHashMap<String, LinkedHashSet<String>>().apply {
+            compact.forEach { (rawParent, children) ->
+                val parentNorm = (rawToNormalized[rawParent] ?: rawParent).removeSurrounding("`")
+                // 当前父
+                val current = getOrPut(rawParent) { LinkedHashSet() }
+                current.addAll(children)
+                // 祖先父
+                collectAncestors(parentNorm, childToParents).forEach { anc ->
+                    val ancClean = anc.removeSurrounding("`")
+                    if (serializableBases.contains(ancClean)) {
+                        val ancRaw = normalizedToRaw[anc] ?: anc
+                        val set = getOrPut(ancRaw) { LinkedHashSet() }
+                        set.addAll(children)
+                    }
+                }
+            }
+        }
 
-        return groupByDiscriminator(orderedResult, rawToNormalized)
+        val finalMap = LinkedHashMap<String, List<String>>().apply {
+            expanded.forEach { (k, v) -> put(k, v.toList()) }
+        }
+        return groupByDiscriminator(finalMap, rawToNormalized)
     }
 
     private fun seedDirectConcrete(
@@ -335,9 +399,10 @@ class SerializerGenerator(
         concreteClasses.forEach { concrete ->
             val childName = concrete.getClassName()
             val rawChildName = normalizedToRaw[childName] ?: concrete.name
-            val ancestors = collectAncestors(childName, childToParents)
-            ancestors.filter { it in interfaceNames }.forEach { ancestor ->
-                val rawParent = normalizedToRaw[ancestor] ?: ancestor
+            // 仅对“直接父接口”做多态注册，避免对所有祖先接口重复注册
+            val directParents = childToParents[childName].orEmpty()
+            directParents.filter { it in interfaceNames }.forEach { directParent ->
+                val rawParent = normalizedToRaw[directParent] ?: directParent
                 parentToChildren.addChild(rawParent, rawChildName)
             }
         }
@@ -355,12 +420,8 @@ class SerializerGenerator(
             val rawLeaf = normalizedToRaw[leaf] ?: leaf
             val implRawName = rawLeaf.appendImplSuffix()
             if (!concreteRawNames.contains(implRawName)) {
-                collectAncestorsIncludingSelf(leaf, childToParents)
-                    .filter { it in interfaceNames }
-                    .forEach { ancestor ->
-                        val rawParent = normalizedToRaw[ancestor] ?: ancestor
-                        parentToChildren.addChild(rawParent, implRawName)
-                    }
+                // 仅为“叶接口自身”添加其推导出的 Impl 映射，避免把 Impl 扩散注册到所有祖先接口
+                parentToChildren.addChild(rawLeaf, implRawName)
             }
         }
 
@@ -537,8 +598,9 @@ class SerializerGenerator(
         child: String
     ) {
         val siblings = getOrPut(parent) { LinkedHashSet() }
+        // 幂等注册：同一父子映射重复出现时静默跳过（仅在高日志级别下提示）
         if (!siblings.add(child)) {
-            Logger.warn("检测到重复的 polymorphic 注册: $child -> $parent")
+            Logger.verbose("  跳过重复的 polymorphic 注册: $child -> $parent", 8)
         }
     }
 
@@ -625,9 +687,10 @@ class SerializerGenerator(
      */
     private fun createSerializersModuleProperty(
         propertyName: String,
-        polymorphicMap: Map<String, List<String>>
+        polymorphicMap: Map<String, List<String>>,
+        serializableBases: Set<String>
     ): PropertySpec {
-        val initializerCode = buildSerializerModuleCode(polymorphicMap)
+        val initializerCode = buildSerializerModuleCode(polymorphicMap, serializableBases)
 
         return PropertySpec.builder(propertyName, PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
             .initializer(initializerCode)
@@ -637,12 +700,21 @@ class SerializerGenerator(
     /**
      * 构建 SerializersModule 初始化代码
      */
-    private fun buildSerializerModuleCode(polymorphicMap: Map<String, List<String>>): CodeBlock {
+    private fun buildSerializerModuleCode(
+        polymorphicMap: Map<String, List<String>>,
+        serializableBases: Set<String>
+    ): CodeBlock {
         return CodeBlock.builder()
             .add("SerializersModule {\n")
             .apply {
                 indent()
                 polymorphicMap.forEach { (parent, children) ->
+                    val cleanParent = parent.removeSurrounding("`")
+                    if (!serializableBases.contains(cleanParent)) {
+                        // 仅对已标注 @Serializable 的基类进行多态注册，避免 PolymorphismValidator 触发
+                        Logger.verbose("  跳过未标注 @Serializable 的多态基类: $parent", 8)
+                        return@forEach
+                    }
                     add("polymorphic(%L::class) {\n", parent)
                     indent()
                     children.forEach { child ->

@@ -420,10 +420,6 @@ object TypesImplementationRules {
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
             KotlinDeclaration.Annotation(
-                "JsonClassDiscriminator",
-                listOf(Expression.StringLiteral(rule.discriminator))
-            ),
-            KotlinDeclaration.Annotation(
                 "SerialName",
                 listOf(Expression.StringLiteral(serialNameValue))
             ),

@@ -16,7 +16,7 @@ class ConcreteClassStage(
                 !it.name.endsWith("Impl")
         }
         Logger.debug("  其他类数量: ${classes.size}", 4)
-        emitter.emit(context.fileLayout.commonFileBuilder, classes, context.poet)
+        emitter.emit(context.fileLayout.commonFileBuilder, classes, context.poet, context.declLookup)
     }
 }
 

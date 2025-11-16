@@ -15,7 +15,8 @@ class ImplementationStage(
             context.input.classDecls,
             context.analyzer,
             context.propertyCache,
-            context.poet
+            context.poet,
+            context.declLookup
         )
     }
 }

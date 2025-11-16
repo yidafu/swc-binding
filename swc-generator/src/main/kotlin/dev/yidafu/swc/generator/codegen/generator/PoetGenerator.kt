@@ -7,7 +7,8 @@ interface PoetGenerator {
     fun emitType(
         fileBuilder: FileSpec.Builder,
         declaration: KotlinDeclaration.ClassDecl,
-        interfaceNames: Set<String>
+        interfaceNames: Set<String>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ): Boolean
 
     fun emitTypeAlias(

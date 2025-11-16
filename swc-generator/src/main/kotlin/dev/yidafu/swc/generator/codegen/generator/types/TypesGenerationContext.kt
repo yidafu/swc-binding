@@ -23,5 +23,8 @@ class TypesGenerationContext(
     val propertyCache: MutableMap<String, List<KotlinDeclaration.PropertyDecl>> = LinkedHashMap()
 ) : GenerationContext {
     override val generatedFiles: MutableList<GeneratedFile> = mutableListOf()
+    val declLookup: Map<String, KotlinDeclaration.ClassDecl> by lazy {
+        input.classDecls.associateBy { it.name }
+    }
 }
 

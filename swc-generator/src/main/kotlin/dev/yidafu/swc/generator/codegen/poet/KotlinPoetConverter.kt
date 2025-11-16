@@ -39,15 +39,19 @@ object KotlinPoetConverter {
      * 转换 KotlinDeclaration 为 TypeSpec
      */
     fun convertDeclaration(decl: KotlinDeclaration): TypeSpec {
-        return convertDeclaration(decl, emptySet())
+        return convertDeclaration(decl, emptySet(), emptyMap())
     }
 
     /**
      * 转换 KotlinDeclaration 为 TypeSpec（带接口名称参数）
      */
-    fun convertDeclaration(decl: KotlinDeclaration, interfaceNames: Set<String>): TypeSpec {
+    fun convertDeclaration(
+        decl: KotlinDeclaration,
+        interfaceNames: Set<String>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
+    ): TypeSpec {
         return when (decl) {
-            is KotlinDeclaration.ClassDecl -> convertClassDeclaration(decl, interfaceNames)
+            is KotlinDeclaration.ClassDecl -> convertClassDeclaration(decl, interfaceNames, declLookup)
             is KotlinDeclaration.PropertyDecl -> {
                 // 属性声明不能直接转换为 TypeSpec，应该通过 convertProperty 处理
                 throw IllegalArgumentException("PropertyDecl cannot be converted to TypeSpec directly")
@@ -70,7 +74,11 @@ object KotlinPoetConverter {
     /**
      * 转换类声明为 TypeSpec
      */
-    fun convertClassDeclaration(decl: KotlinDeclaration.ClassDecl, interfaceNames: Set<String> = emptySet()): TypeSpec {
+    fun convertClassDeclaration(
+        decl: KotlinDeclaration.ClassDecl,
+        interfaceNames: Set<String> = emptySet(),
+        declLookup: Map<String, KotlinDeclaration.ClassDecl> = emptyMap()
+    ): TypeSpec {
         val builder = createTypeBuilder(decl.name, decl.modifier)
 
         // 添加修饰符
@@ -164,11 +172,19 @@ object KotlinPoetConverter {
             }
             is ClassModifier.Interface, is ClassModifier.SealedInterface -> {
                 // 接口：属性不得包含初始化器，生成抽象属性；为 Union.Ux 属性添加 @Serializable(with=...)
+                val nodeDerived = decl.name == "Node" || isDerivedFromNode(decl.parents, declLookup)
                 decl.properties.forEach { prop ->
+                    // 仅 Node 系谱接口保留 `type` 抽象属性；其余接口不生成该字段
+                    if (prop.name == "type" && !nodeDerived) {
+                        return@forEach
+                    }
                     val typeName = convertType(prop.type)
                     val propBuilder = PropertySpec.builder(prop.name, typeName)
-                    // 接口属性修饰符（保持 val/var/override 等）
+                    // 接口属性修饰符（保持 val/var），针对 Node 系谱上的 `type` 强制添加 override（除 Node 本身）
                     addPropertyModifiers(propBuilder, prop.modifier)
+                    if (prop.name == "type" && nodeDerived && decl.name != "Node") {
+                        propBuilder.addModifiers(KModifier.OVERRIDE)
+                    }
                     // 透传原始注解
                     prop.annotations.forEach { annotation ->
                         convertAnnotation(annotation)?.let { propBuilder.addAnnotation(it) }
@@ -182,11 +198,31 @@ object KotlinPoetConverter {
             }
             else -> {
                 // 普通类: 基于 convertProperty，追加 @Serializable(with=...) 注解
+                val nodeDerived = isDerivedFromNode(decl.parents, declLookup)
+                val configDerived = isDerivedFrom(decl.parents, declLookup, "ParserConfig") ||
+                    isDerivedFrom(decl.parents, declLookup, "BaseParseOptions")
                 decl.properties.forEach { prop ->
-                    val base = convertProperty(prop)
+                    // 非 Node 系谱实现类不应包含 `type`
+                    if (prop.name == "type" && !nodeDerived) {
+                        return@forEach
+                    }
+                    val adjusted = downgradeOverrideIfNeeded(prop, decl.parents, declLookup)
+                    val base = convertProperty(adjusted)
                     if (base != null) {
                         val propBuilder = base.toBuilder()
-                        addUnionWithAnnotationAndCollectForProperty(decl.name, prop.name, prop.type, propBuilder)
+                        // 避免与 Json classDiscriminator 冲突：对实现类中的 `type` 字段标注 @Transient
+                        if (adjusted.name == "type" && nodeDerived) {
+                            propBuilder.addAnnotation(
+                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+                            )
+                        }
+                        // 避免与 "syntax" 判别关键字冲突：对 ParserConfig 系谱中的 `syntax` 字段标注 @Transient
+                        if (adjusted.name == "syntax" && configDerived) {
+                            propBuilder.addAnnotation(
+                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+                            )
+                        }
+                        addUnionWithAnnotationAndCollectForProperty(decl.name, adjusted.name, adjusted.type, propBuilder)
                         builder.addProperty(propBuilder.build())
                     }
                 }
@@ -692,5 +728,83 @@ object KotlinPoetConverter {
             }
             else -> false
         }
+    }
+
+    /**
+     * 判断接口是否属于 Node 系谱（直接或通过 *Base 接口）
+     * 由于这里只能看到直接父类型，采用启发式集合来识别已知的 Node 基类接口。
+     */
+    private val nodeBaseInterfaces = setOf(
+        "Node",
+        "ExpressionBase",
+        "PatternBase",
+        "PropBase",
+        "ClassMethodBase",
+        "ClassPropertyBase",
+        "HasSpan" // 大多数 Node 派生都会实现 HasSpan
+    )
+
+    private fun isDerivedFromNode(parents: List<KotlinType>, declLookup: Map<String, KotlinDeclaration.ClassDecl>): Boolean {
+        if (parents.isEmpty()) return false
+        fun dfs(type: KotlinType, seen: MutableSet<String>): Boolean {
+            val name = when (type) {
+                is KotlinType.Simple -> type.name
+                else -> return false
+            }
+            if (!seen.add(name)) return false
+            if (name == "Node") return true
+            val parentDecl = declLookup[name] ?: return false
+            return parentDecl.parents.any { p -> dfs(p, seen) }
+        }
+        return parents.any { dfs(it, mutableSetOf()) }
+    }
+
+    private fun isDerivedFrom(
+        parents: List<KotlinType>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>,
+        target: String
+    ): Boolean {
+        if (parents.isEmpty()) return false
+        fun dfs(type: KotlinType, seen: MutableSet<String>): Boolean {
+            val name = when (type) {
+                is KotlinType.Simple -> type.name
+                else -> return false
+            }
+            if (!seen.add(name)) return false
+            if (name == target) return true
+            val parentDecl = declLookup[name] ?: return false
+            return parentDecl.parents.any { p -> dfs(p, seen) }
+        }
+        return parents.any { dfs(it, mutableSetOf()) }
+    }
+
+    /**
+     * 如果父类型层级中不存在同名属性，则去掉 Override 修饰，避免生成无效的 override。
+     */
+    private fun downgradeOverrideIfNeeded(
+        prop: KotlinDeclaration.PropertyDecl,
+        parents: List<KotlinType>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
+    ): KotlinDeclaration.PropertyDecl {
+        fun parentHasProperty(type: KotlinType, target: String, seen: MutableSet<String>): Boolean {
+            val name = when (type) {
+                is KotlinType.Simple -> type.name
+                else -> return false
+            }
+            if (!seen.add(name)) return false
+            val decl = declLookup[name] ?: return false
+            if (decl.properties.any { it.name == target }) return true
+            return decl.parents.any { parentHasProperty(it, target, seen) }
+        }
+        val has = parents.any { parentHasProperty(it, prop.name, mutableSetOf()) }
+        if (has) return prop
+        val newModifier = when (prop.modifier) {
+            dev.yidafu.swc.generator.model.kotlin.PropertyModifier.OverrideVal ->
+                dev.yidafu.swc.generator.model.kotlin.PropertyModifier.Val
+            dev.yidafu.swc.generator.model.kotlin.PropertyModifier.OverrideVar ->
+                dev.yidafu.swc.generator.model.kotlin.PropertyModifier.Var
+            else -> prop.modifier
+        }
+        return if (newModifier == prop.modifier) prop else prop.copy(modifier = newModifier)
     }
 }

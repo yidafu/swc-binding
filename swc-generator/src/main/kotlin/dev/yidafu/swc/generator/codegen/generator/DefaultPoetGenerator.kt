@@ -9,10 +9,11 @@ class DefaultPoetGenerator : PoetGenerator {
     override fun emitType(
         fileBuilder: FileSpec.Builder,
         declaration: KotlinDeclaration.ClassDecl,
-        interfaceNames: Set<String>
+        interfaceNames: Set<String>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ): Boolean {
         return runCatching {
-            KotlinPoetConverter.convertDeclaration(declaration, interfaceNames)
+            KotlinPoetConverter.convertDeclaration(declaration, interfaceNames, declLookup)
         }.onSuccess { typeSpec ->
             fileBuilder.addType(typeSpec)
         }.onFailure { e ->

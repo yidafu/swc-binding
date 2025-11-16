@@ -131,6 +131,12 @@ class TypeConverter(
             return convertUndefinedUnion(union)
         }
 
+        // 规则：字符串字面量 + 布尔（关键字或字面量）仅生成 Boolean | String（U2）
+        if (isOnlyStringLiteralsAndBoolean(union)) {
+            Logger.debug("  字符串字面量 + 布尔 -> Union.U2<Boolean, String>", 6)
+            return createUnionType(arrayOf(KotlinTypeFactory.boolean(), KotlinTypeFactory.string()))
+        }
+
         // 检查是否为字面量联合类型
         if (isLiteralUnion(union)) {
             Logger.debug("  字面量联合类型", 6)
@@ -320,13 +326,8 @@ class TypeConverter(
 
         // 如果都是字符串字面量，转换为 Union.U2/U3/U4 或 Any
         if (literalTypes.all { it is LiteralValue.StringLiteral }) {
-            val typeCount = union.types.size
-            if (typeCount in 2..4) {
-                val stringType: KotlinType = KotlinTypeFactory.string()
-                val typeParams: Array<KotlinType> = Array(typeCount) { stringType }
-                return createUnionType(typeParams)
-            }
-            return KotlinTypeFactory.any() // 超过 4 个类型转换为 Any
+            // 直接折叠为 String，避免生成 U3<String, String, ...>
+            return KotlinTypeFactory.string()
         }
 
         // 如果都是布尔字面量，转换为 Union.U2/U3/U4
@@ -365,6 +366,37 @@ class TypeConverter(
 
         // 超过 4 个类型，转换为 Any
         return KotlinTypeFactory.any()
+    }
+
+    /**
+     * 检测是否仅包含（字符串字面量）与（布尔关键字或布尔字面量）
+     * 例如：false | "inline" | "commonjs" 或 boolean | "inline" | "commonjs"
+     * 命中后应折叠为 Union.U2<Boolean, String>
+     */
+    private fun isOnlyStringLiteralsAndBoolean(union: TypeScriptType.Union): Boolean {
+        var hasStringLiteral = false
+        var hasBoolean = false
+        for (t in union.types) {
+            when (t) {
+                is TypeScriptType.Literal -> {
+                    when (t.value) {
+                        is LiteralValue.StringLiteral -> hasStringLiteral = true
+                        is LiteralValue.BooleanLiteral -> hasBoolean = true
+                        else -> return false
+                    }
+                }
+                is TypeScriptType.Keyword -> {
+                    if (t.kind == KeywordKind.BOOLEAN) {
+                        hasBoolean = true
+                    } else {
+                        return false
+                    }
+                }
+                else -> return false
+            }
+        }
+        // 需要同时存在字符串字面量与布尔（关键字/字面量）
+        return hasStringLiteral && hasBoolean
     }
 
     /**

@@ -14,10 +14,11 @@ class ConcreteClassEmitter(
     fun emit(
         fileBuilder: FileSpec.Builder,
         classes: List<KotlinDeclaration.ClassDecl>,
-        poet: PoetGenerator
+        poet: PoetGenerator,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ) {
         classes.forEach { classDecl ->
-            if (poet.emitType(fileBuilder, classDecl, interfaceRegistry.names)) {
+            if (poet.emitType(fileBuilder, classDecl, interfaceRegistry.names, declLookup)) {
                 Logger.verbose("  ✓ 类: ${classDecl.name} (${classDecl.modifier})", 6)
             }
         }

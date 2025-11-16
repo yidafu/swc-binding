@@ -528,9 +528,32 @@ class InterfaceConverter(
     ): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
 
-        // 为 FinalClass 添加 @Serializable 注解
-        if (modifier is ClassModifier.FinalClass) {
-            annotations.add(KotlinDeclaration.Annotation("Serializable"))
+        // 仅为密封接口与最终类添加 @Serializable（非 sealed 接口默认多态，无需标注）
+        when (modifier) {
+            is ClassModifier.FinalClass,
+            is ClassModifier.SealedInterface -> annotations.add(KotlinDeclaration.Annotation("Serializable"))
+            else -> {}
+        }
+
+        // 为“参与多态”的基类接口添加必要 discriminator（仅在根接口处，避免层级冲突）
+        if (modifier is ClassModifier.Interface || modifier is ClassModifier.SealedInterface) {
+            val mappedName = CodeGenerationRules.mapTypeName(tsInterface.name)
+            // 仅在固定的根接口上打上 discriminator，防止层级内冲突
+            val rootDiscriminator: String? = when (mappedName) {
+                // AST 根
+                "Node" -> Hardcoded.Serializer.DEFAULT_DISCRIMINATOR
+                // Config 体系根
+                "Config", "ParserConfig", "Options" -> Hardcoded.Serializer.SYNTAX_DISCRIMINATOR
+                else -> null
+            }
+            if (rootDiscriminator != null) {
+                annotations.add(
+                    KotlinDeclaration.Annotation(
+                        "JsonClassDiscriminator",
+                        listOf(Expression.StringLiteral(rootDiscriminator))
+                    )
+                )
+            }
         }
 
         // 添加 SwcDslMarker 注解

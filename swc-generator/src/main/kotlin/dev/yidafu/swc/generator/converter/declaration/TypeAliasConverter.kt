@@ -159,7 +159,17 @@ class TypeAliasConverter(
             parents = emptyList(),
             typeParameters = emptyList(),
             nestedClasses = emptyList(),
-            annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
+            annotations = buildList {
+                add(KotlinDeclaration.Annotation("SwcDslMarker"))
+                // 作为 ParserConfig 多态体系一部分：应参与序列化并声明 discriminator
+                add(KotlinDeclaration.Annotation("Serializable"))
+                add(
+                    KotlinDeclaration.Annotation(
+                        name = "JsonClassDiscriminator",
+                        arguments = listOf(Expression.StringLiteral(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR))
+                    )
+                )
+            },
             kdoc = sourceKdoc
         )
     }
@@ -323,7 +333,31 @@ class TypeAliasConverter(
             parents = parentTypes,
             typeParameters = emptyList(),
             nestedClasses = emptyList(),
-            annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
+            annotations = run {
+                val ann = mutableListOf<KotlinDeclaration.Annotation>()
+                ann.add(KotlinDeclaration.Annotation("SwcDslMarker"))
+                // 作为多态基类参与序列化
+                ann.add(KotlinDeclaration.Annotation("Serializable"))
+                // Config 体系或 AST 根添加 discriminator（仅在确认为根时）
+                val cleanName = tsTypeAlias.name.removeSurrounding("`")
+                val discriminator =
+                    when {
+                        Hardcoded.Serializer.configInterfaceNames.contains(cleanName) ->
+                            Hardcoded.Serializer.SYNTAX_DISCRIMINATOR
+                        cleanName == "Node" ->
+                            Hardcoded.Serializer.DEFAULT_DISCRIMINATOR
+                        else -> null
+                    }
+                if (discriminator != null) {
+                    ann.add(
+                        KotlinDeclaration.Annotation(
+                            name = "JsonClassDiscriminator",
+                            arguments = listOf(Expression.StringLiteral(discriminator))
+                        )
+                    )
+                }
+                ann
+            },
             kdoc = tsTypeAlias.kdoc
         )
 
