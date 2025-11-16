@@ -1,6 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 import dev.yidafu.swc.generated.dsl.createModule
 import dev.yidafu.swc.generated.dsl.createVariableDeclarator
 import io.kotest.core.spec.style.AnnotationSpec
@@ -125,7 +126,7 @@ class AstBasicsTest : AnnotationSpec() {
     @Test
     fun `serialize Identifier with nested Span includes ctxt field`() {
         // 测试嵌套在 AST 节点中的 Span 是否包含 ctxt 字段
-        val id = IdentifierImpl().apply {
+        val id = Identifier().apply {
             value = "testVar"
             optional = false
             span = span().apply {
@@ -277,7 +278,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create IdentifierImpl`() {
-        val id = IdentifierImpl().apply {
+        val id = Identifier().apply {
             value = "testVar"
             optional = false
             span = emptySpan()
@@ -289,7 +290,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `serialize Identifier`() {
-        val id = IdentifierImpl().apply {
+        val id = Identifier().apply {
             value = "myVar"
             optional = false
             span = emptySpan()
@@ -310,7 +311,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create StringLiteralImpl`() {
-        val lit = StringLiteralImpl().apply {
+        val lit = StringLiteral().apply {
             value = "hello"
             raw = "\"hello\""
             span = emptySpan()
@@ -322,7 +323,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create NumericLiteralImpl`() {
-        val lit = NumericLiteralImpl().apply {
+        val lit = NumericLiteral().apply {
             value = 42.0
             raw = "42"
             span = emptySpan()
@@ -334,7 +335,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create BooleanLiteralImpl`() {
-        val lit = BooleanLiteralImpl().apply {
+        val lit = BooleanLiteral().apply {
             value = true
             span = emptySpan()
         }
@@ -344,7 +345,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create NullLiteralImpl`() {
-        val lit = NullLiteralImpl().apply {
+        val lit = NullLiteral().apply {
             span = emptySpan()
         }
 
@@ -353,7 +354,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create ModuleImpl with apply`() {
-        val mod = ModuleImpl().apply {
+        val mod = Module().apply {
             span = emptySpan()
             body = arrayOf()
         }
@@ -389,11 +390,11 @@ class AstBasicsTest : AnnotationSpec() {
     fun `create VariableDeclaratorImpl`() {
         val decl = createVariableDeclarator {
             span = emptySpan()
-            id = IdentifierImpl().apply {
+            id = Identifier().apply {
                 value = "x"
                 span = emptySpan()
             }
-            init = NumericLiteralImpl().apply {
+            init = NumericLiteral().apply {
                 value = 1.0
                 raw = "1"
                 span = emptySpan()

@@ -2,8 +2,7 @@ package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.astJson
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.module
-import dev.yidafu.swc.span
+import dev.yidafu.swc.generated.Span
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
@@ -174,19 +173,17 @@ class AstJsonTest : AnnotationSpec() {
     fun `encode ast dsl`() {
         val tree =
             module {
-                span =
-                    span {
-                        start = 0
-                        end = 17
-                    }
+                span = Span().apply {
+                    start = 0
+                    end = 17
+                }
                 body =
                     arrayOf(
                         variableDeclaration {
-                            span =
-                                span {
-                                    start = 5
-                                    end = 17
-                                }
+                            span = Span().apply {
+                                start = 5
+                                end = 17
+                            }
                             kind = VariableDeclarationKind.CONST
                             declarations =
                                 arrayOf(
@@ -194,20 +191,18 @@ class AstJsonTest : AnnotationSpec() {
                                         id =
                                             identifier {
                                                 value = "a"
-                                                span =
-                                                    span {
-                                                        start = 5
-                                                        end = 6
-                                                    }
+                                                span = Span().apply {
+                                                    start = 5
+                                                    end = 6
+                                                }
                                             }
                                         init =
                                             stringLiteral {
                                                 value = "String"
-                                                span =
-                                                    span {
-                                                        start = 9
-                                                        end = 17
-                                                    }
+                                                span = Span().apply {
+                                                    start = 9
+                                                    end = 17
+                                                }
                                             }
                                     }
                                 )

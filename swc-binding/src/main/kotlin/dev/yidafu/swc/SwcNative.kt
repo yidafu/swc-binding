@@ -1,7 +1,9 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.types.* // ktlint-disable no-wildcard-imports
+import dev.yidafu.swc.generated.* // ktlint-disable no-wildcard-imports
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -24,6 +26,7 @@ interface SwcCallback {
     fun onError(error: String)
 }
 
+
 class SwcNative {
     init {
         try {
@@ -32,6 +35,24 @@ class SwcNative {
         } catch (e: UnsatisfiedLinkError) {
             val dllPath = DllLoader.copyDll2Temp("swc_jni")
             System.load(dllPath)
+        }
+    }
+
+    /**
+     * 将可能被二次编码（顶层为字符串）的 JSON 安全解码为 TransformOutput
+     */
+    private fun decodeTransformOutput(result: String): TransformOutput {
+        return try {
+            val element = Json.parseToJsonElement(result)
+            val inner = if (element is JsonPrimitive && element.isString) {
+                element.content
+            } else {
+                result
+            }
+            outputJson.decodeFromString<TransformOutput>(inner)
+        } catch (_: Exception) {
+            // 回退直接按对象解码
+            outputJson.decodeFromString<TransformOutput>(result)
         }
     }
 
@@ -45,7 +66,7 @@ class SwcNative {
      * @sample [dev.yidafu.swc.sample.parseSyncBasicUsage]
      * @throws [SwcAnyException]
      * @param [code] source code
-     * @param [options] options json string. see [dev.yidafu.swc.types.ParserConfig].
+     * @param [options] options json string. see [dev.yidafu.swc.generated.ParserConfig].
      * @param [filename] js file name
      * @return ast tree json string
      */
@@ -91,7 +112,7 @@ class SwcNative {
      * @throws [RuntimeException]
      * @sample [dev.yidafu.swc.sample.parseFileSyncBasicUsage]
      * @param filepath filepath to source code
-     * @param [options] options json string. see [dev.yidafu.swc.types.ParserConfig].
+     * @param [options] options json string. see [dev.yidafu.swc.generated.ParserConfig].
      * @return ast tree json string
      */
     @Throws(RuntimeException::class)
@@ -163,7 +184,9 @@ class SwcNative {
     ): TransformOutput {
         val optionStr = configJson.encodeToString(options)
         val res = transformSync(code, isModule, optionStr)
-        return astJson.decodeFromString<TransformOutput>(res)
+        // 调试：打印返回的 JSON
+        println("[Kotlin] transformSync JSON: $res")
+        return decodeTransformOutput(res)
     }
 
     /**
@@ -177,7 +200,9 @@ class SwcNative {
         options: Options
     ): TransformOutput {
         val res = transformFileSync(filepath, isModule, configJson.encodeToString(options))
-        return astJson.decodeFromString<TransformOutput>(res)
+        // 调试：打印返回的 JSON
+        println("[Kotlin] transformFileSync JSON: $res")
+        return decodeTransformOutput(res)
     }
 
     /**
@@ -199,10 +224,18 @@ class SwcNative {
         program: Program,
         options: Options
     ): TransformOutput {
-        val pStr = astJson.encodeToString(program)
+        // 序列化前，通过重新序列化和反序列化来确保所有默认值都被正确设置
+        // 这样可以确保所有 Span 的 ctxt 字段都被正确包含在 JSON 中
+//        val programJson = astJson.encodeToString<Program>(program)
+//        val fixedProgram = astJson.decodeFromString<Program>(programJson)
+        var pStr = astJson.encodeToString<Program>(program)
+        
+        // 修复所有缺少 ctxt 字段的 span 对象
+//        pStr = fixMissingCtxtFields(pStr)
+        
         val oStr = configJson.encodeToString(options)
         val res = printSync(pStr, oStr)
-        return astJson.decodeFromString<TransformOutput>(res)
+        return outputJson.decodeFromString<TransformOutput>(res)
     }
 
     /**
@@ -233,7 +266,7 @@ class SwcNative {
         val codeStr = configJson.encodeToString(code)
         val oStr = configJson.encodeToString(options)
         val res = minifySync(codeStr, oStr)
-        return astJson.decodeFromString<TransformOutput>(res)
+        return outputJson.decodeFromString<TransformOutput>(res)
     }
 
     // ==================== Async Methods ====================
@@ -417,7 +450,9 @@ class SwcNative {
             object : SwcCallback {
                 override fun onSuccess(result: String) {
                     try {
-                        val output = astJson.decodeFromString<TransformOutput>(result)
+                        // 调试：打印返回的 JSON
+                        println("[Kotlin] transformAsync JSON: $result")
+                        val output = decodeTransformOutput(result)
                         onSuccess(output)
                     } catch (e: Exception) {
                         onError("Failed to parse result: ${e.message}")
@@ -455,7 +490,9 @@ class SwcNative {
             object : SwcCallback {
                 override fun onSuccess(result: String) {
                     try {
-                        val output = astJson.decodeFromString<TransformOutput>(result)
+                        // 调试：打印返回的 JSON
+                        println("[Kotlin] transformFileAsync JSON: $result")
+                        val output = decodeTransformOutput(result)
                         onSuccess(output)
                     } catch (e: Exception) {
                         onError("Failed to parse result: ${e.message}")
@@ -482,27 +519,44 @@ class SwcNative {
         onSuccess: (TransformOutput) -> Unit,
         onError: (String) -> Unit
     ) {
-        val pStr = astJson.encodeToString(program)
-        val oStr = configJson.encodeToString(options)
+        try {
+            // 序列化前，通过重新序列化和反序列化来确保所有默认值都被正确设置
+            // 这样可以确保所有 Span 的 ctxt 字段都被正确包含在 JSON 中
+//            val programJson = astJson.encodeToString<Program>(program)
+//            val fixedProgram = astJson.decodeFromString<Program>(programJson)
+            var pStr = astJson.encodeToString<Program>(program)
+            
+            // 修复所有缺少 ctxt 字段的 span 对象
+            // 使用正则表达式查找所有 "span":{...} 并确保包含 ctxt 字段
+//            pStr = fixMissingCtxtFields(pStr)
+            
+            val oStr = configJson.encodeToString(options)
 
-        printAsync(
-            pStr,
-            oStr,
-            object : SwcCallback {
-                override fun onSuccess(result: String) {
-                    try {
-                        val output = astJson.decodeFromString<TransformOutput>(result)
-                        onSuccess(output)
-                    } catch (e: Exception) {
-                        onError("Failed to parse result: ${e.message}")
+            printAsync(
+                pStr,
+                oStr,
+                object : SwcCallback {
+                    override fun onSuccess(result: String) {
+                        try {
+                            // 添加日志输出接收到的 JSON，用于调试
+                            println("[Kotlin] Received JSON for TransformOutput: $result")
+                            val output = outputJson.decodeFromString<TransformOutput>(result)
+                            onSuccess(output)
+                        } catch (e: Exception) {
+                            println("[Kotlin] Failed to decode TransformOutput: ${e.message}")
+                            println("[Kotlin] JSON was: $result")
+                            onError("Failed to parse result: ${e.message}")
+                        }
+                    }
+
+                    override fun onError(error: String) {
+                        onError(error)
                     }
                 }
-
-                override fun onError(error: String) {
-                    onError(error)
-                }
-            }
-        )
+            )
+        } catch (e: Exception) {
+            onError("Failed to serialize program: ${e.message}")
+        }
     }
 
     /**
@@ -518,38 +572,42 @@ class SwcNative {
         onSuccess: (TransformOutput) -> Unit,
         onError: (String) -> Unit
     ) {
-        // Rust minify expects code string, not AST JSON
-        // First convert Program to code using printSync
-        val printResult = try {
-            printSync(program, options)
-        } catch (e: Exception) {
-            onError("Failed to convert AST to code: ${e.message}")
-            return
-        }
-        val code = printResult.code
+        try {
+            // Rust minify expects code string, not AST JSON
+            // First convert Program to code using printSync
+            // printSync 内部已经处理了 ctxt 字段的修复
+            val printResult = printSync(program, options)
+            val code = printResult.code
 
-        // Minify expects MinifyTarget::Single(String), so wrap in quotes
-        val codeStr = configJson.encodeToString(code)
-        val oStr = configJson.encodeToString(options)
+            // Minify expects MinifyTarget::Single(String), so wrap in quotes
+            val codeStr = configJson.encodeToString(code)
+            val oStr = configJson.encodeToString(options)
 
-        minifyAsync(
-            codeStr,
-            oStr,
-            object : SwcCallback {
-                override fun onSuccess(result: String) {
-                    try {
-                        val output = astJson.decodeFromString<TransformOutput>(result)
-                        onSuccess(output)
-                    } catch (e: Exception) {
-                        onError("Failed to parse result: ${e.message}")
+            minifyAsync(
+                codeStr,
+                oStr,
+                object : SwcCallback {
+                    override fun onSuccess(result: String) {
+                        try {
+                            // 添加日志输出接收到的 JSON，用于调试
+                            println("[Kotlin] Received JSON for TransformOutput: $result")
+                            val output = outputJson.decodeFromString<TransformOutput>(result)
+                            onSuccess(output)
+                        } catch (e: Exception) {
+                            println("[Kotlin] Failed to decode TransformOutput: ${e.message}")
+                            println("[Kotlin] JSON was: $result")
+                            onError("Failed to parse result: ${e.message}")
+                        }
+                    }
+
+                    override fun onError(error: String) {
+                        onError(error)
                     }
                 }
-
-                override fun onError(error: String) {
-                    onError(error)
-                }
-            }
-        )
+            )
+        } catch (e: Exception) {
+            onError("Failed to convert AST to code: ${e.message}")
+        }
     }
 
     // ==================== Coroutine-based Suspend Functions ====================

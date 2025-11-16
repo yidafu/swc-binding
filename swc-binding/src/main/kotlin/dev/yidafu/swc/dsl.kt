@@ -1,25 +1,27 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
+import kotlinx.serialization.ExperimentalSerializationApi
 
 /**
  * @sample dev.yidafu.swc.sample.createExampleDsl
  */
-fun module(block: Module.() -> Unit): Module = ModuleImpl().apply(block)
+//@OptIn(ExperimentalSerializationApi::class)
+//fun module(block: Module.() -> Unit): Module = Module().apply(block)
 
-fun options(block: Options.() -> Unit): Options = OptionsImpl().apply(block)
+fun options(block: Options.() -> Unit): Options = Options().apply(block)
 
-fun tsParserConfig(block: TsParserConfig.() -> Unit): TsParserConfig =
-    TsParserConfigImpl().apply(block)
-
-fun esParserConfig(block: EsParserConfig.() -> Unit): EsParserConfig =
-    EsParserConfigImpl().apply(block)
-
-fun tsParseOptions(block: TsParserConfig.() -> Unit = {}): TsParserConfig =
-    TsParserConfigImpl().apply(block)
-
-fun esParseOptions(block: EsParserConfig.() -> Unit = {}): EsParserConfig =
-    EsParserConfigImpl().apply(block)
+//fun tsParserConfig(block: TsParserConfig.() -> Unit): TsParserConfig =
+//    TsParserConfig().apply(block)
+//
+//fun esParserConfig(block: EsParserConfig.() -> Unit): EsParserConfig =
+//    EsParserConfig().apply(block)
+//
+//fun tsParseOptions(block: TsParserConfig.() -> Unit = {}): TsParserConfig =
+//    TsParserConfig().apply(block)
+//
+//fun esParseOptions(block: EsParserConfig.() -> Unit = {}): EsParserConfig =
+//    EsParserConfig().apply(block)
 
 fun span(
     start: Int = 0,

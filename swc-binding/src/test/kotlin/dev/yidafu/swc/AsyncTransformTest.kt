@@ -1,7 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
-import dev.yidafu.swc.generated.dsl.jscConfig
+import dev.yidafu.swc.generated.dsl.*
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -55,7 +55,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = testCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             },
@@ -90,7 +90,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = tsCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = tsParseOptions { }
                 }
             },
@@ -117,7 +117,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = "const x = ;", // Invalid syntax
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             },
@@ -143,7 +143,7 @@ class AsyncTransformTest : AnnotationSpec() {
             filepath = getResource("test.js"),
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             },
@@ -170,7 +170,7 @@ class AsyncTransformTest : AnnotationSpec() {
             filepath = getResource("test.ts"),
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = tsParseOptions { }
                 }
             },
@@ -196,7 +196,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = testCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }
@@ -213,7 +213,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = "const x = 1;",
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                     target = JscTarget.ES5
                 }
@@ -238,7 +238,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = tsCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = tsParseOptions { }
                 }
             }
@@ -255,7 +255,7 @@ class AsyncTransformTest : AnnotationSpec() {
                 code = "const x = ;", // Invalid syntax
                 isModule = false,
                 options = options {
-                    jsc = jscConfig {
+                    jsc = JscConfig().apply {
                         parser = esParseOptions { }
                     }
                 }
@@ -274,7 +274,7 @@ class AsyncTransformTest : AnnotationSpec() {
             filepath = getResource("test.js"),
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }
@@ -291,7 +291,7 @@ class AsyncTransformTest : AnnotationSpec() {
             filepath = getResource("test.ts"),
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = tsParseOptions { }
                 }
             }
@@ -319,7 +319,7 @@ class AsyncTransformTest : AnnotationSpec() {
                     code = code,
                     isModule = false,
                     options = options {
-                        jsc = jscConfig {
+                        jsc = JscConfig().apply {
                             parser = esParseOptions { }
                         }
                     }
@@ -347,7 +347,7 @@ class AsyncTransformTest : AnnotationSpec() {
                 code = code,
                 isModule = false,
                 options = options {
-                    jsc = jscConfig {
+                    jsc = JscConfig().apply {
                         parser = esParseOptions { }
                     }
                 },
@@ -379,7 +379,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = "",
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }
@@ -395,7 +395,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = "export const x = 1;",
             isModule = true,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }
@@ -425,7 +425,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = largeCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }
@@ -447,7 +447,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = jsxCode,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions {
                         jsx = true
                     }
@@ -466,7 +466,7 @@ class AsyncTransformTest : AnnotationSpec() {
             code = code,
             isModule = false,
             options = options {
-                jsc = jscConfig {
+                jsc = JscConfig().apply {
                     parser = esParseOptions { }
                 }
             }

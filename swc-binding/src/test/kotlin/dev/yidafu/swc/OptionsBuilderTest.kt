@@ -1,7 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
-import dev.yidafu.swc.generated.dsl.jscConfig
+import dev.yidafu.swc.generated.dsl.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -69,9 +69,7 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with jscConfig`() {
         val opt = options {
-            jsc = jscConfig {
-                loose = true
-            }
+            jsc = JscConfig().apply { loose = true }
         }
 
         assertNotNull(opt.jsc)
@@ -81,10 +79,8 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with nested jscConfig and parser`() {
         val opt = options {
-            jsc = jscConfig {
-                parser = tsParseOptions {
-                    tsx = true
-                }
+            jsc = JscConfig().apply {
+                parser = tsParseOptions { tsx = true }
             }
         }
 
@@ -95,9 +91,7 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with jscConfig target`() {
         val opt = options {
-            jsc = jscConfig {
-                target = JscTarget.ES2015
-            }
+            jsc = JscConfig().apply { target = JscTarget.ES2015 }
         }
 
         assertEquals(JscTarget.ES2015, opt.jsc?.target)
@@ -106,9 +100,7 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with jscConfig keepClassNames`() {
         val opt = options {
-            jsc = jscConfig {
-                keepClassNames = true
-            }
+            jsc = JscConfig().apply { keepClassNames = true }
         }
 
         assertEquals(true, opt.jsc?.keepClassNames)
@@ -120,7 +112,7 @@ class OptionsBuilderTest : AnnotationSpec() {
             cwd = "/project"
             swcrc = false
             filename = "app.js"
-            jsc = jscConfig {
+            jsc = JscConfig().apply {
                 loose = true
                 target = JscTarget.ES2020
             }
@@ -176,9 +168,7 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with jscConfig externalHelpers`() {
         val opt = options {
-            jsc = jscConfig {
-                externalHelpers = true
-            }
+            jsc = JscConfig().apply { externalHelpers = true }
         }
 
         assertEquals(true, opt.jsc?.externalHelpers)

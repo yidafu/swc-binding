@@ -1,11 +1,10 @@
 package dev.yidafu.swc
 
+import dev.yidafu.swc.generated.Argument
 import dev.yidafu.swc.generated.ArrayExpression
-import dev.yidafu.swc.generated.ArrayExpressionImpl
-import dev.yidafu.swc.generated.ExprOrSpreadImpl
-import dev.yidafu.swc.generated.NumericLiteralImpl
+import dev.yidafu.swc.generated.NumericLiteral
 import dev.yidafu.swc.generated.dsl.createArrayExpression
-import dev.yidafu.swc.generated.dsl.exprOrSpread
+import dev.yidafu.swc.generated.dsl.argument
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -16,11 +15,11 @@ class ArrayExpressionTest : AnnotationSpec() {
 
     @Test
     fun `ArrayExpression elements allows holes (null entries)`() {
-        val arr: ArrayExpression = ArrayExpressionImpl().apply {
+        val arr: ArrayExpression = ArrayExpression().apply {
             elements = arrayOf(
                 null, // hole
-                ExprOrSpreadImpl().apply {
-                    expression = NumericLiteralImpl().apply {
+                Argument().apply {
+                    expression = NumericLiteral().apply {
                         value = 1.0
                         raw = "1"
                     }
@@ -41,8 +40,8 @@ class ArrayExpressionTest : AnnotationSpec() {
         val arr = createArrayExpression {
             elements = arrayOf(
                 null,
-                exprOrSpread {
-                    expression = NumericLiteralImpl().apply {
+                argument {
+                    expression = NumericLiteral().apply {
                         value = 2.0
                         raw = "2"
                     }

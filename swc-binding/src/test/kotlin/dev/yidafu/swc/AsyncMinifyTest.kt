@@ -1,6 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

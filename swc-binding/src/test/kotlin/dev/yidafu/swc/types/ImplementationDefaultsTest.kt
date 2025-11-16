@@ -8,7 +8,7 @@ import kotlin.test.Test
 class ImplementationDefaultsTest : AnnotationSpec() {
     @Test
     fun `binary expression implementation properties default values`() {
-        val impl = BinaryExpressionImpl()
+        val impl = BinaryExpression()
 
         assertEquals("BinaryExpression", impl.type, "type should default to interface name")
         assertNull(impl.operator, "operator should default to null")

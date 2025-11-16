@@ -11,9 +11,9 @@ class AstNodeTest : AnnotationSpec() {
 
     @Test
     fun `binary ast tree`() {
-        val expr = BinaryExpressionImpl().apply {
+        val expr = BinaryExpression().apply {
             operator = BinaryOperator.Addition
-            left = NumericLiteralImpl().apply {
+            left = NumericLiteral().apply {
                 value = 2.0
                 raw = "2"
                 span = span().apply {
@@ -23,7 +23,7 @@ class AstNodeTest : AnnotationSpec() {
                 }
             }
 
-            right = NumericLiteralImpl().apply {
+            right = NumericLiteral().apply {
                 value = 2.0
                 raw = "2"
                 span = span().apply {

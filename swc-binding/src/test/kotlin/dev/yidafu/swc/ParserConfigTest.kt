@@ -1,6 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import io.kotest.core.spec.style.AnnotationSpec
