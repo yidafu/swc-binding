@@ -9,7 +9,6 @@ object PoetConstants {
     // Package names
     const val PKG_TYPES = "dev.yidafu.swc.generated"
     const val PKG_DSL = "dev.yidafu.swc.generated.dsl"
-    const val PKG_BOOLEANABLE = "dev.yidafu.swc.booleanable"
 
     // Kotlinx Serialization
     object Serialization {

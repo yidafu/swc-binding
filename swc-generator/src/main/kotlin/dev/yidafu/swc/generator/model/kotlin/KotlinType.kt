@@ -24,7 +24,6 @@ sealed class KotlinType {
         val returnType: KotlinType
     ) : KotlinType()
     data class Union(val types: List<KotlinType>) : KotlinType()
-    data class Booleanable(val innerType: KotlinType) : KotlinType()
     object Any : KotlinType()
     object Unit : KotlinType()
     object Nothing : KotlinType()
@@ -83,10 +82,6 @@ sealed class KotlinType {
             LambdaTypeName.get(receiver = receiverTypeName, parameters = paramTypes.toTypedArray(), returnType = returnTypeName)
         }
         is Union -> convertUnionType(this)
-        is Booleanable -> {
-            // Booleanable<T> 转换为 T? 类型
-            innerType.toTypeName().copy(nullable = true)
-        }
         is Any -> ANY
         is Unit -> UNIT
         is Nothing -> NOTHING
@@ -144,10 +139,6 @@ sealed class KotlinType {
                 append('>')
             }
             else -> "Any"
-        }
-        is Booleanable -> buildString {
-            append("Booleanable")
-            append(innerType.toTypeString())
         }
         is Any -> "Any"
         is Unit -> "Unit"

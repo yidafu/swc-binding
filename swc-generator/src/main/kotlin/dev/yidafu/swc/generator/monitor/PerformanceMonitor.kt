@@ -2,16 +2,40 @@ package dev.yidafu.swc.generator.monitor
 
 import dev.yidafu.swc.generator.util.Logger
 import kotlin.system.measureTimeMillis
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 性能监控器
- * * 监控关键操作的耗时，帮助识别性能瓶颈
+ * 统一管理性能监控、缓存统计和性能优化功能
  */
 object PerformanceMonitor {
 
     private val measurements = mutableMapOf<String, MutableList<Long>>()
     private val operationCounts = mutableMapOf<String, Int>()
     private val totalTimes = mutableMapOf<String, Long>()
+
+    // 缓存统计
+    private val cacheStats = ConcurrentHashMap<String, MutableCacheStats>()
+
+    /**
+     * 可变的缓存统计信息
+     */
+    private data class MutableCacheStats(
+        var hitCount: Int = 0,
+        var missCount: Int = 0
+    )
+
+    /**
+     * 缓存统计信息
+     */
+    data class CacheStats(
+        val cacheName: String,
+        val hitCount: Int,
+        val missCount: Int,
+        val totalSize: Int
+    ) {
+        val hitRate: Double get() = if (hitCount + missCount > 0) hitCount.toDouble() / (hitCount + missCount) else 0.0
+    }
 
     /**
      * 测量操作耗时
@@ -192,7 +216,93 @@ object PerformanceMonitor {
         measurements.clear()
         operationCounts.clear()
         totalTimes.clear()
+        cacheStats.clear()
         Logger.debug("性能监控数据已重置")
+    }
+
+    /**
+     * 性能计时器（兼容 PerformanceOptimizer.measureTime）
+     * 测量操作耗时并记录到性能监控中
+     */
+    inline fun <T> measureTime(operationName: String, noinline operation: () -> T): T {
+        return measure(operationName, operation)
+    }
+
+    /**
+     * 批量处理优化
+     */
+    fun <T, R> processBatch(
+        items: List<T>,
+        batchSize: Int = 100,
+        processor: (List<T>) -> List<R>
+    ): List<R> {
+        return items.chunked(batchSize).flatMap { batch ->
+            measureTime("批量处理 ${batch.size} 项") {
+                processor(batch)
+            }
+        }
+    }
+
+    /**
+     * 记录缓存命中
+     */
+    fun recordCacheHit(cacheName: String) {
+        cacheStats.getOrPut(cacheName) { MutableCacheStats() }.hitCount++
+    }
+
+    /**
+     * 记录缓存未命中
+     */
+    fun recordCacheMiss(cacheName: String) {
+        cacheStats.getOrPut(cacheName) { MutableCacheStats() }.missCount++
+    }
+
+    /**
+     * 获取缓存统计信息
+     */
+    fun getCacheStats(cacheName: String, totalSize: Int = 0): CacheStats? {
+        val stats = cacheStats[cacheName] ?: return null
+        return CacheStats(
+            cacheName = cacheName,
+            hitCount = stats.hitCount,
+            missCount = stats.missCount,
+            totalSize = totalSize
+        )
+    }
+
+    /**
+     * 获取所有缓存统计信息
+     */
+    fun getAllCacheStats(): List<CacheStats> {
+        return cacheStats.keys.mapNotNull { cacheName ->
+            val stats = cacheStats[cacheName] ?: return@mapNotNull null
+            CacheStats(
+                cacheName = cacheName,
+                hitCount = stats.hitCount,
+                missCount = stats.missCount,
+                totalSize = 0 // 需要从实际缓存实例获取
+            )
+        }
+    }
+
+    /**
+     * 打印缓存统计信息
+     */
+    fun printCacheStats() {
+        val stats = getAllCacheStats()
+        if (stats.isNotEmpty()) {
+            Logger.info("=== 缓存性能统计 ===")
+            stats.forEach { stat ->
+                Logger.info("${stat.cacheName}: 命中率 ${(stat.hitRate * 100).toInt()}% (${stat.hitCount}/${stat.hitCount + stat.missCount}), 大小: ${stat.totalSize}")
+            }
+        }
+    }
+
+    /**
+     * 清理所有缓存统计
+     */
+    fun clearCacheStats() {
+        cacheStats.clear()
     }
 
     /**

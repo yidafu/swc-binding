@@ -64,12 +64,13 @@ class CodeEmitter(
             Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
         } else {
             config.outputTypesPath?.let { path ->
-                val generator = TypesGenerator(transformResult.classDecls.toMutableList())
-                // 添加类型别名
-                transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->
-                    generator.addTypeAlias(typeAlias)
+                TypesGenerator(transformResult.classDecls.toMutableList()).use { generator ->
+                    // 添加类型别名
+                    transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->
+                        generator.addTypeAlias(typeAlias)
+                    }
+                    generator.writeToFile(path)
                 }
-                generator.writeToFile(path)
                 Logger.success("  ✓ 生成 types.kt")
             }
         }
@@ -86,7 +87,9 @@ class CodeEmitter(
             Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
         } else {
             config.outputSerializerPath?.let { path ->
-                SerializerGenerator().writeToFile(path, transformResult.classDecls)
+                SerializerGenerator().use { generator ->
+                    generator.writeToFile(path, transformResult.classDecls)
+                }
                 Logger.success("  ✓ 生成 serializer.kt")
             }
         }
@@ -104,9 +107,8 @@ class CodeEmitter(
             Logger.info("  [DRY-RUN] DSL 函数数（估计）: ~$functionCount", 2)
         } else {
             config.outputDslDir?.let { dir ->
-                DslGenerator(transformResult.classDecls, transformResult.classAllPropertiesMap).apply {
-                    generateExtensionFunctions()
-                    writeToDirectory(dir)
+                DslGenerator(transformResult.classDecls, transformResult.classAllPropertiesMap).use { generator ->
+                    generator.writeToDirectory(dir)
                 }
                 Logger.success("  ✓ 生成 DSL 文件")
             }
@@ -119,7 +121,15 @@ class CodeEmitter(
     private fun ensureOutputDirectories() {
         Logger.debug("创建输出目录...")
 
-        config.outputTypesPath?.let { File(it).parentFile?.mkdirs() }
+        config.outputTypesPath?.let { path ->
+            val file = File(path)
+            // 如果是文件路径（以.kt结尾），创建父目录；否则创建目录本身
+            if (path.endsWith(".kt")) {
+                file.parentFile?.mkdirs()
+            } else {
+                file.mkdirs()
+            }
+        }
 
         config.outputSerializerPath?.let { File(it).parentFile?.mkdirs() }
 

@@ -149,24 +149,28 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
                 annotations = annotations
             )
 
-            // 如果是 type 属性，设置为不可空 String 类型并设置默认值为接口名称
-            if (prop.name == "type") {
+            // 如果是 type 属性，设置为不可空 String 类型
+            // 如果已经有默认值（从 TypeScript 接口的 type 字段提取的字面量值），保留它
+            // 否则设置为接口名称
+            if (prop.name.removeSurrounding("`") == "type") {
                 val innerType = when (updatedProp.type) {
                     is KotlinType.Nullable -> updatedProp.type.innerType
                     else -> updatedProp.type
                 }
                 if (innerType is KotlinType.StringType) {
                     // type 属性应该是不可空的 String 类型
+                    // 如果已经有默认值（从 TypeScript 提取的字面量值），保留它；否则使用接口名称
+                    val finalDefaultValue = updatedProp.defaultValue ?: Expression.StringLiteral(interfaceName)
                     updatedProp.copy(
                         type = KotlinType.StringType,
-                        defaultValue = Expression.StringLiteral(interfaceName)
+                        defaultValue = finalDefaultValue
                     )
                 } else {
                     updatedProp.copy(defaultValue = Expression.NullLiteral)
                 }
             } else {
-                // 其他属性设置默认值为 null
-                updatedProp.copy(defaultValue = Expression.NullLiteral)
+                // 其他属性设置默认值为 null（如果还没有默认值）
+                updatedProp.copy(defaultValue = updatedProp.defaultValue ?: Expression.NullLiteral)
             }
         }
     )
@@ -203,8 +207,23 @@ fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
 
 /**
  * 计算SerialName
+ * 优先使用从 TypeScript 接口的 type 字段提取的字面量值
  */
 fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String {
+    // 首先尝试从 type 属性的默认值中提取字面量值
+    val typeProperty = properties.find { it.name.removeSurrounding("`") == "type" }
+    val typeFieldLiteralValue = typeProperty?.defaultValue?.let { defaultValue ->
+        when (defaultValue) {
+            is Expression.StringLiteral -> defaultValue.value
+            else -> null
+        }
+    }
+    
+    // 如果找到了 type 字段的字面量值，优先使用它
+    if (typeFieldLiteralValue != null && discriminator == "type") {
+        return typeFieldLiteralValue
+    }
+    
     return when (discriminator) {
         "type" -> {
             when {

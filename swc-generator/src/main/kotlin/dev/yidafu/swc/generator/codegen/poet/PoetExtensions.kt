@@ -2,6 +2,8 @@ package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import dev.yidafu.swc.generator.util.CacheManager
+import dev.yidafu.swc.generator.config.Hardcoded
 
 /**
  * KotlinPoet 扩展函数
@@ -23,14 +25,12 @@ fun createDslLambdaType(receiverClassName: String): LambdaTypeName {
 
 /**
  * 解析 Kotlin 类型字符串为 TypeName（增强版）
- * 使用缓存优化重复解析
+ * 使用统一的缓存管理器
  */
-private val typeNameCache = mutableMapOf<String, TypeName>()
-
 fun String.parseAsTypeName(): TypeName {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
 
-    return typeNameCache.getOrPut(cleanType) {
+    return CacheManager.getOrPutTypeName(cleanType) {
         parseAsTypeNameInternal(cleanType)
     }
 }
@@ -101,17 +101,16 @@ private fun parseGenericType(cleanType: String): TypeName {
 /**
  * 获取基础类名
  */
-private fun getBaseClassName(baseName: String): ClassName {
-    return when (baseName) {
-        "Map" -> MAP
-        "List" -> LIST
-        "Set" -> SET
-        "MutableMap" -> MUTABLE_MAP
-        "MutableList" -> MUTABLE_LIST
-        "MutableSet" -> MUTABLE_SET
+private fun getBaseClassName(baseName: String): ClassName =
+    when (baseName) {
+        "Map" -> Hardcoded.Collections.MAP
+        "List" -> Hardcoded.Collections.LIST
+        "Set" -> Hardcoded.Collections.SET
+        "MutableMap" -> Hardcoded.Collections.MUTABLE_MAP
+        "MutableList" -> Hardcoded.Collections.MUTABLE_LIST
+        "MutableSet" -> Hardcoded.Collections.MUTABLE_SET
         else -> ClassName("", baseName.sanitizeForClassName())
     }
-}
 
 /**
  * 解析基本类型

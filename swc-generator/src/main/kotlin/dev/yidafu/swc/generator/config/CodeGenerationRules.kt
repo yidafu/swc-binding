@@ -15,6 +15,17 @@ import dev.yidafu.swc.generator.util.Logger
  * * 注意：基础类型转换现在完全在 ADT 转换过程中自动处理
  */
 object CodeGenerationRules {
+    // 存储接口名称到 type 字段字面量值的映射（用于生成实现类时的 @SerialName）
+    // 这个映射表在 InterfaceConverter 中填充，在生成实现类时使用
+    private val typeFieldLiteralValueMap = mutableMapOf<String, String>()
+    
+    fun getTypeFieldLiteralValue(interfaceName: String): String? {
+        return typeFieldLiteralValueMap[interfaceName]
+    }
+    
+    fun setTypeFieldLiteralValue(interfaceName: String, literalValue: String) {
+        typeFieldLiteralValueMap[interfaceName] = literalValue
+    }
 
     // ==================== 特殊属性类型覆盖规则 ====================
 
@@ -270,6 +281,16 @@ object CodeGenerationRules {
         return skipDslReceivers.contains(receiverName)
     }
 
+    /**
+     * 判断 DSL 扩展函数是否可注册
+     */
+    fun canRegisterDslExtension(receiverName: String, funName: String): Boolean {
+        if (receiverName == funName) return false
+        if (shouldSkipDslReceiver(receiverName)) return false
+        if (!isValidKotlinTypeName(funName) || !isValidKotlinTypeName(receiverName)) return false
+        return true
+    }
+
     // ==================== 代码生成规则 ====================
 
     /**
@@ -334,5 +355,173 @@ object CodeGenerationRules {
     fun handleNamingError(originalName: String, error: Exception): String {
         Logger.warn("命名处理失败: $originalName, ${error.message}")
         return "InvalidName_${System.currentTimeMillis()}"
+    }
+}
+
+/**
+ * Types 生成相关的可组合规则
+ */
+object TypesImplementationRules {
+    private val parserSyntaxLiteral = mapOf(
+        "TsParserConfig" to "typescript",
+        "EsParserConfig" to "ecmascript"
+    )
+
+    data class InterfaceRule(
+        val interfaceCleanName: String,
+        val syntaxLiteral: String?,
+        val discriminator: String
+    )
+
+    fun createInterfaceRule(interfaceName: String): InterfaceRule {
+        val cleanName = interfaceName.removeSurrounding("`")
+        val syntaxLiteral = parserSyntaxLiteral[cleanName]
+        val discriminator = if (syntaxLiteral != null) "syntax" else "type"
+        return InterfaceRule(
+            interfaceCleanName = cleanName,
+            syntaxLiteral = syntaxLiteral,
+            discriminator = discriminator
+        )
+    }
+
+    fun implementationAnnotations(rule: InterfaceRule, interfaceDecl: KotlinDeclaration.ClassDecl? = null): List<KotlinDeclaration.Annotation> {
+        // 尝试从接口的 type 属性中提取字面量值（如果属性有默认值）
+        val typeFieldLiteralValueFromProperty = interfaceDecl?.properties?.find { it.name.removeSurrounding("`") == "type" }?.defaultValue?.let { defaultValue ->
+            when (defaultValue) {
+                is Expression.StringLiteral -> defaultValue.value
+                else -> null
+            }
+        }
+        
+        // 如果没有从属性中获取到，尝试从全局映射表中获取（接口属性没有默认值，但字面量值已存储在映射表中）
+        val typeFieldLiteralValue = typeFieldLiteralValueFromProperty 
+            ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
+        
+        // 特殊处理：检测已知的 @SerialName 冲突
+        // 1. BindingIdentifier 和 Identifier 有相同的 type 值 "Identifier"
+        // 2. TsTemplateLiteralType 和 TemplateLiteral 有相同的 type 值 "TemplateLiteral"
+        // 为了避免 @SerialName 冲突，这些类型使用接口名称
+        val hasSerialNameConflict = when {
+            rule.interfaceCleanName == "BindingIdentifier" && typeFieldLiteralValue == "Identifier" -> true
+            rule.interfaceCleanName == "TsTemplateLiteralType" && typeFieldLiteralValue == "TemplateLiteral" -> true
+            else -> false
+        }
+        
+        // 优先使用从 TypeScript 提取的字面量值，否则使用 syntaxLiteral 或 interfaceCleanName
+        // 如果检测到冲突，使用接口名称作为后备方案
+        val serialNameValue = when {
+            hasSerialNameConflict -> rule.interfaceCleanName
+            typeFieldLiteralValue != null && rule.discriminator == "type" -> typeFieldLiteralValue
+            rule.syntaxLiteral != null -> rule.syntaxLiteral
+            else -> rule.interfaceCleanName
+        }
+        
+        return listOf(
+            KotlinDeclaration.Annotation("SwcDslMarker"),
+            KotlinDeclaration.Annotation("Serializable"),
+            KotlinDeclaration.Annotation(
+                "JsonClassDiscriminator",
+                listOf(Expression.StringLiteral(rule.discriminator))
+            ),
+            KotlinDeclaration.Annotation(
+                "SerialName",
+                listOf(Expression.StringLiteral(serialNameValue))
+            ),
+            KotlinDeclaration.Annotation(
+                "OptIn",
+                listOf(Expression.ClassReference("ExperimentalSerializationApi"))
+            )
+        )
+    }
+
+    fun reorderImplementationProperties(
+        allProperties: List<KotlinDeclaration.PropertyDecl>,
+        interfaceDecl: KotlinDeclaration.ClassDecl
+    ): List<KotlinDeclaration.PropertyDecl> {
+        val ownProperties = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val inheritedProperties = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val typeProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val spanProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+        val decoratorsProperty = mutableListOf<KotlinDeclaration.PropertyDecl>()
+
+        allProperties.forEach { prop ->
+            when (prop.name) {
+                "type" -> typeProperty.add(prop)
+                "span" -> spanProperty.add(prop)
+                "decorators" -> decoratorsProperty.add(prop)
+                else -> {
+                    if (isOwnProperty(prop.name, interfaceDecl)) {
+                        ownProperties.add(prop)
+                    } else {
+                        inheritedProperties.add(prop)
+                    }
+                }
+            }
+        }
+
+        return ownProperties + inheritedProperties + typeProperty + spanProperty + decoratorsProperty
+    }
+
+    fun processImplementationProperty(
+        prop: KotlinDeclaration.PropertyDecl,
+        rule: InterfaceRule
+    ): KotlinDeclaration.PropertyDecl {
+        val newModifier = when (prop.modifier) {
+            is PropertyModifier.Var -> PropertyModifier.OverrideVar
+            is PropertyModifier.Val -> PropertyModifier.OverrideVal
+            else -> prop.modifier
+        }
+
+        val normalizedName = prop.name.removeSurrounding("`")
+        val isTypeProperty = normalizedName == "type"
+        val isSyntaxProperty = normalizedName == "syntax" && rule.syntaxLiteral != null
+
+        val isSpanCoordinateProperty = rule.interfaceCleanName == "Span" &&
+            normalizedName in setOf("start", "end", "ctxt")
+        val isSpanProperty = normalizedName == "span"
+
+        val updatedType = when {
+            isTypeProperty -> KotlinType.StringType
+            isSyntaxProperty -> KotlinType.StringType
+            isSpanProperty -> KotlinType.Simple("Span")
+            isSpanCoordinateProperty -> KotlinType.Int
+            prop.type is KotlinType.Nullable -> prop.type
+            else -> KotlinType.Nullable(prop.type)
+        }
+
+        val defaultValue = when {
+            // 如果是 type 属性，优先使用从 TypeScript 提取的字面量值，否则使用接口名称
+            // 如果属性没有默认值（接口属性被清除了），尝试从全局映射表中获取
+            isTypeProperty -> prop.defaultValue 
+                ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)?.let { literalValue -> Expression.StringLiteral(literalValue) }
+                ?: Expression.StringLiteral(rule.interfaceCleanName)
+            isSyntaxProperty -> Expression.StringLiteral(rule.syntaxLiteral!!)
+            isSpanProperty -> Expression.FunctionCall("Span")
+            isSpanCoordinateProperty -> Expression.NumberLiteral("0")
+            updatedType is KotlinType.Nullable -> Expression.NullLiteral
+            else -> prop.defaultValue
+        }
+
+        val annotations = buildList {
+            addAll(prop.annotations)
+            // 不再为 type/syntax 判别字段添加 @Transient 注解
+            if (isSpanProperty || isSpanCoordinateProperty) {
+                add(KotlinDeclaration.Annotation("EncodeDefault"))
+            }
+        }
+
+        return prop.copy(
+            modifier = newModifier,
+            type = updatedType,
+            defaultValue = defaultValue,
+            annotations = annotations
+        )
+    }
+
+    private fun isOwnProperty(
+        propertyName: String,
+        interfaceDecl: KotlinDeclaration.ClassDecl
+    ): Boolean {
+        return interfaceDecl.properties.any { it.name == propertyName }
     }
 }

@@ -1,6 +1,7 @@
 package dev.yidafu.swc.generator.model.kotlin
 
 import com.squareup.kotlinpoet.*
+import dev.yidafu.swc.generator.util.CacheManager
 
 /**
  * Kotlin 类型的扩展方法
@@ -33,7 +34,6 @@ fun KotlinType.getTypeName(): String = when (this) {
     is KotlinType.Function -> "Function"
     is KotlinType.ReceiverFunction -> "ReceiverFunction"
     is KotlinType.Union -> "Union"
-    is KotlinType.Booleanable -> "Booleanable"
     is KotlinType.Any -> "Any"
     is KotlinType.Unit -> "Unit"
     is KotlinType.Nothing -> "Nothing"
@@ -69,7 +69,6 @@ object KotlinTypeFactory {
     fun nested(parent: String, name: String) = KotlinType.Nested(parent, name)
     fun generic(name: String, vararg params: KotlinType) = KotlinType.Generic(name, params.toList())
     fun nullable(type: KotlinType) = KotlinType.Nullable(type)
-    fun booleanable(type: KotlinType) = KotlinType.Booleanable(type)
     fun union(vararg types: KotlinType) = KotlinType.Union(types.toList())
     fun receiverFunction(receiver: KotlinType, vararg params: KotlinType, returnType: KotlinType = unit()) =
         KotlinType.ReceiverFunction(receiver, params.toList(), returnType)
@@ -85,14 +84,12 @@ fun KotlinType.makeNullable(): KotlinType = when (this) {
 
 /**
  * 扩展方法：从字符串解析为 KotlinType
- * 使用缓存优化重复解析
+ * 使用统一的缓存管理器
  */
-private val kotlinTypeCache = mutableMapOf<String, KotlinType>()
-
 fun String.parseToKotlinType(): KotlinType {
     val cleanType = this.trim().replace(Regex("""/\*.*?\*/"""), "").trim()
 
-    return kotlinTypeCache.getOrPut(cleanType) {
+    return CacheManager.getOrPutKotlinType(cleanType) {
         parseToKotlinTypeInternal(cleanType)
     }
 }

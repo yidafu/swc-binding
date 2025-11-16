@@ -3,9 +3,10 @@ package dev.yidafu.swc.generator.converter.declaration
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
-import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
+import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeParameter
 import dev.yidafu.swc.generator.model.typescript.Variance
@@ -24,9 +25,23 @@ class TypeAliasConverter(
     private val unionParentRegistry: MutableMap<String, MutableSet<String>> = mutableMapOf(),
     private val nestedTypeRegistry: MutableMap<String, String> = mutableMapOf()
 ) {
+    companion object {
+        private const val PARSE_OPTIONS_ALIAS = "ParseOptions"
+        private const val PARSE_OPTIONS_REFERENCE = "ParserConfig"
+        private const val BASE_PARSE_OPTIONS_NAME = "BaseParseOptions"
+    }
+
     private val literalNameMap = SwcGeneratorConfig().literalNameMap
     private val typeConverter = TypeConverter(config, nestedTypeRegistry)
     private val forceNullableInterfaces = setOf("WasmAnalysisOptions")
+    private val extraDeclarations = mutableListOf<KotlinDeclaration>()
+
+    fun drainExtraDeclarations(): List<KotlinDeclaration> {
+        if (extraDeclarations.isEmpty()) return emptyList()
+        val snapshot = extraDeclarations.toList()
+        extraDeclarations.clear()
+        return snapshot
+    }
 
     /**
      * 转换类型别名声明
@@ -39,9 +54,11 @@ class TypeAliasConverter(
 
             val mappedAliasName = CodeGenerationRules.mapTypeName(tsTypeAlias.name)
 
-            // 特殊处理：TerserEcmaVersion 直接映射为 String
-            if (tsTypeAlias.name == "TerserEcmaVersion") {
-                Logger.debug("  特殊处理 TerserEcmaVersion -> String", 6)
+            handleIntersectionAlias(tsTypeAlias)?.let { return it }
+
+            // 特殊规则：部分别名强制映射为 String（集中于 Hardcoded）
+            if (Hardcoded.TypeAliasRules.isForceStringAlias(tsTypeAlias.name)) {
+                Logger.debug("  特殊处理 ${tsTypeAlias.name} -> String", 6)
                 val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
                     name = wrapReservedWord(mappedAliasName),
                     type = KotlinType.StringType,
@@ -82,7 +99,7 @@ class TypeAliasConverter(
             val kotlinTypeParams = convertTypeParameters(tsTypeAlias.typeParameters)
 
             val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
-                name = wrapReservedWord(mappedAliasName),
+            name = wrapReservedWord(mappedAliasName),
                 type = kotlinType,
                 typeParameters = kotlinTypeParams,
                 annotations = emptyList(),
@@ -100,6 +117,51 @@ class TypeAliasConverter(
                 cause = e
             )
         }
+    }
+
+    private fun handleIntersectionAlias(
+        tsTypeAlias: TypeScriptDeclaration.TypeAliasDeclaration
+    ): GeneratorResult<KotlinDeclaration>? {
+        val intersection = tsTypeAlias.type as? TypeScriptType.Intersection ?: return null
+        if (tsTypeAlias.name != PARSE_OPTIONS_ALIAS) return null
+
+        val reference = intersection.types.filterIsInstance<TypeScriptType.Reference>()
+            .firstOrNull { it.name == PARSE_OPTIONS_REFERENCE } ?: return null
+        val literal = intersection.types.filterIsInstance<TypeScriptType.TypeLiteral>().firstOrNull() ?: return null
+
+        Logger.debug("  处理 ParseOptions 交叉类型，生成 BaseParseOptions", 6)
+        val baseInterface = createBaseParseOptionsInterface(literal, tsTypeAlias.kdoc)
+        extraDeclarations.add(baseInterface)
+        unionParentRegistry.getOrPut(PARSE_OPTIONS_REFERENCE) { mutableSetOf() }.add(BASE_PARSE_OPTIONS_NAME)
+
+        val aliasDecl = KotlinDeclaration.TypeAliasDecl(
+            name = wrapReservedWord(CodeGenerationRules.mapTypeName(tsTypeAlias.name)),
+            type = KotlinTypeFactory.simple(CodeGenerationRules.mapTypeName(reference.name)),
+            typeParameters = emptyList(),
+            annotations = emptyList(),
+            kdoc = tsTypeAlias.kdoc
+        )
+
+        return GeneratorResultFactory.success(aliasDecl)
+    }
+
+    private fun createBaseParseOptionsInterface(
+        typeLiteral: TypeScriptType.TypeLiteral,
+        sourceKdoc: String?
+    ): KotlinDeclaration.ClassDecl {
+        val properties = typeLiteral.members.mapNotNull { member ->
+            convertTypeMember(member, BASE_PARSE_OPTIONS_NAME)
+        }
+        return KotlinDeclaration.ClassDecl(
+            name = wrapReservedWord(BASE_PARSE_OPTIONS_NAME),
+            modifier = ClassModifier.SealedInterface,
+            properties = properties,
+            parents = emptyList(),
+            typeParameters = emptyList(),
+            nestedClasses = emptyList(),
+            annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
+            kdoc = sourceKdoc
+        )
     }
 
     /**
@@ -276,7 +338,7 @@ class TypeAliasConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         val typeLiteral = tsTypeAlias.type as TypeScriptType.TypeLiteral
         val properties = typeLiteral.members.mapNotNull { member ->
-            val adjustedMember = if (forceNullableInterfaces.contains(tsTypeAlias.name)) {
+            val adjustedMember = if (Hardcoded.TypeAliasRules.forceNullableForInterface(tsTypeAlias.name)) {
                 member.copy(optional = true)
             } else {
                 member
@@ -333,16 +395,5 @@ class TypeAliasConverter(
     /**
      * 包装保留字
      */
-    private fun wrapReservedWord(name: String): String {
-        val reservedWords = setOf(
-            "object", "inline", "in", "super", "class", "interface", "fun",
-            "val", "var", "when", "is", "as", "import", "package"
-        )
-
-        return if (reservedWords.contains(name.lowercase())) {
-            "`$name`"
-        } else {
-            name
-        }
-    }
+    private fun wrapReservedWord(name: String): String = Hardcoded.PropertyRules.wrapReservedWord(name)
 }

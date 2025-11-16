@@ -47,5 +47,8 @@ enum class ErrorCode(val code: String, val description: String) {
     FILE_IO_ERROR("FILE_IO_ERROR", "文件IO错误"),
 
     // 序列化错误
-    SERIALIZATION_ERROR("SERIALIZATION_ERROR", "序列化错误")
+    SERIALIZATION_ERROR("SERIALIZATION_ERROR", "序列化错误"),
+
+    // 跳过接口
+    SKIPPED_INTERFACE("SKIPPED_INTERFACE", "跳过的接口")
 }

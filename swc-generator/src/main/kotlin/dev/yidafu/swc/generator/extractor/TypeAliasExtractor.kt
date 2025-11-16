@@ -197,10 +197,10 @@ class TypeAliasExtractor(private val visitor: TsAstVisitor) {
         if (!actualType.isUnionType()) return false
 
         val types = actualType.getNodes("types")
-        
+
         // 如果类型中包含了非字面量类型，返回 false
         if (!types.all { it.isLiteralType() }) return false
-        
+
         val literalTypes = types
             .mapNotNull {
                 val literal = it.getNode("literal")

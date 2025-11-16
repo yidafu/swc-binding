@@ -5,6 +5,7 @@ import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.converter.declaration.InterfaceConverter
 import dev.yidafu.swc.generator.converter.declaration.TypeAliasConverter
 import dev.yidafu.swc.generator.converter.type.TypeConverter
+import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
@@ -22,9 +23,8 @@ class TypeScriptToKotlinConverter(
     private val config: Configuration,
     private val inheritanceAnalyzer: InheritanceAnalyzer? = null
 ) {
-    
+
     private val typeConverter = TypeConverter(config)
-    private val skippedTypeAliases = setOf("ToSnakeCase", "ToSnakeCaseProperties")
 
     /**
      * 转换 TypeScript 声明列表为 Kotlin 声明列表
@@ -50,6 +50,7 @@ class TypeScriptToKotlinConverter(
                 val result = convertDeclaration(tsDeclaration, interfaceConverter, typeAliasConverter)
                 result.onSuccess { kotlinDeclaration ->
                     kotlinDeclarations.add(kotlinDeclaration)
+                    kotlinDeclarations.addAll(typeAliasConverter.drainExtraDeclarations())
                 }.onFailure { error ->
                     Logger.warn("转换声明失败: ${tsDeclaration::class.simpleName}, ${error.message}")
                     // 继续处理其他声明，不中断整个流程
@@ -110,7 +111,7 @@ class TypeScriptToKotlinConverter(
 
     private fun shouldSkipDeclaration(declaration: TypeScriptDeclaration): Boolean {
         return declaration is TypeScriptDeclaration.TypeAliasDeclaration &&
-            skippedTypeAliases.contains(declaration.name)
+            Hardcoded.ConverterRules.shouldSkipTypeAlias(declaration.name)
     }
 
     private fun buildUnionParentRegistry(

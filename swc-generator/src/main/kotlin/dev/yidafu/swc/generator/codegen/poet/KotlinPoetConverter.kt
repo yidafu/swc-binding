@@ -1,9 +1,12 @@
 package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.util.PerformanceOptimizer
+import dev.yidafu.swc.generator.util.CacheManager
+import dev.yidafu.swc.generator.monitor.PerformanceMonitor
+import dev.yidafu.swc.generator.config.Hardcoded
 
 /**
  * ADT 到 KotlinPoet 的核心转换器
@@ -13,16 +16,14 @@ object KotlinPoetConverter {
 
     /**
      * 转换 KotlinType 为 TypeName
-     * 使用性能优化的缓存
+     * 使用统一的缓存管理器
      */
-    private val typeCache = mutableMapOf<String, TypeName>()
-
     fun convertType(kotlinType: KotlinType): TypeName {
         val typeString = kotlinType.toTypeString()
 
-        // 使用缓存避免重复转换
-        return typeCache.getOrPut(typeString) {
-            PerformanceOptimizer.measureTime("类型转换: $typeString") {
+        // 使用统一缓存避免重复转换
+        return CacheManager.getOrPutTypeName(typeString) {
+            PerformanceMonitor.measureTime("类型转换: $typeString") {
                 try {
                     kotlinType.toTypeName()
                 } catch (e: Exception) {
@@ -114,6 +115,9 @@ object KotlinPoetConverter {
                         }
                     }
 
+                    // 若为 Union.Ux 或 Array<Union.Ux>，添加 @Serializable(with=...) 注解并收集
+                    addUnionWithAnnotationAndCollectForParam(decl.name, prop.name, prop.type, paramBuilder)
+
                     paramBuilder.build()
                 }
                 builder.primaryConstructor(
@@ -158,10 +162,33 @@ object KotlinPoetConverter {
                     }
                 }
             }
-            else -> {
-                // 普通类: 属性作为类属性
+            is ClassModifier.Interface, is ClassModifier.SealedInterface -> {
+                // 接口：属性不得包含初始化器，生成抽象属性；为 Union.Ux 属性添加 @Serializable(with=...)
                 decl.properties.forEach { prop ->
-                    convertProperty(prop)?.let { builder.addProperty(it) }
+                    val typeName = convertType(prop.type)
+                    val propBuilder = PropertySpec.builder(prop.name, typeName)
+                    // 接口属性修饰符（保持 val/var/override 等）
+                    addPropertyModifiers(propBuilder, prop.modifier)
+                    // 透传原始注解
+                    prop.annotations.forEach { annotation ->
+                        convertAnnotation(annotation)?.let { propBuilder.addAnnotation(it) }
+                    }
+                    // 为 Union.Ux 或 Array<Union.Ux> 添加专属 with 注解并收集
+                    addUnionWithAnnotationAndCollectForProperty(decl.name, prop.name, prop.type, propBuilder)
+                    // 文档
+                    prop.kdoc?.let { propBuilder.addKdoc(it.cleanKdoc()) }
+                    builder.addProperty(propBuilder.build())
+                }
+            }
+            else -> {
+                // 普通类: 基于 convertProperty，追加 @Serializable(with=...) 注解
+                decl.properties.forEach { prop ->
+                    val base = convertProperty(prop)
+                    if (base != null) {
+                        val propBuilder = base.toBuilder()
+                        addUnionWithAnnotationAndCollectForProperty(decl.name, prop.name, prop.type, propBuilder)
+                        builder.addProperty(propBuilder.build())
+                    }
                 }
             }
         }
@@ -262,6 +289,212 @@ object KotlinPoetConverter {
         return builder.build()
     }
 
+    // === Union 序列化器收集与注解 ===
+    private fun addUnionWithAnnotationAndCollectForProperty(
+        ownerName: String,
+        propName: String,
+        propType: KotlinType,
+        builder: PropertySpec.Builder
+    ) {
+        val usage = computeUnionUsage(ownerName, propName, propType) ?: return
+        val serializerClass = ClassName("dev.yidafu.swc.generated", serializerNameFor(usage))
+        val serializable = AnnotationSpec.builder(Hardcoded.AnnotationNames.toClassName(Hardcoded.AnnotationNames.SERIALIZABLE))
+            .addMember("with = %T::class", serializerClass)
+            .build()
+        builder.addAnnotation(serializable)
+        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
+    }
+
+    private fun addUnionWithAnnotationAndCollectForParam(
+        ownerName: String,
+        propName: String,
+        propType: KotlinType,
+        builder: ParameterSpec.Builder
+    ) {
+        val usage = computeUnionUsage(ownerName, propName, propType) ?: return
+        val serializerClass = ClassName("dev.yidafu.swc.generated", serializerNameFor(usage))
+        val serializable = AnnotationSpec.builder(Hardcoded.AnnotationNames.toClassName(Hardcoded.AnnotationNames.SERIALIZABLE))
+            .addMember("with = %T::class", serializerClass)
+            .build()
+        builder.addAnnotation(serializable)
+        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
+    }
+
+    private fun serializerNameFor(usage: dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage): String {
+        // 去重命名：基于 unionKind + 规范化参数token
+        return dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.computeSerializerName(
+            usage.unionKind,
+            usage.typeArguments
+        )
+    }
+
+    private fun computeUnionUsage(
+        ownerName: String,
+        propName: String,
+        type: KotlinType
+    ): dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage? {
+        fun unwrapNullable(t: KotlinType): Pair<KotlinType, Boolean> =
+            if (t is KotlinType.Nullable) (t.innerType to true) else (t to false)
+        var isArray = false
+        var t = type
+        if (t is KotlinType.Nullable) t = t.innerType
+        if (t is KotlinType.Generic && t.name == "Array" && t.params.size == 1) {
+            isArray = true
+            t = t.params[0]
+        }
+        val (core, _) = unwrapNullable(t)
+        if (core is KotlinType.Generic && core.name.startsWith("Union.U")) {
+            val unionKind = core.name.removePrefix("Union.")
+            val args = core.params.map { a ->
+                val (inner, isNull) = unwrapNullable(a)
+                val cls: com.squareup.kotlinpoet.TypeName = when (inner) {
+                    is KotlinType.Simple -> {
+                        val raw = inner.name.removePrefix("`").removeSuffix("`")
+                        when (raw) {
+                            "String" -> ClassName("kotlin", "String")
+                            "Int" -> ClassName("kotlin", "Int")
+                            "Double" -> ClassName("kotlin", "Double")
+                            "Float" -> ClassName("kotlin", "Float")
+                            "Long" -> ClassName("kotlin", "Long")
+                            "Short" -> ClassName("kotlin", "Short")
+                            "Byte" -> ClassName("kotlin", "Byte")
+                            "Boolean" -> ClassName("kotlin", "Boolean")
+                            "Any" -> ClassName("kotlin", "Any")
+                            "Unit" -> ClassName("kotlin", "Unit")
+                            "Nothing" -> ClassName("kotlin", "Nothing")
+                            else -> ClassName("dev.yidafu.swc.generated", raw)
+                        }
+                    }
+                    is KotlinType.Generic -> {
+                        val raw = inner.name.removePrefix("`").removeSuffix("`")
+                        if (raw == "Array" && inner.params.size == 1) {
+                            val (elemInner, _) = unwrapNullable(inner.params[0])
+                            val elemType = when (elemInner) {
+                                is KotlinType.Simple -> {
+                                    val eraw = elemInner.name.removePrefix("`").removeSuffix("`")
+                                    when (eraw) {
+                                        "String" -> ClassName("kotlin", "String")
+                                        "Int" -> ClassName("kotlin", "Int")
+                                        "Double" -> ClassName("kotlin", "Double")
+                                        "Float" -> ClassName("kotlin", "Float")
+                                        "Long" -> ClassName("kotlin", "Long")
+                                        "Short" -> ClassName("kotlin", "Short")
+                                        "Byte" -> ClassName("kotlin", "Byte")
+                                        "Boolean" -> ClassName("kotlin", "Boolean")
+                                        "Any" -> ClassName("kotlin", "Any")
+                                        "Unit" -> ClassName("kotlin", "Unit")
+                                        "Nothing" -> ClassName("kotlin", "Nothing")
+                                        else -> ClassName("dev.yidafu.swc.generated", eraw)
+                                    }
+                                }
+                                is KotlinType.StringType -> ClassName("kotlin", "String")
+                                is KotlinType.Int -> ClassName("kotlin", "Int")
+                                is KotlinType.Boolean -> ClassName("kotlin", "Boolean")
+                                is KotlinType.Long -> ClassName("kotlin", "Long")
+                                is KotlinType.Double -> ClassName("kotlin", "Double")
+                                is KotlinType.Float -> ClassName("kotlin", "Float")
+                                is KotlinType.Char -> ClassName("kotlin", "Char")
+                                is KotlinType.Byte -> ClassName("kotlin", "Byte")
+                                is KotlinType.Short -> ClassName("kotlin", "Short")
+                                is KotlinType.Any -> ClassName("kotlin", "Any")
+                                is KotlinType.Unit -> ClassName("kotlin", "Unit")
+                                is KotlinType.Nothing -> ClassName("kotlin", "Nothing")
+                                else -> ClassName("kotlin", "Any")
+                            }
+                            ClassName("kotlin", "Array").parameterizedBy(elemType)
+                        } else {
+                            val base = ClassName("dev.yidafu.swc.generated", raw)
+                            if (inner.params.isNotEmpty()) {
+                                val paramTypes = inner.params.map { p ->
+                                    when (p) {
+                                        is KotlinType.Nullable -> mapInnerToPoetType(p.innerType).copy(nullable = true)
+                                        else -> mapInnerToPoetType(p)
+                                    }
+                                }
+                                base.parameterizedBy(paramTypes)
+                            } else {
+                                base
+                            }
+                        }
+                    }
+                    is KotlinType.StringType -> ClassName("kotlin", "String")
+                    is KotlinType.Int -> ClassName("kotlin", "Int")
+                    is KotlinType.Boolean -> ClassName("kotlin", "Boolean")
+                    is KotlinType.Long -> ClassName("kotlin", "Long")
+                    is KotlinType.Double -> ClassName("kotlin", "Double")
+                    is KotlinType.Float -> ClassName("kotlin", "Float")
+                    is KotlinType.Char -> ClassName("kotlin", "Char")
+                    is KotlinType.Byte -> ClassName("kotlin", "Byte")
+                    is KotlinType.Short -> ClassName("kotlin", "Short")
+                    is KotlinType.Any -> ClassName("kotlin", "Any")
+                    is KotlinType.Unit -> ClassName("kotlin", "Unit")
+                    is KotlinType.Nothing -> ClassName("kotlin", "Nothing")
+                    else -> ClassName("kotlin", "Any")
+                }
+                cls to isNull
+            }
+            val ownerSimple = ownerName.removePrefix("`").removeSuffix("`")
+            return dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage(
+                ownerSimpleName = ownerSimple,
+                propertyName = propName,
+                unionKind = unionKind,
+                typeArguments = args.map { it.first },
+                isArray = isArray,
+                isNullableElement = args.map { it.second }
+            )
+        }
+        return null
+    }
+
+    private fun mapInnerToPoetType(inner: KotlinType): com.squareup.kotlinpoet.TypeName {
+        return when (inner) {
+            is KotlinType.Simple -> {
+                val raw = inner.name.removePrefix("`").removeSuffix("`")
+                when (raw) {
+                    "String" -> ClassName("kotlin", "String")
+                    "Int" -> ClassName("kotlin", "Int")
+                    "Double" -> ClassName("kotlin", "Double")
+                    "Float" -> ClassName("kotlin", "Float")
+                    "Long" -> ClassName("kotlin", "Long")
+                    "Short" -> ClassName("kotlin", "Short")
+                    "Byte" -> ClassName("kotlin", "Byte")
+                    "Boolean" -> ClassName("kotlin", "Boolean")
+                    "Any" -> ClassName("kotlin", "Any")
+                    "Unit" -> ClassName("kotlin", "Unit")
+                    "Nothing" -> ClassName("kotlin", "Nothing")
+                    else -> ClassName("dev.yidafu.swc.generated", raw)
+                }
+            }
+            is KotlinType.Generic -> {
+                val raw = inner.name.removePrefix("`").removeSuffix("`")
+                if (raw == "Array" && inner.params.size == 1) {
+                    val elemType = mapInnerToPoetType(inner.params[0])
+                    ClassName("kotlin", "Array").parameterizedBy(elemType)
+                } else {
+                    val base = ClassName("dev.yidafu.swc.generated", raw)
+                    if (inner.params.isNotEmpty()) {
+                        base.parameterizedBy(inner.params.map { mapInnerToPoetType(it) })
+                    } else {
+                        base
+                    }
+                }
+            }
+            is KotlinType.StringType -> ClassName("kotlin", "String")
+            is KotlinType.Int -> ClassName("kotlin", "Int")
+            is KotlinType.Boolean -> ClassName("kotlin", "Boolean")
+            is KotlinType.Long -> ClassName("kotlin", "Long")
+            is KotlinType.Double -> ClassName("kotlin", "Double")
+            is KotlinType.Float -> ClassName("kotlin", "Float")
+            is KotlinType.Char -> ClassName("kotlin", "Char")
+            is KotlinType.Byte -> ClassName("kotlin", "Byte")
+            is KotlinType.Short -> ClassName("kotlin", "Short")
+            is KotlinType.Any -> ClassName("kotlin", "Any")
+            is KotlinType.Unit -> ClassName("kotlin", "Unit")
+            is KotlinType.Nothing -> ClassName("kotlin", "Nothing")
+            else -> ClassName("kotlin", "Any")
+        }
+    }
+
     /**
      * 转换类型别名声明为 TypeAliasSpec
      */
@@ -291,14 +524,12 @@ object KotlinPoetConverter {
 
     /**
      * 转换注解为 AnnotationSpec
-     * 使用缓存优化重复转换
+     * 使用统一的缓存管理器
      */
-    private val annotationCache = mutableMapOf<String, AnnotationSpec?>()
-
     fun convertAnnotation(annotation: KotlinDeclaration.Annotation): AnnotationSpec? {
         val cacheKey = "${annotation.name}:${annotation.arguments.joinToString(",") { it.toCodeString() }}"
 
-        return annotationCache.getOrPut(cacheKey) {
+        return CacheManager.getOrPutAnnotation(cacheKey) {
             try {
                 val className = getAnnotationClassName(annotation.name)
                 val builder = AnnotationSpec.builder(className)
@@ -319,16 +550,12 @@ object KotlinPoetConverter {
     /**
      * 获取注解类名（提取公共逻辑）
      */
-    private fun getAnnotationClassName(annotationName: String): ClassName {
-        return when (annotationName) {
-            "SerialName" -> ClassName("kotlinx.serialization", "SerialName")
-            "Serializable" -> ClassName("kotlinx.serialization", "Serializable")
-            "JsonClassDiscriminator" -> ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
-            "OptIn" -> ClassName("kotlin", "OptIn")
-            "SwcDslMarker" -> ClassName("dev.yidafu.swc.generated", "SwcDslMarker")
-            else -> ClassName("", annotationName)
+    private fun getAnnotationClassName(annotationName: String): ClassName =
+        if (annotationName == "SwcDslMarker") {
+            ClassName("dev.yidafu.swc.generated", "SwcDslMarker")
+        } else {
+            Hardcoded.AnnotationNames.toClassName(annotationName)
         }
-    }
 
     /**
      * 添加注解参数（提取公共逻辑）
@@ -455,7 +682,7 @@ object KotlinPoetConverter {
      * 判断类型是否是接口
      * 使用动态生成的接口名称集合
      */
-    private val interfaceSuffixes = setOf("Interface", "Options", "Config")
+    private val interfaceSuffixes = Hardcoded.InterfaceHeuristics.interfaceSuffixes
 
     private fun isInterfaceType(kotlinType: KotlinType, interfaceNames: Set<String>): Boolean {
         return when (kotlinType) {

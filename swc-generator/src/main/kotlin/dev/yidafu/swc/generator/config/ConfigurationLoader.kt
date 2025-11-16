@@ -133,7 +133,7 @@ class ConfigurationLoader {
                 debug = debug
             ),
             output = OutputConfig(
-                outputTypesPath = outputTypesPath ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt",
+                outputTypesPath = outputTypesPath ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast",
                 outputSerializerPath = outputSerializerPath ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt",
                 outputDslDir = outputDslDir ?: "$projectRoot/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl",
                 dryRun = dryRun
@@ -268,7 +268,7 @@ class ConfigurationLoader {
                     debug = false
                 ),
                 output = YamlOutputConfig(
-                    outputTypesPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt",
+                    outputTypesPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast",
                     outputSerializerPath = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt",
                     outputDslDir = "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl",
                     dryRun = false

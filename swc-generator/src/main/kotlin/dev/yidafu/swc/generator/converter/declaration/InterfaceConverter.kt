@@ -3,8 +3,10 @@ package dev.yidafu.swc.generator.converter.declaration
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.TypesImplementationRules
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeParameter
 import dev.yidafu.swc.generator.model.typescript.Variance
@@ -23,55 +25,10 @@ class InterfaceConverter(
     private val unionParentRegistry: MutableMap<String, MutableSet<String>> = mutableMapOf(),
     private val nestedTypeRegistry: MutableMap<String, String> = mutableMapOf()
 ) {
-    private val syntaxLiteralMap = mapOf(
-        "TsParserConfig" to "typescript",
-        "EsParserConfig" to "ecmascript"
-    )
+    // 移除硬编码的语法字面量映射，改为从 TS ADT 成员中推导
 
     private val typeConverter = TypeConverter(config, nestedTypeRegistry)
-    private val fallbackParentProperties = mapOf(
-        "Node" to setOf("type"),
-        "ExpressionBase" to setOf("type"),
-        "PropBase" to setOf("type"),
-        "PatternBase" to setOf("type"),
-        "ClassPropertyBase" to setOf("type"),
-        "ClassMember" to setOf("type"),
-        "ClassMethodBase" to setOf("type"),
-        "HasSpan" to setOf("span"),
-        "HasDecorator" to setOf("decorators"),
-        "ClassMember" to emptySet(),
-        "Expression" to emptySet(),
-        "Statement" to emptySet(),
-        "Declaration" to emptySet(),
-        "Pattern" to emptySet(),
-        "Property" to emptySet(),
-        "PropertyName" to emptySet(),
-        "JSXObject" to emptySet(),
-        "JSXElementName" to emptySet(),
-        "JSXAttributeName" to emptySet(),
-        "JSXExpression" to emptySet(),
-        "JSXAttrValue" to emptySet(),
-        "JSXElementChild" to emptySet(),
-        "JSXAttributeOrSpread" to emptySet(),
-        "ModuleExportName" to emptySet(),
-        "TsEntityName" to emptySet(),
-        "TsThisTypeOrIdent" to emptySet(),
-        "TsEnumMemberId" to emptySet(),
-        "TsModuleName" to emptySet(),
-        "TsLiteral" to emptySet(),
-        "TsTypeQueryExpr" to emptySet(),
-        "TsModuleReference" to emptySet(),
-        "TsNamespaceBody" to emptySet(),
-        "TsTypeElement" to emptySet(),
-        "TsFnParameter" to emptySet(),
-        "TsParameterPropertyParameter" to emptySet(),
-        "ObjectPatternProperty" to emptySet(),
-        "ImportSpecifier" to emptySet(),
-        "ExportSpecifier" to emptySet(),
-        "DefaultDecl" to emptySet(),
-        "ModuleItem" to emptySet(),
-        "SealedInterface" to emptySet()
-    )
+    // 移除硬编码的父属性兜底，父属性应从 TS ADT 与继承分析中推导
 
     /**
      * 转换接口声明为 Kotlin 类声明
@@ -80,6 +37,15 @@ class InterfaceConverter(
         tsInterface: TypeScriptDeclaration.InterfaceDeclaration
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         return try {
+            // 跳过 OptionalChainingCall，只保留 CallExpression
+            if (tsInterface.name == "OptionalChainingCall") {
+                Logger.debug("跳过 OptionalChainingCall 接口（只保留 CallExpression）", 4)
+                return GeneratorResultFactory.failure(
+                    code = ErrorCode.SKIPPED_INTERFACE,
+                    message = "OptionalChainingCall is skipped, use CallExpression instead"
+                )
+            }
+            
             Logger.debug("转换接口声明: ${tsInterface.name}", 4)
 
             // 转换类型参数
@@ -104,6 +70,10 @@ class InterfaceConverter(
             // 去重：优先保留 camelCase 版本，如果只有 snake_case 版本则转换
             val deduplicatedMembers = deduplicateMembers(tsInterface.members)
             val mappedInterfaceName = CodeGenerationRules.mapTypeName(tsInterface.name)
+            
+            // 提取 type 字段的字面量值（用于生成正确的 @SerialName）
+            val typeFieldLiteralValue = extractTypeFieldLiteralValue(tsInterface.members)
+            
             val kotlinProperties = deduplicatedMembers.mapNotNull { member ->
                 convertTypeMember(member, mappedInterfaceName, nestedInterfaces)
             }
@@ -116,13 +86,32 @@ class InterfaceConverter(
             // 确定修饰符
             val modifier = determineClassModifier(tsInterface)
 
+            // 对于 FinalClass，应用 CodeGenerationRules 处理属性
+            val processedProperties = if (modifier is ClassModifier.FinalClass) {
+                val rule = TypesImplementationRules.createInterfaceRule(mappedInterfaceName)
+                filteredProperties.map { prop ->
+                    processFinalClassProperty(prop, rule)
+                }
+            } else {
+                // 对于接口，清除所有属性的默认值（Kotlin 接口属性不能有初始值）
+                // 但保留字面量值信息用于后续生成实现类时的 @SerialName
+                // 将字面量值存储在全局映射表中
+                if (typeFieldLiteralValue != null) {
+                    CodeGenerationRules.setTypeFieldLiteralValue(mappedInterfaceName, typeFieldLiteralValue)
+                }
+                filteredProperties.map { prop ->
+                    val isTypeProp = prop.name.removeSurrounding("`") == "type"
+                    if (isTypeProp) prop else prop.copy(defaultValue = null)
+                }
+            }
+
             // 添加注解
-            val annotations = buildAnnotations(tsInterface)
+            val annotations = buildAnnotations(tsInterface, modifier, typeFieldLiteralValue)
 
             val classDecl = KotlinDeclaration.ClassDecl(
                 name = wrapReservedWord(mappedInterfaceName),
                 modifier = modifier,
-                properties = filteredProperties,
+                properties = processedProperties,
                 parents = kotlinParents,
                 typeParameters = kotlinTypeParams,
                 nestedClasses = nestedInterfaces,
@@ -192,71 +181,135 @@ class InterfaceConverter(
         interfaceName: String,
         nestedInterfaces: MutableList<KotlinDeclaration.ClassDecl>
     ): KotlinDeclaration.PropertyDecl? {
-        val isTypeProperty = member.name == "type"
-        val syntaxLiteral = syntaxLiteralMap[interfaceName]
-        val isSyntaxProperty = member.name == "syntax" && syntaxLiteral != null
-        val kotlinType = when (member.type) {
-            is TypeScriptType.TypeLiteral -> {
-                val hasIndexSignature = member.type.members.any { it.type is TypeScriptType.IndexSignature }
-                if (hasIndexSignature) {
-                    val indexSignature = member.type.members.find { it.type is TypeScriptType.IndexSignature }
-                    if (indexSignature?.type is TypeScriptType.IndexSignature) {
-                        val indexSig = indexSignature.type as TypeScriptType.IndexSignature
-                        val keyType = typeConverter.convert(indexSig.keyType).getOrDefault(KotlinTypeFactory.string())
-                        val valueType = typeConverter.convert(indexSig.valueType).getOrDefault(KotlinTypeFactory.any())
-                        KotlinTypeFactory.generic("Map", keyType, valueType)
-                    } else {
-                        KotlinTypeFactory.generic("Map", KotlinTypeFactory.string(), KotlinTypeFactory.any())
-                    }
-                } else {
-                    val nestedInterfaceName = ensureNestedInterface(member, interfaceName, nestedInterfaces)
-                    KotlinTypeFactory.nested(interfaceName, nestedInterfaceName)
-                }
-            }
-            is TypeScriptType.Union -> {
-                // 检查联合类型中是否包含 TypeLiteral
-                val hasTypeLiteral = member.type.types.any { it is TypeScriptType.TypeLiteral }
-                if (hasTypeLiteral) {
-                    // 替换联合类型中的 TypeLiteral 为嵌套接口引用
-                    val modifiedTypes = member.type.types.map { type ->
-                        if (type is TypeScriptType.TypeLiteral) {
-                            // 生成嵌套接口引用
-                            val typeMember = TypeMember(member.name, type, member.optional, member.readonly, member.kdoc)
-                            val nestedInterfaceName = ensureNestedInterface(typeMember, interfaceName, nestedInterfaces)
-                            TypeScriptType.Reference(nestedInterfaceName)
+        val isTypeProperty = Hardcoded.PropertyRules.isTypeProperty(member.name)
+        // 从 TS ADT 中推导 syntax 的字面量（若存在）
+        val syntaxLiteral: String? = if (Hardcoded.PropertyRules.isSyntaxProperty(member.name) && member.type is TypeScriptType.Literal) {
+            val v = (member.type as TypeScriptType.Literal).value
+            if (v is LiteralValue.StringLiteral) v.value else null
+        } else null
+        val isSyntaxProperty = Hardcoded.PropertyRules.isSyntaxProperty(member.name) && syntaxLiteral != null
+        val overrideType = getSpecialPropertyType(interfaceName, member.name)
+        val kotlinType = if (overrideType != null) {
+            overrideType
+        } else {
+            when (member.type) {
+                is TypeScriptType.TypeLiteral -> {
+                    val hasIndexSignature = member.type.members.any { it.type is TypeScriptType.IndexSignature }
+                    if (hasIndexSignature) {
+                        val indexSignature = member.type.members.find { it.type is TypeScriptType.IndexSignature }
+                        if (indexSignature?.type is TypeScriptType.IndexSignature) {
+                            val indexSig = indexSignature.type as TypeScriptType.IndexSignature
+                            val keyType = typeConverter.convert(indexSig.keyType).getOrDefault(KotlinTypeFactory.string())
+                            val valueType = typeConverter.convert(indexSig.valueType).getOrDefault(KotlinTypeFactory.any())
+                            KotlinTypeFactory.generic("Map", keyType, valueType)
                         } else {
-                            type
+                            KotlinTypeFactory.generic("Map", KotlinTypeFactory.string(), KotlinTypeFactory.any())
+                        }
+                    } else {
+                        val nestedInterfaceName = ensureNestedInterface(member, interfaceName, nestedInterfaces)
+                        KotlinTypeFactory.nested(interfaceName, nestedInterfaceName)
+                    }
+                }
+                is TypeScriptType.Union -> {
+                    // 检查联合类型中是否包含 TypeLiteral
+                    val hasTypeLiteral = member.type.types.any { it is TypeScriptType.TypeLiteral }
+                    // 替换 OptionalChainingCall 为 CallExpression
+                    val modifiedTypes = member.type.types.map { type ->
+                        when (type) {
+                            is TypeScriptType.Reference -> {
+                                // 将 OptionalChainingCall 替换为 CallExpression
+                                if (type.name == "OptionalChainingCall") {
+                                    TypeScriptType.Reference("CallExpression")
+                                } else {
+                                    type
+                                }
+                            }
+                            is TypeScriptType.TypeLiteral -> {
+                                // 生成嵌套接口引用
+                                val typeMember = TypeMember(member.name, type, member.optional, member.readonly, member.kdoc)
+                                val nestedInterfaceName = ensureNestedInterface(typeMember, interfaceName, nestedInterfaces)
+                                TypeScriptType.Reference(nestedInterfaceName)
+                            }
+                            else -> type
                         }
                     }
                     val modifiedUnion = TypeScriptType.Union(modifiedTypes)
-                    typeConverter.convert(modifiedUnion).getOrDefault(KotlinTypeFactory.any())
-                } else {
+                    if (hasTypeLiteral) {
+                        typeConverter.convert(modifiedUnion).getOrDefault(KotlinTypeFactory.any())
+                    } else {
+                        typeConverter.convert(modifiedUnion).getOrDefault(KotlinTypeFactory.any())
+                    }
+                }
+                else -> {
                     typeConverter.convert(member.type).getOrDefault(KotlinTypeFactory.any())
                 }
-            }
-            else -> {
-                typeConverter.convert(member.type).getOrDefault(KotlinTypeFactory.any())
             }
         }
 
         // 处理可空性
         val propertyName = wrapReservedWord(member.name)
+        val cleanPropertyName = propertyName.removeSurrounding("`")
+        val cleanInterfaceName = interfaceName.removeSurrounding("`")
+        val isSpanCoordinate = Hardcoded.PropertyRules.isSpanCoordinateProperty(cleanInterfaceName, cleanPropertyName)
         val modifier = if (member.readonly) PropertyModifier.Val else PropertyModifier.Var
-        val shouldForceNullable = !isTypeProperty && !isSyntaxProperty
+        val isSpanProperty = isRequiredSpanProperty(cleanPropertyName, kotlinType)
+        val shouldForceNullable = !isTypeProperty && !isSyntaxProperty && !isSpanCoordinate
         val finalType = when {
             isTypeProperty -> KotlinType.StringType
             isSyntaxProperty -> KotlinType.StringType
+            isSpanProperty -> kotlinType
             member.optional || shouldForceNullable -> kotlinType.makeNullable()
             else -> kotlinType
+        }
+
+        // 如果是 type 属性且类型是字面量，将字面量值存储在默认值中
+        // 注意：对于接口，默认值会在后续被清除，但字面量值会存储在全局映射表中
+        val defaultValue = when {
+            isTypeProperty && member.type is TypeScriptType.Literal -> {
+                when (val literalValue = (member.type as TypeScriptType.Literal).value) {
+                    is LiteralValue.StringLiteral -> Expression.StringLiteral(literalValue.value)
+                    else -> null
+                }
+            }
+            isSyntaxProperty && syntaxLiteral != null -> {
+                // 接口阶段会在后续清理默认值，但这里保留以利于实现类 SerialName 计算链路一致
+                Expression.StringLiteral(syntaxLiteral)
+            }
+            else -> null
         }
 
         return KotlinDeclaration.PropertyDecl(
             name = propertyName,
             type = finalType,
             modifier = modifier,
+            defaultValue = defaultValue,
             annotations = emptyList(),
             kdoc = member.kdoc
         )
+    }
+
+    private fun getSpecialPropertyType(
+        interfaceName: String,
+        propertyName: String
+    ): KotlinType? {
+        val cleanInterfaceName = interfaceName.removeSurrounding("`")
+        return when {
+            Hardcoded.PropertyRules.isSpanCoordinateProperty(cleanInterfaceName, propertyName) -> KotlinTypeFactory.int()
+            else -> null
+        }
+    }
+
+    // isSpanCoordinateProperty 已移动至 Hardcoded.PropertyRules
+
+    private fun isRequiredSpanProperty(
+        propertyName: String,
+        kotlinType: KotlinType
+    ): Boolean {
+        if (propertyName != "span") return false
+        return when (kotlinType) {
+            is KotlinType.Simple -> kotlinType.name.removeSurrounding("`") == "Span"
+            else -> false
+        }
     }
 
     /**
@@ -429,12 +482,7 @@ class InterfaceConverter(
         }
 
         if (result.isEmpty()) {
-            val fallback = fallbackParentProperties[parentTypeName].orEmpty()
-            fallback.forEach { name ->
-                val wrapped = wrapReservedWord(name)
-                result.add(wrapped)
-                result.add(wrapped.removeSurrounding("`"))
-            }
+            // 不再使用硬编码兜底；如果为空，说明父接口无可过滤的公开属性
         }
 
         return result
@@ -457,8 +505,33 @@ class InterfaceConverter(
     /**
      * 构建注解
      */
-    private fun buildAnnotations(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): List<KotlinDeclaration.Annotation> {
+    /**
+     * 提取 type 字段的字面量值
+     */
+    private fun extractTypeFieldLiteralValue(members: List<TypeMember>): String? {
+        val typeMember = members.find { it.name == "type" } ?: return null
+        return when (val type = typeMember.type) {
+            is TypeScriptType.Literal -> {
+                when (val value = type.value) {
+                    is LiteralValue.StringLiteral -> value.value
+                    else -> null
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun buildAnnotations(
+        tsInterface: TypeScriptDeclaration.InterfaceDeclaration,
+        modifier: ClassModifier,
+        typeFieldLiteralValue: String? = null
+    ): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
+
+        // 为 FinalClass 添加 @Serializable 注解
+        if (modifier is ClassModifier.FinalClass) {
+            annotations.add(KotlinDeclaration.Annotation("Serializable"))
+        }
 
         // 添加 SwcDslMarker 注解
         if (config.rules.classModifiers.sealedInterface.contains(tsInterface.name)) {
@@ -469,18 +542,56 @@ class InterfaceConverter(
     }
 
     /**
+     * 处理 FinalClass 的属性，应用 CodeGenerationRules
+     */
+    private fun processFinalClassProperty(
+        prop: KotlinDeclaration.PropertyDecl,
+        rule: TypesImplementationRules.InterfaceRule
+    ): KotlinDeclaration.PropertyDecl {
+        val normalizedName = prop.name.removeSurrounding("`")
+        val isTypeProperty = Hardcoded.PropertyRules.isTypeProperty(normalizedName)
+        val isSyntaxProperty = Hardcoded.PropertyRules.isSyntaxProperty(normalizedName) && rule.syntaxLiteral != null
+
+        val isSpanCoordinateProperty = Hardcoded.PropertyRules.isSpanCoordinateProperty(rule.interfaceCleanName, normalizedName)
+        val isSpanProperty = Hardcoded.PropertyRules.isSpanProperty(normalizedName)
+
+        val updatedType = when {
+            isTypeProperty -> KotlinType.StringType
+            isSyntaxProperty -> KotlinType.StringType
+            isSpanProperty -> KotlinType.Simple("Span")
+            isSpanCoordinateProperty -> KotlinType.Int
+            prop.type is KotlinType.Nullable -> prop.type
+            else -> prop.type
+        }
+
+        val defaultValue = when {
+            // 如果是 type 属性，优先使用从 TypeScript 提取的字面量值，否则使用接口名称
+            isTypeProperty -> prop.defaultValue ?: Expression.StringLiteral(rule.interfaceCleanName)
+            isSyntaxProperty -> Expression.StringLiteral(rule.syntaxLiteral!!)
+            isSpanProperty -> Expression.FunctionCall("Span")
+            isSpanCoordinateProperty -> Expression.NumberLiteral("0")
+            updatedType is KotlinType.Nullable -> Expression.NullLiteral
+            else -> prop.defaultValue
+        }
+
+        val annotations = buildList {
+            addAll(prop.annotations)
+            if (isSpanProperty || isSpanCoordinateProperty) {
+                add(KotlinDeclaration.Annotation("EncodeDefault"))
+            }
+        }
+
+        return prop.copy(
+            type = updatedType,
+            defaultValue = defaultValue,
+            annotations = annotations
+        )
+    }
+
+    /**
      * 包装保留字
      */
     private fun wrapReservedWord(name: String): String {
-        val reservedWords = setOf(
-            "object", "inline", "in", "super", "class", "interface", "fun",
-            "val", "var", "when", "is", "as", "import", "package"
-        )
-
-        return if (reservedWords.contains(name.lowercase())) {
-            "`$name`"
-        } else {
-            name
-        }
+        return Hardcoded.PropertyRules.wrapReservedWord(name)
     }
 }

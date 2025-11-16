@@ -11,10 +11,12 @@ import dev.yidafu.swc.generator.converter.declaration.InterfaceConverter
 import dev.yidafu.swc.generator.converter.declaration.TypeAliasConverter
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.extractor.TypeScriptADTExtractor
+import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
+import dev.yidafu.swc.generator.parser.TsAstVisitor
 import dev.yidafu.swc.generator.parser.TypeScriptParser
 import dev.yidafu.swc.generator.processor.KotlinADTProcessor
 import dev.yidafu.swc.generator.processor.KotlinADTProcessorFactory
-import dev.yidafu.swc.generator.util.PerformanceOptimizer
+import dev.yidafu.swc.generator.monitor.PerformanceMonitor
 
 /**
  * 依赖注入容器
@@ -37,7 +39,7 @@ import dev.yidafu.swc.generator.util.PerformanceOptimizer
  * * 5. **代码生成器**
  *    - CodeEmitter: 代码文件生成器
  * * 6. **工具类**
- *    - PerformanceOptimizer: 性能优化器
+ *    - PerformanceMonitor: 性能监控器（统一管理性能监控和缓存统计）
  * * ## 生命周期
  * * - 所有组件使用 `lazy` 延迟初始化
  * - 首次访问时创建，之后重用同一实例
@@ -87,8 +89,9 @@ class DependencyContainer(
     // 处理器
     private val _kotlinADTProcessor by lazy { KotlinADTProcessorFactory.createCombinedProcessor(_swcGeneratorConfig) }
 
-    // 性能优化器
-    private val _performanceOptimizer by lazy { PerformanceOptimizer }
+    // 性能监控器（已统一，保留此属性以保持兼容性）
+    @Deprecated("使用 PerformanceMonitor 直接访问", ReplaceWith("PerformanceMonitor"))
+    private val _performanceOptimizer by lazy { PerformanceMonitor }
 
     // 代码生成器
     private val _codeEmitter by lazy {
@@ -113,20 +116,21 @@ class DependencyContainer(
     val typeAliasConverter: TypeAliasConverter get() = _typeAliasConverter
     val typeScriptToKotlinConverter: TypeScriptToKotlinConverter get() = _typeScriptToKotlinConverter
     val kotlinADTProcessor: KotlinADTProcessor get() = _kotlinADTProcessor
-    val performanceOptimizer: PerformanceOptimizer get() = _performanceOptimizer
+    @Deprecated("使用 PerformanceMonitor 直接访问", ReplaceWith("PerformanceMonitor"))
+    val performanceOptimizer: PerformanceMonitor get() = _performanceOptimizer
     val codeEmitter: CodeEmitter get() = _codeEmitter
 
     /**
      * 创建新的 TypeScriptADTExtractor 实例（因为需要不同的 visitor）
      */
-    fun createTypeScriptADTExtractor(visitor: dev.yidafu.swc.generator.parser.TsAstVisitor): TypeScriptADTExtractor {
+    fun createTypeScriptADTExtractor(visitor: TsAstVisitor): TypeScriptADTExtractor {
         return TypeScriptADTExtractor(visitor)
     }
 
     /**
      * 创建新的 InheritanceAnalyzer 实例（因为需要不同的声明列表）
      */
-    fun createInheritanceAnalyzer(declarations: List<dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration>): InheritanceAnalyzer {
+    fun createInheritanceAnalyzer(declarations: List<TypeScriptDeclaration>): InheritanceAnalyzer {
         return InheritanceAnalyzer(declarations)
     }
 }

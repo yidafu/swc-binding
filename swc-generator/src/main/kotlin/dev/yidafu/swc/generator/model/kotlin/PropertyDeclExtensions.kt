@@ -26,19 +26,6 @@ fun KotlinDeclaration.PropertyDecl.isUnion(): Boolean {
 }
 
 /**
- * 判断是否为Booleanable
- */
-fun KotlinDeclaration.PropertyDecl.isBooleanable(): Boolean {
-    return when (type) {
-        is KotlinType.Boolean -> true
-        is KotlinType.Union -> {
-            type.types.any { it is KotlinType.Boolean }
-        }
-        else -> false
-    }
-}
-
-/**
  * 判断是否为基本类型
  */
 fun KotlinDeclaration.PropertyDecl.isPrimitive(): Boolean {
