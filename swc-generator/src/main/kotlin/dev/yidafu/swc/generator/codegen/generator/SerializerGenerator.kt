@@ -104,6 +104,11 @@ class SerializerGenerator(
         if (!hasDefault) {
             fileBuilder.addProperty(
                 PropertySpec.builder("swcSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
+                    .addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                            .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+                            .build()
+                    )
                     .initializer(CodeBlock.of("SerializersModule { }"))
                     .build()
             )
@@ -111,6 +116,11 @@ class SerializerGenerator(
         if (!hasSyntax) {
             fileBuilder.addProperty(
                 PropertySpec.builder("swcConfigSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
+                    .addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                            .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+                            .build()
+                    )
                     .initializer(CodeBlock.of("SerializersModule { }"))
                     .build()
             )
@@ -632,6 +642,11 @@ class SerializerGenerator(
         val initializerCode = buildSerializerModuleCode(polymorphicMap)
 
         return PropertySpec.builder(propertyName, PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+                    .build()
+            )
             .initializer(initializerCode)
             .build()
     }

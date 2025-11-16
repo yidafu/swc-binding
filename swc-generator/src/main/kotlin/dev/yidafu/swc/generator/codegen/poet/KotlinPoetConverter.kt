@@ -202,6 +202,28 @@ object KotlinPoetConverter {
                 val hasSpanDerived = isDerivedFrom(decl.parents, declLookup, "HasSpan")
                 val configDerived = isDerivedFrom(decl.parents, declLookup, "ParserConfig") ||
                     isDerivedFrom(decl.parents, declLookup, "BaseParseOptions")
+                // 多态类添加 JsonClassDiscriminator
+                if (nodeDerived) {
+                    // 需要实验 API opt-in
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                    )
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
+                            .addMember("%S", "type")
+                            .build()
+                    )
+                } else if (configDerived) {
+                    // 需要实验 API opt-in
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                    )
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
+                            .addMember("%S", "syntax")
+                            .build()
+                    )
+                }
                 val existingPropNames = mutableSetOf<String>()
                 decl.properties.forEach { prop ->
                     existingPropNames.add(prop.name)
@@ -213,12 +235,7 @@ object KotlinPoetConverter {
                     val base = convertProperty(adjusted)
                     if (base != null) {
                         val propBuilder = base.toBuilder()
-                        // 避免与 Json classDiscriminator 冲突：对实现类中的 `type` 字段标注 @Transient
-                        if (adjusted.name == "type" && nodeDerived) {
-                            propBuilder.addAnnotation(
-                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-                            )
-                        }
+                        // 保留实现类中 `type` 字段为常规可序列化字段，不再添加 @Transient
                         // 避免与 "syntax" 判别关键字冲突：对 ParserConfig 系谱中的 `syntax` 字段标注 @Transient
                         if (adjusted.name == "syntax" && configDerived) {
                             propBuilder.addAnnotation(
@@ -271,7 +288,6 @@ object KotlinPoetConverter {
                         val typeProp = PropertySpec.builder("type", typeName)
                             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                             .mutable(true)
-                            .addAnnotation(AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build())
                             .initializer("%S", decl.name.removeSurrounding("`"))
                             .build()
                         builder.addProperty(typeProp)
