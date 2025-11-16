@@ -1,21 +1,21 @@
 package dev.yidafu.swc
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
+import io.kotest.core.spec.style.AnnotationSpec
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertTrue
+import kotlin.LazyThreadSafetyMode
+import kotlin.test.Test
 
 /**
  * Simple test for async JNI methods
  * This test demonstrates that the async callback mechanism works correctly.
  */
-class SimpleAsyncTest {
-    private lateinit var swc: SwcNative
-
-    @BeforeEach
-    fun setup() {
-        swc = SwcNative()
+class SimpleAsyncTest : AnnotationSpec() {
+    private val swc: SwcNative by lazy(LazyThreadSafetyMode.NONE) {
+        runCatching { SwcNative() }.getOrElse { throwable ->
+            throw RuntimeException("Failed to initialize SwcNative", throwable)
+        }
     }
 
     @Test

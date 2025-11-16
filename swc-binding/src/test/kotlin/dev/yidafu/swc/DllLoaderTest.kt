@@ -1,11 +1,12 @@
 package dev.yidafu.swc
 
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlin.test.Test
 
-class DllLoaderTest {
+class DllLoaderTest : AnnotationSpec() {
 
     @Test
     fun `detect current platform`() {

@@ -1,29 +1,29 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.generated.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
-class ParserConfigTest {
+class ParserConfigTest : AnnotationSpec() {
 
     @Test
     fun `create EsParserConfig with apply`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             jsx = true
-            target = "es2020"
+            target = JscTarget.ES2020
         }
 
         assertEquals(true, config.jsx)
-        assertEquals("es2020", config.target)
+        assertEquals(JscTarget.ES2020, config.target)
     }
 
     @Test
     fun `create EsParserConfig with comments`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             comments = true
         }
 
@@ -32,7 +32,7 @@ class ParserConfigTest {
 
     @Test
     fun `create EsParserConfig with decorators`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             decorators = true
         }
 
@@ -41,7 +41,7 @@ class ParserConfigTest {
 
     @Test
     fun `create EsParserConfig with dynamicImport`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             dynamicImport = true
         }
 
@@ -50,18 +50,18 @@ class ParserConfigTest {
 
     @Test
     fun `create TsParserConfig with apply`() {
-        val config = TsParserConfig().apply {
+        val config = tsParseOptions {
             tsx = true
-            target = "es2015"
+            target = JscTarget.ES2015
         }
 
         assertEquals(true, config.tsx)
-        assertEquals("es2015", config.target)
+        assertEquals(JscTarget.ES2015, config.target)
     }
 
     @Test
     fun `create TsParserConfig with decorators`() {
-        val config = TsParserConfig().apply {
+        val config = tsParseOptions {
             decorators = true
         }
 
@@ -70,7 +70,7 @@ class ParserConfigTest {
 
     @Test
     fun `create TsParserConfig with dynamicImport`() {
-        val config = TsParserConfig().apply {
+        val config = tsParseOptions {
             dynamicImport = true
         }
 
@@ -99,9 +99,9 @@ class ParserConfigTest {
 
     @Test
     fun `serialize EsParserConfig`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             jsx = true
-            target = "es2020"
+            target = JscTarget.ES2020
             comments = false
         }
 
@@ -115,12 +115,12 @@ class ParserConfigTest {
         val config = Json.decodeFromString<EsParserConfig>(json)
 
         assertEquals(true, config.jsx)
-        assertEquals("es2020", config.target)
+        assertEquals(JscTarget.ES2020, config.target)
     }
 
     @Test
     fun `serialize and deserialize TsParserConfig`() {
-        val config = TsParserConfig().apply {
+        val config = tsParseOptions {
             tsx = true
             decorators = true
         }
@@ -134,16 +134,16 @@ class ParserConfigTest {
 
     @Test
     fun `EsParserConfig with multiple options`() {
-        val config = EsParserConfig().apply {
+        val config = esParseOptions {
             jsx = true
-            target = "es2020"
+            target = JscTarget.ES2020
             comments = true
             decorators = true
             dynamicImport = true
         }
 
         assertEquals(true, config.jsx)
-        assertEquals("es2020", config.target)
+        assertEquals(JscTarget.ES2020, config.target)
         assertEquals(true, config.comments)
         assertEquals(true, config.decorators)
         assertEquals(true, config.dynamicImport)
@@ -151,29 +151,29 @@ class ParserConfigTest {
 
     @Test
     fun `TsParserConfig with multiple options`() {
-        val config = TsParserConfig().apply {
+        val config = tsParseOptions {
             tsx = true
-            target = "es2015"
+            target = JscTarget.ES2015
             decorators = false
             dynamicImport = false
         }
 
         assertEquals(true, config.tsx)
-        assertEquals("es2015", config.target)
+        assertEquals(JscTarget.ES2015, config.target)
         assertEquals(false, config.decorators)
         assertEquals(false, config.dynamicImport)
     }
 
     @Test
     fun `create default EsParserConfig`() {
-        val config = EsParserConfig()
+        val config = esParseOptions { }
 
         assertNotNull(config)
     }
 
     @Test
     fun `create default TsParserConfig`() {
-        val config = TsParserConfig()
+        val config = tsParseOptions { }
 
         assertNotNull(config)
     }

@@ -1,27 +1,28 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.types.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import dev.yidafu.swc.generated.*
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.LazyThreadSafetyMode
+import kotlin.test.Test
 
 /**
  * Comprehensive tests for async minify methods
  */
-class AsyncMinifyTest {
-    private lateinit var swc: SwcNative
-
-    @BeforeEach
-    fun setup() {
-        swc = SwcNative()
+class AsyncMinifyTest : AnnotationSpec() {
+    private val swc: SwcNative by lazy(LazyThreadSafetyMode.NONE) {
+        runCatching { SwcNative() }.getOrElse { throwable ->
+            throw RuntimeException("Failed to initialize SwcNative", throwable)
+        }
     }
 
     private val testCode = """
@@ -50,7 +51,7 @@ class AsyncMinifyTest {
 
         swc.minifyAsync(
             program = program,
-            options = Options(),
+            options = options { },
             onSuccess = {
                 result = it
                 latch.countDown()
@@ -75,7 +76,7 @@ class AsyncMinifyTest {
 
         swc.minifyAsync(
             program = program,
-            options = Options(),
+            options = options { },
             onSuccess = {
                 result = it
                 latch.countDown()
@@ -97,7 +98,7 @@ class AsyncMinifyTest {
 
         val result = swc.minifyAsync(
             program = program,
-            options = Options()
+            options = options { }
         )
 
         assertNotNull(result)
@@ -125,7 +126,7 @@ class AsyncMinifyTest {
         """.trimIndent()
 
         val program = swc.parseSync(verboseCode, esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         assertTrue(
@@ -146,7 +147,7 @@ class AsyncMinifyTest {
     fun `test minifyAsync with options`() = runBlocking {
         val program = swc.parseSync(testCode, esParseOptions {}, "test.js")
 
-        val options = Options()
+        val options = options { }
 
         val result = swc.minifyAsync(program, options)
 
@@ -163,7 +164,8 @@ class AsyncMinifyTest {
         """.trimIndent()
 
         val program = swc.parseSync(simpleCode, esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        println("minify async ${astJson.encodeToString(program)}")
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         // Minified code should still contain 'function' or equivalent
@@ -186,7 +188,7 @@ class AsyncMinifyTest {
         """.trimIndent()
 
         val program = swc.parseSync(es6Code, esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         assertTrue(result.code.length < es6Code.length)
@@ -205,7 +207,7 @@ class AsyncMinifyTest {
         """.trimIndent()
 
         val program = swc.parseSync(tsCode, esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         assertTrue(result.code.length < tsCode.length)
@@ -225,7 +227,7 @@ class AsyncMinifyTest {
         val results = codes.map { code ->
             async {
                 val program = swc.parseSync(code, esParseOptions {}, "test.js")
-                swc.minifyAsync(program, Options())
+                swc.minifyAsync(program, options { })
             }
         }.awaitAll()
 
@@ -249,7 +251,7 @@ class AsyncMinifyTest {
 
             swc.minifyAsync(
                 program = program,
-                options = Options(),
+                options = options { },
                 onSuccess = {
                     synchronized(results) {
                         results.add(it)
@@ -275,7 +277,7 @@ class AsyncMinifyTest {
     @Test
     fun `test minifyAsync with empty code`() = runBlocking {
         val program = swc.parseSync("", esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result)
         assertNotNull(result.code)
@@ -285,7 +287,7 @@ class AsyncMinifyTest {
     fun `test minifyAsync with already minified code`() = runBlocking {
         val minifiedCode = "function f(){return 42}"
         val program = swc.parseSync(minifiedCode, esParseOptions {}, "test.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         // Should still process, even if already minified
@@ -309,7 +311,7 @@ class AsyncMinifyTest {
         }
 
         val program = swc.parseSync(largeCode, esParseOptions {}, "large.js")
-        val result = swc.minifyAsync(program, Options())
+        val result = swc.minifyAsync(program, options { })
 
         assertNotNull(result.code)
         assertTrue(
@@ -330,7 +332,7 @@ class AsyncMinifyTest {
         """.trimIndent()
 
         val program = swc.parseSync(code, esParseOptions {}, "test.js")
-        val options = Options()
+        val options = options { }
 
         val result = swc.minifyAsync(program, options)
 

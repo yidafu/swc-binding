@@ -1,14 +1,16 @@
-package dev.yidafu.swc.types
+package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.astJson
-import dev.yidafu.swc.dsl.* // ktlint-disable no-wildcard-imports
+import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import dev.yidafu.swc.module
-import kotlinx.serialization.encodeToString
-import kotlin.test.Test
+import dev.yidafu.swc.span
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.serialization.encodeToString
+import kotlin.test.Test
 
-class AstJsonTest {
+class AstJsonTest : AnnotationSpec() {
     @Test
     fun `decode ImportSpecifier AST Node`() {
         val astStr =

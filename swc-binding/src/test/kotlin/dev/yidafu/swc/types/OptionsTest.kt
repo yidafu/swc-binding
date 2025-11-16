@@ -1,31 +1,30 @@
-package dev.yidafu.swc.types
+package dev.yidafu.swc.generated
 
-import dev.yidafu.swc.booleanable.Booleanable
-import dev.yidafu.swc.dsl.jscConfig
-import dev.yidafu.swc.dsl.matchPattern
+import dev.yidafu.swc.Union
+import dev.yidafu.swc.generated.dsl.jscConfig
+import dev.yidafu.swc.generated.dsl.matchPattern
 import dev.yidafu.swc.options
+import kotlin.test.assertEquals
+import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class OptionsTest {
+class OptionsTest : AnnotationSpec() {
     @Test
     fun `encode options`() {
         val opt = options {
             cwd = "/path/to/cwd"
-            configFile = Booleanable.ofFalse()
+            configFile = Union.U2<String, Boolean>(b = false)
             swcrc = true
-            isModule = Booleanable.ofTrue()
+            isModule = Union.U3<Boolean, String, String>(a = true)
             jsc = jscConfig {
                 loose = true
             }
 
-            swcrcRoots = Booleanable.ofValue(
-                arrayOf(
-                    matchPattern {
-                        MatchPattern()
-                    }
+            swcrcRoots = Union.U3<Boolean, MatchPattern, Array<MatchPattern>>(
+                c = arrayOf(
+                    matchPattern { }
                 )
             )
         }

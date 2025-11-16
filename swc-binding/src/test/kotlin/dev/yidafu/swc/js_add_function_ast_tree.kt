@@ -1,7 +1,7 @@
 package dev.yidafu.swc // ktlint-disable filename
 
-import dev.yidafu.swc.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.types.Module
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 
 val esAddFunction: Module =
     module {
@@ -101,7 +101,7 @@ val esAddFunction: Module =
                                                         end = 38
                                                         ctxt = 0
                                                     }
-                                                operator = "+"
+                                                operator = BinaryOperator.Addition
                                                 left =
                                                     identifier {
                                                         span =
@@ -155,16 +155,19 @@ val esAddFunction: Module =
                                     ctxt = 0
                                 }
                             callee =
-                                identifier {
-                                    span =
-                                        span {
-                                            start = 43
-                                            end = 46
-                                            ctxt = 2
-                                        }
-                                    value = "add"
-                                    optional = false
-                                }
+                                Union.U3<JsSuper, JsImport, Expression>(
+                                    c =
+                                    identifier {
+                                        span =
+                                            span {
+                                                start = 43
+                                                end = 46
+                                                ctxt = 2
+                                            }
+                                        value = "add"
+                                        optional = false
+                                    }
+                                )
                             arguments =
                                 arrayOf(
                                     argument {

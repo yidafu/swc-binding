@@ -1,28 +1,27 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.types.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertIs
+import dev.yidafu.swc.generated.*
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.Test
+import kotlin.LazyThreadSafetyMode
 
 /**
  * Comprehensive tests for async parse methods
  */
-class AsyncParseTest {
-    private lateinit var swc: SwcNative
-
-    @BeforeEach
-    fun setup() {
-        swc = SwcNative()
+class AsyncParseTest : AnnotationSpec() {
+    private val swc: SwcNative by lazy(LazyThreadSafetyMode.NONE) {
+        runCatching { SwcNative() }.getOrElse { throwable ->
+            throw RuntimeException("Failed to initialize SwcNative", throwable)
+        }
     }
 
     private fun getResource(filename: String): String {
@@ -110,7 +109,7 @@ class AsyncParseTest {
 
         assertTrue(latch.await(10, TimeUnit.SECONDS), "Timeout waiting for callback")
         assertNotNull(result)
-        assertIs<Module>(result)
+        result.shouldBeInstanceOf<Module>()
     }
 
     @Test
@@ -192,7 +191,7 @@ class AsyncParseTest {
         )
 
         assertNotNull(result)
-        assertIs<Module>(result)
+        result.shouldBeInstanceOf<Module>()
     }
 
     @Test
@@ -210,20 +209,23 @@ class AsyncParseTest {
         )
 
         assertNotNull(result)
-        assertIs<Module>(result)
+        result.shouldBeInstanceOf<Module>()
     }
 
     @Test
     fun `test parseAsync coroutine error handling`() = runBlocking {
-        val exception = assertThrows<RuntimeException> {
+        val exception = try {
             swc.parseAsync(
                 code = "const x = ;", // Invalid syntax
                 options = esParseOptions {},
                 filename = "test.js"
             )
+            null
+        } catch (e: RuntimeException) {
+            e
         }
 
-        assertNotNull(exception.message)
+        assertNotNull(exception?.message)
     }
 
     // ==================== File-based async tests ====================
@@ -257,7 +259,7 @@ class AsyncParseTest {
         )
 
         assertNotNull(result)
-        assertIs<Module>(result)
+        result.shouldBeInstanceOf<Module>()
     }
 
     // ==================== Concurrent tests ====================
@@ -284,7 +286,7 @@ class AsyncParseTest {
 
         results.forEach { result ->
             assertNotNull(result)
-            assertIs<Module>(result)
+            result.shouldBeInstanceOf<Module>()
         }
     }
 

@@ -1,16 +1,16 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.booleanable.Booleanable
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlin.test.Test
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.jscConfig
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlin.test.Test
 
-class OptionsBuilderTest {
+class OptionsBuilderTest : AnnotationSpec() {
 
     @Test
     fun `build empty options`() {
@@ -49,21 +49,21 @@ class OptionsBuilderTest {
     }
 
     @Test
-    fun `build options with Booleanable isModule`() {
+    fun `build options with union isModule`() {
         val opt = options {
-            isModule = Booleanable.ofTrue()
+            isModule = Union.U3<Boolean, String, String>(a = true)
         }
 
-        assertTrue(opt.isModule?.isTrue() ?: false)
+        assertTrue(opt.isModule?.a == true)
     }
 
     @Test
-    fun `build options with Booleanable configFile false`() {
+    fun `build options with union configFile false`() {
         val opt = options {
-            configFile = Booleanable.ofFalse()
+            configFile = Union.U2<String, Boolean>(b = false)
         }
 
-        assertTrue(opt.configFile?.isFalse() ?: false)
+        assertTrue(opt.configFile?.b == false)
     }
 
     @Test
@@ -82,7 +82,7 @@ class OptionsBuilderTest {
     fun `build options with nested jscConfig and parser`() {
         val opt = options {
             jsc = jscConfig {
-                parser = TsParserConfig().apply {
+                parser = tsParseOptions {
                     tsx = true
                 }
             }
@@ -96,11 +96,11 @@ class OptionsBuilderTest {
     fun `build options with jscConfig target`() {
         val opt = options {
             jsc = jscConfig {
-                target = "es2015"
+                target = JscTarget.ES2015
             }
         }
 
-        assertEquals("es2015", opt.jsc?.target)
+        assertEquals(JscTarget.ES2015, opt.jsc?.target)
     }
 
     @Test
@@ -122,7 +122,7 @@ class OptionsBuilderTest {
             filename = "app.js"
             jsc = jscConfig {
                 loose = true
-                target = "es2020"
+                target = JscTarget.ES2020
             }
         }
 
@@ -130,7 +130,7 @@ class OptionsBuilderTest {
         assertEquals(false, opt.swcrc)
         assertEquals("app.js", opt.filename)
         assertEquals(true, opt.jsc?.loose)
-        assertEquals("es2020", opt.jsc?.target)
+        assertEquals(JscTarget.ES2020, opt.jsc?.target)
     }
 
     @Test
@@ -165,12 +165,12 @@ class OptionsBuilderTest {
     }
 
     @Test
-    fun `build options with sourceMaps using Booleanable`() {
+    fun `build options with sourceMaps union`() {
         val opt = options {
-            sourceMaps = Booleanable.ofValue("inline")
+            sourceMaps = Union.U2<Boolean, String>(b = "inline")
         }
 
-        assertEquals("inline", opt.sourceMaps?.value)
+        assertEquals("inline", opt.sourceMaps?.b)
     }
 
     @Test

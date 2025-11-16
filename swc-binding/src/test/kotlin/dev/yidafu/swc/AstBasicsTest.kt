@@ -1,56 +1,59 @@
 package dev.yidafu.swc
 
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.*
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.createModule
+import dev.yidafu.swc.generated.dsl.createVariableDeclarator
+import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.encodeToString
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
-class AstBasicsTest {
+class AstBasicsTest : AnnotationSpec() {
+    private val swc = SwcNative()
 
     @Test
     fun `create Span with span DSL`() {
         val s = span()
 
-        assertNotNull(s)
-        assertIs<Span>(s)
+        s.shouldNotBeNull()
+        s.shouldBeInstanceOf<Span>()
     }
 
     @Test
     fun `create Span with emptySpan DSL`() {
         val s = emptySpan()
 
-        assertNotNull(s)
-        assertEquals(0, s.start)
-        assertEquals(0, s.end)
-        assertEquals(0, s.ctxt)
+        s.shouldNotBeNull()
+        s.start shouldBe 0
+        s.end shouldBe 0
+        s.ctxt shouldBe 0
     }
 
     @Test
     fun `create Span with apply`() {
-        val s = Span().apply {
+        val s = span().apply {
             start = 10
             end = 20
             ctxt = 0
         }
 
-        assertEquals(10, s.start)
-        assertEquals(20, s.end)
-        assertEquals(0, s.ctxt)
+        s.start shouldBe 10
+        s.end shouldBe 20
+        s.ctxt shouldBe 0
     }
 
     @Test
     fun `serialize Span`() {
-        val s = Span().apply {
+        val s = span().apply {
             start = 5
             end = 15
             ctxt = 2
         }
 
         val json = astJson.encodeToString(s)
-        assertNotNull(json)
+        json.shouldNotBeNull()
     }
 
     @Test
@@ -58,9 +61,218 @@ class AstBasicsTest {
         val json = """{"start":10,"end":20,"ctxt":5}"""
         val s = astJson.decodeFromString<Span>(json)
 
-        assertEquals(10, s.start)
-        assertEquals(20, s.end)
-        assertEquals(5, s.ctxt)
+        s.start shouldBe 10
+        s.end shouldBe 20
+        s.ctxt shouldBe 5
+    }
+
+    @Test
+    fun `serialize Span includes ctxt field`() {
+        val s = span().apply {
+            start = 5
+            end = 15
+            ctxt = 2
+        }
+
+        val json = astJson.encodeToString(s)
+        
+        // 验证 JSON 包含 ctxt 字段
+        json shouldBe """{"start":5,"end":15,"ctxt":2}"""
+    }
+
+    @Test
+    fun `serialize Span with default ctxt includes ctxt field`() {
+        val s = span().apply {
+            start = 1
+            end = 10
+            // ctxt 使用默认值 0
+        }
+
+        val json = astJson.encodeToString(s)
+        
+        // 验证 JSON 包含 ctxt 字段（即使使用默认值）
+        json shouldBe """{"start":1,"end":10,"ctxt":0}"""
+        json shouldContain "\"ctxt\""
+        json shouldContain "\"ctxt\":0"
+    }
+
+    @Test
+    fun `serialize Span with zero ctxt includes ctxt field`() {
+        val s = span().apply {
+            start = 0
+            end = 0
+            ctxt = 0
+        }
+
+        val json = astJson.encodeToString(s)
+        
+        // 验证 JSON 包含 ctxt 字段
+        json shouldBe """{"start":0,"end":0,"ctxt":0}"""
+        json shouldContain "\"ctxt\""
+    }
+
+    @Test
+    fun `deserialize Span without ctxt field uses default`() {
+        // 测试从缺少 ctxt 字段的 JSON 反序列化
+        val json = """{"start":10,"end":20}"""
+        val s = astJson.decodeFromString<Span>(json)
+
+        s.start shouldBe 10
+        s.end shouldBe 20
+        s.ctxt shouldBe 0 // 应该使用默认值
+    }
+
+    @Test
+    fun `serialize Identifier with nested Span includes ctxt field`() {
+        // 测试嵌套在 AST 节点中的 Span 是否包含 ctxt 字段
+        val id = IdentifierImpl().apply {
+            value = "testVar"
+            optional = false
+            span = span().apply {
+                start = 0
+                end = 8
+                ctxt = 0
+            }
+        }
+
+        val json = astJson.encodeToString<Identifier>(id)
+        
+        // 验证 JSON 中的嵌套 Span 包含 ctxt 字段
+        json shouldContain "\"ctxt\""
+        json shouldContain "\"span\""
+        // 验证 span 对象中包含 ctxt
+        val spanJson = json.substringAfter("\"span\":{").substringBefore("}")
+        spanJson shouldContain "\"ctxt\""
+    }
+
+    @Test
+    fun `serialize Module with nested Spans includes ctxt fields`() {
+        // 测试包含多个嵌套 Span 的复杂 AST 节点
+        val module = swc.parseSync(
+            "const x = 1;",
+            esParseOptions { },
+            "test.js"
+        ) as Module
+
+        val json = astJson.encodeToString<Program>(module)
+        
+        // 验证 JSON 中包含 ctxt 字段（应该出现在所有 Span 对象中）
+        json shouldContain "\"ctxt\""
+        
+        // 检查所有 "span" 对象后是否都有 "ctxt" 字段
+        // 使用更精确的方法：查找所有 "span":{ 并检查对应的对象
+        var index = 0
+        var spanCount = 0
+        var ctxtCount = 0
+        val jsonLower = json.lowercase()
+        
+        while (true) {
+            val spanIndex = jsonLower.indexOf("\"span\":{", index)
+            if (spanIndex == -1) break
+            
+            spanCount++
+            // 找到对应的结束括号（需要处理嵌套）
+            var depth = 0
+            var endIndex = spanIndex + 8 // 跳过 "span":{
+            var found = false
+            
+            while (endIndex < json.length) {
+                when (json[endIndex]) {
+                    '{' -> depth++
+                    '}' -> {
+                        if (depth == 0) {
+                            found = true
+                            break
+                        }
+                        depth--
+                    }
+                }
+                endIndex++
+            }
+            
+            if (found) {
+                val spanContent = json.substring(spanIndex, endIndex + 1)
+                if (spanContent.contains("\"ctxt\"")) {
+                    ctxtCount++
+                } else {
+                    // 打印缺少 ctxt 的 span 对象
+                    println("Found span without ctxt: ${spanContent.take(150)}")
+                }
+            }
+            
+            index = spanIndex + 8
+        }
+        
+        println("Total spans found: $spanCount, spans with ctxt: $ctxtCount")
+        
+        // 所有 span 对象都应该包含 ctxt 字段
+        if (spanCount > 0) {
+            spanCount shouldBe ctxtCount
+        }
+    }
+    
+    @Test
+    fun `printSync serialized JSON includes ctxt in all Spans`() {
+        // 测试 printSync 序列化的 JSON 中所有 Span 都包含 ctxt
+        val module = swc.parseSync(
+            "const x = 1; const y = 2;",
+            esParseOptions { },
+            "test.js"
+        ) as Module
+
+        // 模拟 printSync 中的序列化过程
+        val programJson = astJson.encodeToString<Program>(module)
+        val fixedProgram = astJson.decodeFromString<Program>(programJson)
+        val finalJson = astJson.encodeToString<Program>(fixedProgram)
+        
+        // 检查所有 span 对象
+        var index = 0
+        var spanCount = 0
+        var ctxtCount = 0
+        val jsonLower = finalJson.lowercase()
+        
+        while (true) {
+            val spanIndex = jsonLower.indexOf("\"span\":{", index)
+            if (spanIndex == -1) break
+            
+            spanCount++
+            // 找到对应的结束括号
+            var depth = 0
+            var endIndex = spanIndex + 8
+            var found = false
+            
+            while (endIndex < finalJson.length) {
+                when (finalJson[endIndex]) {
+                    '{' -> depth++
+                    '}' -> {
+                        if (depth == 0) {
+                            found = true
+                            break
+                        }
+                        depth--
+                    }
+                }
+                endIndex++
+            }
+            
+            if (found) {
+                val spanContent = finalJson.substring(spanIndex, endIndex + 1)
+                if (spanContent.contains("\"ctxt\"")) {
+                    ctxtCount++
+                } else {
+                    println("printSync: Found span without ctxt: ${spanContent.take(150)}")
+                }
+            }
+            
+            index = spanIndex + 8
+        }
+        
+        println("printSync: Total spans: $spanCount, with ctxt: $ctxtCount")
+        
+        // 所有 span 对象都应该包含 ctxt 字段
+        if (spanCount > 0) {
+            spanCount shouldBe ctxtCount
+        }
     }
 
     @Test
@@ -71,8 +283,8 @@ class AstBasicsTest {
             span = emptySpan()
         }
 
-        assertEquals("testVar", id.value)
-        assertEquals(false, id.optional)
+        id.value shouldBe "testVar"
+        id.optional shouldBe false
     }
 
     @Test
@@ -84,7 +296,7 @@ class AstBasicsTest {
         }
 
         val json = astJson.encodeToString<Identifier>(id)
-        assertNotNull(json)
+        json.shouldNotBeNull()
     }
 
     @Test
@@ -92,8 +304,8 @@ class AstBasicsTest {
         val json = """{"type":"Identifier","value":"test","optional":false,"span":{"start":0,"end":0,"ctxt":0}}"""
         val id = astJson.decodeFromString<Identifier>(json)
 
-        assertEquals("test", id.value)
-        assertEquals(false, id.optional)
+        id.value shouldBe "test"
+        id.optional shouldBe false
     }
 
     @Test
@@ -104,8 +316,8 @@ class AstBasicsTest {
             span = emptySpan()
         }
 
-        assertEquals("hello", lit.value)
-        assertEquals("\"hello\"", lit.raw)
+        lit.value shouldBe "hello"
+        lit.raw shouldBe "\"hello\""
     }
 
     @Test
@@ -116,8 +328,8 @@ class AstBasicsTest {
             span = emptySpan()
         }
 
-        assertEquals(42.0, lit.value)
-        assertEquals("42", lit.raw)
+        lit.value shouldBe 42.0
+        lit.raw shouldBe "42"
     }
 
     @Test
@@ -127,7 +339,7 @@ class AstBasicsTest {
             span = emptySpan()
         }
 
-        assertEquals(true, lit.value)
+        lit.value shouldBe true
     }
 
     @Test
@@ -136,7 +348,7 @@ class AstBasicsTest {
             span = emptySpan()
         }
 
-        assertNotNull(lit)
+        lit.shouldNotBeNull()
     }
 
     @Test
@@ -146,9 +358,9 @@ class AstBasicsTest {
             body = arrayOf()
         }
 
-        assertNotNull(mod)
-        assertNotNull(mod.body)
-        assertEquals(0, mod.body?.size)
+        mod.shouldNotBeNull()
+        mod.body.shouldNotBeNull()
+        mod.body!!.size shouldBe 0
     }
 
     @Test
@@ -158,24 +370,24 @@ class AstBasicsTest {
             body = arrayOf()
         }
 
-        assertNotNull(mod)
-        assertIs<Module>(mod)
+        mod.shouldNotBeNull()
+        mod.shouldBeInstanceOf<Module>()
     }
 
     @Test
     fun `serialize Module`() {
-        val mod = ModuleImpl().apply {
+        val mod = createModule {
             span = emptySpan()
             body = arrayOf()
         }
 
         val json = astJson.encodeToString<Module>(mod)
-        assertNotNull(json)
+        json.shouldNotBeNull()
     }
 
     @Test
     fun `create VariableDeclaratorImpl`() {
-        val decl = VariableDeclaratorImpl().apply {
+        val decl = createVariableDeclarator {
             span = emptySpan()
             id = IdentifierImpl().apply {
                 value = "x"
@@ -188,19 +400,19 @@ class AstBasicsTest {
             }
         }
 
-        assertNotNull(decl)
-        assertIs<Identifier>(decl.id)
+        decl.shouldNotBeNull()
+        decl.id.shouldBeInstanceOf<Identifier>()
     }
 
     @Test
     fun `Span with same values`() {
-        val s1 = Span().apply { start = 1; end = 2; ctxt = 0 }
-        val s2 = Span().apply { start = 1; end = 2; ctxt = 0 }
+        val s1 = span().apply { start = 1; end = 2; ctxt = 0 }
+        val s2 = span().apply { start = 1; end = 2; ctxt = 0 }
 
-        // Span may not implement equals, just verify they can be created
-        assertNotNull(s1)
-        assertNotNull(s2)
-        assertEquals(s1.start, s2.start)
-        assertEquals(s1.end, s2.end)
+        s1.shouldNotBeNull()
+        s2.shouldNotBeNull()
+        s1.start shouldBe s2.start
+        s1.end shouldBe s2.end
+        s1.ctxt shouldBe s2.ctxt
     }
 }

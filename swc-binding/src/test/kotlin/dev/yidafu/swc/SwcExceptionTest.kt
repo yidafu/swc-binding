@@ -1,11 +1,12 @@
 package dev.yidafu.swc
 
-import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.assertNotNull
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlin.test.Test
 
-class SwcExceptionTest {
+class SwcExceptionTest : AnnotationSpec() {
 
     @Test
     fun `create SwcException with message`() {
@@ -18,7 +19,7 @@ class SwcExceptionTest {
     fun `SwcException is RuntimeException`() {
         val exception = SwcException("Test error")
 
-        assertIs<RuntimeException>(exception)
+        exception.shouldBeInstanceOf<RuntimeException>()
     }
 
     @Test
@@ -62,7 +63,7 @@ class SwcExceptionTest {
         try {
             throw SwcException("Test")
         } catch (e: RuntimeException) {
-            assertIs<SwcException>(e)
+            e.shouldBeInstanceOf<SwcException>()
         }
     }
 
