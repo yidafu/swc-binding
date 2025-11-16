@@ -6,6 +6,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import io.kotest.core.spec.style.AnnotationSpec
+import kotlin.test.assertIs
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking

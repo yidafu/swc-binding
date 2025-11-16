@@ -17,7 +17,7 @@ class OptionsTest : AnnotationSpec() {
             cwd = "/path/to/cwd"
             configFile = Union.U2<String, Boolean>(b = false)
             swcrc = true
-            isModule = Union.U3<Boolean, String, String>(a = true)
+            isModule = Union.U2<Boolean, String>(a = true)
             jsc = jscConfig {
                 loose = true
             }

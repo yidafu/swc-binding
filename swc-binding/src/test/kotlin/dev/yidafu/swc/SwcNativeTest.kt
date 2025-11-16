@@ -5,7 +5,8 @@ import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import kotlin.test.assertEquals
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.assertNotNull
-import io.kotest.assertions.throwables.shouldThrow
+import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import java.io.File
@@ -149,7 +150,7 @@ class SwcNativeTest : AnnotationSpec() {
 
     @Test
     fun `parse invalid js code`() {
-        shouldThrow<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             val module = swcNative.parseSync(
                 """
                     val a = 234; // kotlin code

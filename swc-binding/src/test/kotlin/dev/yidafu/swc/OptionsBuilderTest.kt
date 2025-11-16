@@ -51,7 +51,7 @@ class OptionsBuilderTest : AnnotationSpec() {
     @Test
     fun `build options with union isModule`() {
         val opt = options {
-            isModule = Union.U3<Boolean, String, String>(a = true)
+            isModule = Union.U2<Boolean, String>(a = true)
         }
 
         assertTrue(opt.isModule?.a == true)

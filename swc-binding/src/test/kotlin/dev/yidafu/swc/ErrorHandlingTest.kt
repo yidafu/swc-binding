@@ -4,18 +4,19 @@ import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.jscConfig
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.assertNotNull
-import io.kotest.assertions.throwables.shouldThrow
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.Test
+import kotlin.test.assertIs
 
 class ErrorHandlingTest : AnnotationSpec() {
     private val swcNative = SwcNative()
 
     @Test
     fun `parse invalid JS syntax`() {
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "function { // missing name",
                 esParseOptions { },
@@ -26,7 +27,7 @@ class ErrorHandlingTest : AnnotationSpec() {
 
     @Test
     fun `parse unclosed brace`() {
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "function test() { console.log('test');",
                 esParseOptions { },
@@ -37,7 +38,7 @@ class ErrorHandlingTest : AnnotationSpec() {
 
     @Test
     fun `parse invalid TypeScript syntax`() {
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "interface { // missing name",
                 tsParseOptions { },
@@ -48,7 +49,7 @@ class ErrorHandlingTest : AnnotationSpec() {
 
     @Test
     fun `parse with unexpected token`() {
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "const x = @invalid;",
                 esParseOptions { },
@@ -109,7 +110,7 @@ class ErrorHandlingTest : AnnotationSpec() {
 
     @Test
     fun `transform with syntax error in code`() {
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.transformSync(
                 "const x = ;", // 缺少值
                 false,
@@ -125,7 +126,7 @@ class ErrorHandlingTest : AnnotationSpec() {
     @Test
     fun `parse JSX without JSX enabled`() {
         // 不启用 JSX 解析应该失败
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "<div>Test</div>",
                 esParseOptions {
@@ -139,7 +140,7 @@ class ErrorHandlingTest : AnnotationSpec() {
     @Test
     fun `parse TypeScript with ES parser`() {
         // 用 ES 解析器解析 TS 代码应该失败
-        assertThrows<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             swcNative.parseSync(
                 "interface Test { x: number }",
                 esParseOptions { },

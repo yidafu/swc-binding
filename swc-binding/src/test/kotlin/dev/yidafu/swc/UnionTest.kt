@@ -4,7 +4,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import io.kotest.assertions.throwables.shouldThrow
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.SerializationException
@@ -51,7 +51,7 @@ class UnionTest : AnnotationSpec() {
     fun `U2 constructor with both null throws on serialize`() {
         val union = Union.U2<String, Double>(a = null, b = null)
 
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.encodeToString(serializerU2, union)
         }
     }
@@ -90,7 +90,7 @@ class UnionTest : AnnotationSpec() {
 
     @Test
     fun `U2 deserialize invalid value throws`() {
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.decodeFromString(serializerU2, "null")
         }
     }
@@ -131,7 +131,7 @@ class UnionTest : AnnotationSpec() {
     fun `U3 constructor with all null throws on serialize`() {
         val union = Union.U3<String, Double, Boolean>(a = null, b = null, c = null)
 
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.encodeToString(serializerU3, union)
         }
     }
@@ -170,7 +170,7 @@ class UnionTest : AnnotationSpec() {
 
     @Test
     fun `U3 deserialize invalid value throws`() {
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.decodeFromString(serializerU3, "[]")
         }
     }
@@ -203,7 +203,7 @@ class UnionTest : AnnotationSpec() {
     fun `U4 constructor with all null throws on serialize`() {
         val union = Union.U4<String, Double, Boolean, Int>(a = null, b = null, c = null, d = null)
 
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.encodeToString(serializerU4, union)
         }
     }
@@ -254,7 +254,7 @@ class UnionTest : AnnotationSpec() {
     fun `U5 constructor with all null throws on serialize`() {
         val union = Union.U5<String, Double, Boolean, Int, Long>(a = null, b = null, c = null, d = null, e = null)
 
-        assertThrows<SerializationException> {
+        assertFailsWith<SerializationException> {
             format.encodeToString(serializerU5, union)
         }
     }
