@@ -84,7 +84,9 @@ class DependencyContainer(
 
     private val _typeAliasConverter by lazy { TypeAliasConverter(configuration) }
 
-    private val _typeScriptToKotlinConverter by lazy { TypeScriptToKotlinConverter(configuration, _inheritanceAnalyzer) }
+    // 重要：不要向主转换器注入一个“空”的 InheritanceAnalyzer，
+    // 让其基于当前声明集动态构建分析器，避免将所有接口误判为“叶子”从而生成为 class。
+    private val _typeScriptToKotlinConverter by lazy { TypeScriptToKotlinConverter(configuration, null) }
 
     // 处理器
     private val _kotlinADTProcessor by lazy { KotlinADTProcessorFactory.createCombinedProcessor(_swcGeneratorConfig) }

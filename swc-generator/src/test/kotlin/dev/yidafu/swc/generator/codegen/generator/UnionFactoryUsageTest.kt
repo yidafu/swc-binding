@@ -12,7 +12,7 @@ import java.io.File
 class UnionFactoryUsageTest : AnnotationSpec() {
 
     @Test
-    fun `UnionSerializer objects delegate to UnionFactory`() {
+    fun `UnionSerializer objects do not use UnionFactory and delegate via serializerFor`() {
         val stringT = ClassName("kotlin", "String")
         val intT = ClassName("kotlin", "Int")
         val arrString = ClassName("kotlin", "Array").parameterizedBy(stringT)
@@ -50,12 +50,14 @@ class UnionFactoryUsageTest : AnnotationSpec() {
         unionFile.exists().shouldBeTrue()
         val content = unionFile.readText()
 
-        // 存在工厂与缓存
-        content.shouldContain("object UnionFactory")
-        content.shouldContain("ConcurrentHashMap")
+        // 不再存在工厂与缓存
+        kotlin.runCatching { content.shouldContain("object UnionFactory") }.isFailure.shouldBeTrue()
+        kotlin.runCatching { content.shouldContain("ConcurrentHashMap") }.isFailure.shouldBeTrue()
 
-        // 对象使用 UnionFactory.get(...)
-        content.shouldContain("UnionFactory.get(\"U3\"")
+        // 对象应使用 Union.U3.serializerFor(...) 构造委托
+        content.shouldContain("Union.U3.serializerFor(")
+        // 数组形态应包一层 ArraySerializer(...)
+        content.shouldContain("ArraySerializer(")
     }
 }
 

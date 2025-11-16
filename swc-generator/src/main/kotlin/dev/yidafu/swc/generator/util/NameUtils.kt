@@ -15,28 +15,6 @@ object NameUtils {
 
     fun normalized(name: String): String = removeBackticks(name)
 
-    fun appendImplSuffix(rawOrQuoted: String): String {
-        return if (rawOrQuoted.startsWith("`") && rawOrQuoted.endsWith("`")) {
-            val core = rawOrQuoted.substring(1, rawOrQuoted.length - 1)
-            "`" + core + "Impl`"
-        } else {
-            rawOrQuoted + "Impl"
-        }
-    }
-
-    fun buildImplNameCandidates(rawInterfaceName: String, normalizedInterface: String): List<String> {
-        return listOf(
-            appendImplSuffix(rawInterfaceName),
-            if (rawInterfaceName.startsWith("`") && rawInterfaceName.endsWith("`")) {
-                rawInterfaceName.substring(1, rawInterfaceName.length - 1) + "Impl"
-            } else {
-                "`$rawInterfaceName`Impl"
-            },
-            normalizedInterface + "Impl",
-            "`${normalizedInterface}Impl`"
-        ).distinct()
-    }
-
     fun simpleNameOf(type: KotlinType): String? {
         return when (type) {
             is KotlinType.Simple -> removeBackticks(type.name)

@@ -31,6 +31,7 @@ class TypesFileLayout(
     )
 
     private val interfaceBuilders = LinkedHashMap<String, FileSpec.Builder>()
+    private val classBuilders = LinkedHashMap<String, FileSpec.Builder>()
 
     fun builderForInterfaceName(name: String): FileSpec.Builder {
         return if (name in interfacesWithDedicatedFiles) {
@@ -48,6 +49,15 @@ class TypesFileLayout(
 
     fun requiresDedicatedFile(name: String): Boolean = name in interfacesWithDedicatedFiles
 
+    /**
+     * 为类提供专属文件构建器：类总是独立文件
+     */
+    fun builderForClassName(name: String): FileSpec.Builder {
+        return classBuilders.getOrPut(name) {
+            createFileBuilder(packageName, name, *defaultImports)
+        }
+    }
+
     fun collectGeneratedFiles(
         poet: PoetGenerator,
         postProcessor: TypesPostProcessor
@@ -56,6 +66,9 @@ class TypesFileLayout(
 
         generatedFiles += createGeneratedFile(commonOutputPath, commonFileBuilder, poet, postProcessor)
         interfaceBuilders.forEach { (name, builder) ->
+            generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
+        }
+        classBuilders.forEach { (name, builder) ->
             generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
         }
 

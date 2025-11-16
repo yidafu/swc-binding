@@ -199,9 +199,12 @@ object KotlinPoetConverter {
             else -> {
                 // 普通类: 基于 convertProperty，追加 @Serializable(with=...) 注解
                 val nodeDerived = isDerivedFromNode(decl.parents, declLookup)
+                val hasSpanDerived = isDerivedFrom(decl.parents, declLookup, "HasSpan")
                 val configDerived = isDerivedFrom(decl.parents, declLookup, "ParserConfig") ||
                     isDerivedFrom(decl.parents, declLookup, "BaseParseOptions")
+                val existingPropNames = mutableSetOf<String>()
                 decl.properties.forEach { prop ->
+                    existingPropNames.add(prop.name)
                     // 非 Node 系谱实现类不应包含 `type`
                     if (prop.name == "type" && !nodeDerived) {
                         return@forEach
@@ -225,6 +228,78 @@ object KotlinPoetConverter {
                         addUnionWithAnnotationAndCollectForProperty(decl.name, adjusted.name, adjusted.type, propBuilder)
                         builder.addProperty(propBuilder.build())
                     }
+                }
+                // 若实现了 HasSpan 但未声明 span 属性，则补充 override span: Span = emptySpan()
+                if (hasSpanDerived && decl.properties.none { it.name == "span" }) {
+                    val spanType = ClassName("dev.yidafu.swc.generated", "Span")
+                    val memberEmptySpan = MemberName("dev.yidafu.swc", "emptySpan")
+                    val spanProp = PropertySpec.builder("span", spanType)
+                        .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                        .mutable(true)
+                        .initializer("%M()", memberEmptySpan)
+                        .build()
+                    builder.addProperty(spanProp)
+                }
+                // 对于类：补齐父接口链上的抽象属性（override，可空，默认 null），避免未实现抽象属性导致编译错误
+                fun collectParentProps(type: KotlinType, seen: MutableSet<String>, out: MutableList<KotlinDeclaration.PropertyDecl>) {
+                    val name = when (type) {
+                        is KotlinType.Simple -> type.name
+                        else -> return
+                    }
+                    if (!seen.add(name)) return
+                    val parentDecl = declLookup[name] ?: return
+                    // 仅当父是接口/密封接口时才需要实现其抽象属性
+                    if (parentDecl.modifier is ClassModifier.Interface || parentDecl.modifier is ClassModifier.SealedInterface) {
+                        out.addAll(parentDecl.properties)
+                    }
+                    parentDecl.parents.forEach { p -> collectParentProps(p, seen, out) }
+                }
+                val parentProps = mutableListOf<KotlinDeclaration.PropertyDecl>()
+                val visited = mutableSetOf<String>()
+                decl.parents.forEach { p -> collectParentProps(p, visited, parentProps) }
+                // 逐一添加缺失属性
+                parentProps.forEach { p ->
+                    val propName = p.name
+                    if (existingPropNames.contains(propName)) return@forEach
+                    if (propName == "span" && hasSpanDerived) return@forEach // 已在上面补齐
+                    // 计算类型：除特殊字段外一律可空
+                    val isTypeProp = propName.removeSurrounding("`") == "type"
+                    val isSyntaxProp = propName.removeSurrounding("`") == "syntax"
+                    // Node 系谱的 type 属性若缺失，保持非空 String 并添加 @Transient 与默认值为声明名
+                    if (isTypeProp && nodeDerived) {
+                        val typeName = ClassName("kotlin", "String")
+                        val typeProp = PropertySpec.builder("type", typeName)
+                            .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                            .mutable(true)
+                            .addAnnotation(AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build())
+                            .initializer("%S", decl.name.removeSurrounding("`"))
+                            .build()
+                        builder.addProperty(typeProp)
+                        existingPropNames.add(propName)
+                        return@forEach
+                    }
+                    // ParserConfig 系谱的 syntax 属性标注 @Transient
+                    val baseTypeName = convertType(p.type)
+                    val finalType = if (p.type is KotlinType.Nullable) baseTypeName else baseTypeName.copy(nullable = true)
+                    // 跳过：真正属性在下一轮构建（需要默认值与注解）
+                }
+                // 再次填充（修正 KModifier.OFFSET 误用并设置默认值 null）
+                parentProps.forEach { p ->
+                    val propName = p.name
+                    if (existingPropNames.contains(propName)) return@forEach
+                    if (propName == "span" && hasSpanDerived) return@forEach
+                    val isSyntaxProp = propName.removeSurrounding("`") == "syntax"
+                    val baseTypeName = convertType(p.type)
+                    val finalType = if (p.type is KotlinType.Nullable) baseTypeName else baseTypeName.copy(nullable = true)
+                    val builderProp = PropertySpec.builder(propName, finalType)
+                        .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                        .mutable(true)
+                    if (isSyntaxProp && configDerived) {
+                        builderProp.addAnnotation(AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build())
+                    }
+                    builderProp.initializer("null")
+                    builder.addProperty(builderProp.build())
+                    existingPropNames.add(propName)
                 }
             }
         }
@@ -333,12 +408,14 @@ object KotlinPoetConverter {
         builder: PropertySpec.Builder
     ) {
         val usage = computeUnionUsage(ownerName, propName, propType) ?: return
-        val serializerClass = ClassName("dev.yidafu.swc.generated", serializerNameFor(usage))
-        val serializable = AnnotationSpec.builder(Hardcoded.AnnotationNames.toClassName(Hardcoded.AnnotationNames.SERIALIZABLE))
-            .addMember("with = %T::class", serializerClass)
+        // 收集 usage
+        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
+        // 添加注解 @Serializable(with = dev.yidafu.swc.generated.<Name>::class)
+        val serializerName = serializerNameFor(usage)
+        val serializable = AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+            .addMember("with = %T::class", ClassName("dev.yidafu.swc.generated", serializerName))
             .build()
         builder.addAnnotation(serializable)
-        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
     }
 
     private fun addUnionWithAnnotationAndCollectForParam(
@@ -348,12 +425,14 @@ object KotlinPoetConverter {
         builder: ParameterSpec.Builder
     ) {
         val usage = computeUnionUsage(ownerName, propName, propType) ?: return
-        val serializerClass = ClassName("dev.yidafu.swc.generated", serializerNameFor(usage))
-        val serializable = AnnotationSpec.builder(Hardcoded.AnnotationNames.toClassName(Hardcoded.AnnotationNames.SERIALIZABLE))
-            .addMember("with = %T::class", serializerClass)
+        // 收集 usage
+        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
+        // 添加注解 @Serializable(with = dev.yidafu.swc.generated.<Name>::class)
+        val serializerName = serializerNameFor(usage)
+        val serializable = AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+            .addMember("with = %T::class", ClassName("dev.yidafu.swc.generated", serializerName))
             .build()
         builder.addAnnotation(serializable)
-        dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.addUsage(usage)
     }
 
     private fun serializerNameFor(usage: dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage): String {

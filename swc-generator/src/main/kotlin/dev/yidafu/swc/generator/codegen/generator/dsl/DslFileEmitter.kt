@@ -97,22 +97,21 @@ class DslFileEmitter(
         val normalized = DslNamingRules.sanitizeTypeName(DslNamingRules.removeGenerics(typeName)).removeSurrounding("`")
         val decl = modelContext.classInfoByName[normalized]
         return when {
-            decl == null -> if (modelContext.leafInterfaceNames.contains(normalized)) "${normalized}Impl" else null
-            decl.modifier.isInterface() -> if (modelContext.leafInterfaceNames.contains(normalized)) "${decl.name}Impl" else null
+            // 对于叶子接口，生成器已产出同名具体类，直接返回同名类
+            decl == null -> if (modelContext.leafInterfaceNames.contains(normalized)) normalized else null
+            decl.modifier.isInterface() -> if (modelContext.leafInterfaceNames.contains(normalized)) decl.name else null
             else -> decl.name
         }
     }
 
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
         val interfaceName = klass.name.removeSurrounding("`")
-        val implName = "${interfaceName}Impl"
-        val interfaceType = ClassName(PoetConstants.PKG_TYPES, interfaceName)
-        val implType = ClassName(PoetConstants.PKG_TYPES, implName)
+        val classType = ClassName(PoetConstants.PKG_TYPES, interfaceName)
 
         return FunSpec.builder("create$interfaceName")
-            .addParameter("block", createDslLambdaType(interfaceType as TypeName))
-            .returns(interfaceType)
-            .addStatement("return %T().apply(block)", implType)
+            .addParameter("block", createDslLambdaType(classType as TypeName))
+            .returns(classType)
+            .addStatement("return %T().apply(block)", classType)
             .build()
     }
 }

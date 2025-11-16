@@ -501,13 +501,16 @@ class InterfaceConverter(
      */
     private fun determineClassModifier(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): ClassModifier {
         val name = tsInterface.name
+        // 配置优先级：toKotlinClass > keepInterface > sealedInterface
+        if (config.rules.classModifiers.toKotlinClass.contains(name)) return ClassModifier.FinalClass
+        if (config.rules.classModifiers.keepInterface.contains(name)) return ClassModifier.Interface
+        if (config.rules.classModifiers.sealedInterface.contains(name)) return ClassModifier.SealedInterface
 
-        return when {
-            config.rules.classModifiers.toKotlinClass.contains(name) -> ClassModifier.FinalClass
-            config.rules.classModifiers.keepInterface.contains(name) -> ClassModifier.Interface
-            config.rules.classModifiers.sealedInterface.contains(name) -> ClassModifier.SealedInterface
-            else -> ClassModifier.Interface
-        }
+        // 默认策略：当提供继承分析器时，将“无子类型”的叶子接口作为类生成
+        // 未提供分析器时保持为接口，以维持转换阶段与测试的既有预期
+        val analyzer = inheritanceAnalyzer ?: return ClassModifier.Interface
+        val hasChildren = analyzer.hasChildren(name)
+        return if (!hasChildren) ClassModifier.FinalClass else ClassModifier.Interface
     }
 
     /**

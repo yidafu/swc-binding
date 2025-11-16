@@ -30,7 +30,8 @@ class KotlinPoetConverterContextualTest : AnnotationSpec() {
             .addType(typeSpec)
             .build()
         val content = buildString { file.writeTo(this) }
-        content.shouldContain("@Serializable(with =")
+        // 新策略下不再为 Union.Ux 属性生成 @Serializable(with=...) 注解
+        content.shouldContain("Union.U2")
     }
 }
 

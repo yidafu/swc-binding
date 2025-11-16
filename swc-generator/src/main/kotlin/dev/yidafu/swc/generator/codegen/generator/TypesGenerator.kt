@@ -51,7 +51,7 @@ class TypesGenerator(
             TypeAliasStage(typeAliasEmitter),
             InterfaceStage(interfaceEmitter),
             ConcreteClassStage(concreteClassEmitter),
-            ImplementationStage(implementationEmitter),
+            // 去掉实现类（Impl）生成阶段
             CollectTypesFileStage(postProcessor)
         )
     private val pipeline = GenerationPipeline(generationStages + WriteFilesStage(writer))

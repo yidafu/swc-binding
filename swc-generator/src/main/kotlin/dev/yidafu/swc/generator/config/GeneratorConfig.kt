@@ -19,13 +19,7 @@ data class SwcGeneratorConfig(
     val literalNameMap: Map<String, String> get() = namingRules.literalOperators
     val propsToSnakeCase: List<String> get() = classModifiers.propsToSnakeCase
 
-    // 不生成 Impl 类的根类型列表（保持原有逻辑）
-    val noImplRootList: List<String> = listOf(
-        "ParserConfig",
-        "Config",
-        "JscConfig",
-        "BaseModuleConfig"
-    )
+    // noImplRootList 已废弃：新的生成逻辑不再生成任何 *Impl 类
 }
 
 /**

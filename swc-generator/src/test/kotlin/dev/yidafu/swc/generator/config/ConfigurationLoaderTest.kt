@@ -56,12 +56,13 @@ class ConfigurationLoaderTest : AnnotationSpec() {
 
         result.isSuccess().shouldBeTrue()
         val config = result.getOrThrow()
-        config.input.inputPath shouldBe "test.d.ts"
+        // 现在路径会基于配置文件目录规范化为绝对路径
+        config.input.inputPath.endsWith("test.d.ts").shouldBeTrue()
         config.input.verbose.shouldBeTrue()
         config.input.debug.shouldBeFalse()
-        config.output.outputTypesPath shouldBe "output/types.kt"
-        config.output.outputSerializerPath shouldBe "output/serializer.kt"
-        config.output.outputDslDir shouldBe "output/dsl"
+        config.output.outputTypesPath!!.endsWith("output/types.kt").shouldBeTrue()
+        config.output.outputSerializerPath!!.endsWith("output/serializer.kt").shouldBeTrue()
+        config.output.outputDslDir!!.endsWith("output/dsl").shouldBeTrue()
         config.behavior.enableCaching.shouldBeTrue()
         config.behavior.enableParallelProcessing.shouldBeFalse()
     }
@@ -81,7 +82,7 @@ class ConfigurationLoaderTest : AnnotationSpec() {
 
         result.isSuccess().shouldBeTrue()
         val config = result.getOrThrow()
-        config.input.inputPath shouldBe "custom.d.ts"
+        config.input.inputPath.endsWith("custom.d.ts").shouldBeTrue()
         config.output.dryRun.shouldBeTrue()
         config.rules.shouldNotBeNull()
         config.behavior.shouldNotBeNull()

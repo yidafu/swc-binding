@@ -177,13 +177,39 @@ class ConfigurationLoader {
             // 使用 kaml 解析 YAML
             val yamlConfig = yaml.decodeFromString(YamlConfiguration.serializer(), yamlContent)
 
-            // 转换为内部 Configuration 对象
-            convertYamlToConfiguration(yamlConfig)
+            // 转换为内部 Configuration 对象，并基于配置文件位置规范化相对路径
+            val config = convertYamlToConfiguration(yamlConfig)
+            normalizePathsByConfigLocation(config, configFile.parentFile ?: File("."))
         } catch (e: Exception) {
             Logger.warn("YAML 解析失败: ${e.message}，使用默认配置")
             Logger.debug("YAML 解析错误详情: ${e.stackTraceToString()}")
             Configuration.default()
         }
+    }
+
+    /**
+     * 将配置中的相对路径（输入与输出路径）按配置文件所在目录解析为绝对路径。
+     * 这样即便从项目根目录执行，也能正确定位到 swc-generator 下的 node_modules 与输出目录。
+     */
+    private fun normalizePathsByConfigLocation(
+        configuration: Configuration,
+        baseDir: File
+    ): Configuration {
+        fun resolve(path: String?): String? {
+            if (path.isNullOrBlank()) return path
+            val f = File(path)
+            return if (f.isAbsolute) f.absolutePath else File(baseDir, path).absolutePath
+        }
+
+        val normalizedInput = configuration.input.copy(
+            inputPath = resolve(configuration.input.inputPath) ?: configuration.input.inputPath
+        )
+        val normalizedOutput = configuration.output.copy(
+            outputTypesPath = resolve(configuration.output.outputTypesPath),
+            outputSerializerPath = resolve(configuration.output.outputSerializerPath),
+            outputDslDir = resolve(configuration.output.outputDslDir)
+        )
+        return configuration.copy(input = normalizedInput, output = normalizedOutput)
     }
 
     /**

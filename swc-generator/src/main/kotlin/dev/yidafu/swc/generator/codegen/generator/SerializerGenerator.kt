@@ -16,8 +16,6 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.getClassName
 import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.util.NameUtils
-import dev.yidafu.swc.generator.util.NameUtils.appendImplSuffix
-import dev.yidafu.swc.generator.util.NameUtils.buildImplNameCandidates
 import dev.yidafu.swc.generator.util.NameUtils.normalized
 import dev.yidafu.swc.generator.util.NameUtils.removeBackticks
 import dev.yidafu.swc.generator.util.NameUtils.simpleNameOf
@@ -100,6 +98,23 @@ class SerializerGenerator(
                 )
             }
         }
+        // 确保至少输出空的模块属性，避免下游引用缺失
+        val hasDefault = polymorphicGroups.containsKey(Hardcoded.Serializer.DEFAULT_DISCRIMINATOR)
+        val hasSyntax = polymorphicGroups.containsKey(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR)
+        if (!hasDefault) {
+            fileBuilder.addProperty(
+                PropertySpec.builder("swcSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
+                    .initializer(CodeBlock.of("SerializersModule { }"))
+                    .build()
+            )
+        }
+        if (!hasSyntax) {
+            fileBuilder.addProperty(
+                PropertySpec.builder("swcConfigSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
+                    .initializer(CodeBlock.of("SerializersModule { }"))
+                    .build()
+            )
+        }
         return fileBuilder.build()
     }
 
@@ -118,9 +133,6 @@ class SerializerGenerator(
             "kotlinx.serialization.builtins" to "ArraySerializer",
             "dev.yidafu.swc" to "Union"
         )
-
-        // 生成通用工厂（带缓存）
-        emitUnionFactory(fileBuilder)
 
         val usages = UnionSerializerRegistry.all()
         if (usages.isEmpty()) {
@@ -175,19 +187,28 @@ class SerializerGenerator(
             }
             val kSerializerType = ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(targetType)
 
-            // 通过工厂获取委托序列化器（复用 & 缓存）
+            // 构造委托序列化器：Union.Ux.serializerFor(argSerializers...)，必要时再包一层 ArraySerializer(...)
             val delegateInit = CodeBlock.builder().apply {
-                add("%T.get(", ClassName(PoetConstants.PKG_TYPES, "UnionFactory"))
-                add("%S, ", usage.unionKind)
-                add("%L, ", usage.isArray)
-                add("listOf(")
-                usage.typeArguments.forEachIndexed { idx, tn ->
-                    if (idx > 0) add(", ")
+                // 构造各类型参数的 KSerializer 表达式
+                val argExprs = usage.typeArguments.mapIndexed { idx, tn ->
                     val argType = if (usage.isNullableElement.getOrNull(idx) == true) tn.copy(nullable = true) else tn
-                    val nullable = usage.isNullableElement.getOrNull(idx) == true
-                    add("%L", buildArgSerializerExpr(argType, nullable))
+                    val isNull = usage.isNullableElement.getOrNull(idx) == true
+                    buildArgSerializerExpr(argType, isNull)
                 }
-                add(")) as %T", kSerializerType)
+                // 组装 serializerFor(...)
+                val unionTypeExpr = CodeBlock.builder().apply {
+                    add("%T.%L.serializerFor(", ClassName("dev.yidafu.swc", "Union"), usage.unionKind)
+                    argExprs.forEachIndexed { i, cb ->
+                        if (i > 0) add(", ")
+                        add("%L", cb)
+                    }
+                    add(")")
+                }.build()
+                if (usage.isArray) {
+                    add("%T(%L)", ClassName("kotlinx.serialization.builtins", "ArraySerializer"), unionTypeExpr)
+                } else {
+                    add("%L", unionTypeExpr)
+                }
             }.build()
 
             val delegateProp = PropertySpec.builder("delegate", kSerializerType, KModifier.PRIVATE)
@@ -232,78 +253,7 @@ class SerializerGenerator(
         return fileBuilder.build()
     }
 
-    /**
-     * 发出 UnionFactory（缓存 + 工厂）
-     */
-    private fun emitUnionFactory(fileBuilder: FileSpec.Builder) {
-        val mapType = ClassName("java.util.concurrent", "ConcurrentHashMap")
-            .parameterizedBy(ClassName("kotlin", "String"), ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(STAR))
-
-        val factoryType = TypeSpec.objectBuilder("UnionFactory")
-            .addProperty(
-                PropertySpec.builder("cache", mapType, KModifier.PRIVATE)
-                    .initializer("%T()", ClassName("java.util.concurrent", "ConcurrentHashMap"))
-                    .build()
-            )
-            .addFunction(
-                FunSpec.builder("keyOf")
-                    .addModifiers(KModifier.PRIVATE)
-                    .returns(ClassName("kotlin", "String"))
-                    .addParameter("kind", String::class)
-                    .addParameter("isArray", Boolean::class)
-                    .addParameter("argSerializers", ClassName("kotlin.collections", "List").parameterizedBy(ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(STAR)))
-                    .addCode(
-                        CodeBlock.of(
-                            "return buildString {\n" +
-                                "  append(kind).append('|')\n" +
-                                "  append(\"arr=\").append(isArray).append('|')\n" +
-                                "  argSerializers.forEachIndexed { i, ks ->\n" +
-                                "    if (i > 0) append(',')\n" +
-                                "    val sn = ks.descriptor.serialName\n" +
-                                "    append(sn)\n" +
-                                "    if (%T.Union.includeNullabilityInKey) {\n" +
-                                "      val isNull = sn.endsWith('?')\n" +
-                                "      append(\":null=\").append(isNull)\n" +
-                                "    }\n" +
-                                "  }\n" +
-                                "}\n",
-                            ClassName("dev.yidafu.swc.generator.config", "Hardcoded")
-                        )
-                    )
-                    .build()
-            )
-            .addFunction(
-                FunSpec.builder("get")
-                    .addKdoc("根据 Union 元数与参数序列化器获取（或缓存）对应的 KSerializer；必要时包装为 ArraySerializer。")
-                    .returns(ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(STAR))
-                    .addParameter("kind", String::class)
-                    .addParameter("isArray", Boolean::class)
-                    .addParameter("argSerializers", ClassName("kotlin.collections", "List").parameterizedBy(ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(STAR)))
-                    .addCode(
-                        CodeBlock.builder()
-                            .addStatement("val key = keyOf(kind, isArray, argSerializers)")
-                            .addStatement("val cached = cache[key]")
-                            .addStatement("if (cached != null) return cached")
-                            .add("val created: %T = when (kind) {\n", ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(STAR))
-                            .indent()
-                            .addStatement("\"U2\" -> %T.U2.serializerFor(argSerializers[0], argSerializers[1])", ClassName("dev.yidafu.swc", "Union"))
-                            .addStatement("\"U3\" -> %T.U3.serializerFor(argSerializers[0], argSerializers[1], argSerializers[2])", ClassName("dev.yidafu.swc", "Union"))
-                            .addStatement("\"U4\" -> %T.U4.serializerFor(argSerializers[0], argSerializers[1], argSerializers[2], argSerializers[3])", ClassName("dev.yidafu.swc", "Union"))
-                            .addStatement("\"U5\" -> %T.U5.serializerFor(argSerializers[0], argSerializers[1], argSerializers[2], argSerializers[3], argSerializers[4])", ClassName("dev.yidafu.swc", "Union"))
-                            .addStatement("else -> throw IllegalArgumentException(\"Unsupported Union kind: $\" + kind)")
-                            .unindent()
-                            .addStatement("}")
-                            .addStatement("val result = if (isArray) %T(created) else created", ClassName("kotlinx.serialization.builtins", "ArraySerializer"))
-                            .addStatement("cache[key] = result")
-                            .addStatement("return result")
-                            .build()
-                    )
-                    .build()
-            )
-            .build()
-
-        fileBuilder.addType(factoryType)
-    }
+    // 不再生成 UnionFactory（按使用点生成唯一命名的序列化器）
 
     /**
      * 内部收集用结构
@@ -362,50 +312,13 @@ class SerializerGenerator(
         val concreteClasses = snapshot.concreteClasses
 
         val parentToChildren = mutableMapOf<String, LinkedHashSet<String>>()
-        val concreteRawNames = concreteClasses
-            .map { normalizedToRaw[it.getClassName()] ?: it.name }
-            .toSet()
-        val parentsWithDirectConcrete = collectParentsWithDirectConcrete(concreteClasses, childToParents)
+        // 仅基于已存在的具体类进行注册
 
         // 现有具体类（如果存在）直接参与多态映射
         seedDirectConcrete(concreteClasses, childToParents, interfaceNames, normalizedToRaw, parentToChildren)
 
-        // 基于接口继承关系推导应生成的 Impl 类
-        val interfaceChildrenMap = buildInterfaceChildrenMap(childToParents, interfaceNames)
-        val leafInterfaces = interfaceNames.filter { interfaceChildrenMap[it].isNullOrEmpty() }
-
-        inferMissingImpls(
-            leafInterfaces = leafInterfaces,
-            interfaceNames = interfaceNames,
-            childToParents = childToParents,
-            normalizedToRaw = normalizedToRaw,
-            concreteRawNames = concreteRawNames,
-            parentToChildren = parentToChildren
-        )
-
-        // 自动检测所有有对应 Impl 类的接口，并为其生成多态注册
-        interfaceNames.forEach { normalizedInterface ->
-            val rawInterfaceName = normalizedToRaw[normalizedInterface] ?: normalizedInterface
-            // 尝试多种名称格式来查找对应的 Impl 类
-            val possibleImplNames = buildImplNameCandidates(rawInterfaceName, normalizedInterface)
-            
-            // 如果还是找不到，尝试在 concreteRawNames 中搜索包含接口名称的类
-            val foundImplName = possibleImplNames.firstOrNull { concreteRawNames.contains(it) }
-                ?: concreteRawNames.firstOrNull { implName ->
-                    val normalizedImpl = implName.removeSurrounding("`", "`")
-                    normalizedImpl == "${normalizedInterface}Impl" || normalizedImpl == "${rawInterfaceName.removeSurrounding("`", "`")}Impl"
-                }
-            
-            if (foundImplName != null) {
-                // 找到对应的 Impl 类，确保该接口在 parentToChildren 中，并包含其 Impl 类
-                // 即使接口已经在 parentToChildren 中（作为其他接口的子类），也要确保它本身作为父接口
-                parentToChildren.addChild(rawInterfaceName, foundImplName)
-                Logger.verbose("  为接口 $rawInterfaceName 添加多态注册，子类: $foundImplName", 6)
-                
-            } else {
-                Logger.verbose("  接口 $rawInterfaceName 没有找到对应的 Impl 类（尝试了: ${possibleImplNames.joinToString(", ")})", 8)
-            }
-        }
+        // 不再推导或依赖 *Impl 命名：仅基于“已存在的具体类”注册到其直接父接口
+        // parentToChildren 已经由 seedDirectConcrete 完成初始化
 
         // 1) 提升到最近的可序列化祖先
         val remappedToSerializableAncestor = promoteToNearestSerializableAncestor(
@@ -531,41 +444,7 @@ class SerializerGenerator(
         }
     }
 
-    private fun inferMissingImpls(
-        leafInterfaces: List<String>,
-        interfaceNames: Set<String>,
-        childToParents: Map<String, List<String>>,
-        normalizedToRaw: Map<String, String>,
-        concreteRawNames: Set<String>,
-        parentToChildren: MutableMap<String, LinkedHashSet<String>>
-    ) {
-        leafInterfaces.forEach { leaf ->
-            val rawLeaf = normalizedToRaw[leaf] ?: leaf
-            val implRawName = appendImplSuffix(rawLeaf)
-            if (!concreteRawNames.contains(implRawName)) {
-                // 仅为“叶接口自身”添加其推导出的 Impl 映射，避免把 Impl 扩散注册到所有祖先接口
-                parentToChildren.addChild(rawLeaf, implRawName)
-            }
-        }
-
-        // 自动检测所有有对应 Impl 类的接口，并为其生成多态注册（保持旧逻辑）
-        interfaceNames.forEach { normalizedInterface ->
-            val rawInterfaceName = normalizedToRaw[normalizedInterface] ?: normalizedInterface
-            val candidates = buildImplNameCandidates(rawInterfaceName, normalizedInterface)
-            val foundImplName = candidates.firstOrNull { concreteRawNames.contains(it) }
-                ?: concreteRawNames.firstOrNull { implName ->
-                    val normalizedImpl = implName.removeSurrounding("`", "`")
-                    normalizedImpl == "${normalizedInterface}Impl" || normalizedImpl == "${rawInterfaceName.removeSurrounding("`", "`")}Impl"
-                }
-
-            if (foundImplName != null) {
-                parentToChildren.addChild(rawInterfaceName, foundImplName)
-                Logger.verbose("  为接口 $rawInterfaceName 添加多态注册，子类: $foundImplName", 6)
-            } else {
-                Logger.verbose("  接口 $rawInterfaceName 没有找到对应的 Impl 类（尝试了: ${candidates.joinToString(", ")})", 8)
-            }
-        }
-    }
+    // 旧的 Impl 推导逻辑删除
 
     private fun orderParents(
         classDecls: List<KotlinDeclaration.ClassDecl>,
@@ -643,36 +522,14 @@ class SerializerGenerator(
     private fun shouldGeneratePolymorphic(
         normalizedParent: String,
         interfaceChildrenMap: Map<String, LinkedHashSet<String>>,
-        parentsWithDirectConcrete: Set<String>,
-        concreteRawNames: Set<String>,
-        rawParent: String
+        parentsWithDirectConcrete: Set<String>
     ): Boolean {
         val cleanName = normalizedParent.removeSurrounding("`", "`")
         if (cleanName in skipPolymorphicInterfaces) {
             return false
         }
 
-        // 检查接口是否有对应的 Impl 类
-        val implRawName = appendImplSuffix(rawParent)
-        if (concreteRawNames.contains(implRawName)) {
-            // 有对应的 Impl 类，生成多态注册以便可以直接反序列化为接口类型
-            return true
-        }
-        
-        // 尝试多种名称格式
-        val possibleImplNames = buildImplNameCandidates(rawParent, normalizedParent)
-        
-        // 检查是否有任何匹配的 Impl 类名称
-        if (possibleImplNames.any { concreteRawNames.contains(it) }) {
-            return true
-        }
-        
-        // 检查是否在 concreteRawNames 中有标准化名称匹配的类
-        val normalizedImplName = "${normalizedParent}Impl"
-        if (concreteRawNames.any { it.removeSurrounding("`", "`") == normalizedImplName }) {
-            return true
-        }
-        
+        // 不再依赖 Impl 类存在性，仅根据是否有直接具体子类决定
         // 如果接口已经在 parentToChildren 中有子类（说明之前已经添加过），也应该生成多态注册
         // 这适用于从现有注册中找到的情况
         val interfaceChildrenCount = interfaceChildrenMap[normalizedParent].orEmpty().size

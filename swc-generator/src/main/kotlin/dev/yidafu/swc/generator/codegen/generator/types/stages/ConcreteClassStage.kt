@@ -16,7 +16,11 @@ class ConcreteClassStage(
                 !it.name.endsWith("Impl")
         }
         Logger.debug("  其他类数量: ${classes.size}", 4)
-        emitter.emit(context.fileLayout.commonFileBuilder, classes, context.poet, context.declLookup)
+        // 每个类独立文件生成
+        classes.forEach { cls ->
+            val builder = context.fileLayout.builderForClassName(cls.name)
+            emitter.emit(builder, listOf(cls), context.poet, context.declLookup)
+        }
     }
 }
 

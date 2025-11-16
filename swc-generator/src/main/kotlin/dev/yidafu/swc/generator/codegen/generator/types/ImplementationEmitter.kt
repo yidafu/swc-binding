@@ -59,9 +59,10 @@ class ImplementationEmitter(
         }
 
         return interfaceDecl.copy(
-            name = "${interfaceDecl.name}Impl",
+            // 生成与接口同名的具体类，直接继承接口原有父接口（名实合一）
+            name = interfaceDecl.name,
             modifier = ClassModifier.FinalClass,
-            parents = listOf(KotlinType.Simple(interfaceDecl.name)),
+            parents = interfaceDecl.parents,
             properties = processedProperties,
             nestedClasses = emptyList(),
             annotations = TypesImplementationRules.implementationAnnotations(interfaceRule, interfaceDecl)
