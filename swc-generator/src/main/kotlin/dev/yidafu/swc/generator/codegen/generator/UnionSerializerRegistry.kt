@@ -36,19 +36,30 @@ object UnionSerializerRegistry {
     /**
      * 计算类型参数的规范化 token，用于生成去重后的序列化器名称。
      * 规则：SimpleName + 子参数token连接；Array<String> => ArrayString；Record<String,String> => RecordStringString
-     * 忽略可空标记以简化命名。
+     * 可选地包含可空标记以避免碰撞（受配置控制）。
      */
     fun canonicalToken(typeName: TypeName): String {
-        val tn = if (typeName.isNullable) typeName.copy(nullable = false) else typeName
+        val includeNull = dev.yidafu.swc.generator.config.Hardcoded.Union.includeNullabilityInToken
+        val tn = if (!includeNull && typeName.isNullable) typeName.copy(nullable = false) else typeName
         return when (tn) {
             is ParameterizedTypeName -> {
                 val raw = (tn.rawType as ClassName)
                 val base = raw.simpleNames.joinToString("")
                 val args = tn.typeArguments.joinToString("") { canonicalToken(it) }
-                base + args
+                val nullTag = if (includeNull && typeName.isNullable) "N" else ""
+                base + args + nullTag
             }
-            is ClassName -> tn.simpleNames.joinToString("")
-            else -> tn.toString()
+            is ClassName -> {
+                val base = tn.simpleNames.joinToString("")
+                val nullTag = if (includeNull && typeName.isNullable) "N" else ""
+                base + nullTag
+            }
+            else -> {
+                // 回退到字符串表示，并按需加空性标记
+                val base = tn.toString()
+                val nullTag = if (includeNull && typeName.isNullable) "N" else ""
+                base + nullTag
+            }
         }
     }
 

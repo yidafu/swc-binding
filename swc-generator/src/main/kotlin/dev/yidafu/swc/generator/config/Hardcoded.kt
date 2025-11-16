@@ -45,6 +45,32 @@ object Hardcoded {
     object Serializer {
         const val DEFAULT_DISCRIMINATOR: String = "type"
         const val SYNTAX_DISCRIMINATOR: String = "syntax"
+        /**
+         * 允许作为多态父接口的开放接口白名单（非 sealed）
+         */
+        @JvmStatic
+        val additionalOpenBases: MutableSet<String> = linkedSetOf(
+            // 常见作为外部 API 入口或需要直接反序列化的非 sealed 基类
+            "Node",
+            "ModuleItem",
+            "ModuleDeclaration",
+            "Identifier",
+            "BindingIdentifier",
+            "VariableDeclarator",
+            "Module",
+            "Script"
+        )
+
+        /**
+         * 缺失 @Serializable 注解时的处理策略
+         */
+        enum class MissingSerializablePolicy {
+            ERROR,            // 一律抛错
+            WARN_OPEN_BASES,  // 白名单开放父接口仅告警，其他抛错
+            WARN_ALL          // 全部仅告警
+        }
+        @JvmStatic
+        var missingSerializablePolicy: MissingSerializablePolicy = MissingSerializablePolicy.WARN_OPEN_BASES
         val configInterfaceNames: Set<String> = setOf(
             "BaseParseOptions",
             "ParserConfig",
@@ -53,6 +79,27 @@ object Hardcoded {
             "Options",
             "Config"
         )
+    }
+
+    /**
+     * Union 相关的默认配置（可被外部配置接入覆盖）
+     */
+    object Union {
+        // 命名 token 中是否包含可空性标记（默认关闭，保持兼容）
+        @JvmStatic
+        var includeNullabilityInToken: Boolean = false
+        // 缓存 key 中是否包含可空性标记（默认关闭，保持兼容）
+        @JvmStatic
+        var includeNullabilityInKey: Boolean = false
+
+        // 需要固化为 object 的高频组合（字符串化 key，生成器内部解释）
+        // 约定 key: "${kind}|${args-joined-by-','}|arr=${isArray}"
+        @JvmStatic
+        val hotFixedCombos: MutableSet<String> = linkedSetOf()
+
+        // 生成的工厂支持的元数（默认 2..5）
+        @JvmStatic
+        var factoryArity: Set<Int> = setOf(2, 3, 4, 5)
     }
 
     /**

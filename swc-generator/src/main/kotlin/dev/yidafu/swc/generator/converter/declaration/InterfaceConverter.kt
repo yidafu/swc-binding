@@ -37,6 +37,14 @@ class InterfaceConverter(
         tsInterface: TypeScriptDeclaration.InterfaceDeclaration
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         return try {
+            // 合并规则：忽略 ExprOrSpread 的单独生成（统一使用 Argument）
+            if (tsInterface.name == "ExprOrSpread") {
+                Logger.debug("跳过 ExprOrSpread 接口（统一使用 Argument）", 4)
+                return GeneratorResultFactory.failure(
+                    code = ErrorCode.SKIPPED_INTERFACE,
+                    message = "ExprOrSpread is skipped, use Argument instead"
+                )
+            }
             // 跳过 OptionalChainingCall，只保留 CallExpression
             if (tsInterface.name == "OptionalChainingCall") {
                 Logger.debug("跳过 OptionalChainingCall 接口（只保留 CallExpression）", 4)

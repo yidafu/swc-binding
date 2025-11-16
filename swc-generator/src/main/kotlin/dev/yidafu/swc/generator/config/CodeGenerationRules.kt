@@ -74,7 +74,9 @@ object CodeGenerationRules {
     private val typeNameOverrides = mapOf(
         "Class" to "JsClass",
         "Super" to "JsSuper",
-        "Import" to "JsImport"
+        "Import" to "JsImport",
+        // 特殊处理：将 ExprOrSpread 统一映射为 Argument，避免双类型导致的解码/DSL 冲突
+        "ExprOrSpread" to "Argument"
     )
 
     /**
@@ -268,7 +270,9 @@ object CodeGenerationRules {
      */
     val skipDslReceivers = setOf(
         "HasSpan",
-        "HasDecorator"
+        "HasDecorator",
+        // 合并处理：跳过为 ExprOrSpread 生成 DSL，统一用 Argument 的 DSL
+        "ExprOrSpread"
     )
 
     // 注意：skipClassPatterns 已移除
@@ -416,7 +420,7 @@ object TypesImplementationRules {
             else -> rule.interfaceCleanName
         }
         
-        return listOf(
+        val annotations = mutableListOf(
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
             KotlinDeclaration.Annotation(
@@ -428,6 +432,16 @@ object TypesImplementationRules {
                 listOf(Expression.ClassReference("ExperimentalSerializationApi"))
             )
         )
+        // 若使用 syntax 作为判别字段，则加上 JsonClassDiscriminator("syntax")
+        if (rule.discriminator == "syntax") {
+            annotations.add(
+                KotlinDeclaration.Annotation(
+                    "JsonClassDiscriminator",
+                    listOf(Expression.StringLiteral(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR))
+                )
+            )
+        }
+        return annotations
     }
 
     fun reorderImplementationProperties(
