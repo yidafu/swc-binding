@@ -1,6 +1,7 @@
 plugins {
     id("dev.yidafu.library")
     alias(libs.plugins.kotlin.serialization)
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
 group = "dev.yidafu.swc"

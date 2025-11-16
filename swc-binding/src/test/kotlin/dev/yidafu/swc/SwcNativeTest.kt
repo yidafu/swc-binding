@@ -9,6 +9,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import java.io.File
+import java.net.URL
 import kotlin.test.Test
 
 class SwcNativeTest : AnnotationSpec() {
@@ -17,8 +18,8 @@ class SwcNativeTest : AnnotationSpec() {
         return SwcNativeTest::class.java.classLoader.getResource(filename)!!.file!!
     }
 
-    private fun getResourceContent(filename: String): String {
-        return File(getResource(filename)).readText()
+    private fun getResourceContent(url: String): String {
+        return URL(url).readText()
     }
 
     @Test
@@ -389,7 +390,7 @@ class SwcNativeTest : AnnotationSpec() {
     @Test
     fun `parse react source code`() {
         val output1 = swcNative.parseSync(
-            getResourceContent("react.development.js"),
+            getResourceContent("https://unpkg.com/react@18/umd/react.development.js"),
             esParseOptions { },
             "react.development.js"
         )
@@ -397,7 +398,7 @@ class SwcNativeTest : AnnotationSpec() {
         output1.shouldBeInstanceOf<Module>()
 
         val output2 = swcNative.parseSync(
-            getResourceContent("react-dom.development.js"),
+            getResourceContent("https://unpkg.com/react-dom@18/umd/react-dom.development.js"),
             esParseOptions { },
             "react-dom.development.js"
         )
