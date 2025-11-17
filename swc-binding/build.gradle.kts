@@ -7,6 +7,15 @@ plugins {
 group = "dev.yidafu.swc"
 version = "0.7.0"
 
+kotlin {
+    sourceSets {
+        val main by getting {
+            kotlin.srcDir("src/main/kotlin")
+            kotlin.exclude("dev/yidafu/swc/sample/**")
+        }
+    }
+}
+
 dependencies {
     implementation(libs.kotlin.serialization.json)
 

@@ -2,8 +2,8 @@ package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.Union
 import dev.yidafu.swc.generated.dsl.jscConfig
-import dev.yidafu.swc.generated.dsl.matchPattern
-import dev.yidafu.swc.options
+import dev.yidafu.swc.generated.dsl.options
+import dev.yidafu.swc.generated.MatchPattern
 import kotlin.test.assertEquals
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
@@ -24,7 +24,7 @@ class OptionsTest : AnnotationSpec() {
 
             swcrcRoots = Union.U3<Boolean, MatchPattern, Array<MatchPattern>>(
                 c = arrayOf(
-                    matchPattern { }
+                    MatchPattern()
                 )
             )
         }

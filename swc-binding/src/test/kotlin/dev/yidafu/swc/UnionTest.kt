@@ -13,6 +13,12 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import dev.yidafu.swc.astJson
+import dev.yidafu.swc.generated.Identifier
+import dev.yidafu.swc.generated.PrivateName
+import dev.yidafu.swc.generated.ComputedPropName
+import dev.yidafu.swc.Union
+import dev.yidafu.swc.emptySpan
 
 /**
  * Comprehensive tests for Union types (U2, U3, U4, U5)
@@ -386,5 +392,8 @@ class UnionTest : AnnotationSpec() {
         assertTrue(decoded.isC())
         assertEquals(false, decoded.valueOfC())
     }
+
+    // ==================== AST Union type tests ====================
+
 }
 

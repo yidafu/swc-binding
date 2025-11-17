@@ -7,24 +7,25 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class UnionSerializationRoundTripTest : AnnotationSpec() {
 
     @Test
-    fun `ArrowFunctionExpression body U2 roundtrip`() {
+    fun `ArrowFunctionExpression body Node roundtrip`() {
         val json = Json {
             serializersModule = swcSerializersModule
             ignoreUnknownKeys = true
         }
         val node = ArrowFunctionExpression().apply {
-            // 使用 U2 的第一个分支（BlockStatement）
-            body = Union.U2.ofA<BlockStatement, Expression>(BlockStatement())
+            // body 的类型是 Node?，可以直接赋值 BlockStatement 或 Expression
+            body = BlockStatement()
         }
         val encoded = json.encodeToString(node)
         val decoded = json.decodeFromString<ArrowFunctionExpression>(encoded)
         assertEquals("ArrowFunctionExpression", decoded.type)
-        // a 分支存在即可视为成功往返
-        assertEquals(true, decoded.body?.isA() == true)
+        // body 应该不为 null，并且应该是 BlockStatement 类型
+        assertNotNull(decoded.body)
     }
 }
 

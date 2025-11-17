@@ -10,6 +10,8 @@ import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.LazyThreadSafetyMode
@@ -391,15 +393,18 @@ class AsyncTransformTest : AnnotationSpec() {
 
     @Test
     fun `test transformAsync with module mode`() = runBlocking {
-        val result = swc.transformAsync(
-            code = "export const x = 1;",
-            isModule = true,
-            options = options {
-                jsc = JscConfig().apply {
-                    parser = esParseOptions { }
+        // 使用 Dispatcher.IO 执行 JNI 调用以确保线程安全
+        val result = withContext(Dispatchers.IO) {
+            swc.transformAsync(
+                code = "export const x = 1;",
+                isModule = true,
+                options = options {
+                    jsc = JscConfig().apply {
+                        parser = esParseOptions { }
+                    }
                 }
-            }
-        )
+            )
+        }
 
         assertNotNull(result.code)
         assertTrue(result.code.isNotEmpty())

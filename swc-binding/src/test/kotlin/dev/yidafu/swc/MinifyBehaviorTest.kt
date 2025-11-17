@@ -1,6 +1,7 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.dsl.esParseOptions
+import dev.yidafu.swc.generated.dsl.options
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.Test
 import kotlin.test.assertNotNull

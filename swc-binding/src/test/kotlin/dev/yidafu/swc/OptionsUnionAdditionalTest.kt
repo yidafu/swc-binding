@@ -2,6 +2,7 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.jscConfig
+import dev.yidafu.swc.generated.dsl.options
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.Test
 import kotlin.test.assertEquals

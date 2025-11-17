@@ -8,7 +8,14 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Union 类型用于表示 TypeScript 中的联合类型
@@ -116,17 +123,82 @@ sealed class Union {
                 buildClassSerialDescriptor("dev.yidafu.swc.Union.U3")
 
             override fun serialize(encoder: Encoder, value: U3<A, B, C>) {
-                value.a?.let {
-                    encoder.encodeSerializableValue(aSerializer, it)
-                    return
-                }
-                value.b?.let {
-                    encoder.encodeSerializableValue(bSerializer, it)
-                    return
-                }
-                value.c?.let {
-                    encoder.encodeSerializableValue(cSerializer, it)
-                    return
+                // 对于 JsonEncoder，确保 type 字段被正确添加
+                if (encoder is JsonEncoder) {
+                    val json = encoder.json
+                    value.a?.let {
+                        // 序列化为 JSON 元素，然后确保包含 type 字段
+                        val jsonElement = json.encodeToJsonElement(aSerializer, it)
+                        val jsonObj = if (jsonElement is JsonObject) {
+                            jsonElement
+                        } else {
+                            buildJsonObject { put("value", jsonElement) }
+                        }
+                        // 如果缺少 type 字段，添加它
+                        val finalObj = if (!jsonObj.containsKey("type")) {
+                            val typeName = aSerializer.descriptor.serialName
+                            buildJsonObject {
+                                put("type", typeName)
+                                jsonObj.forEach { (key, value) -> put(key, value) }
+                            }
+                        } else {
+                            jsonObj
+                        }
+                        encoder.encodeJsonElement(finalObj)
+                        return
+                    }
+                    value.b?.let {
+                        val jsonElement = json.encodeToJsonElement(bSerializer, it)
+                        val jsonObj = if (jsonElement is JsonObject) {
+                            jsonElement
+                        } else {
+                            buildJsonObject { put("value", jsonElement) }
+                        }
+                        val finalObj = if (!jsonObj.containsKey("type")) {
+                            val typeName = bSerializer.descriptor.serialName
+                            buildJsonObject {
+                                put("type", typeName)
+                                jsonObj.forEach { (key, value) -> put(key, value) }
+                            }
+                        } else {
+                            jsonObj
+                        }
+                        encoder.encodeJsonElement(finalObj)
+                        return
+                    }
+                    value.c?.let {
+                        val jsonElement = json.encodeToJsonElement(cSerializer, it)
+                        val jsonObj = if (jsonElement is JsonObject) {
+                            jsonElement
+                        } else {
+                            buildJsonObject { put("value", jsonElement) }
+                        }
+                        val finalObj = if (!jsonObj.containsKey("type")) {
+                            val typeName = cSerializer.descriptor.serialName
+                            buildJsonObject {
+                                put("type", typeName)
+                                jsonObj.forEach { (key, value) -> put(key, value) }
+                            }
+                        } else {
+                            jsonObj
+                        }
+                        encoder.encodeJsonElement(finalObj)
+                        return
+                    }
+                } else {
+                    // 非 JSON encoder，使用原始逻辑
+                    value.a?.let {
+                        encoder.encodeSerializableValue(aSerializer, it)
+                        return
+                    }
+                    value.b?.let {
+                        encoder.encodeSerializableValue(bSerializer, it)
+                        return
+                    }
+                    value.c?.let {
+                        encoder.encodeSerializableValue(cSerializer, it)
+                        return
+                    }
                 }
                 throw SerializationException("Union.U3 requires one value to be non-null")
             }

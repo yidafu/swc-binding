@@ -155,19 +155,16 @@ val esAddFunction: Module =
                                     ctxt = 0
                                 }
                             callee =
-                                Union.U3<JsSuper, JsImport, Expression>(
-                                    c =
-                                    identifier {
-                                        span =
-                                            span {
-                                                start = 43
-                                                end = 46
-                                                ctxt = 2
-                                            }
-                                        value = "add"
-                                        optional = false
-                                    }
-                                )
+                                identifier {
+                                    span =
+                                        span {
+                                            start = 43
+                                            end = 46
+                                            ctxt = 2
+                                        }
+                                    value = "add"
+                                    optional = false
+                                }
                             arguments =
                                 arrayOf(
                                     argument {

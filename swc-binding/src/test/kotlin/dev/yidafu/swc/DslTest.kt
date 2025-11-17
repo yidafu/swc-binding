@@ -3,6 +3,7 @@ package dev.yidafu.swc
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.esParseOptions
 import dev.yidafu.swc.generated.dsl.module
+import dev.yidafu.swc.generated.dsl.options
 import dev.yidafu.swc.generated.dsl.tsParseOptions
 // 使用生成的 DSL
 import dev.yidafu.swc.generated.dsl.span as genSpan

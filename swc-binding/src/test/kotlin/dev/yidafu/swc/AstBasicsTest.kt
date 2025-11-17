@@ -151,7 +151,7 @@ class AstBasicsTest : AnnotationSpec() {
         // 测试包含多个嵌套 Span 的复杂 AST 节点
         val module = swc.parseSync(
             "const x = 1;",
-            esParseOptions { },
+            createEsParserConfig { },
             "test.js"
         ) as Module
 
@@ -217,7 +217,7 @@ class AstBasicsTest : AnnotationSpec() {
         // 测试 printSync 序列化的 JSON 中所有 Span 都包含 ctxt
         val module = swc.parseSync(
             "const x = 1; const y = 2;",
-            esParseOptions { },
+            createEsParserConfig { },
             "test.js"
         ) as Module
 
