@@ -38,7 +38,7 @@ pub fn transformSync(
     process_output(env, result)
 }
 
-/// 执行同步转换工作的辅助函数
+/// Helper function to perform synchronous transform work
 fn perform_transform_sync_work(code: &str, is_module: bool, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
@@ -100,7 +100,7 @@ pub fn transformFileSync(
     process_output(env, result)
 }
 
-/// 执行同步文件转换工作的辅助函数
+/// Helper function to perform synchronous file transform work
 fn perform_transform_file_sync_work(filepath: &str, is_module: bool, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
@@ -134,7 +134,7 @@ fn perform_transform_file_sync_work(filepath: &str, is_module: bool, opts: &str)
     result
 }
 
-/// 异步转换方法 - 使用回调
+/// Async transform method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn transformAsync(
     mut env: JNIEnv,
@@ -146,18 +146,12 @@ pub fn transformAsync(
 ) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let s: String = env
@@ -176,7 +170,7 @@ pub fn transformAsync(
     });
 }
 
-/// 异步转换文件方法 - 使用回调
+/// Async transform file method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn transformFileAsync(
     mut env: JNIEnv,
@@ -188,18 +182,12 @@ pub fn transformFileAsync(
 ) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let s: String = env
@@ -218,7 +206,7 @@ pub fn transformFileAsync(
     });
 }
 
-/// 实际执行转换工作的辅助函数
+/// Helper function to actually perform transform work
 fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<String, String> {
     let c = get_compiler();
 
@@ -258,13 +246,16 @@ fn perform_transform_work(code: &str, is_module: bool, opts: &str) -> Result<Str
     .convert_err();
 
     match result {
-        Ok(output) => serde_json::to_string(&output)
-            .map_err(|e| format!("Failed to serialize output: {:?}", e)),
+        Ok(output) => {
+            let json_str = serde_json::to_string(&output)
+                .map_err(|e| format!("Failed to serialize output: {:?}", e))?;
+            Ok(json_str)
+        },
         Err(e) => Err(format!("Transform error: {:?}", e)),
     }
 }
 
-/// 实际执行文件转换工作的辅助函数
+/// Helper function to actually perform file transform work
 fn perform_transform_file_work(
     filepath: &str,
     is_module: bool,
@@ -301,8 +292,11 @@ fn perform_transform_file_work(
     .convert_err();
 
     match result {
-        Ok(output) => serde_json::to_string(&output)
-            .map_err(|e| format!("Failed to serialize output: {:?}", e)),
+        Ok(output) => {
+            let json_str = serde_json::to_string(&output)
+                .map_err(|e| format!("Failed to serialize output: {:?}", e))?;
+            Ok(json_str)
+        },
         Err(e) => Err(format!("Transform error: {:?}", e)),
     }
 }

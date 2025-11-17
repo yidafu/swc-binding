@@ -61,7 +61,7 @@ pub fn minifySync(mut env: JNIEnv, _: JClass, code: JString, opts: JString) -> j
     process_output(env, result)
 }
 
-/// 执行同步压缩工作的辅助函数
+/// Helper function to perform synchronous minify work
 fn perform_minify_sync_work(code: &str, opts: &str) -> SwcResult<TransformOutput> {
     let code: MinifyTarget = get_deserialized(code.as_bytes())?;
     let opts = get_deserialized(opts.as_bytes())?;
@@ -82,23 +82,17 @@ fn perform_minify_sync_work(code: &str, opts: &str) -> SwcResult<TransformOutput
     result
 }
 
-/// 异步压缩方法 - 使用回调
+/// Async minify method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn minifyAsync(mut env: JNIEnv, _: JClass, code: JString, opts: JString, callback: JObject) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let code: String = env
@@ -116,7 +110,7 @@ pub fn minifyAsync(mut env: JNIEnv, _: JClass, code: JString, opts: JString, cal
     });
 }
 
-/// 实际执行压缩工作的辅助函数
+/// Helper function to actually perform minify work
 fn perform_minify_work(code: &str, opts: &str) -> Result<String, String> {
     let code: MinifyTarget = get_deserialized(code.as_bytes())
         .map_err(|e| format!("Failed to deserialize code: {:?}", e))?;
@@ -132,8 +126,11 @@ fn perform_minify_work(code: &str, opts: &str) -> Result<String, String> {
     .convert_err();
 
     match result {
-        Ok(output) => serde_json::to_string(&output)
-            .map_err(|e| format!("Failed to serialize output: {:?}", e)),
+        Ok(output) => {
+            let json_str = serde_json::to_string(&output)
+                .map_err(|e| format!("Failed to serialize output: {:?}", e))?;
+            Ok(json_str)
+        },
         Err(e) => Err(format!("Minify error: {:?}", e)),
     }
 }

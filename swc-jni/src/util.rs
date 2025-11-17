@@ -24,8 +24,21 @@ pub enum SwcException {
 
 pub trait MapErr<T>: Into<Result<T, anyhow::Error>> {
     fn convert_err(self) -> SwcResult<T> {
-        self.into().map_err(|err| SwcException::SwcAnyException {
-            msg: format!("{:?}", err),
+        self.into().map_err(|err| {
+            // Format complete error stack information
+            let mut error_msg = format!("{:?}", err);
+            
+            // If error has a cause chain, add complete stack
+            if let Some(source) = err.source() {
+                error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                let mut current = source.source();
+                while let Some(cause) = current {
+                    error_msg.push_str(&format!("\n    {}", cause));
+                    current = cause.source();
+                }
+            }
+            
+            SwcException::SwcAnyException { msg: error_msg }
         })
     }
 }
@@ -75,10 +88,15 @@ pub fn deserialize_json<T>(json: &str) -> Result<T, serde_json::Error>
 where
     T: DeserializeOwned,
 {
-    let mut deserializer = serde_json::Deserializer::from_str(json);
-    deserializer.disable_recursion_limit();
-
-    T::deserialize(&mut deserializer)
+    // Use serde_json_path_to_error to get more detailed error path information
+    // It provides specific error paths to help locate issues
+    let result: Result<T, _> = serde_json_path_to_error::from_str(json);
+    
+    // Convert error to serde_json::Error (preserving path information)
+    result.map_err(|e| {
+        // Extract inner error
+        e.into_inner()
+    })
 }
 
 pub fn get_deserialized<T, B>(buffer: B) -> SwcResult<T>

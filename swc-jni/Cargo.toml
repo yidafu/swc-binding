@@ -25,6 +25,7 @@ jni = "0.21.1"
 jni_fn = "0.1.2"
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = { version = "1.0.115", features = ["unbounded_depth"] }
+serde_json_path_to_error = "0.1.1"
 swc = "43.0.0"
 swc_common = "15.0.0"
 swc_ecma_ast = { version = "16.0.0", features = ["serde-impl"] }

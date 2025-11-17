@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::thread;
 
 use jni::objects::{JClass, JObject, JString};
@@ -12,7 +13,7 @@ use swc_ecma_ast::Program;
 
 use anyhow::Context;
 use crate::async_utils::callback_java;
-use crate::util::{deserialize_json, get_deserialized, process_output, MapErr, SwcResult};
+use crate::util::{deserialize_json, get_deserialized, process_output, MapErr, SwcException, SwcResult};
 
 use crate::get_compiler;
 
@@ -32,11 +33,33 @@ pub fn printSync(mut env: JNIEnv, _: JClass, program: JString, options: JString)
     process_output(env, result)
 }
 
-/// 执行同步打印工作的辅助函数
+/// Helper function to perform synchronous print work
 fn perform_print_sync_work(program_str: &str, opts: &str) -> SwcResult<TransformOutput> {
     let c = get_compiler();
 
     let program: Program = deserialize_json(program_str)
+        .map_err(|e| {
+            // Format complete error stack information, including serde_json error path
+            let error_str = format!("{}", e);
+            let mut error_msg = format!("Failed to deserialize program\n{:?}", e);
+            
+            // serde_json::Error's Display implementation includes path information
+            if !error_str.is_empty() {
+                error_msg.push_str(&format!("\n\nError details: {}", error_str));
+            }
+            
+            // If error has a cause chain, add complete stack
+            if let Some(source) = e.source() {
+                error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                let mut current = source.source();
+                while let Some(cause) = current {
+                    error_msg.push_str(&format!("\n    {}", cause));
+                    current = cause.source();
+                }
+            }
+            
+            anyhow::anyhow!(error_msg)
+        })
         .context("Failed to deserialize program")
         .convert_err()?;
 
@@ -55,12 +78,27 @@ fn perform_print_sync_work(program_str: &str, opts: &str) -> SwcResult<Transform
                 .unwrap_or(SourceMapsConfig::Bool(false)),
             ..Default::default()
         };
-        c.print(&program, print_args).convert_err()
+        c.print(&program, print_args).map_err(|e| {
+            // Format complete error stack information
+            let mut error_msg = format!("Print failed\n{:?}", e);
+            
+            // If error has a cause chain, add complete stack
+            if let Some(source) = e.source() {
+                error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                let mut current = source.source();
+                while let Some(cause) = current {
+                    error_msg.push_str(&format!("\n    {}", cause));
+                    current = cause.source();
+                }
+            }
+            
+            SwcException::SwcAnyException { msg: error_msg }
+        })
     });
     result
 }
 
-/// 异步打印方法 - 使用回调
+/// Async print method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn printAsync(
     mut env: JNIEnv,
@@ -71,18 +109,12 @@ pub fn printAsync(
 ) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let program: String = env
@@ -100,15 +132,40 @@ pub fn printAsync(
     });
 }
 
-/// 实际执行打印工作的辅助函数
+/// Helper function to actually perform print work
 fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
     let c = get_compiler();
 
     let program: Program = deserialize_json(program_str)
-        .map_err(|e| format!("Failed to deserialize program: {:?}", e))?;
+        .map_err(|e| {
+            // Format complete error stack information, including serde_json error path
+            let mut error_msg = format!("Failed to deserialize program\n{:?}", e);
+            
+            // serde_json::Error's Display implementation includes path information
+            let error_str = format!("{}", e);
+            if !error_str.is_empty() {
+                error_msg.push_str(&format!("\n\nError details: {}", error_str));
+            }
+            
+            // If error has a cause chain, add complete stack
+            if let Some(source) = e.source() {
+                error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                let mut current = source.source();
+                while let Some(cause) = current {
+                    error_msg.push_str(&format!("\n    {}", cause));
+                    current = cause.source();
+                }
+            }
+            
+            error_msg
+        })?;
 
-    let options: Options =
-        get_deserialized(opts).map_err(|e| format!("Failed to parse options: {:?}", e))?;
+    let options: Options = get_deserialized(opts).map_err(|e| {
+        // SwcException already has complete error information (formatted in convert_err)
+        match e {
+            SwcException::SwcAnyException { msg } => msg,
+        }
+    })?;
 
     // Defaults to es3
     let _codegen_target = options.codegen_target().unwrap_or_default();
@@ -123,13 +180,54 @@ fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
                 .unwrap_or(SourceMapsConfig::Bool(false)),
             ..Default::default()
         };
-        c.print(&program, print_args).convert_err()
+        c.print(&program, print_args)
+            .map_err(|e| {
+                // Format complete error stack information
+                let mut error_msg = format!("Print failed\n{:?}", e);
+                
+                // If error has a cause chain, add complete stack
+                if let Some(source) = e.source() {
+                    error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                    let mut current = source.source();
+                    while let Some(cause) = current {
+                        error_msg.push_str(&format!("\n    {}", cause));
+                        current = cause.source();
+                    }
+                }
+                
+                anyhow::anyhow!(error_msg)
+            })
+            .convert_err()
     });
 
     match result {
-        Ok(output) => serde_json::to_string(&output)
-            .map_err(|e| format!("Failed to serialize output: {:?}", e)),
-        Err(e) => Err(format!("Print error: {:?}", e)),
+        Ok(output) => {
+            let json_str = serde_json::to_string(&output)
+                .map_err(|e| {
+                    // Format complete error stack information
+                    let mut error_msg = format!("Failed to serialize output\n{:?}", e);
+                    
+                    // If error has a cause chain, add complete stack
+                    if let Some(source) = e.source() {
+                        error_msg.push_str(&format!("\n\nCaused by:\n    {}", source));
+                        let mut current = source.source();
+                        while let Some(cause) = current {
+                            error_msg.push_str(&format!("\n    {}", cause));
+                            current = cause.source();
+                        }
+                    }
+                    
+                    error_msg
+                })?;
+            Ok(json_str)
+        },
+        Err(e) => {
+            // Extract error message from SwcException
+            let error_msg = match e {
+                crate::util::SwcException::SwcAnyException { msg } => msg,
+            };
+            Err(error_msg)
+        },
     }
 }
 

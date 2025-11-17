@@ -44,7 +44,7 @@ pub fn parseSync(
     process_result(env, result)
 }
 
-/// 执行同步解析工作的辅助函数
+/// Helper function to perform synchronous parse work
 fn perform_parse_sync_work(src: &str, opts: &str, filename: &str) -> SwcResult<Program> {
     let c = get_compiler();
 
@@ -104,7 +104,7 @@ pub fn parseFileSync(mut env: JNIEnv, _: JClass, filepath: JString, options: JSt
     process_result(env, result)
 }
 
-/// 执行同步文件解析工作的辅助函数
+/// Helper function to perform synchronous file parse work
 fn perform_parse_file_sync_work(path: &str, opts: &str) -> SwcResult<Program> {
     let c = get_compiler();
     let options: ParseOptions = get_deserialized(opts)?;
@@ -139,7 +139,7 @@ fn perform_parse_file_sync_work(path: &str, opts: &str) -> SwcResult<Program> {
     result
 }
 
-/// 异步解析方法 - 使用回调
+/// Async parse method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn parseAsync(
     mut env: JNIEnv,
@@ -149,25 +149,19 @@ pub fn parseAsync(
     filename: JString,
     callback: JObject,
 ) {
-    // 1. 获取 JavaVM（用于跨线程调用 Java）
+    // 1. Get JavaVM (for cross-thread Java calls)
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
-    // 2. 创建回调的全局引用
+    // 2. Create global reference to callback
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
-    // 3. 提取参数（必须在 JNI 线程中完成）
+    // 3. Extract parameters (must be done in JNI thread)
     let src: String = env
         .get_string(&code)
         .expect("Couldn't get java string!")
@@ -181,19 +175,19 @@ pub fn parseAsync(
         .expect("Couldn't get java string!")
         .into();
 
-    // 4. 在新线程中执行解析（立即返回，不阻塞）
+    // 4. Execute parse in new thread (returns immediately, non-blocking)
     thread::spawn(move || {
-        // 执行实际的解析工作
+        // Perform actual parse work
         let result = perform_parse_work(&src, &opts, &file);
 
-        // 5. 附加到 JVM 并回调 Java
+        // 5. Attach to JVM and callback Java
         callback_java(jvm, callback_ref, result);
     });
 
-    // 方法立即返回
+    // Method returns immediately
 }
 
-/// 异步解析文件方法 - 使用回调
+/// Async parse file method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn parseFileAsync(
     mut env: JNIEnv,
@@ -204,18 +198,12 @@ pub fn parseFileAsync(
 ) {
     let jvm = match env.get_java_vm() {
         Ok(vm) => vm,
-        Err(e) => {
-            eprintln!("Failed to get JavaVM: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let callback_ref = match env.new_global_ref(callback) {
         Ok(r) => r,
-        Err(e) => {
-            eprintln!("Failed to create global ref: {:?}", e);
-            return;
-        }
+        Err(_) => return,
     };
 
     let opts: String = env
@@ -233,7 +221,7 @@ pub fn parseFileAsync(
     });
 }
 
-/// 实际执行解析工作的辅助函数
+/// Helper function to actually perform parse work
 pub(crate) fn perform_parse_work(src: &str, opts: &str, file: &str) -> Result<String, String> {
     let c = get_compiler();
 
@@ -285,7 +273,7 @@ pub(crate) fn perform_parse_work(src: &str, opts: &str, file: &str) -> Result<St
     }
 }
 
-/// 实际执行文件解析工作的辅助函数
+/// Helper function to actually perform file parse work
 fn perform_parse_file_work(path: &str, opts: &str) -> Result<String, String> {
     let c = get_compiler();
 
