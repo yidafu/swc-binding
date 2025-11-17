@@ -27,7 +27,7 @@ class InterfaceConverter(
 ) {
     // 移除硬编码的语法字面量映射，改为从 TS ADT 成员中推导
 
-    private val typeConverter = TypeConverter(config, nestedTypeRegistry)
+    private val typeConverter = TypeConverter(config, nestedTypeRegistry, inheritanceAnalyzer)
     // 移除硬编码的父属性兜底，父属性应从 TS ADT 与继承分析中推导
 
     /**
@@ -37,20 +37,13 @@ class InterfaceConverter(
         tsInterface: TypeScriptDeclaration.InterfaceDeclaration
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         return try {
-            // 合并规则：忽略 ExprOrSpread 的单独生成（统一使用 Argument）
-            if (tsInterface.name == "ExprOrSpread") {
-                Logger.debug("跳过 ExprOrSpread 接口（统一使用 Argument）", 4)
+            // 检查是否需要跳过该接口
+            if (Hardcoded.InterfaceRules.shouldSkipInterface(tsInterface.name)) {
+                val skipReason = Hardcoded.InterfaceRules.getSkipReason(tsInterface.name) ?: "使用替代方案"
+                Logger.debug("跳过 ${tsInterface.name} 接口（$skipReason）", 4)
                 return GeneratorResultFactory.failure(
                     code = ErrorCode.SKIPPED_INTERFACE,
-                    message = "ExprOrSpread is skipped, use Argument instead"
-                )
-            }
-            // 跳过 OptionalChainingCall，只保留 CallExpression
-            if (tsInterface.name == "OptionalChainingCall") {
-                Logger.debug("跳过 OptionalChainingCall 接口（只保留 CallExpression）", 4)
-                return GeneratorResultFactory.failure(
-                    code = ErrorCode.SKIPPED_INTERFACE,
-                    message = "OptionalChainingCall is skipped, use CallExpression instead"
+                    message = "${tsInterface.name} is skipped, $skipReason"
                 )
             }
             

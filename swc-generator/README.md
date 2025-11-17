@@ -41,6 +41,35 @@ Kotlin-based code generator for SWC Kotlin/JVM bindings. It reads SWC type defin
 - Generated Kotlin sources under `swc-binding/src/main/kotlin/...`
 - Test fixtures under `swc-generator/test-outputs`
 
+### Special Field Handling (ctxt)
+
+Some Rust structs contain independent `ctxt: SyntaxContext` fields (not within `span`), and these fields don't have `serde(default)`, making them required during deserialization. The code generator automatically adds `ctxt: Int = 0` fields with `@EncodeDefault` annotations to the following classes:
+
+**Statement-related:**
+- `BlockStatement`: corresponds to Rust `BlockStmt` struct
+
+**Expression-related:**
+- `CallExpression`: corresponds to Rust `CallExpr` struct
+- `NewExpression`: corresponds to Rust `NewExpr` struct
+- `ArrowFunctionExpression`: corresponds to Rust `ArrowExpr` struct
+- `TaggedTemplateExpression`: corresponds to Rust `TaggedTpl` struct
+
+**Declaration-related:**
+- `FunctionDeclaration`: corresponds to Rust `Function` struct (expanded through `FnDecl`'s `#[serde(flatten)]`)
+- `VariableDeclaration`: corresponds to Rust `VarDecl` struct
+
+**Class-related:**
+- `Class`: corresponds to Rust `Class` struct
+- `PrivateProperty`: corresponds to Rust `PrivateProp` struct
+- `Constructor`: corresponds to Rust `Constructor` struct
+
+**Identifier-related:**
+- `Identifier`: corresponds to Rust `Ident` struct
+
+This special handling ensures the generated Kotlin code is compatible with Rust's deserialization requirements.
+
+**Note**: Although the Rust `Span` struct itself does not contain a `ctxt` field (only `start` and `end`), the Kotlin `Span` class retains the `ctxt` field for compatibility with TypeScript definitions and existing code. These node-level independent `ctxt` fields are additional fields needed to match Rust's deserialization requirements.
+
 ## Development
 
 - See `swc-generator/ARCHITECTURE.md` and `ARCHITECTURE_OVERVIEW.md`

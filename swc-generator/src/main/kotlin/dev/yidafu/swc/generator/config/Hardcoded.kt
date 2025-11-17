@@ -132,6 +132,39 @@ object Hardcoded {
     }
 
     /**
+     * 需要独立 ctxt 字段的类
+     */
+    object CtxtFields {
+        /**
+         * 需要自动添加 ctxt 字段的类名列表
+         * 这些类对应 Rust 端包含独立的 ctxt: SyntaxContext 字段的结构体
+         * 注意：ctxt 不是 Span 的一部分，而是这些结构体的独立字段
+         */
+        val CLASSES_WITH_CTXT = setOf(
+            // 语句相关
+            "BlockStatement",       // 对应 Rust BlockStmt 结构体
+            
+            // 表达式相关
+            "CallExpression",       // 对应 Rust CallExpr 结构体
+            "NewExpression",        // 对应 Rust NewExpr 结构体
+            "ArrowFunctionExpression",  // 对应 Rust ArrowExpr 结构体
+            "TaggedTemplateExpression", // 对应 Rust TaggedTpl 结构体
+            
+            // 声明相关
+            "FunctionDeclaration",  // 对应 Rust Function 结构体（通过 FnDecl 展开）
+            "VariableDeclaration",  // 对应 Rust VarDecl 结构体
+            
+            // 类相关
+            "Class",                // 对应 Rust Class 结构体
+            "PrivateProperty",      // 对应 Rust PrivateProp 结构体
+            "Constructor",          // 对应 Rust Constructor 结构体
+            
+            // 标识符相关
+            "Identifier"            // 对应 Rust Ident 结构体
+        )
+    }
+
+    /**
      * 类型别名规则与特殊映射
      */
     object TypeAliasRules {
@@ -160,6 +193,63 @@ object Hardcoded {
             "ToSnakeCaseProperties"
         )
         fun shouldSkipTypeAlias(name: String): Boolean = SKIPPED_TYPE_ALIASES.contains(name)
+    }
+
+    /**
+     * 接口转换相关规则
+     */
+    object InterfaceRules {
+        /**
+         * 需要跳过的接口名称及其原因
+         * 这些接口在转换时会被跳过，使用替代方案
+         */
+        val SKIPPED_INTERFACES: Map<String, String> = mapOf(
+            "ExprOrSpread" to "统一使用 Argument",
+            "OptionalChainingCall" to "只保留 CallExpression"
+        )
+
+        /**
+         * 检查接口是否应该被跳过
+         */
+        fun shouldSkipInterface(interfaceName: String): Boolean {
+            return SKIPPED_INTERFACES.containsKey(interfaceName)
+        }
+
+        /**
+         * 获取跳过接口的原因
+         */
+        fun getSkipReason(interfaceName: String): String? {
+            return SKIPPED_INTERFACES[interfaceName]
+        }
+
+        /**
+         * 类型引用替换映射
+         * 在转换联合类型时，某些类型引用需要被替换为其他类型
+         */
+        val TYPE_REFERENCE_REPLACEMENTS: Map<String, String> = mapOf(
+            "OptionalChainingCall" to "CallExpression"
+        )
+
+        /**
+         * 替换类型引用（如果需要）
+         */
+        fun replaceTypeReference(typeName: String): String {
+            return TYPE_REFERENCE_REPLACEMENTS[typeName] ?: typeName
+        }
+
+        /**
+         * 根据接口名称确定根鉴别器
+         * 返回 null 表示该接口不需要根鉴别器
+         */
+        fun getRootDiscriminator(mappedInterfaceName: String): String? {
+            return when (mappedInterfaceName) {
+                // AST 根
+                "Node" -> Serializer.DEFAULT_DISCRIMINATOR
+                // Config 体系根
+                "Config", "ParserConfig", "Options" -> Serializer.SYNTAX_DISCRIMINATOR
+                else -> null
+            }
+        }
     }
 }
 

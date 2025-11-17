@@ -1,5 +1,6 @@
 package dev.yidafu.swc.generator.converter.type
 
+import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.model.kotlin.*
@@ -18,7 +19,8 @@ import dev.yidafu.swc.generator.util.Logger
  */
 class TypeConverter(
     private val config: Configuration,
-    private val nestedTypeRegistry: Map<String, String> = emptyMap()
+    private val nestedTypeRegistry: Map<String, String> = emptyMap(),
+    private val inheritanceAnalyzer: InheritanceAnalyzer? = null
 ) {
 
     /**
@@ -406,6 +408,71 @@ class TypeConverter(
         val typeCount = union.types.size
         Logger.debug("  转换接口联合类型: $typeCount 个类型", 8)
 
+        // 如果提供了 InheritanceAnalyzer，尝试查找公共父接口
+        if (inheritanceAnalyzer != null) {
+            // 提取所有类型引用名称，并尝试展开类型别名
+            val expandedTypes = mutableListOf<String>()
+            
+            for (tsType in union.types) {
+                when (tsType) {
+                    is TypeScriptType.Reference -> {
+                        val typeName = tsType.name
+                        
+                        // 尝试展开类型别名（如 Expression、Pattern）
+                        val expanded = inheritanceAnalyzer.expandTypeAlias(typeName)
+                        
+                        if (expanded != null) {
+                            // 类型别名展开成功，添加所有展开的类型
+                            expandedTypes.addAll(expanded)
+                            Logger.debug("  展开类型别名 $typeName -> ${expanded.size} 个类型", 8)
+                        } else {
+                            // 不是类型别名或无法展开，直接使用类型名称
+                            expandedTypes.add(typeName)
+                        }
+                    }
+                    else -> {
+                        // 非引用类型不支持展开
+                        Logger.debug("  跳过非引用类型: ${tsType.javaClass.simpleName}", 8)
+                    }
+                }
+            }
+            
+            // 如果有展开的类型，在所有展开的类型中查找公共父接口
+            if (expandedTypes.isNotEmpty()) {
+                val distinctTypes = expandedTypes.distinct()
+                Logger.debug("  展开后的类型总数: ${distinctTypes.size} (去重后)", 8)
+                
+                val commonAncestor = inheritanceAnalyzer.findLowestCommonAncestor(distinctTypes)
+                
+                if (commonAncestor != null) {
+                    // 找到公共父接口，直接返回该接口类型
+                    val mappedName = CodeGenerationRules.mapTypeName(commonAncestor)
+                    Logger.debug("  找到公共父接口: $commonAncestor -> $mappedName，替换 Union.U$typeCount", 8)
+                    return KotlinTypeFactory.simple(mappedName)
+                }
+            }
+            
+            // 如果展开失败或没有找到公共父接口，回退到直接查找原始类型的公共父接口
+            val typeRefs = union.types.mapNotNull { tsType ->
+                when (tsType) {
+                    is TypeScriptType.Reference -> tsType.name
+                    else -> null
+                }
+            }
+            
+            if (typeRefs.size == typeCount && typeRefs.isNotEmpty()) {
+                val commonAncestor = inheritanceAnalyzer.findLowestCommonAncestor(typeRefs)
+                
+                if (commonAncestor != null) {
+                    // 找到公共父接口，直接返回该接口类型
+                    val mappedName = CodeGenerationRules.mapTypeName(commonAncestor)
+                    Logger.debug("  找到公共父接口: $commonAncestor -> $mappedName，替换 Union.U$typeCount", 8)
+                    return KotlinTypeFactory.simple(mappedName)
+                }
+            }
+        }
+
+        // 如果没有找到公共父接口，回退到原来的逻辑（生成 Union.U2/U3/U4）
         // 尝试转换所有类型并去重
         val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
             .distinctBy { it.toTypeString() }

@@ -515,6 +515,7 @@ object TypesImplementationRules {
         val annotations = buildList {
             addAll(prop.annotations)
             // 不再为 type/syntax 判别字段添加 @Transient 注解
+            // Span 坐标属性（包括 ctxt）都有默认值和 @EncodeDefault 注解
             if (isSpanProperty || isSpanCoordinateProperty) {
                 add(KotlinDeclaration.Annotation("EncodeDefault"))
             }

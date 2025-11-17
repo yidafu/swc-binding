@@ -36,10 +36,18 @@ class DslExtensionCollector(
         }
 
         // 仅对可实例化的 Node 实现类生成 create 函数（避免对接口实例化）
-        val nodeCreatableClasses = modelContext.classDecls.filter { klass ->
-            !klass.modifier.isInterface() && modelContext.inheritsNode(klass.name.removeSurrounding("`"))
+        val nodeCreatableClasses = run {
+            val nodeImpls = modelContext.classDecls.filter { klass ->
+                !klass.modifier.isInterface() && modelContext.inheritsNode(klass.name.removeSurrounding("`"))
+            }
+            val parserConfigImpls = modelContext.classDecls.filter { klass ->
+                !klass.modifier.isInterface() && modelContext.inheritsTarget(klass.name.removeSurrounding("`"), "ParserConfig")
+            }
+            val merged = (nodeImpls + parserConfigImpls)
+                .distinctBy { it.name.removeSurrounding("`") }
+            Logger.debug("DSL create 函数候选(实现类，含 ParserConfig 子类): ${merged.size}", 5)
+            merged
         }
-        Logger.debug("DSL create 函数候选(实现类): ${nodeCreatableClasses.size}", 5)
 
         return DslExtensionCollection(
             groups = extFunMap.values.groupBy { it.receiver },
@@ -70,6 +78,22 @@ class DslExtensionCollector(
             return emptyList()
         }
 
+        // 检查属性类型是否为联合类型（Union.U2/U3/U4）
+        val unionTypeName = getUnionTypeName(prop.type)
+        if (unionTypeName != null) {
+            // 对于联合类型，只为联合类型本身生成一个 DSL 扩展函数
+            val kdoc = """
+                /**
+                  * $klass#${prop.name}: ${prop.type.toTypeString()}
+                  * extension function for union type: ${prop.type.toTypeString()}
+                  */
+            """.trimIndent()
+            
+            Logger.debug("为联合类型属性 $klass#${prop.name}: ${prop.type.toTypeString()} 生成 DSL 扩展函数", 6)
+            return listOf(KotlinExtensionFun(klass, unionTypeName, kdoc))
+        }
+
+        // 对于非联合类型，保持原有逻辑：为每个可实例化的类型生成 DSL 扩展函数
         val kdoc = """
             /**
               * $klass#${prop.name}: ${prop.type.toTypeString()}
@@ -81,6 +105,28 @@ class DslExtensionCollector(
         val instantiableTypes = candidateTypes.flatMap { resolveInstantiableTypes(it) }.distinct()
         return instantiableTypes.map { child ->
             KotlinExtensionFun(klass, child, kdoc.replace("{child}", child))
+        }
+    }
+
+    /**
+     * 检查类型是否为联合类型（Union.U2/U3/U4），如果是则返回联合类型的名称
+     * 用于确定是否为联合类型，以便只为联合类型本身生成 DSL 扩展函数
+     */
+    private fun getUnionTypeName(type: KotlinType): String? {
+        return when (type) {
+            is KotlinType.Generic -> {
+                if (type.name.startsWith("Union.U")) {
+                    // 返回联合类型名称（如 "Union.U3"）
+                    type.name
+                } else {
+                    null
+                }
+            }
+            is KotlinType.Nullable -> {
+                // 递归检查内部类型
+                getUnionTypeName(type.innerType)
+            }
+            else -> null
         }
     }
 

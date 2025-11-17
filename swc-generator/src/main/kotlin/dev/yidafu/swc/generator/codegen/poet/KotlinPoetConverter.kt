@@ -89,6 +89,44 @@ object KotlinPoetConverter {
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
 
+        // 为 ParserConfig 子类添加 @SerialName 注解（用于与 Rust 端兼容）
+        // 同时为所有 Node 派生类（实现了密封接口的类）添加 @SerialName，使用类名作为序列化名称
+        val className = decl.name.removeSurrounding("`")
+        val hasSerialName = decl.annotations.any { it.name == "SerialName" }
+        val nodeDerived = decl.name == "Node" || isDerivedFromNode(decl.parents, declLookup)
+        // 检查是否实现了任何密封接口（如 ModuleItem, Statement, Declaration 等）
+        val implementsSealedInterface = implementsSealedInterface(decl.parents, declLookup)
+        
+        if (!hasSerialName) {
+            when (className) {
+                "EsParserConfig" -> {
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                            .addMember("%S", "ecmascript")
+                            .build()
+                    )
+                }
+                "TsParserConfig" -> {
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                            .addMember("%S", "typescript")
+                            .build()
+                    )
+                }
+                else -> {
+                    // 对于所有 Node 派生类或实现了密封接口的类，如果没有 @SerialName，则使用类名作为序列化名称
+                    // 这样可以确保多态序列化时，JSON 中的 type 字段值与序列化名称匹配
+                    if ((nodeDerived || implementsSealedInterface) && decl.modifier !is ClassModifier.Interface && decl.modifier !is ClassModifier.SealedInterface) {
+                        builder.addAnnotation(
+                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                                .addMember("%S", className)
+                                .build()
+                        )
+                    }
+                }
+            }
+        }
+
         // 添加类型参数
         if (decl.typeParameters.isNotEmpty()) {
             decl.typeParameters.forEach { typeParam ->
@@ -189,6 +227,12 @@ object KotlinPoetConverter {
                     prop.annotations.forEach { annotation ->
                         convertAnnotation(annotation)?.let { propBuilder.addAnnotation(it) }
                     }
+                    // Node 接口的 type 属性需要添加 @Transient，因为它与 JsonClassDiscriminator("type") 冲突
+                    if (prop.name == "type" && decl.name == "Node") {
+                        propBuilder.addAnnotation(
+                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+                        )
+                    }
                     // 为 Union.Ux 或 Array<Union.Ux> 添加专属 with 注解并收集
                     addUnionWithAnnotationAndCollectForProperty(decl.name, prop.name, prop.type, propBuilder)
                     // 文档
@@ -235,9 +279,13 @@ object KotlinPoetConverter {
                     val base = convertProperty(adjusted)
                     if (base != null) {
                         val propBuilder = base.toBuilder()
-                        // 保留实现类中 `type` 字段为常规可序列化字段，不再添加 @Transient
+                        // Node 系谱的 type 属性需要添加 @Transient，因为它与 JsonClassDiscriminator("type") 冲突
                         // 避免与 "syntax" 判别关键字冲突：对 ParserConfig 系谱中的 `syntax` 字段标注 @Transient
-                        if (adjusted.name == "syntax" && configDerived) {
+                        if (adjusted.name == "type" && nodeDerived) {
+                            propBuilder.addAnnotation(
+                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+                            )
+                        } else if (adjusted.name == "syntax" && configDerived) {
                             propBuilder.addAnnotation(
                                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
                             )
@@ -256,6 +304,22 @@ object KotlinPoetConverter {
                         .initializer("%M()", memberEmptySpan)
                         .build()
                     builder.addProperty(spanProp)
+                }
+                // 对于需要 ctxt 字段的类，如果未声明 ctxt 属性，则补充 ctxt: Int = 0
+                // 注意：ctxt 是独立的字段，不是 Span 的一部分
+                val className = decl.name.removeSurrounding("`")
+                val needsCtxt = Hardcoded.CtxtFields.CLASSES_WITH_CTXT.contains(className)
+                if (needsCtxt && decl.properties.none { it.name == "ctxt" }) {
+                    val ctxtType = ClassName("kotlin", "Int")
+                    val ctxtProp = PropertySpec.builder("ctxt", ctxtType)
+                        .addModifiers(KModifier.PUBLIC)
+                        .mutable(true)
+                        .initializer("0")
+                        .addAnnotation(
+                            AnnotationSpec.builder(Hardcoded.AnnotationNames.toClassName(Hardcoded.AnnotationNames.ENCODE_DEFAULT)).build()
+                        )
+                        .build()
+                    builder.addProperty(ctxtProp)
                 }
                 // 对于类：补齐父接口链上的抽象属性（override，可空，默认 null），避免未实现抽象属性导致编译错误
                 fun collectParentProps(type: KotlinType, seen: MutableSet<String>, out: MutableList<KotlinDeclaration.PropertyDecl>) {
@@ -289,6 +353,9 @@ object KotlinPoetConverter {
                             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                             .mutable(true)
                             .initializer("%S", decl.name.removeSurrounding("`"))
+                            .addAnnotation(
+                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+                            )
                             .build()
                         builder.addProperty(typeProp)
                         existingPropNames.add(propName)
@@ -348,12 +415,23 @@ object KotlinPoetConverter {
                 convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
             }
 
+            // 检查是否有默认值
+            val hasDefaultValue = prop.defaultValue != null
+            val hasEncodeDefault = prop.annotations.any { it.name == "EncodeDefault" }
+
             // 添加默认值
             prop.defaultValue?.let { defaultValue ->
                 val defaultValueStr = defaultValue.toCodeString()
                 // 只有当默认值不为空时才添加 initializer
                 if (defaultValueStr.isNotBlank()) {
                     builder.initializer(defaultValueStr)
+                    // 如果有默认值但没有 @EncodeDefault 注解，自动添加
+                    // 这样可以确保反序列化时，如果 JSON 中缺失字段，使用默认值
+                    if (!hasEncodeDefault) {
+                        builder.addAnnotation(
+                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "EncodeDefault")).build()
+                        )
+                    }
                 }
             }
 
@@ -459,6 +537,14 @@ object KotlinPoetConverter {
         )
     }
 
+    /**
+     * 计算联合类型使用情况
+     * 
+     * 注意：此方法只检测联合类型（Union.U2/U3/U4）。
+     * 如果联合类型已被替换为公共父接口（通过 TypeConverter.convertInterfaceUnion），
+     * 此方法会返回 null，表示不需要联合类型序列化器。
+     * 公共父接口应使用标准的多态序列化（polymorphic serialization），而不是联合类型序列化器。
+     */
     private fun computeUnionUsage(
         ownerName: String,
         propName: String,
@@ -868,6 +954,32 @@ object KotlinPoetConverter {
             if (!seen.add(name)) return false
             if (name == target) return true
             val parentDecl = declLookup[name] ?: return false
+            return parentDecl.parents.any { p -> dfs(p, seen) }
+        }
+        return parents.any { dfs(it, mutableSetOf()) }
+    }
+
+    /**
+     * 检查类是否实现了任何密封接口（sealed interface）
+     * 这对于多态序列化很重要，因为所有实现密封接口的类都需要 @SerialName 注解
+     */
+    private fun implementsSealedInterface(
+        parents: List<KotlinType>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
+    ): Boolean {
+        if (parents.isEmpty()) return false
+        fun dfs(type: KotlinType, seen: MutableSet<String>): Boolean {
+            val name = when (type) {
+                is KotlinType.Simple -> type.name
+                else -> return false
+            }
+            if (!seen.add(name)) return false
+            val parentDecl = declLookup[name] ?: return false
+            // 检查当前父类型是否是密封接口
+            if (parentDecl.modifier is ClassModifier.SealedInterface) {
+                return true
+            }
+            // 递归检查所有父类型
             return parentDecl.parents.any { p -> dfs(p, seen) }
         }
         return parents.any { dfs(it, mutableSetOf()) }

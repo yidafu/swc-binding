@@ -7,20 +7,13 @@ input:
 
 # 输出配置
 output:
-  outputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt"
+  outputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast"
   outputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt"
   outputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
-
-# 类型映射规则（仅保留实际需要覆盖的属性类型）
+#
+# 规则配置
 rules:
   classModifiers:
-    literalUnionToTypealias:
-      - "TruePlusMinus"
-  typeMapping:
-    propertyTypeOverrides:
-      global_defs: "Map<String, String>"
-      targets: "Map<String, String>"
-      sequences: "Boolean"
-      toplevel: "String?"
-      pureGetters: "String?"
-      topRetain: "String?"
+    # 将以下 TS 接口生成为 Kotlin 类
+    toKotlinClass:
+      - "EsParserConfig"

@@ -1,6 +1,7 @@
 package dev.yidafu.swc.generator.analyzer
 
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
+import dev.yidafu.swc.generator.model.typescript.TypeScriptType
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -233,6 +234,114 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
                 is TypeScriptDeclaration.TypeAliasDeclaration -> it.name == name
             }
         }
+    }
+
+    /**
+     * 展开类型别名为其所有成员类型
+     * 
+     * 如果类型别名是联合类型（如 `Expression = A | B | C`），展开为所有成员类型名称列表。
+     * 支持递归展开（类型别名可能引用其他类型别名）。
+     * 
+     * @param typeName 类型别名名称
+     * @param visited 已访问的类型别名集合（用于避免无限递归）
+     * @return 展开后的类型名称列表，如果不是类型别名或不是联合类型则返回 null
+     */
+    fun expandTypeAlias(typeName: String, visited: MutableSet<String> = mutableSetOf()): List<String>? {
+        // 检查是否已访问（避免循环引用）
+        if (visited.contains(typeName)) {
+            Logger.debug("检测到类型别名循环引用: $typeName", 6)
+            return null
+        }
+        visited.add(typeName)
+
+        // 查找类型别名声明
+        val declaration = getDeclaration(typeName) as? TypeScriptDeclaration.TypeAliasDeclaration
+            ?: return null
+
+        // 如果类型别名是联合类型，展开为所有成员类型名称
+        val type = declaration.type
+        if (type is TypeScriptType.Union) {
+            val expandedTypes = mutableListOf<String>()
+            
+            for (memberType in type.types) {
+                when (memberType) {
+                    is TypeScriptType.Reference -> {
+                        // 检查成员类型是否是另一个类型别名
+                        val memberName = memberType.name
+                        val memberExpanded = expandTypeAlias(memberName, visited)
+                        
+                        if (memberExpanded != null) {
+                            // 递归展开类型别名
+                            expandedTypes.addAll(memberExpanded)
+                        } else {
+                            // 不是类型别名或无法展开，直接使用类型名称
+                            expandedTypes.add(memberName)
+                        }
+                    }
+                    else -> {
+                        // 其他类型（字面量、关键字等）不支持展开
+                        Logger.debug("类型别名 $typeName 的成员类型不是引用类型: ${memberType::class.simpleName}", 8)
+                    }
+                }
+            }
+            
+            if (expandedTypes.isNotEmpty()) {
+                Logger.debug("展开类型别名 $typeName: ${expandedTypes.size} 个类型", 6)
+                return expandedTypes.distinct() // 去重
+            }
+        }
+
+        // 不是联合类型或展开失败
+        visited.remove(typeName)
+        return null
+    }
+
+    /**
+     * 查找多个类型的最近公共父接口（Lowest Common Ancestor, LCA）
+     * 
+     * 算法：
+     * 1. 收集每个类型的所有祖先（包括自身）
+     * 2. 找到所有类型的公共祖先
+     * 3. 在公共祖先中，选择深度最大的（即最具体的）
+     * 4. 如果最深的公共祖先是 `Node` 或没有找到，返回 `null`
+     * 
+     * @param typeNames 类型名称列表
+     * @return 最近公共父接口名称，如果找不到（除了 Node）则返回 null
+     */
+    fun findLowestCommonAncestor(typeNames: List<String>): String? {
+        if (typeNames.isEmpty()) return null
+        if (typeNames.size == 1) return typeNames.first()
+
+        // 收集每个类型的所有祖先（包括自身）
+        val ancestorSets = typeNames.map { typeName ->
+            val ancestors = mutableSetOf<String>()
+            ancestors.add(typeName) // 包括自身
+            ancestors.addAll(findAllGrandParents(typeName)) // 包括所有祖先
+            ancestors
+        }
+
+        // 找到所有类型的公共祖先
+        val commonAncestors = ancestorSets.reduce { acc, ancestors ->
+            acc.intersect(ancestors).toMutableSet()
+        }
+
+        if (commonAncestors.isEmpty()) {
+            Logger.debug("未找到类型 ${typeNames.joinToString(", ")} 的公共祖先", 6)
+            return null
+        }
+
+        // 在公共祖先中，选择深度最大的（即最具体的）
+        // 深度越大，说明离根节点越远，越具体
+        val lca = commonAncestors.maxByOrNull { getInheritanceDepth(it) }
+
+        if (lca == null) {
+            Logger.debug("无法确定类型 ${typeNames.joinToString(", ")} 的最近公共祖先", 6)
+            return null
+        }
+
+        // 直接返回最近公共祖先，包括 Node
+        Logger.debug("类型 ${typeNames.joinToString(", ")} 的最近公共祖先是: $lca (深度: ${getInheritanceDepth(lca)})", 6)
+        return lca
     }
 
     /**

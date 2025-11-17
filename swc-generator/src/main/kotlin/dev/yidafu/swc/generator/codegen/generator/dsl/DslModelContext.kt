@@ -47,6 +47,23 @@ class DslModelContext(
         }
         return false
     }
+
+    fun inheritsTarget(startName: String, targetInterface: String): Boolean {
+        val visited = LinkedHashSet<String>()
+        val queue = ArrayDeque<String>()
+        queue.add(startName.removeSurrounding("`"))
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            if (!visited.add(current)) continue
+            val decl = classInfoByName[current] ?: continue
+            val parentNames = decl.parents.mapNotNull { it.extractSimpleName() }
+            if (parentNames.any { it == targetInterface }) {
+                return true
+            }
+            parentNames.forEach { queue.add(it) }
+        }
+        return false
+    }
 }
 
 class DslHierarchy(

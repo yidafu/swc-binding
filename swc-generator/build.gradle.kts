@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     application
     id("dev.yidafu.library")
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
 group = "dev.yidafu.swc"
@@ -44,6 +45,10 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+koverReport {
+    // 使用默认报告（html/xml），无需额外配置
 }
 
 kotlin {
