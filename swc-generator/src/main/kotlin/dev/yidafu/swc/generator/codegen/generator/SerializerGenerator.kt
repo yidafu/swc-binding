@@ -25,6 +25,7 @@ import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
 import dev.yidafu.swc.generator.config.Hardcoded
+import dev.yidafu.swc.generator.config.SerializerConfig
 
 /**
  * serializer.kt 生成器（使用 KotlinPoet）
@@ -728,10 +729,10 @@ class SerializerGenerator(
                 if (!annotated) {
                     val msg = "多态父类型缺失 @Serializable: raw=$rawParent, norm=$norm, discriminator=$discriminator, module=$moduleName"
                     when (policy) {
-                        Hardcoded.Serializer.MissingSerializablePolicy.ERROR -> {
+                        SerializerConfig.MissingSerializablePolicy.ERROR -> {
                             missingDetails.add(msg)
                         }
-                        Hardcoded.Serializer.MissingSerializablePolicy.WARN_OPEN_BASES -> {
+                        SerializerConfig.MissingSerializablePolicy.WARN_OPEN_BASES -> {
                             // 非 sealed 接口默认仅告警（开放父接口更可能是外部入口或推断生成）
                             if (!isSealed || openBases.contains(norm)) {
                                 Logger.warn(msg)
@@ -739,7 +740,7 @@ class SerializerGenerator(
                                 missingDetails.add(msg)
                             }
                         }
-                        Hardcoded.Serializer.MissingSerializablePolicy.WARN_ALL -> {
+                        SerializerConfig.MissingSerializablePolicy.WARN_ALL -> {
                             Logger.warn(msg)
                         }
                     }

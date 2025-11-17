@@ -9,6 +9,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 import dev.yidafu.swc.generator.config.Hardcoded
+import dev.yidafu.swc.generator.config.SerializerConfig
 
 class SerializerGeneratorTest : AnnotationSpec() {
 
@@ -145,7 +146,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         val generator = SerializerGenerator()
         val prevPolicy = Hardcoded.Serializer.missingSerializablePolicy
         try {
-            Hardcoded.Serializer.missingSerializablePolicy = Hardcoded.Serializer.MissingSerializablePolicy.WARN_OPEN_BASES
+            Hardcoded.Serializer.missingSerializablePolicy = SerializerConfig.MissingSerializablePolicy.WARN_OPEN_BASES
             // Identifier 在 additionalOpenBases 白名单中，未标注 @Serializable 应仅告警，不抛错
             val declarations = listOf(
                 interfaceDecl("Identifier"),
@@ -166,7 +167,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         val generator = SerializerGenerator()
         val prevPolicy = Hardcoded.Serializer.missingSerializablePolicy
         try {
-            Hardcoded.Serializer.missingSerializablePolicy = Hardcoded.Serializer.MissingSerializablePolicy.ERROR
+            Hardcoded.Serializer.missingSerializablePolicy = SerializerConfig.MissingSerializablePolicy.ERROR
             val declarations = listOf(
                 interfaceDecl("SomeParent"),
                 implDecl("SomeParentImpl", "SomeParent")
@@ -189,7 +190,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         val generator = SerializerGenerator()
         val prevPolicy = Hardcoded.Serializer.missingSerializablePolicy
         try {
-            Hardcoded.Serializer.missingSerializablePolicy = Hardcoded.Serializer.MissingSerializablePolicy.WARN_ALL
+            Hardcoded.Serializer.missingSerializablePolicy = SerializerConfig.MissingSerializablePolicy.WARN_ALL
             val declarations = listOf(
                 interfaceDecl("AnotherParent"),
                 implDecl("AnotherParentImpl", "AnotherParent")

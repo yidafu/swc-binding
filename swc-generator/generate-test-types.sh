@@ -58,13 +58,23 @@ for test_file in "${TEST_FILES[@]}"; do
         
         # Run the generator
         if ./gradlew :swc-generator:run --args="-i $test_file" --quiet > /dev/null 2>&1; then
-            # Move the generated types.kt to the test subdirectory
-            # The default output path is in swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt
-            default_output="$PROJECT_ROOT/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/types.kt"
+            # Move the generated files to the test subdirectory
+            # The default output path is in swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast/
+            default_output_dir="$PROJECT_ROOT/swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast"
             
-            if [ -f "$default_output" ]; then
-                # Move the generated types.kt to the test subdirectory
-                mv "$default_output" "$output_file"
+            if [ -d "$default_output_dir" ]; then
+                # Move all generated .kt files to the test subdirectory
+                for kt_file in "$default_output_dir"/*.kt; do
+                    if [ -f "$kt_file" ]; then
+                        mv "$kt_file" "$output_dir/"
+                    fi
+                done
+                # If there's a types.kt, also copy it as the main output file
+                if [ -f "$output_dir/types.kt" ]; then
+                    cp "$output_dir/types.kt" "$output_file"
+                elif [ -f "$output_dir/common.kt" ]; then
+                    cp "$output_dir/common.kt" "$output_file"
+                fi
                 
                 # Move the .d.ts file to the test subdirectory as well (only if it's not already there)
                 if [ "$(dirname "$test_file")" != "$output_dir" ]; then
