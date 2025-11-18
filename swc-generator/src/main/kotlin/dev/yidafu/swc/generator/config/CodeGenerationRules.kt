@@ -229,6 +229,9 @@ object CodeGenerationRules {
 
     /**
      * 获取序列化注解
+     * 
+     * 对于多态序列化，即使名称相同，也需要 @SerialName 注解来确保序列化器能正确识别类型。
+     * 因此，我们始终添加 @SerialName 注解。
      */
     fun getSerializationAnnotations(originalName: String, kotlinName: String): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
@@ -236,10 +239,14 @@ object CodeGenerationRules {
         // 添加 @Serializable 注解
         annotations.add(KotlinDeclaration.Annotation("Serializable"))
 
-        // 如果名称发生变化，添加 @SerialName 注解
-        if (originalName != kotlinName) {
-            annotations.add(KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(originalName))))
+        // 始终添加 @SerialName 注解，这对于多态序列化是必需的
+        // 如果名称发生变化，使用原始名称；否则使用类名
+        val serialNameValue = if (originalName != kotlinName) {
+            originalName
+        } else {
+            kotlinName
         }
+        annotations.add(KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialNameValue))))
 
         return annotations
     }

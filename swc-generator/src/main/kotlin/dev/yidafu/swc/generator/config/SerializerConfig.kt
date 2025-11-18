@@ -33,7 +33,12 @@ object SerializerConfig {
         BINDING_IDENTIFIER("BindingIdentifier"),
         VARIABLE_DECLARATOR("VariableDeclarator"),
         MODULE("Module"),
-        SCRIPT("Script")
+        SCRIPT("Script"),
+        // 中间接口（非 sealed），需要显式添加到 additionalOpenBases
+        // Declaration、Expression、Statement、Pattern 是 sealed interface，会自动包含
+        EXPRESSION_BASE("ExpressionBase"),
+        FN("Fn"),
+        PATTERN_BASE("PatternBase")
     }
 
     /**

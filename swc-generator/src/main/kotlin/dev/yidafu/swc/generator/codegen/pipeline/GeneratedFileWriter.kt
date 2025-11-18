@@ -83,7 +83,7 @@ class GeneratedFileWriter(
     }
 
     /**
-     * 比较两个文件内容是否相同，忽略头部注释中的时间戳。
+     * 比较两个文件内容是否相同，忽略头部注释中的时间戳和所有其他注释。
      * 头部注释格式: // Auto-generated file. Do not edit. Generated at: <timestamp>
      */
     private fun contentEqualsIgnoringHeaderTimestamp(existing: String, new: String): Boolean {
@@ -93,22 +93,114 @@ class GeneratedFileWriter(
     }
 
     /**
-     * 标准化内容，移除头部注释中的时间戳部分。
+     * 标准化内容，移除头部注释中的时间戳部分，以及所有其他注释（包括单行注释、多行注释和 KDoc）。
      */
     private fun normalizeContent(content: String): String {
+        // 首先移除头部注释
         val headerPrefix = "// Auto-generated file. Do not edit. Generated at: "
-        if (content.startsWith(headerPrefix)) {
-            // 找到第一个换行符的位置
+        val contentWithoutHeader = if (content.startsWith(headerPrefix)) {
             val firstNewlineIndex = content.indexOf('\n')
             if (firstNewlineIndex != -1) {
-                // 移除头部注释行（包括时间戳），保留其余内容
                 val remainingContent = content.substring(firstNewlineIndex + 1)
-                // 移除可能的第二个换行符（空行）
-                val trimmed = remainingContent.removePrefix("\n")
-                return trimmed
+                remainingContent.removePrefix("\n")
+            } else {
+                content
+            }
+        } else {
+            content
+        }
+        
+        // 移除所有注释（单行注释、多行注释和 KDoc）
+        return removeAllComments(contentWithoutHeader)
+    }
+
+    /**
+     * 移除 Kotlin 代码中的所有注释，但保留字符串字面量中的内容。
+     * 支持：
+     * - 单行注释：//
+     * - 多行注释：/* */
+     * - KDoc 注释：/** */
+     */
+    private fun removeAllComments(content: String): String {
+        val result = StringBuilder()
+        var i = 0
+        val length = content.length
+        
+        while (i < length) {
+            when {
+                // 检查是否是原始字符串（三重引号）- 优先检查，因为可能包含普通引号
+                i + 2 < length && content.substring(i, i + 3) == "\"\"\"" -> {
+                    result.append("\"\"\"")
+                    i += 3
+                    // 跳过原始字符串内容
+                    while (i + 2 < length) {
+                        if (content.substring(i, i + 3) == "\"\"\"") {
+                            result.append("\"\"\"")
+                            i += 3
+                            break
+                        }
+                        result.append(content[i])
+                        i++
+                    }
+                }
+                // 检查是否是字符串字面量（双引号）
+                content[i] == '"' -> {
+                    result.append(content[i])
+                    i++
+                    // 跳过字符串内容，直到找到未转义的结束引号
+                    while (i < length) {
+                        result.append(content[i])
+                        if (content[i] == '"') {
+                            // 检查是否是转义的引号（计算连续反斜杠的数量）
+                            var backslashCount = 0
+                            var j = i - 1
+                            while (j >= 0 && content[j] == '\\') {
+                                backslashCount++
+                                j--
+                            }
+                            // 如果反斜杠数量是偶数，则引号未转义
+                            if (backslashCount % 2 == 0) {
+                                i++
+                                break
+                            }
+                        }
+                        i++
+                    }
+                }
+                // 检查是否是单行注释
+                i + 1 < length && content[i] == '/' && content[i + 1] == '/' -> {
+                    // 跳过直到行尾
+                    while (i < length && content[i] != '\n') {
+                        i++
+                    }
+                    // 保留换行符
+                    if (i < length) {
+                        result.append(content[i])
+                        i++
+                    }
+                }
+                // 检查是否是多行注释或 KDoc
+                i + 1 < length && content[i] == '/' && content[i + 1] == '*' -> {
+                    val isKDoc = i + 2 < length && content[i + 2] == '*'
+                    i += if (isKDoc) 3 else 2
+                    // 跳过直到找到 */
+                    while (i + 1 < length) {
+                        if (content[i] == '*' && content[i + 1] == '/') {
+                            i += 2
+                            break
+                        }
+                        i++
+                    }
+                }
+                // 普通字符
+                else -> {
+                    result.append(content[i])
+                    i++
+                }
             }
         }
-        return content
+        
+        return result.toString()
     }
 
     override fun close() {

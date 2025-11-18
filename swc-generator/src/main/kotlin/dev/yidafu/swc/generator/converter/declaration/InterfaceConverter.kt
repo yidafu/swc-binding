@@ -563,14 +563,23 @@ class InterfaceConverter(
     ): List<KotlinDeclaration.Annotation> {
         val annotations = mutableListOf<KotlinDeclaration.Annotation>()
 
-        // 仅为密封接口与最终类添加 @Serializable（非 sealed 接口默认多态，无需标注）
+        // 为密封接口和最终类添加 @Serializable
+        // 注意：普通接口（即使是在 additionalOpenBases 中的）不能添加 @Serializable 注解
+        // 因为 Kotlinx Serialization 要求：非 sealed 接口默认支持多态序列化，不能使用不带参数的 @Serializable
+        val interfaceName = CodeGenerationRules.mapTypeName(tsInterface.name)
+        val isInAdditionalOpenBases = SerializerConfig.additionalOpenBases.contains(interfaceName)
+        
         when (modifier) {
             is ClassModifier.FinalClass,
             is ClassModifier.SealedInterface -> annotations.add(KotlinDeclaration.Annotation("Serializable"))
+            is ClassModifier.Interface -> {
+                // 普通接口不添加 @Serializable 注解
+                // 它们仍然会在 polymorphic 块中注册（通过 additionalOpenBases），但不需要 @Serializable 注解
+            }
             else -> {}
         }
 
-        // 为“参与多态”的基类接口添加必要 discriminator（仅在根接口处，避免层级冲突）
+        // 为"参与多态"的基类接口添加必要 discriminator（仅在根接口处，避免层级冲突）
         if (modifier is ClassModifier.Interface || modifier is ClassModifier.SealedInterface) {
             val mappedName = CodeGenerationRules.mapTypeName(tsInterface.name)
             // 仅在固定的根接口上打上 discriminator，防止层级内冲突
@@ -581,11 +590,17 @@ class InterfaceConverter(
                 "Config", "ParserConfig", "Options" -> SerializerConfig.SYNTAX_DISCRIMINATOR
                 else -> null
             }
-            if (rootDiscriminator != null) {
+            // 如果接口在 additionalOpenBases 中，也需要添加 @JsonClassDiscriminator（使用默认的 "type"）
+            val discriminator = rootDiscriminator ?: if (isInAdditionalOpenBases) {
+                SerializerConfig.DEFAULT_DISCRIMINATOR
+            } else {
+                null
+            }
+            if (discriminator != null) {
                 annotations.add(
                     KotlinDeclaration.Annotation(
                         "JsonClassDiscriminator",
-                        listOf(Expression.StringLiteral(rootDiscriminator))
+                        listOf(Expression.StringLiteral(discriminator))
                     )
                 )
             }

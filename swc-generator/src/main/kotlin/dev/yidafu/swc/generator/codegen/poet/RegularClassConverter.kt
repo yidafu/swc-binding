@@ -37,7 +37,7 @@ object RegularClassConverter {
         addUnionAnnotation: (String, String, KotlinType, PropertySpec.Builder) -> Unit
     ) {
         // 多态类添加 JsonClassDiscriminator 和 @SerialName
-        addPolymorphicAnnotations(builder, nodeDerived, configDerived, decl)
+        addPolymorphicAnnotations(builder, nodeDerived, configDerived, decl, declLookup)
 
         // 为所有 Node 派生类添加 type 字段注释
         if (nodeDerived) {
@@ -109,33 +109,16 @@ object RegularClassConverter {
         builder: TypeSpec.Builder,
         nodeDerived: Boolean,
         configDerived: Boolean,
-        decl: KotlinDeclaration.ClassDecl? = null
+        decl: KotlinDeclaration.ClassDecl? = null,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl> = emptyMap()
     ) {
-        if (nodeDerived) {
-            builder.addAnnotation(
-                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
-                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
-                    .build()
-            )
-            builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
-                    .addMember("%S", "type")
-                    .build()
-            )
-            // 为 Node 派生类（叶子节点）添加 @SerialName 和 @SwcDslMarker 注解
-            if (decl != null) {
-                val serialName = decl.computeSerialName("type")
-                builder.addAnnotation(
-                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                        .addMember("%S", serialName)
-                        .build()
-                )
-                // 为 Node 叶子节点添加 @SwcDslMarker 注解
-                builder.addAnnotation(
-                    AnnotationSpec.builder(PoetConstants.SwcTypes.SWC_DSL_MARKER).build()
-                )
-            }
-        } else if (configDerived) {
+        // 检查类是否实现了 sealed interface（参与多态序列化）
+        val implementsSealedInterface = decl?.let { d ->
+            ClassDeclarationConverter.implementsSealedInterface(d.parents, declLookup)
+        } ?: false
+        
+        // Config 派生类优先使用 syntax discriminator
+        if (configDerived) {
             builder.addAnnotation(
                 AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
                     .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
@@ -154,6 +137,32 @@ object RegularClassConverter {
                         .addMember("%S", serialName)
                         .build()
                 )
+            }
+        } else if (nodeDerived || implementsSealedInterface) {
+            builder.addAnnotation(
+                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
+                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
+                    .build()
+            )
+            builder.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
+                    .addMember("%S", "type")
+                    .build()
+            )
+            // 为 Node 派生类或实现 sealed interface 的类（叶子节点）添加 @SerialName 和 @SwcDslMarker 注解
+            if (decl != null) {
+                val serialName = decl.computeSerialName("type")
+                builder.addAnnotation(
+                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                        .addMember("%S", serialName)
+                        .build()
+                )
+                // 为 Node 叶子节点添加 @SwcDslMarker 注解
+                if (nodeDerived) {
+                    builder.addAnnotation(
+                        AnnotationSpec.builder(PoetConstants.SwcTypes.SWC_DSL_MARKER).build()
+                    )
+                }
             }
         }
     }
