@@ -1,7 +1,5 @@
 package dev.yidafu.swc.generator.codegen.poet
 
-import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -24,7 +22,16 @@ object InterfaceClassConverter {
         addUnionAnnotation: (String, String, dev.yidafu.swc.generator.model.kotlin.KotlinType, PropertySpec.Builder) -> Unit
     ) {
         // 接口：属性不得包含初始化器，生成抽象属性；为 Union.Ux 属性添加 @Serializable(with=...)
+        // Node 接口不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
+        if (decl.name == "Node") {
+            // 为 Node 接口添加注释说明 type 字段与 @SerialName 冲突
+            builder.addKdoc("conflict with @SerialName\nremove class property `var type: String?`")
+        }
         decl.properties.forEach { prop ->
+            // Node 接口不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
+            if (prop.name == "type" && decl.name == "Node") {
+                return@forEach
+            }
             // 仅 Node 系谱接口保留 `type` 抽象属性；其余接口不生成该字段
             if (prop.name == "type" && !nodeDerived) {
                 return@forEach
@@ -40,12 +47,14 @@ object InterfaceClassConverter {
             prop.annotations.forEach { annotation ->
                 AnnotationConverter.convertAnnotation(annotation)?.let { propBuilder.addAnnotation(it) }
             }
-            // Node 接口的 type 属性需要添加 @Transient，因为它与 JsonClassDiscriminator("type") 冲突
-            if (prop.name == "type" && decl.name == "Node") {
-                propBuilder.addAnnotation(
-                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-                )
-            }
+            // 注意：不再为 Node 接口的 type 属性添加 @Transient
+            // 当使用 @JsonClassDiscriminator("type") 时，Kotlinx Serialization 会自动处理 type 字段
+            // 如果添加 @Transient，会导致序列化时缺少 type 字段
+            // if (prop.name == "type" && decl.name == "Node") {
+            //     propBuilder.addAnnotation(
+            //         AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
+            //     )
+            // }
             // 为 Union.Ux 或 Array<Union.Ux> 添加专属 with 注解并收集
             addUnionAnnotation(decl.name, prop.name, prop.type, propBuilder)
             // 文档
@@ -54,4 +63,3 @@ object InterfaceClassConverter {
         }
     }
 }
-

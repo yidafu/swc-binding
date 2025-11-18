@@ -238,11 +238,9 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
 
     /**
      * 展开类型别名为其所有成员类型
-     * 
-     * 如果类型别名是联合类型（如 `Expression = A | B | C`），展开为所有成员类型名称列表。
+     * * 如果类型别名是联合类型（如 `Expression = A | B | C`），展开为所有成员类型名称列表。
      * 支持递归展开（类型别名可能引用其他类型别名）。
-     * 
-     * @param typeName 类型别名名称
+     * * @param typeName 类型别名名称
      * @param visited 已访问的类型别名集合（用于避免无限递归）
      * @return 展开后的类型名称列表，如果不是类型别名或不是联合类型则返回 null
      */
@@ -262,14 +260,14 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
         val type = declaration.type
         if (type is TypeScriptType.Union) {
             val expandedTypes = mutableListOf<String>()
-            
+
             for (memberType in type.types) {
                 when (memberType) {
                     is TypeScriptType.Reference -> {
                         // 检查成员类型是否是另一个类型别名
                         val memberName = memberType.name
                         val memberExpanded = expandTypeAlias(memberName, visited)
-                        
+
                         if (memberExpanded != null) {
                             // 递归展开类型别名
                             expandedTypes.addAll(memberExpanded)
@@ -284,7 +282,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
                     }
                 }
             }
-            
+
             if (expandedTypes.isNotEmpty()) {
                 Logger.debug("展开类型别名 $typeName: ${expandedTypes.size} 个类型", 6)
                 return expandedTypes.distinct() // 去重
@@ -298,14 +296,12 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
 
     /**
      * 查找多个类型的最近公共父接口（Lowest Common Ancestor, LCA）
-     * 
-     * 算法：
+     * * 算法：
      * 1. 收集每个类型的所有祖先（包括自身）
      * 2. 找到所有类型的公共祖先
      * 3. 在公共祖先中，选择深度最大的（即最具体的）
      * 4. 如果最深的公共祖先是 `Node` 或没有找到，返回 `null`
-     * 
-     * @param typeNames 类型名称列表
+     * * @param typeNames 类型名称列表
      * @return 最近公共父接口名称，如果找不到（除了 Node）则返回 null
      */
     fun findLowestCommonAncestor(typeNames: List<String>): String? {

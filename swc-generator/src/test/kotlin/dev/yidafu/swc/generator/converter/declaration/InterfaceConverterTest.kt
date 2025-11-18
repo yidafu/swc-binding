@@ -2,14 +2,16 @@ package dev.yidafu.swc.generator.converter.declaration
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.TypesImplementationRules
+import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
+import dev.yidafu.swc.generator.model.kotlin.computeSerialName
 import dev.yidafu.swc.generator.model.kotlin.toImplClass
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeMember
-import dev.yidafu.swc.generator.config.TypesImplementationRules
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.collections.shouldContain
@@ -320,10 +322,10 @@ class InterfaceConverterTest : AnnotationSpec() {
 
         val kotlinClass = converter.convert(tsInterface).getOrThrow()
         val typeProperty = kotlinClass.properties.first { it.name.removeSurrounding("`") == "type" }
-        
+
         // 验证 type 属性是 String 类型
         typeProperty.type shouldBe KotlinType.StringType
-        
+
         // 验证字面量值被存储在 defaultValue 中
         typeProperty.defaultValue.shouldNotBeNull()
         typeProperty.defaultValue.shouldBeInstanceOf<Expression.StringLiteral>()
@@ -346,21 +348,14 @@ class InterfaceConverterTest : AnnotationSpec() {
         )
 
         val kotlinClass = converter.convert(tsInterface).getOrThrow()
-        
+
         // 转换为实现类
         val implClass = kotlinClass.toImplClass()
-        
-        // 验证 @SerialName 注解使用了从 TypeScript 提取的字面量值
-        val serialNameAnnotation = implClass.annotations.find { it.name == "SerialName" }
-        serialNameAnnotation.shouldNotBeNull()
-        
-        val serialNameArg = serialNameAnnotation!!.arguments.firstOrNull()
-        serialNameArg.shouldNotBeNull()
-        serialNameArg.shouldBeInstanceOf<Expression.StringLiteral>()
-        
-        val serialNameValue = (serialNameArg as Expression.StringLiteral).value
+
+        // 验证 computeSerialName 方法正确计算了序列化名称（虽然不再添加到类注解中）
+        val serialName = implClass.computeSerialName("type")
         // 应该使用 "Parameter" 而不是 "Param"
-        serialNameValue shouldBe "Parameter"
+        serialName shouldBe "Parameter"
     }
 
     @Test
@@ -379,17 +374,10 @@ class InterfaceConverterTest : AnnotationSpec() {
 
         val kotlinClass = converter.convert(tsInterface).getOrThrow()
         val implClass = kotlinClass.toImplClass()
-        
-        // 验证 @SerialName 注解使用了接口名称（因为没有字面量值）
-        val serialNameAnnotation = implClass.annotations.find { it.name == "SerialName" }
-        serialNameAnnotation.shouldNotBeNull()
-        
-        val serialNameArg = serialNameAnnotation!!.arguments.firstOrNull()
-        serialNameArg.shouldNotBeNull()
-        serialNameArg.shouldBeInstanceOf<Expression.StringLiteral>()
-        
-        val serialNameValue = (serialNameArg as Expression.StringLiteral).value
-        serialNameValue shouldBe "SimpleNode"
+
+        // 验证 computeSerialName 方法在没有字面量值时回退到接口名称
+        val serialName = implClass.computeSerialName("type")
+        serialName shouldBe "SimpleNode"
     }
 
     @Test
@@ -431,12 +419,12 @@ class InterfaceConverterTest : AnnotationSpec() {
 
         val kotlinClass = converter.convert(tsInterface).getOrThrow()
         val implClass = kotlinClass.toImplClass()
-        
+
         // 验证实现类中的 type 属性保留了从 TypeScript 提取的字面量值
         val typeProperty = implClass.properties.first { it.name.removeSurrounding("`") == "type" }
         typeProperty.defaultValue.shouldNotBeNull()
         typeProperty.defaultValue.shouldBeInstanceOf<Expression.StringLiteral>()
-        
+
         val literalValue = (typeProperty.defaultValue as Expression.StringLiteral).value
         // 应该保留 "Parameter" 而不是被覆盖为 "Param"
         literalValue shouldBe "Parameter"
@@ -473,14 +461,104 @@ class InterfaceConverterTest : AnnotationSpec() {
         )
 
         val kotlinClass = converter.convert(tsInterface).getOrThrow()
-        
+
         // 验证在转换为 FinalClass 后，type 属性的默认值仍然是 "Parameter"
         val processedTypeProperty = kotlinClass.properties.first { it.name.removeSurrounding("`") == "type" }
         processedTypeProperty.defaultValue.shouldNotBeNull()
         processedTypeProperty.defaultValue.shouldBeInstanceOf<Expression.StringLiteral>()
-        
+
         val literalValue = (processedTypeProperty.defaultValue as Expression.StringLiteral).value
         // processFinalClassProperty 应该保留从 TypeScript 提取的字面量值
         literalValue shouldBe "Parameter"
+    }
+
+    @Test
+    fun `span property has default value as emptySpan function call in FinalClass`() {
+        // 创建一个会被转换为 FinalClass 的接口（通过配置）
+        // 使用 toKotlinClass 配置使其成为 FinalClass
+        val customConfig = Configuration.default().copy(
+            rules = config.rules.copy(
+                classModifiers = config.rules.classModifiers.copy(
+                    toKotlinClass = config.rules.classModifiers.toKotlinClass + listOf("TestNode")
+                )
+            )
+        )
+        val customConverter = InterfaceConverter(customConfig)
+
+        val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
+            name = "TestNode",
+            members = listOf(
+                TypeMember(
+                    name = "span",
+                    type = TypeScriptType.Reference("Span")
+                )
+            ),
+            extends = emptyList()
+        )
+
+        val kotlinClass = customConverter.convert(tsInterface).getOrThrow()
+
+        // 验证是 FinalClass
+        kotlinClass.modifier.shouldBeInstanceOf<ClassModifier.FinalClass>()
+
+        val spanProperty = kotlinClass.properties.first { it.name == "span" }
+
+        // 验证 span 属性的类型是 Span
+        spanProperty.type.shouldBeInstanceOf<KotlinType.Simple>()
+        (spanProperty.type as KotlinType.Simple).name shouldBe "Span"
+
+        // 验证 span 属性的默认值是 emptySpan() 函数调用
+        spanProperty.defaultValue.shouldNotBeNull()
+        spanProperty.defaultValue.shouldBeInstanceOf<Expression.FunctionCall>()
+        val functionCall = spanProperty.defaultValue as Expression.FunctionCall
+        functionCall.name shouldBe "emptySpan"
+        functionCall.arguments shouldBe emptyList()
+
+        // 验证添加了 @EncodeDefault 注解
+        spanProperty.annotations.map { it.name }.shouldContain("EncodeDefault")
+    }
+
+    @Test
+    fun `span property in FinalClass with HasSpan inheritance has emptySpan default value`() {
+        // 创建一个会被转换为 FinalClass 的接口（通过配置）
+        val customConfig = Configuration.default().copy(
+            rules = config.rules.copy(
+                classModifiers = config.rules.classModifiers.copy(
+                    toKotlinClass = config.rules.classModifiers.toKotlinClass + "TestIdentifier"
+                )
+            )
+        )
+        val customConverter = InterfaceConverter(customConfig)
+
+        val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
+            name = "TestIdentifier",
+            members = listOf(
+                TypeMember(
+                    name = "value",
+                    type = TypeScriptType.Keyword(KeywordKind.STRING)
+                ),
+                TypeMember(
+                    name = "span",
+                    type = TypeScriptType.Reference("Span")
+                )
+            ),
+            extends = listOf(TypeReference("HasSpan"))
+        )
+
+        val kotlinClass = customConverter.convert(tsInterface).getOrThrow()
+
+        // 验证是 FinalClass
+        kotlinClass.modifier.shouldBeInstanceOf<ClassModifier.FinalClass>()
+
+        val spanProperty = kotlinClass.properties.first { it.name == "span" }
+
+        // 验证 span 属性的默认值是 emptySpan() 函数调用
+        spanProperty.defaultValue.shouldNotBeNull()
+        spanProperty.defaultValue.shouldBeInstanceOf<Expression.FunctionCall>()
+        val functionCall = spanProperty.defaultValue as Expression.FunctionCall
+        functionCall.name shouldBe "emptySpan"
+
+        // 验证添加了 @EncodeDefault 注解
+        spanProperty.annotations.map { it.name }.shouldContain("EncodeDefault")
     }
 }

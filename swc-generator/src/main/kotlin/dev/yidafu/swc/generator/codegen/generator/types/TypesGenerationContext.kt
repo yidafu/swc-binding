@@ -2,8 +2,8 @@ package dev.yidafu.swc.generator.codegen.generator.types
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.codegen.generator.PoetGenerator
-import dev.yidafu.swc.generator.codegen.pipeline.GenerationContext
 import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFile
+import dev.yidafu.swc.generator.codegen.pipeline.GenerationContext
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import java.nio.file.Path
 import java.util.LinkedHashMap
@@ -27,4 +27,3 @@ class TypesGenerationContext(
         input.classDecls.associateBy { it.name }
     }
 }
-

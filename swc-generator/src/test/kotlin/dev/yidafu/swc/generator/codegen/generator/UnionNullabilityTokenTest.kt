@@ -2,7 +2,7 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.ClassName
 import dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage
-import dev.yidafu.swc.generator.config.Hardcoded
+import dev.yidafu.swc.generator.config.UnionConfig
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -13,9 +13,9 @@ class UnionNullabilityTokenTest : AnnotationSpec() {
 
     @Test
     fun `distinct names when includeNullabilityInToken enabled`() {
-        val prev = Hardcoded.Union.includeNullabilityInToken
+        val prev = UnionConfig.includeNullabilityInToken
         try {
-            Hardcoded.Union.includeNullabilityInToken = true
+            UnionConfig.includeNullabilityInToken = true
 
             val stringT = ClassName("kotlin", "String")
             UnionSerializerRegistry.addUsage(
@@ -54,9 +54,7 @@ class UnionNullabilityTokenTest : AnnotationSpec() {
             // 至少包含两个对象定义
             content.contains("object ").shouldBeTrue()
         } finally {
-            Hardcoded.Union.includeNullabilityInToken = prev
+            UnionConfig.includeNullabilityInToken = prev
         }
     }
 }
-
-

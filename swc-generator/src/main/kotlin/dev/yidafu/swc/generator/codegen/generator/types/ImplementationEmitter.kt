@@ -7,7 +7,6 @@ import dev.yidafu.swc.generator.config.TypesImplementationRules
 import dev.yidafu.swc.generator.extensions.getAllPropertiesForImpl
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.util.ImplementationClassGenerator
 import dev.yidafu.swc.generator.util.Logger
 

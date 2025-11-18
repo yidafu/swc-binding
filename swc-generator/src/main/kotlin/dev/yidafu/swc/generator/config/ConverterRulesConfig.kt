@@ -25,4 +25,3 @@ object ConverterRulesConfig {
         return SKIPPED_TYPE_ALIASES.contains(name)
     }
 }
-

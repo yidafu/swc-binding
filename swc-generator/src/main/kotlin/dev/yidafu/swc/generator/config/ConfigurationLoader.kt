@@ -90,7 +90,54 @@ class ConfigurationLoader {
     fun loadFromFile(configPath: String?): GeneratorResult<Configuration> {
         return try {
             val configFile = when {
-                configPath != null -> File(configPath)
+                configPath != null -> {
+                    // 如果是相对路径，尝试从当前工作目录和 swc-generator 目录查找
+                    val file = File(configPath)
+                    val resolvedFile = when {
+                        file.exists() -> file
+                        file.isAbsolute -> file
+                        else -> {
+                            // 如果路径以 swc-generator/ 开头，直接使用
+                            if (configPath.startsWith("swc-generator/")) {
+                                val directFile = File(configPath)
+                                if (directFile.exists()) {
+                                    directFile
+                                } else {
+                                    // 尝试从 swc-generator 目录查找（去掉 swc-generator/ 前缀）
+                                    val cleanPath = configPath.removePrefix("swc-generator/")
+                                    // 注意：File("swc-generator", cleanPath) 会得到 swc-generator/swc-generator-config.yaml
+                                    // 但 cleanPath 已经是 swc-generator-config.yaml，所以不需要再加 swc-generator 前缀
+                                    // 直接使用 cleanPath 作为相对路径
+                                    val generatorDirFile = File(cleanPath)
+                                    if (generatorDirFile.exists()) {
+                                        generatorDirFile
+                                    } else {
+                                        // 如果 cleanPath 不存在，尝试从 swc-generator 目录查找
+                                        val generatorDirFile2 = File("swc-generator", cleanPath)
+                                        if (generatorDirFile2.exists()) {
+                                            generatorDirFile2
+                                        } else {
+                                            file
+                                        }
+                                    }
+                                }
+                            } else {
+                                // 尝试从 swc-generator 目录查找
+                                val generatorDirFile = File("swc-generator", configPath)
+                                if (generatorDirFile.exists()) {
+                                    generatorDirFile
+                                } else {
+                                    file
+                                }
+                            }
+                        }
+                    }
+                    // 调试：打印解析结果
+                    if (configPath.contains("swc-generator")) {
+                        println("  [DEBUG] 配置文件路径解析: 输入=$configPath, 解析结果=${resolvedFile.absolutePath}, 存在=${resolvedFile.exists()}")
+                    }
+                    resolvedFile
+                }
                 else -> findDefaultConfigFile()
             }
 

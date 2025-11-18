@@ -18,10 +18,21 @@ class ConcreteClassEmitter(
         declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ) {
         classes.forEach { classDecl ->
+            val cleanName = classDecl.name.removeSurrounding("`")
+            if (cleanName == "ForOfStatement" || cleanName == "ComputedPropName") {
+                Logger.info("  处理类: ${classDecl.name} (${classDecl.modifier})", 4)
+            } else {
+                Logger.debug("  处理类: ${classDecl.name} (${classDecl.modifier})", 6)
+            }
             if (poet.emitType(fileBuilder, classDecl, interfaceRegistry.names, declLookup)) {
-                Logger.verbose("  ✓ 类: ${classDecl.name} (${classDecl.modifier})", 6)
+                if (cleanName == "ForOfStatement" || cleanName == "ComputedPropName") {
+                    Logger.info("  ✓ 类: ${classDecl.name} (${classDecl.modifier})", 4)
+                } else {
+                    Logger.verbose("  ✓ 类: ${classDecl.name} (${classDecl.modifier})", 6)
+                }
+            } else {
+                Logger.warn("  ✗ 类生成失败: ${classDecl.name} (${classDecl.modifier})")
             }
         }
     }
 }
-

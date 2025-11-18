@@ -64,7 +64,6 @@ sealed class KotlinType {
                 "MutableMap" -> ClassName("kotlin.collections", "MutableMap")
                 "Union.U2" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U2")
                 "Union.U3" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U3")
-                "Union.U4" -> ClassName("dev.yidafu.swc", "Union").nestedClass("U4")
                 else -> ClassName("", name)
             }
             baseClassName.parameterizedBy(params.map { it.toTypeName() })
@@ -133,11 +132,6 @@ sealed class KotlinType {
                 append(types.joinToString(", ") { it.toTypeString() })
                 append('>')
             }
-            4 -> buildString {
-                append("Union.U4<")
-                append(types.joinToString(", ") { it.toTypeString() })
-                append('>')
-            }
             else -> "Any"
         }
         is Any -> "Any"
@@ -162,7 +156,6 @@ sealed class KotlinType {
         return when (union.types.size) {
             2 -> base.nestedClass("U2").parameterizedBy(union.types.map { it.toTypeName() })
             3 -> base.nestedClass("U3").parameterizedBy(union.types.map { it.toTypeName() })
-            4 -> base.nestedClass("U4").parameterizedBy(union.types.map { it.toTypeName() })
             else -> ANY
         }
     }

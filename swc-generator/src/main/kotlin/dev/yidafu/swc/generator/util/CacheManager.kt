@@ -84,12 +84,9 @@ object CacheManager {
      */
     fun getAllCacheStats(): List<PerformanceMonitor.CacheStats> {
         return listOf(
-            PerformanceMonitor.getCacheStats(CACHE_TYPE_NAME, typeNameCache.size) ?: 
-                PerformanceMonitor.CacheStats(CACHE_TYPE_NAME, 0, 0, typeNameCache.size),
-            PerformanceMonitor.getCacheStats(CACHE_KOTLIN_TYPE, kotlinTypeCache.size) ?: 
-                PerformanceMonitor.CacheStats(CACHE_KOTLIN_TYPE, 0, 0, kotlinTypeCache.size),
-            PerformanceMonitor.getCacheStats(CACHE_ANNOTATION, annotationCache.size) ?: 
-                PerformanceMonitor.CacheStats(CACHE_ANNOTATION, 0, 0, annotationCache.size)
+            PerformanceMonitor.getCacheStats(CACHE_TYPE_NAME, typeNameCache.size) ?: PerformanceMonitor.CacheStats(CACHE_TYPE_NAME, 0, 0, typeNameCache.size),
+            PerformanceMonitor.getCacheStats(CACHE_KOTLIN_TYPE, kotlinTypeCache.size) ?: PerformanceMonitor.CacheStats(CACHE_KOTLIN_TYPE, 0, 0, kotlinTypeCache.size),
+            PerformanceMonitor.getCacheStats(CACHE_ANNOTATION, annotationCache.size) ?: PerformanceMonitor.CacheStats(CACHE_ANNOTATION, 0, 0, annotationCache.size)
         )
     }
 
@@ -137,4 +134,3 @@ object CacheManager {
         }
     }
 }
-

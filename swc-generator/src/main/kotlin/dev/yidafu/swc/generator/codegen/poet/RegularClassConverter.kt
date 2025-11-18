@@ -6,11 +6,13 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import dev.yidafu.swc.generator.config.CtxtFieldsConfig
 import dev.yidafu.swc.generator.config.AnnotationConfig
+import dev.yidafu.swc.generator.config.CtxtFieldsConfig
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.kotlin.computeSerialName
 
 /**
  * 普通类转换器
@@ -34,11 +36,28 @@ object RegularClassConverter {
         downgradeOverride: (KotlinDeclaration.PropertyDecl, List<KotlinType>, Map<String, KotlinDeclaration.ClassDecl>) -> KotlinDeclaration.PropertyDecl,
         addUnionAnnotation: (String, String, KotlinType, PropertySpec.Builder) -> Unit
     ) {
-        // 多态类添加 JsonClassDiscriminator
-        addPolymorphicAnnotations(builder, nodeDerived, configDerived)
+        // 多态类添加 JsonClassDiscriminator 和 @SerialName
+        addPolymorphicAnnotations(builder, nodeDerived, configDerived, decl)
+
+        // 为所有 Node 派生类添加 type 字段注释
+        if (nodeDerived) {
+            // 获取实际的 type 字段值（用于注释），而不是 SerialName（可能不同）
+            val typeFieldValue = decl.properties.find { it.name.removeSurrounding("`") == "type" }?.defaultValue?.let { defaultValue ->
+                when (defaultValue) {
+                    is Expression.StringLiteral -> defaultValue.value
+                    else -> null
+                }
+            } ?: dev.yidafu.swc.generator.config.CodeGenerationRules.getTypeFieldLiteralValue(decl.name.removeSurrounding("`")) ?: decl.name.removeSurrounding("`")
+            builder.addKdoc("conflict with @SerialName\nremove class property `override var type : String? = %S`", typeFieldValue)
+        }
+        // 为所有 Config 派生类添加 syntax 字段注释
+        if (configDerived) {
+            val serialName = decl.computeSerialName("syntax")
+            builder.addKdoc("conflict with @SerialName\nremove class property `override var syntax : String? = %S`", serialName)
+        }
 
         val existingPropNames = mutableSetOf<String>()
-        
+
         // 添加类自己的属性
         decl.properties.forEach { prop ->
             existingPropNames.add(prop.name)
@@ -47,12 +66,17 @@ object RegularClassConverter {
                 return@forEach
             }
             val adjusted = downgradeOverride(prop, decl.parents, declLookup)
+            // Node 派生类不生成 type 属性，使用 @SerialName + @JsonClassDiscriminator 代替
+            if (adjusted.name == "type" && nodeDerived) {
+                return@forEach
+            }
+            // Config 派生类不生成 syntax 属性，使用 @SerialName + @JsonClassDiscriminator 代替
+            if (adjusted.name == "syntax" && configDerived) {
+                return@forEach
+            }
             val base = convertProperty(adjusted)
             if (base != null) {
                 val propBuilder = base.toBuilder()
-                // Node 系谱的 type 属性需要添加 @Transient，因为它与 JsonClassDiscriminator("type") 冲突
-                // 避免与 "syntax" 判别关键字冲突：对 ParserConfig 系谱中的 `syntax` 字段标注 @Transient
-                addTransientAnnotationIfNeeded(propBuilder, adjusted.name, nodeDerived, configDerived)
                 addUnionAnnotation(decl.name, adjusted.name, adjusted.type, propBuilder)
                 builder.addProperty(propBuilder.build())
             }
@@ -66,37 +90,71 @@ object RegularClassConverter {
 
         // 补齐父接口链上的抽象属性
         addMissingParentProperties(
-            builder, decl, nodeDerived, configDerived, declLookup, 
-            existingPropNames, convertType
+            builder,
+            decl,
+            nodeDerived,
+            configDerived,
+            declLookup,
+            existingPropNames,
+            convertType
         )
     }
 
     /**
      * 添加多态序列化注解
+     * 使用 @JsonClassDiscriminator 来指定 type 属性作为 discriminator
+     * 使用 @SerialName 来指定序列化时的类型名称
      */
     private fun addPolymorphicAnnotations(
         builder: TypeSpec.Builder,
         nodeDerived: Boolean,
-        configDerived: Boolean
+        configDerived: Boolean,
+        decl: KotlinDeclaration.ClassDecl? = null
     ) {
         if (nodeDerived) {
             builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
+                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
+                    .build()
             )
             builder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
                     .addMember("%S", "type")
                     .build()
             )
+            // 为 Node 派生类（叶子节点）添加 @SerialName 和 @SwcDslMarker 注解
+            if (decl != null) {
+                val serialName = decl.computeSerialName("type")
+                builder.addAnnotation(
+                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                        .addMember("%S", serialName)
+                        .build()
+                )
+                // 为 Node 叶子节点添加 @SwcDslMarker 注解
+                builder.addAnnotation(
+                    AnnotationSpec.builder(PoetConstants.SwcTypes.SWC_DSL_MARKER).build()
+                )
+            }
         } else if (configDerived) {
             builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
+                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
+                    .build()
             )
             builder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
                     .addMember("%S", "syntax")
                     .build()
             )
+            // 为 Config 派生类添加 @SerialName 注解
+            if (decl != null) {
+                val serialName = decl.computeSerialName("syntax")
+                builder.addAnnotation(
+                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                        .addMember("%S", serialName)
+                        .build()
+                )
+            }
         }
     }
 
@@ -109,15 +167,9 @@ object RegularClassConverter {
         nodeDerived: Boolean,
         configDerived: Boolean
     ) {
-        if (propName == "type" && nodeDerived) {
-            propBuilder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-            )
-        } else if (propName == "syntax" && configDerived) {
-            propBuilder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-            )
-        }
+        // 目前无需对 type 或 syntax 字段添加 @Transient
+        // JsonClassDiscriminator("type"/"syntax") 已自动处理判别字段
+        // 保留占位以便未来若需对其他字段添加 @Transient
     }
 
     /**
@@ -192,18 +244,16 @@ object RegularClassConverter {
             }
 
             val isTypeProp = propName.removeSurrounding("`") == "type"
-            // Node 系谱的 type 属性若缺失，保持非空 String 并添加 @Transient 与默认值为声明名
+            // Node 系谱的 type 属性不再生成，使用 @SerialName + @JsonClassDiscriminator 代替
+            // 注释已在 addRegularClassProperties 开始处添加，这里只需跳过
             if (isTypeProp && nodeDerived) {
-                val typeName = ClassName("kotlin", "String")
-                val typeProp = PropertySpec.builder("type", typeName)
-                    .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
-                    .mutable(true)
-                    .initializer("%S", decl.name.removeSurrounding("`"))
-                    .addAnnotation(
-                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-                    )
-                    .build()
-                builder.addProperty(typeProp)
+                existingPropNames.add(propName)
+                return@forEach
+            }
+            val isSyntaxProp = propName.removeSurrounding("`") == "syntax"
+            // Config 系谱的 syntax 属性不再生成，使用 @SerialName + @JsonClassDiscriminator 代替
+            // 注释已在 addRegularClassProperties 开始处添加，这里只需跳过
+            if (isSyntaxProp && configDerived) {
                 existingPropNames.add(propName)
                 return@forEach
             }
@@ -217,15 +267,11 @@ object RegularClassConverter {
                 return@forEach
             }
 
-            val isSyntaxProp = propName.removeSurrounding("`") == "syntax"
             val baseTypeName = convertType(p.type)
             val finalType = if (p.type is KotlinType.Nullable) baseTypeName else baseTypeName.copy(nullable = true)
             val builderProp = PropertySpec.builder(propName, finalType)
                 .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                 .mutable(true)
-            if (isSyntaxProp && configDerived) {
-                builderProp.addAnnotation(AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build())
-            }
             builderProp.initializer("null")
             builder.addProperty(builderProp.build())
             existingPropNames.add(propName)
@@ -259,4 +305,3 @@ object RegularClassConverter {
         return parentProps
     }
 }
-

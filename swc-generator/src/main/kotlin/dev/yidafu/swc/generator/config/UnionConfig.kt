@@ -38,4 +38,3 @@ object UnionConfig {
         require(factoryArity.all { it >= 2 && it <= 10 }) { "factoryArity 的值必须在 2-10 之间" }
     }
 }
-

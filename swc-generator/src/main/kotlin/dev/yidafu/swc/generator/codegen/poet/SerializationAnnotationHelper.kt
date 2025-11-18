@@ -29,42 +29,44 @@ object SerializationAnnotationHelper {
         val configDerived = ClassDeclarationConverter.isDerivedFrom(decl.parents, declLookup, "ParserConfig") ||
             ClassDeclarationConverter.isDerivedFrom(decl.parents, declLookup, "BaseParseOptions")
 
-        // 添加 @SerialName 注解
-        if (!hasSerialName) {
-            when (className) {
-                "EsParserConfig" -> {
-                    builder.addAnnotation(
-                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                            .addMember("%S", "ecmascript")
-                            .build()
-                    )
-                }
-                "TsParserConfig" -> {
-                    builder.addAnnotation(
-                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                            .addMember("%S", "typescript")
-                            .build()
-                    )
-                }
-                else -> {
-                    // 对于所有 Node 派生类或实现了密封接口的类，如果没有 @SerialName，则使用类名作为序列化名称
-                    if ((nodeDerived || implementsSealedInterface) && 
-                        decl.modifier !is ClassModifier.Interface && 
-                        decl.modifier !is ClassModifier.SealedInterface) {
-                        builder.addAnnotation(
-                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                                .addMember("%S", className)
-                                .build()
-                        )
-                    }
-                }
-            }
-        }
+        // 不再自动添加 @SerialName 注解
+        // 如果需要 @SerialName，应该在类声明中显式添加
+        // if (!hasSerialName) {
+        //     when (className) {
+        //         "EsParserConfig" -> {
+        //             builder.addAnnotation(
+        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                     .addMember("%S", "ecmascript")
+        //                     .build()
+        //             )
+        //         }
+        //         "TsParserConfig" -> {
+        //             builder.addAnnotation(
+        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                     .addMember("%S", "typescript")
+        //                     .build()
+        //             )
+        //         }
+        //         else -> {
+        //             if ((nodeDerived || implementsSealedInterface) && decl.modifier !is ClassModifier.Interface && decl.modifier !is ClassModifier.SealedInterface) {
+        //                 builder.addAnnotation(
+        //                     AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                         .addMember("%S", className)
+        //                         .build()
+        //                 )
+        //             }
+        //         }
+        //     }
+        // }
 
         // 添加 @JsonClassDiscriminator 注解
+        // 使用 @JsonClassDiscriminator 来指定 type 属性作为 discriminator
+        // 这样 type 属性既会被序列化，也会用于多态识别
         if (nodeDerived) {
             builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
+                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
+                    .build()
             )
             builder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
@@ -73,7 +75,9 @@ object SerializationAnnotationHelper {
             )
         } else if (configDerived) {
             builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "ExperimentalSerializationApi")).build()
+                AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
+                    .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
+                    .build()
             )
             builder.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
@@ -104,4 +108,3 @@ object SerializationAnnotationHelper {
         }
     }
 }
-

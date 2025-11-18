@@ -92,4 +92,3 @@ object PropertyConverter {
         }
     }
 }
-

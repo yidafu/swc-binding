@@ -95,4 +95,3 @@ class TypesPostProcessor {
         return indent + content
     }
 }
-

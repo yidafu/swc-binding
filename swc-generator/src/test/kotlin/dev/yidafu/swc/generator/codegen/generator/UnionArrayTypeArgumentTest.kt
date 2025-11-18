@@ -44,5 +44,3 @@ class UnionArrayTypeArgumentTest : AnnotationSpec() {
         content.shouldContain("ArraySerializer(serializer<String>())")
     }
 }
-
-

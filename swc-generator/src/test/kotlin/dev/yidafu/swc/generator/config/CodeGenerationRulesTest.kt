@@ -1,13 +1,16 @@
 package dev.yidafu.swc.generator.config
 
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
+import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.annotation.Test
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
@@ -73,5 +76,65 @@ class CodeGenerationRulesTest : AnnotationSpec() {
     fun `skip dsl receiver respects configuration`() {
         CodeGenerationRules.shouldSkipDslReceiver("HasSpan").shouldBeTrue()
         CodeGenerationRules.shouldSkipDslReceiver("Expression").shouldBeFalse()
+    }
+
+    @Test
+    fun `processImplementationProperty sets span default value to emptySpan function call`() {
+        // 创建一个带有 span 属性的属性声明
+        val spanProperty = KotlinDeclaration.PropertyDecl(
+            name = "span",
+            type = KotlinType.Simple("Span"),
+            modifier = PropertyModifier.Var,
+            defaultValue = null,
+            annotations = emptyList()
+        )
+
+        val rule = TypesImplementationRules.InterfaceRule(
+            interfaceCleanName = "TestNode",
+            syntaxLiteral = null,
+            discriminator = "type"
+        )
+
+        val processedProperty = TypesImplementationRules.processImplementationProperty(spanProperty, rule)
+
+        // 验证 span 属性的类型是 Span
+        processedProperty.type.shouldBeInstanceOf<KotlinType.Simple>()
+        (processedProperty.type as KotlinType.Simple).name shouldBe "Span"
+
+        // 验证 span 属性的默认值是 emptySpan() 函数调用
+        processedProperty.defaultValue.shouldNotBeNull()
+        processedProperty.defaultValue.shouldBeInstanceOf<Expression.FunctionCall>()
+        val functionCall = processedProperty.defaultValue as Expression.FunctionCall
+        functionCall.name shouldBe "emptySpan"
+        functionCall.arguments shouldBe emptyList()
+
+        // 验证添加了 @EncodeDefault 注解
+        processedProperty.annotations.map { it.name }.shouldContainExactly(listOf("EncodeDefault"))
+    }
+
+    @Test
+    fun `processImplementationProperty preserves existing span default value if set`() {
+        // 创建一个已经设置了默认值的 span 属性
+        val spanProperty = KotlinDeclaration.PropertyDecl(
+            name = "span",
+            type = KotlinType.Simple("Span"),
+            modifier = PropertyModifier.Var,
+            defaultValue = Expression.FunctionCall("emptySpan"),
+            annotations = emptyList()
+        )
+
+        val rule = TypesImplementationRules.InterfaceRule(
+            interfaceCleanName = "TestNode",
+            syntaxLiteral = null,
+            discriminator = "type"
+        )
+
+        val processedProperty = TypesImplementationRules.processImplementationProperty(spanProperty, rule)
+
+        // 验证默认值仍然是 emptySpan()
+        processedProperty.defaultValue.shouldNotBeNull()
+        processedProperty.defaultValue.shouldBeInstanceOf<Expression.FunctionCall>()
+        val functionCall = processedProperty.defaultValue as Expression.FunctionCall
+        functionCall.name shouldBe "emptySpan"
     }
 }

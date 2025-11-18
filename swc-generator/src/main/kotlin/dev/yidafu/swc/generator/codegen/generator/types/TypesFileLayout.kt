@@ -69,6 +69,10 @@ class TypesFileLayout(
             generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
         }
         classBuilders.forEach { (name, builder) ->
+            // 调试：检查 ForOfStatement 和 ComputedPropName
+            if (name.removeSurrounding("`") == "ForOfStatement" || name.removeSurrounding("`") == "ComputedPropName") {
+                println("  [DEBUG] collectGeneratedFiles: 找到类 $name，将生成文件")
+            }
             generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
         }
 

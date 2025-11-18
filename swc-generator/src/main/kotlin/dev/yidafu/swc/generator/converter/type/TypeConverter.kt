@@ -109,14 +109,13 @@ class TypeConverter(
     }
 
     /**
-     * 创建 Union 类型（U2/U3/U4）
-     * 统一处理 Union.U2/U3/U4 的创建逻辑，减少代码重复
+     * 创建 Union 类型（U2/U3）
+     * 统一处理 Union.U2/U3 的创建逻辑，减少代码重复
      */
     private fun createUnionType(typeParams: Array<KotlinType>): KotlinType {
         return when (typeParams.size) {
             2 -> KotlinTypeFactory.generic("Union.U2", *typeParams)
             3 -> KotlinTypeFactory.generic("Union.U3", *typeParams)
-            4 -> KotlinTypeFactory.generic("Union.U4", *typeParams)
             else -> KotlinTypeFactory.any()
         }
     }
@@ -151,9 +150,9 @@ class TypeConverter(
             return convertInterfaceUnion(union)
         }
 
-        // 检查是否为 Union.U2/U3/U4 类型
+        // 检查是否为 Union.U2/U3 类型
         if (isUnionType(union)) {
-            Logger.debug("  Union.U2/U3/U4 类型", 6)
+            Logger.debug("  Union.U2/U3 类型", 6)
             return convertUnionType(union)
         }
 
@@ -163,7 +162,7 @@ class TypeConverter(
             return convertMixedUnion(union)
         }
 
-        // 尝试将所有类型转换为 Union.U2/U3/U4（适用于基础类型与字面量组合）
+        // 尝试将所有类型转换为 Union.U2/U3（适用于基础类型与字面量组合）
         val convertedTypes = union.types.map { convert(it).getOrNull() }
         if (convertedTypes.all { it != null }) {
             // 去重（例如多字符串字面量合并为一个 String）
@@ -255,12 +254,11 @@ class TypeConverter(
      */
     private fun isUndefinedUnion(union: TypeScriptType.Union): Boolean {
         if (union.types.size != 2) return false
-        
-        val hasUndefined = union.types.any { 
-            it is TypeScriptType.Undefined || 
-            (it is TypeScriptType.Keyword && it.kind == KeywordKind.UNDEFINED)
+
+        val hasUndefined = union.types.any {
+            it is TypeScriptType.Undefined || (it is TypeScriptType.Keyword && it.kind == KeywordKind.UNDEFINED)
         }
-        
+
         return hasUndefined
     }
 
@@ -269,19 +267,18 @@ class TypeConverter(
      */
     private fun convertUndefinedUnion(union: TypeScriptType.Union): KotlinType {
         // 找到非 undefined 的类型
-        val nonUndefinedType = union.types.firstOrNull { 
-            it !is TypeScriptType.Undefined && 
-            !(it is TypeScriptType.Keyword && it.kind == KeywordKind.UNDEFINED)
+        val nonUndefinedType = union.types.firstOrNull {
+            it !is TypeScriptType.Undefined && !(it is TypeScriptType.Keyword && it.kind == KeywordKind.UNDEFINED)
         }
-        
+
         if (nonUndefinedType == null) {
             Logger.warn("未找到非 undefined 类型，返回 Any?")
             return KotlinTypeFactory.nullable(KotlinTypeFactory.any())
         }
-        
+
         // 转换非 undefined 类型
         val kotlinType = convert(nonUndefinedType).getOrDefault(KotlinTypeFactory.any())
-        
+
         // 如果已经是可空类型，直接返回；否则包装为可空类型
         return if (kotlinType is KotlinType.Nullable) {
             kotlinType
@@ -326,16 +323,16 @@ class TypeConverter(
         // 检查字面量类型
         val literalTypes = union.types.mapNotNull { if (it is TypeScriptType.Literal) it.value else null }
 
-        // 如果都是字符串字面量，转换为 Union.U2/U3/U4 或 Any
+        // 如果都是字符串字面量，转换为 Union.U2/U3 或 Any
         if (literalTypes.all { it is LiteralValue.StringLiteral }) {
             // 直接折叠为 String，避免生成 U3<String, String, ...>
             return KotlinTypeFactory.string()
         }
 
-        // 如果都是布尔字面量，转换为 Union.U2/U3/U4
+        // 如果都是布尔字面量，转换为 Union.U2/U3
         if (literalTypes.all { it is LiteralValue.BooleanLiteral }) {
             val typeCount = union.types.size
-            if (typeCount in 2..4) {
+            if (typeCount in 2..3) {
                 val booleanType: KotlinType = KotlinTypeFactory.boolean()
                 val typeParams: Array<KotlinType> = Array(typeCount) { booleanType }
                 return createUnionType(typeParams)
@@ -356,17 +353,17 @@ class TypeConverter(
             }
         }
 
-        // 混合类型，尝试转换为 Union.U2/U3/U4（并对同类去重）
+        // 混合类型，尝试转换为 Union.U2/U3（并对同类去重）
         val typeCount = union.types.size
-        if (typeCount in 2..4) {
+        if (typeCount in 2..3) {
             val converted = union.types.mapNotNull { convert(it).getOrNull() }
             val distinctParams = converted.distinctBy { it.toTypeString() }
-            if (distinctParams.size in 2..4) {
+            if (distinctParams.size in 2..3) {
                 return createUnionType(distinctParams.toTypedArray())
             }
         }
 
-        // 超过 4 个类型，转换为 Any
+        // 超过 3 个类型，转换为 Any
         return KotlinTypeFactory.any()
     }
 
@@ -412,15 +409,15 @@ class TypeConverter(
         if (inheritanceAnalyzer != null) {
             // 提取所有类型引用名称，并尝试展开类型别名
             val expandedTypes = mutableListOf<String>()
-            
+
             for (tsType in union.types) {
                 when (tsType) {
                     is TypeScriptType.Reference -> {
                         val typeName = tsType.name
-                        
+
                         // 尝试展开类型别名（如 Expression、Pattern）
                         val expanded = inheritanceAnalyzer.expandTypeAlias(typeName)
-                        
+
                         if (expanded != null) {
                             // 类型别名展开成功，添加所有展开的类型
                             expandedTypes.addAll(expanded)
@@ -436,14 +433,14 @@ class TypeConverter(
                     }
                 }
             }
-            
+
             // 如果有展开的类型，在所有展开的类型中查找公共父接口
             if (expandedTypes.isNotEmpty()) {
                 val distinctTypes = expandedTypes.distinct()
                 Logger.debug("  展开后的类型总数: ${distinctTypes.size} (去重后)", 8)
-                
+
                 val commonAncestor = inheritanceAnalyzer.findLowestCommonAncestor(distinctTypes)
-                
+
                 if (commonAncestor != null) {
                     // 找到公共父接口，直接返回该接口类型
                     val mappedName = CodeGenerationRules.mapTypeName(commonAncestor)
@@ -451,7 +448,7 @@ class TypeConverter(
                     return KotlinTypeFactory.simple(mappedName)
                 }
             }
-            
+
             // 如果展开失败或没有找到公共父接口，回退到直接查找原始类型的公共父接口
             val typeRefs = union.types.mapNotNull { tsType ->
                 when (tsType) {
@@ -459,10 +456,10 @@ class TypeConverter(
                     else -> null
                 }
             }
-            
+
             if (typeRefs.size == typeCount && typeRefs.isNotEmpty()) {
                 val commonAncestor = inheritanceAnalyzer.findLowestCommonAncestor(typeRefs)
-                
+
                 if (commonAncestor != null) {
                     // 找到公共父接口，直接返回该接口类型
                     val mappedName = CodeGenerationRules.mapTypeName(commonAncestor)
@@ -472,13 +469,13 @@ class TypeConverter(
             }
         }
 
-        // 如果没有找到公共父接口，回退到原来的逻辑（生成 Union.U2/U3/U4）
+        // 如果没有找到公共父接口，回退到原来的逻辑（生成 Union.U2/U3）
         // 尝试转换所有类型并去重
         val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
             .distinctBy { it.toTypeString() }
 
-        // 如果成功转换了所有类型，生成 Union.U2/U3/U4
-        if (typeParams.size == typeCount && typeCount in 2..4) {
+        // 如果成功转换了所有类型，生成 Union.U2/U3
+        if (typeParams.size == typeCount && typeCount in 2..3) {
             return createUnionType(typeParams.toTypedArray())
         }
 
@@ -498,9 +495,9 @@ class TypeConverter(
         val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
             .distinctBy { it.toTypeString() }
 
-        // 去重后如果在 2..4 范围内，生成 Union.U2/U3/U4
+        // 去重后如果在 2..3 范围内，生成 Union.U2/U3
         // 注意：混合联合中可能存在多个同类字面量（如两个字符串字面量），去重后数量会减少
-        if (typeParams.size in 2..4) {
+        if (typeParams.size in 2..3) {
             return createUnionType(typeParams.toTypedArray())
         }
 
@@ -510,20 +507,20 @@ class TypeConverter(
     }
 
     /**
-     * 检查是否为 Union.U2/U3/U4 类型
+     * 检查是否为 Union.U2/U3 类型
      */
     private fun isUnionType(union: TypeScriptType.Union): Boolean {
         val typeCount = union.types.size
-        return typeCount in 2..4 && union.types.all { it is TypeScriptType.Reference || it is TypeScriptType.Array }
+        return typeCount in 2..3 && union.types.all { it is TypeScriptType.Reference || it is TypeScriptType.Array }
     }
 
     /**
-     * 转换 Union.U2/U3/U4 类型
+     * 转换 Union.U2/U3 类型
      */
     private fun convertUnionType(union: TypeScriptType.Union): KotlinType {
         val typeParams = union.types.mapNotNull { convert(it).getOrNull() }
             .distinctBy { it.toTypeString() }
-        if (typeParams.size in 2..4) {
+        if (typeParams.size in 2..3) {
             return createUnionType(typeParams.toTypedArray())
         }
         return KotlinTypeFactory.any()

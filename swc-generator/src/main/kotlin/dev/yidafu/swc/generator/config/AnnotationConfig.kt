@@ -47,4 +47,3 @@ object AnnotationConfig {
     val OPT_IN: String = AnnotationName.OPT_IN.value
     val CONTEXTUAL: String = AnnotationName.CONTEXTUAL.value
 }
-

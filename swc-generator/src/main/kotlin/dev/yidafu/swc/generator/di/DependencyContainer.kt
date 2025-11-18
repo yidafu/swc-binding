@@ -12,11 +12,11 @@ import dev.yidafu.swc.generator.converter.declaration.TypeAliasConverter
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.extractor.TypeScriptADTExtractor
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
+import dev.yidafu.swc.generator.monitor.PerformanceMonitor
 import dev.yidafu.swc.generator.parser.TsAstVisitor
 import dev.yidafu.swc.generator.parser.TypeScriptParser
 import dev.yidafu.swc.generator.processor.KotlinADTProcessor
 import dev.yidafu.swc.generator.processor.KotlinADTProcessorFactory
-import dev.yidafu.swc.generator.monitor.PerformanceMonitor
 
 /**
  * 依赖注入容器
@@ -118,6 +118,7 @@ class DependencyContainer(
     val typeAliasConverter: TypeAliasConverter get() = _typeAliasConverter
     val typeScriptToKotlinConverter: TypeScriptToKotlinConverter get() = _typeScriptToKotlinConverter
     val kotlinADTProcessor: KotlinADTProcessor get() = _kotlinADTProcessor
+
     @Deprecated("使用 PerformanceMonitor 直接访问", ReplaceWith("PerformanceMonitor"))
     val performanceOptimizer: PerformanceMonitor get() = _performanceOptimizer
     val codeEmitter: CodeEmitter get() = _codeEmitter

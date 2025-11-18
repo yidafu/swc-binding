@@ -20,4 +20,3 @@ class InterfaceRegistry(classDecls: Collection<KotlinDeclaration.ClassDecl>) {
         }
     }
 }
-

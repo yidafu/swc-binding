@@ -11,4 +11,3 @@ class TypeAliasStage(
         emitter.emit(context.fileLayout.commonFileBuilder, context.input.typeAliases, context.poet)
     }
 }
-

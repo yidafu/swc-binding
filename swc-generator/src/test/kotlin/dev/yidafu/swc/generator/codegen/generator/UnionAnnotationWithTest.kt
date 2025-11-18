@@ -43,5 +43,3 @@ class UnionAnnotationWithTest : AnnotationSpec() {
         content.shouldContain(": KSerializer<Union.U2<String, Boolean>>")
     }
 }
-
-

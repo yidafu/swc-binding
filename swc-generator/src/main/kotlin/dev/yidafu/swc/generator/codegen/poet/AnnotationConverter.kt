@@ -2,11 +2,11 @@ package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import dev.yidafu.swc.generator.config.AnnotationConfig
 import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.util.CacheManager
 import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.config.Hardcoded
 
 /**
  * 注解转换器
@@ -46,7 +46,7 @@ object AnnotationConverter {
         if (annotationName == "SwcDslMarker") {
             ClassName("dev.yidafu.swc.generated", "SwcDslMarker")
         } else {
-            Hardcoded.AnnotationNames.toClassName(annotationName)
+            AnnotationConfig.toClassName(annotationName)
         }
 
     /**
@@ -66,4 +66,3 @@ object AnnotationConverter {
         }
     }
 }
-

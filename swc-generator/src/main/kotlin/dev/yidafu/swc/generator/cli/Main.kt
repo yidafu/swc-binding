@@ -88,7 +88,7 @@ fun main(args: Array<String>) {
 
         Logger.separator()
         Logger.header("代码生成完成！")
-        
+
         // 显式退出，确保所有资源被释放
         exitProcess(0)
     } catch (e: IllegalArgumentException) {

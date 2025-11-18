@@ -3,10 +3,12 @@ package dev.yidafu.swc.generator.converter.declaration
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.InterfaceRulesConfig
+import dev.yidafu.swc.generator.config.PropertyRulesConfig
+import dev.yidafu.swc.generator.config.SerializerConfig
 import dev.yidafu.swc.generator.config.TypesImplementationRules
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
-import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeParameter
 import dev.yidafu.swc.generator.model.typescript.Variance
@@ -38,15 +40,15 @@ class InterfaceConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         return try {
             // 检查是否需要跳过该接口
-            if (Hardcoded.InterfaceRules.shouldSkipInterface(tsInterface.name)) {
-                val skipReason = Hardcoded.InterfaceRules.getSkipReason(tsInterface.name) ?: "使用替代方案"
+            if (InterfaceRulesConfig.shouldSkipInterface(tsInterface.name)) {
+                val skipReason = InterfaceRulesConfig.getSkipReason(tsInterface.name) ?: "使用替代方案"
                 Logger.debug("跳过 ${tsInterface.name} 接口（$skipReason）", 4)
                 return GeneratorResultFactory.failure(
                     code = ErrorCode.SKIPPED_INTERFACE,
                     message = "${tsInterface.name} is skipped, $skipReason"
                 )
             }
-            
+
             Logger.debug("转换接口声明: ${tsInterface.name}", 4)
 
             // 转换类型参数
@@ -71,10 +73,10 @@ class InterfaceConverter(
             // 去重：优先保留 camelCase 版本，如果只有 snake_case 版本则转换
             val deduplicatedMembers = deduplicateMembers(tsInterface.members)
             val mappedInterfaceName = CodeGenerationRules.mapTypeName(tsInterface.name)
-            
+
             // 提取 type 字段的字面量值（用于生成正确的 @SerialName）
             val typeFieldLiteralValue = extractTypeFieldLiteralValue(tsInterface.members)
-            
+
             val kotlinProperties = deduplicatedMembers.mapNotNull { member ->
                 convertTypeMember(member, mappedInterfaceName, nestedInterfaces)
             }
@@ -182,15 +184,26 @@ class InterfaceConverter(
         interfaceName: String,
         nestedInterfaces: MutableList<KotlinDeclaration.ClassDecl>
     ): KotlinDeclaration.PropertyDecl? {
-        val isTypeProperty = Hardcoded.PropertyRules.isTypeProperty(member.name)
+        val isTypeProperty = PropertyRulesConfig.isTypeProperty(member.name)
         // 从 TS ADT 中推导 syntax 的字面量（若存在）
-        val syntaxLiteral: String? = if (Hardcoded.PropertyRules.isSyntaxProperty(member.name) && member.type is TypeScriptType.Literal) {
+        val syntaxLiteral: String? = if (PropertyRulesConfig.isSyntaxProperty(member.name) && member.type is TypeScriptType.Literal) {
             val v = (member.type as TypeScriptType.Literal).value
             if (v is LiteralValue.StringLiteral) v.value else null
-        } else null
-        val isSyntaxProperty = Hardcoded.PropertyRules.isSyntaxProperty(member.name) && syntaxLiteral != null
+        } else {
+            null
+        }
+        val isSyntaxProperty = PropertyRulesConfig.isSyntaxProperty(member.name) && syntaxLiteral != null
+
+        // 检查是否有特定接口和属性的类型覆盖（如 ForOfStatement.await）
+        val cleanInterfaceName = interfaceName.removeSurrounding("`")
+        val cleanPropertyName = member.name.removeSurrounding("`")
+        val interfacePropertyOverride = CodeGenerationRules.getPropertyTypeOverride(cleanInterfaceName, cleanPropertyName)
+
         val overrideType = getSpecialPropertyType(interfaceName, member.name)
-        val kotlinType = if (overrideType != null) {
+        val kotlinType = if (interfacePropertyOverride != null) {
+            // 优先使用接口和属性的类型覆盖
+            interfacePropertyOverride
+        } else if (overrideType != null) {
             overrideType
         } else {
             when (member.type) {
@@ -249,18 +262,21 @@ class InterfaceConverter(
 
         // 处理可空性
         val propertyName = wrapReservedWord(member.name)
-        val cleanPropertyName = propertyName.removeSurrounding("`")
-        val cleanInterfaceName = interfaceName.removeSurrounding("`")
-        val isSpanCoordinate = Hardcoded.PropertyRules.isSpanCoordinateProperty(cleanInterfaceName, cleanPropertyName)
+        // cleanPropertyName 和 cleanInterfaceName 已在上面声明，这里不再重复声明
+        val isSpanCoordinate = PropertyRulesConfig.isSpanCoordinateProperty(cleanInterfaceName, cleanPropertyName)
         val modifier = if (member.readonly) PropertyModifier.Val else PropertyModifier.Var
         val isSpanProperty = isRequiredSpanProperty(cleanPropertyName, kotlinType)
+
+        // interfacePropertyOverride 已在上面计算，这里使用已计算的值
+        val baseKotlinType = interfacePropertyOverride ?: kotlinType
+
         val shouldForceNullable = !isTypeProperty && !isSyntaxProperty && !isSpanCoordinate
         val finalType = when {
             isTypeProperty -> KotlinType.StringType
             isSyntaxProperty -> KotlinType.StringType
-            isSpanProperty -> kotlinType
-            member.optional || shouldForceNullable -> kotlinType.makeNullable()
-            else -> kotlinType
+            isSpanProperty -> baseKotlinType
+            member.optional || shouldForceNullable -> baseKotlinType.makeNullable()
+            else -> baseKotlinType
         }
 
         // 如果是 type 属性且类型是字面量，将字面量值存储在默认值中
@@ -295,12 +311,12 @@ class InterfaceConverter(
     ): KotlinType? {
         val cleanInterfaceName = interfaceName.removeSurrounding("`")
         return when {
-            Hardcoded.PropertyRules.isSpanCoordinateProperty(cleanInterfaceName, propertyName) -> KotlinTypeFactory.int()
+            PropertyRulesConfig.isSpanCoordinateProperty(cleanInterfaceName, propertyName) -> KotlinTypeFactory.int()
             else -> null
         }
     }
 
-    // isSpanCoordinateProperty 已移动至 Hardcoded.PropertyRules
+    // isSpanCoordinateProperty 已移动至 PropertyRulesConfig
 
     private fun isRequiredSpanProperty(
         propertyName: String,
@@ -495,15 +511,30 @@ class InterfaceConverter(
     private fun determineClassModifier(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): ClassModifier {
         val name = tsInterface.name
         // 配置优先级：toKotlinClass > keepInterface > sealedInterface
-        if (config.rules.classModifiers.toKotlinClass.contains(name)) return ClassModifier.FinalClass
-        if (config.rules.classModifiers.keepInterface.contains(name)) return ClassModifier.Interface
-        if (config.rules.classModifiers.sealedInterface.contains(name)) return ClassModifier.SealedInterface
+        if (config.rules.classModifiers.toKotlinClass.contains(name)) {
+            Logger.debug("  接口 $name 配置为 FinalClass (toKotlinClass)", 6)
+            return ClassModifier.FinalClass
+        }
+        if (config.rules.classModifiers.keepInterface.contains(name)) {
+            Logger.debug("  接口 $name 配置为 Interface (keepInterface)", 6)
+            return ClassModifier.Interface
+        }
+        if (config.rules.classModifiers.sealedInterface.contains(name)) {
+            Logger.debug("  接口 $name 配置为 SealedInterface (sealedInterface)", 6)
+            return ClassModifier.SealedInterface
+        }
 
-        // 默认策略：当提供继承分析器时，将“无子类型”的叶子接口作为类生成
+        // 默认策略：当提供继承分析器时，将"无子类型"的叶子接口作为类生成
         // 未提供分析器时保持为接口，以维持转换阶段与测试的既有预期
-        val analyzer = inheritanceAnalyzer ?: return ClassModifier.Interface
+        val analyzer = inheritanceAnalyzer
+        if (analyzer == null) {
+            Logger.debug("  接口 $name 默认保持为 Interface (无分析器)", 6)
+            return ClassModifier.Interface
+        }
         val hasChildren = analyzer.hasChildren(name)
-        return if (!hasChildren) ClassModifier.FinalClass else ClassModifier.Interface
+        val result = if (!hasChildren) ClassModifier.FinalClass else ClassModifier.Interface
+        Logger.debug("  接口 $name 默认策略: ${if (hasChildren) "Interface (有子类型)" else "FinalClass (无子类型)"}", 6)
+        return result
     }
 
     /**
@@ -545,9 +576,9 @@ class InterfaceConverter(
             // 仅在固定的根接口上打上 discriminator，防止层级内冲突
             val rootDiscriminator: String? = when (mappedName) {
                 // AST 根
-                "Node" -> Hardcoded.Serializer.DEFAULT_DISCRIMINATOR
+                "Node" -> SerializerConfig.DEFAULT_DISCRIMINATOR
                 // Config 体系根
-                "Config", "ParserConfig", "Options" -> Hardcoded.Serializer.SYNTAX_DISCRIMINATOR
+                "Config", "ParserConfig", "Options" -> SerializerConfig.SYNTAX_DISCRIMINATOR
                 else -> null
             }
             if (rootDiscriminator != null) {
@@ -576,11 +607,11 @@ class InterfaceConverter(
         rule: TypesImplementationRules.InterfaceRule
     ): KotlinDeclaration.PropertyDecl {
         val normalizedName = prop.name.removeSurrounding("`")
-        val isTypeProperty = Hardcoded.PropertyRules.isTypeProperty(normalizedName)
-        val isSyntaxProperty = Hardcoded.PropertyRules.isSyntaxProperty(normalizedName) && rule.syntaxLiteral != null
+        val isTypeProperty = PropertyRulesConfig.isTypeProperty(normalizedName)
+        val isSyntaxProperty = PropertyRulesConfig.isSyntaxProperty(normalizedName) && rule.syntaxLiteral != null
 
-        val isSpanCoordinateProperty = Hardcoded.PropertyRules.isSpanCoordinateProperty(rule.interfaceCleanName, normalizedName)
-        val isSpanProperty = Hardcoded.PropertyRules.isSpanProperty(normalizedName)
+        val isSpanCoordinateProperty = PropertyRulesConfig.isSpanCoordinateProperty(rule.interfaceCleanName, normalizedName)
+        val isSpanProperty = PropertyRulesConfig.isSpanProperty(normalizedName)
 
         val updatedType = when {
             isTypeProperty -> KotlinType.StringType
@@ -595,7 +626,8 @@ class InterfaceConverter(
             // 如果是 type 属性，优先使用从 TypeScript 提取的字面量值，否则使用接口名称
             isTypeProperty -> prop.defaultValue ?: Expression.StringLiteral(rule.interfaceCleanName)
             isSyntaxProperty -> Expression.StringLiteral(rule.syntaxLiteral!!)
-            isSpanProperty -> Expression.FunctionCall("Span")
+            // 对于 span 属性，使用 emptySpan() 函数调用，确保包含 ctxt 字段
+            isSpanProperty -> Expression.FunctionCall("emptySpan")
             isSpanCoordinateProperty -> Expression.NumberLiteral("0")
             updatedType is KotlinType.Nullable -> Expression.NullLiteral
             else -> prop.defaultValue
@@ -619,6 +651,6 @@ class InterfaceConverter(
      * 包装保留字
      */
     private fun wrapReservedWord(name: String): String {
-        return Hardcoded.PropertyRules.wrapReservedWord(name)
+        return PropertyRulesConfig.wrapReservedWord(name)
     }
 }

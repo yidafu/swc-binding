@@ -2,8 +2,8 @@ package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import dev.yidafu.swc.generator.config.CollectionsConfig
 import dev.yidafu.swc.generator.util.CacheManager
-import dev.yidafu.swc.generator.config.Hardcoded
 
 /**
  * KotlinPoet 扩展函数
@@ -103,12 +103,12 @@ private fun parseGenericType(cleanType: String): TypeName {
  */
 private fun getBaseClassName(baseName: String): ClassName =
     when (baseName) {
-        "Map" -> Hardcoded.Collections.MAP
-        "List" -> Hardcoded.Collections.LIST
-        "Set" -> Hardcoded.Collections.SET
-        "MutableMap" -> Hardcoded.Collections.MUTABLE_MAP
-        "MutableList" -> Hardcoded.Collections.MUTABLE_LIST
-        "MutableSet" -> Hardcoded.Collections.MUTABLE_SET
+        "Map" -> CollectionsConfig.MAP
+        "List" -> CollectionsConfig.LIST
+        "Set" -> CollectionsConfig.SET
+        "MutableMap" -> CollectionsConfig.MUTABLE_MAP
+        "MutableList" -> CollectionsConfig.MUTABLE_LIST
+        "MutableSet" -> CollectionsConfig.MUTABLE_SET
         else -> ClassName("", baseName.sanitizeForClassName())
     }
 

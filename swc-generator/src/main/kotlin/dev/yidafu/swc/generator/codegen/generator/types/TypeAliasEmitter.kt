@@ -2,11 +2,11 @@ package dev.yidafu.swc.generator.codegen.generator.types
 
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.MAP
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeAliasSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.codegen.generator.PoetGenerator
 import dev.yidafu.swc.generator.codegen.poet.PoetConstants
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
@@ -42,4 +42,3 @@ class TypeAliasEmitter {
             .build()
     }
 }
-

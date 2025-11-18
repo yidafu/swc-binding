@@ -12,7 +12,6 @@ import dev.yidafu.swc.generator.codegen.generator.types.TypesGenerationInput
 import dev.yidafu.swc.generator.codegen.generator.types.TypesPostProcessor
 import dev.yidafu.swc.generator.codegen.generator.types.stages.CollectTypesFileStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.ConcreteClassStage
-import dev.yidafu.swc.generator.codegen.generator.types.stages.ImplementationStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.InterfaceStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.TypeAliasStage
 import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFileWriter
@@ -23,12 +22,12 @@ import dev.yidafu.swc.generator.codegen.poet.PoetConstants
 import dev.yidafu.swc.generator.config.TypesImplementationRules
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.util.Logger
 import dev.yidafu.swc.generator.monitor.PerformanceMonitor
+import dev.yidafu.swc.generator.util.CacheManager
+import dev.yidafu.swc.generator.util.Logger
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.LinkedHashMap
-import dev.yidafu.swc.generator.util.CacheManager
 
 /**
  * types.kt 生成器（使用 KotlinPoet）
@@ -85,10 +84,33 @@ class TypesGenerator(
             val resolvedOutputPath = Paths.get(outputPath)
             Logger.debug("使用 KotlinPoet 生成拆分后的 types 文件...", 4)
 
-            val dedicatedInterfaces = computeInterfacesWithDedicatedFiles(classDecls)
+            // 过滤掉需要手动定义的类型（在 customType.kt 中定义）
+            val skippedTypes = setOf("Identifier", "BindingIdentifier", "TemplateLiteral", "TsTemplateLiteralType")
+            val filteredClassDecls = classDecls.filter { 
+                val cleanName = it.name.removeSurrounding("`")
+                !skippedTypes.contains(cleanName)
+            }.toMutableList()
+            Logger.debug("跳过类型生成: $skippedTypes (共 ${classDecls.size - filteredClassDecls.size} 个)", 4)
+
+            val dedicatedInterfaces = computeInterfacesWithDedicatedFiles(filteredClassDecls)
+
+            // 调试：检查 ForOfStatement 和 ComputedPropName
+            val forOfStatement = filteredClassDecls.find { it.name.removeSurrounding("`") == "ForOfStatement" }
+            val computedPropName = filteredClassDecls.find { it.name.removeSurrounding("`") == "ComputedPropName" }
+            if (forOfStatement != null) {
+                Logger.debug("  TypesGenerator 找到 ForOfStatement: modifier=${forOfStatement.modifier}, name=${forOfStatement.name}", 4)
+            } else {
+                Logger.warn("  TypesGenerator 未找到 ForOfStatement，总类数: ${filteredClassDecls.size}")
+            }
+            if (computedPropName != null) {
+                Logger.debug("  TypesGenerator 找到 ComputedPropName: modifier=${computedPropName.modifier}, name=${computedPropName.name}", 4)
+            } else {
+                Logger.warn("  TypesGenerator 未找到 ComputedPropName，总类数: ${filteredClassDecls.size}")
+            }
+
             val context = TypesGenerationContext(
                 input = TypesGenerationInput(
-                    classDecls = classDecls,
+                    classDecls = filteredClassDecls,
                     typeAliases = typeAliases,
                     outputPath = resolvedOutputPath
                 ),
@@ -141,7 +163,9 @@ class TypesGenerator(
             "kotlinx.serialization" to "Serializable",
             "kotlinx.serialization.json" to "JsonClassDiscriminator",
             "kotlin" to "Int",
-            "kotlin" to "Nothing"
+            "kotlin" to "Nothing",
+            // 添加 emptySpan 导入，确保所有使用 span 属性的类都能正确导入
+            "dev.yidafu.swc" to "emptySpan"
         )
     }
 

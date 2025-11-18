@@ -60,5 +60,3 @@ class UnionFactoryUsageTest : AnnotationSpec() {
         content.shouldContain("ArraySerializer(")
     }
 }
-
-

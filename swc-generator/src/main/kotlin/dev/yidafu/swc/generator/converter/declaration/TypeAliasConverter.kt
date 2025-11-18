@@ -3,10 +3,12 @@ package dev.yidafu.swc.generator.converter.declaration
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.PropertyRulesConfig
+import dev.yidafu.swc.generator.config.SerializerConfig
+import dev.yidafu.swc.generator.config.TypeAliasRulesConfig
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
-import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeParameter
 import dev.yidafu.swc.generator.model.typescript.Variance
@@ -56,8 +58,8 @@ class TypeAliasConverter(
 
             handleIntersectionAlias(tsTypeAlias)?.let { return it }
 
-            // 特殊规则：部分别名强制映射为 String（集中于 Hardcoded）
-            if (Hardcoded.TypeAliasRules.isForceStringAlias(tsTypeAlias.name)) {
+            // 特殊规则：部分别名强制映射为 String（集中于 TypeAliasRulesConfig）
+            if (TypeAliasRulesConfig.isForceStringAlias(tsTypeAlias.name)) {
                 Logger.debug("  特殊处理 ${tsTypeAlias.name} -> String", 6)
                 val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
                     name = wrapReservedWord(mappedAliasName),
@@ -99,7 +101,7 @@ class TypeAliasConverter(
             val kotlinTypeParams = convertTypeParameters(tsTypeAlias.typeParameters)
 
             val typeAliasDecl = KotlinDeclaration.TypeAliasDecl(
-            name = wrapReservedWord(mappedAliasName),
+                name = wrapReservedWord(mappedAliasName),
                 type = kotlinType,
                 typeParameters = kotlinTypeParams,
                 annotations = emptyList(),
@@ -166,7 +168,7 @@ class TypeAliasConverter(
                 add(
                     KotlinDeclaration.Annotation(
                         name = "JsonClassDiscriminator",
-                        arguments = listOf(Expression.StringLiteral(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR))
+                        arguments = listOf(Expression.StringLiteral(SerializerConfig.SYNTAX_DISCRIMINATOR))
                     )
                 )
             },
@@ -342,10 +344,10 @@ class TypeAliasConverter(
                 val cleanName = tsTypeAlias.name.removeSurrounding("`")
                 val discriminator =
                     when {
-                        Hardcoded.Serializer.configInterfaceNames.contains(cleanName) ->
-                            Hardcoded.Serializer.SYNTAX_DISCRIMINATOR
+                        SerializerConfig.configInterfaceNames.contains(cleanName) ->
+                            SerializerConfig.SYNTAX_DISCRIMINATOR
                         cleanName == "Node" ->
-                            Hardcoded.Serializer.DEFAULT_DISCRIMINATOR
+                            SerializerConfig.DEFAULT_DISCRIMINATOR
                         else -> null
                     }
                 if (discriminator != null) {
@@ -372,7 +374,7 @@ class TypeAliasConverter(
     ): GeneratorResult<KotlinDeclaration.ClassDecl> {
         val typeLiteral = tsTypeAlias.type as TypeScriptType.TypeLiteral
         val properties = typeLiteral.members.mapNotNull { member ->
-            val adjustedMember = if (Hardcoded.TypeAliasRules.forceNullableForInterface(tsTypeAlias.name)) {
+            val adjustedMember = if (TypeAliasRulesConfig.forceNullableForInterface(tsTypeAlias.name)) {
                 member.copy(optional = true)
             } else {
                 member
@@ -429,5 +431,5 @@ class TypeAliasConverter(
     /**
      * 包装保留字
      */
-    private fun wrapReservedWord(name: String): String = Hardcoded.PropertyRules.wrapReservedWord(name)
+    private fun wrapReservedWord(name: String): String = PropertyRulesConfig.wrapReservedWord(name)
 }

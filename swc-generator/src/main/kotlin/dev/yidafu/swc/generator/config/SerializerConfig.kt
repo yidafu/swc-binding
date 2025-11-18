@@ -17,9 +17,9 @@ object SerializerConfig {
      * 缺失 @Serializable 注解时的处理策略
      */
     enum class MissingSerializablePolicy {
-        ERROR,            // 一律抛错
-        WARN_OPEN_BASES,  // 白名单开放父接口仅告警，其他抛错
-        WARN_ALL          // 全部仅告警
+        ERROR, // 一律抛错
+        WARN_OPEN_BASES, // 白名单开放父接口仅告警，其他抛错
+        WARN_ALL // 全部仅告警
     }
 
     /**
@@ -70,5 +70,17 @@ object SerializerConfig {
      * 配置接口名称集合
      */
     val configInterfaceNames: Set<String> = ConfigInterface.values().map { it.value }.toSet()
-}
 
+    /**
+     * 接口名到实现类名的映射
+     * 在 polymorphic 注册时，这些接口类型会使用对应的 Impl 类型
+     * 键：接口名（如 "Identifier"）
+     * 值：实现类名（如 "IdentifierImpl"）
+     */
+    val interfaceToImplMap: Map<String, String> = mapOf(
+        "Identifier" to "IdentifierImpl",
+        "BindingIdentifier" to "BindingIdentifierImpl",
+        "TemplateLiteral" to "TemplateLiteralImpl",
+        "TsTemplateLiteralType" to "TsTemplateLiteralTypeImpl"
+    )
+}

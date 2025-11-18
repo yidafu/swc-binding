@@ -2,10 +2,10 @@ package dev.yidafu.swc.generator.converter
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.config.Configuration
+import dev.yidafu.swc.generator.config.ConverterRulesConfig
 import dev.yidafu.swc.generator.converter.declaration.InterfaceConverter
 import dev.yidafu.swc.generator.converter.declaration.TypeAliasConverter
 import dev.yidafu.swc.generator.converter.type.TypeConverter
-import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
@@ -49,10 +49,25 @@ class TypeScriptToKotlinConverter(
                 }
                 val result = convertDeclaration(tsDeclaration, interfaceConverter, typeAliasConverter)
                 result.onSuccess { kotlinDeclaration ->
+                    val name = when (tsDeclaration) {
+                        is TypeScriptDeclaration.InterfaceDeclaration -> tsDeclaration.name
+                        is TypeScriptDeclaration.TypeAliasDeclaration -> tsDeclaration.name
+                    }
+                    if (name == "ForOfStatement" || name == "ComputedPropName") {
+                        Logger.debug("成功转换: $name -> ${kotlinDeclaration::class.simpleName}", 6)
+                    }
                     kotlinDeclarations.add(kotlinDeclaration)
                     kotlinDeclarations.addAll(typeAliasConverter.drainExtraDeclarations())
                 }.onFailure { error ->
-                    Logger.warn("转换声明失败: ${tsDeclaration::class.simpleName}, ${error.message}")
+                    val name = when (tsDeclaration) {
+                        is TypeScriptDeclaration.InterfaceDeclaration -> tsDeclaration.name
+                        is TypeScriptDeclaration.TypeAliasDeclaration -> tsDeclaration.name
+                    }
+                    if (name == "ForOfStatement" || name == "ComputedPropName") {
+                        Logger.warn("转换声明失败: $name, ${error.message}")
+                    } else {
+                        Logger.warn("转换声明失败: ${tsDeclaration::class.simpleName}, ${error.message}")
+                    }
                     // 继续处理其他声明，不中断整个流程
                 }
             }
@@ -111,7 +126,7 @@ class TypeScriptToKotlinConverter(
 
     private fun shouldSkipDeclaration(declaration: TypeScriptDeclaration): Boolean {
         return declaration is TypeScriptDeclaration.TypeAliasDeclaration &&
-            Hardcoded.ConverterRules.shouldSkipTypeAlias(declaration.name)
+            ConverterRulesConfig.shouldSkipTypeAlias(declaration.name)
     }
 
     private fun buildUnionParentRegistry(

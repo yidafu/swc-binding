@@ -14,4 +14,3 @@ object CollectionsConfig {
     val MUTABLE_LIST = ClassName("kotlin.collections", "MutableList")
     val MUTABLE_SET = ClassName("kotlin.collections", "MutableSet")
 }
-

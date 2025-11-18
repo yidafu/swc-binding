@@ -11,22 +11,22 @@ object CtxtFieldsConfig {
     enum class ClassWithCtxt(val value: String, val category: String) {
         // 语句相关
         BLOCK_STATEMENT("BlockStatement", "语句"),
-        
+
         // 表达式相关
         CALL_EXPRESSION("CallExpression", "表达式"),
         NEW_EXPRESSION("NewExpression", "表达式"),
         ARROW_FUNCTION_EXPRESSION("ArrowFunctionExpression", "表达式"),
         TAGGED_TEMPLATE_EXPRESSION("TaggedTemplateExpression", "表达式"),
-        
+
         // 声明相关
         FUNCTION_DECLARATION("FunctionDeclaration", "声明"),
         VARIABLE_DECLARATION("VariableDeclaration", "声明"),
-        
+
         // 类相关
         CLASS("Class", "类"),
         PRIVATE_PROPERTY("PrivateProperty", "类"),
         CONSTRUCTOR("Constructor", "类"),
-        
+
         // 标识符相关
         IDENTIFIER("Identifier", "标识符")
     }
@@ -55,4 +55,3 @@ object CtxtFieldsConfig {
             .toSet()
     }
 }
-

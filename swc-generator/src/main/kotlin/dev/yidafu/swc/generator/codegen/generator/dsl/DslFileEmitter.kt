@@ -10,6 +10,7 @@ import dev.yidafu.swc.generator.codegen.poet.PoetConstants
 import dev.yidafu.swc.generator.codegen.poet.createDslLambdaType
 import dev.yidafu.swc.generator.codegen.poet.createExtensionFun
 import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
+import dev.yidafu.swc.generator.config.SerializerConfig
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.isInterface
 import dev.yidafu.swc.generator.util.Logger
@@ -95,6 +96,12 @@ class DslFileEmitter(
 
     private fun resolveImplClassName(typeName: String): String? {
         val normalized = DslNamingRules.sanitizeTypeName(DslNamingRules.removeGenerics(typeName)).removeSurrounding("`")
+        
+        // 首先检查 customType.kt 中定义的接口到实现类的映射
+        SerializerConfig.interfaceToImplMap[normalized]?.let { implName ->
+            return implName
+        }
+        
         val decl = modelContext.classInfoByName[normalized]
         return when {
             // 若本身是具体类，直接返回
@@ -115,11 +122,19 @@ class DslFileEmitter(
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
         val className = klass.name.removeSurrounding("`")
         val classType = ClassName(PoetConstants.PKG_TYPES, className)
+        
+        // 对于接口类型，使用对应的 Impl 类（如 Identifier -> IdentifierImpl）
+        val implTypeName = resolveImplClassName(className)
+        val implType = if (implTypeName != null) {
+            ClassName(PoetConstants.PKG_TYPES, implTypeName)
+        } else {
+            classType
+        }
 
         return FunSpec.builder("create$className")
             .addParameter("block", createDslLambdaType(classType as TypeName))
             .returns(classType)
-            .addStatement("return %T().apply(block)", classType)
+            .addStatement("return %T().apply(block)", implType)
             .build()
     }
 }

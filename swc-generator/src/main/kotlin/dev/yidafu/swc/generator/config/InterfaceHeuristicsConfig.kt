@@ -19,4 +19,3 @@ object InterfaceHeuristicsConfig {
      */
     val interfaceSuffixes: Set<String> = InterfaceSuffix.values().map { it.value }.toSet()
 }
-

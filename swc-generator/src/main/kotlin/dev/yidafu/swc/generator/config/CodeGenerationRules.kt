@@ -18,11 +18,11 @@ object CodeGenerationRules {
     // 存储接口名称到 type 字段字面量值的映射（用于生成实现类时的 @SerialName）
     // 这个映射表在 InterfaceConverter 中填充，在生成实现类时使用
     private val typeFieldLiteralValueMap = mutableMapOf<String, String>()
-    
+
     fun getTypeFieldLiteralValue(interfaceName: String): String? {
         return typeFieldLiteralValueMap[interfaceName]
     }
-    
+
     fun setTypeFieldLiteralValue(interfaceName: String, literalValue: String) {
         typeFieldLiteralValueMap[interfaceName] = literalValue
     }
@@ -45,6 +45,26 @@ object CodeGenerationRules {
         "topRetain" to KotlinType.StringType.makeNullable(),
         "toplevel" to KotlinType.StringType.makeNullable()
     )
+
+    /**
+     * 获取特定接口和属性的类型覆盖
+     * 用于处理某些属性在特定接口中需要特殊类型映射的情况
+     * * @param interfaceName 接口名称
+     * @param propertyName 属性名称
+     * @return 覆盖后的类型，如果没有覆盖则返回 null
+     */
+    fun getPropertyTypeOverride(interfaceName: String, propertyName: String): KotlinType? {
+        val cleanInterfaceName = interfaceName.removeSurrounding("`")
+        val cleanPropertyName = propertyName.removeSurrounding("`")
+
+        // ForOfStatement.await 在 TS 中声明为 Span?，但实际应该是 Boolean?
+        // 这是 SWC 的特殊情况，需要特殊处理
+        if (cleanInterfaceName == "ForOfStatement" && cleanPropertyName == "await") {
+            return KotlinType.Boolean.makeNullable()
+        }
+
+        return null
+    }
 
     // ==================== 命名规则 ====================
 
@@ -396,11 +416,10 @@ object TypesImplementationRules {
                 else -> null
             }
         }
-        
+
         // 如果没有从属性中获取到，尝试从全局映射表中获取（接口属性没有默认值，但字面量值已存储在映射表中）
-        val typeFieldLiteralValue = typeFieldLiteralValueFromProperty 
-            ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
-        
+        val typeFieldLiteralValue = typeFieldLiteralValueFromProperty ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
+
         // 特殊处理：检测已知的 @SerialName 冲突
         // 1. BindingIdentifier 和 Identifier 有相同的 type 值 "Identifier"
         // 2. TsTemplateLiteralType 和 TemplateLiteral 有相同的 type 值 "TemplateLiteral"
@@ -410,16 +429,25 @@ object TypesImplementationRules {
             rule.interfaceCleanName == "TsTemplateLiteralType" && typeFieldLiteralValue == "TemplateLiteral" -> true
             else -> false
         }
-        
+
+        // 特殊处理：ComputedPropName 应该使用 TS 字面量值 "Computed" 而不是接口名 "ComputedPropName"
+        // 这是为了确保序列化时使用正确的类型标识符
+        val shouldUseLiteralValue = when {
+            rule.interfaceCleanName == "ComputedPropName" && typeFieldLiteralValue == "Computed" -> true
+            else -> false
+        }
+
         // 优先使用从 TypeScript 提取的字面量值，否则使用 syntaxLiteral 或 interfaceCleanName
         // 如果检测到冲突，使用接口名称作为后备方案
+        // ComputedPropName 强制使用字面量值 "Computed"
         val serialNameValue = when {
             hasSerialNameConflict -> rule.interfaceCleanName
+            shouldUseLiteralValue && typeFieldLiteralValue != null -> typeFieldLiteralValue
             typeFieldLiteralValue != null && rule.discriminator == "type" -> typeFieldLiteralValue
             rule.syntaxLiteral != null -> rule.syntaxLiteral
             else -> rule.interfaceCleanName
         }
-        
+
         val annotations = mutableListOf(
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
@@ -437,7 +465,7 @@ object TypesImplementationRules {
             annotations.add(
                 KotlinDeclaration.Annotation(
                     "JsonClassDiscriminator",
-                    listOf(Expression.StringLiteral(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR))
+                    listOf(Expression.StringLiteral(SerializerConfig.SYNTAX_DISCRIMINATOR))
                 )
             )
         }
@@ -502,11 +530,11 @@ object TypesImplementationRules {
         val defaultValue = when {
             // 如果是 type 属性，优先使用从 TypeScript 提取的字面量值，否则使用接口名称
             // 如果属性没有默认值（接口属性被清除了），尝试从全局映射表中获取
-            isTypeProperty -> prop.defaultValue 
-                ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)?.let { literalValue -> Expression.StringLiteral(literalValue) }
+            isTypeProperty -> prop.defaultValue ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)?.let { literalValue -> Expression.StringLiteral(literalValue) }
                 ?: Expression.StringLiteral(rule.interfaceCleanName)
             isSyntaxProperty -> Expression.StringLiteral(rule.syntaxLiteral!!)
-            isSpanProperty -> Expression.FunctionCall("Span")
+            // 对于 span 属性，使用 emptySpan() 函数调用，确保包含 ctxt 字段
+            isSpanProperty -> Expression.FunctionCall("emptySpan")
             isSpanCoordinateProperty -> Expression.NumberLiteral("0")
             updatedType is KotlinType.Nullable -> Expression.NullLiteral
             else -> prop.defaultValue

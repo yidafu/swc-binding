@@ -78,7 +78,7 @@ class DslExtensionCollector(
             return emptyList()
         }
 
-        // 检查属性类型是否为联合类型（Union.U2/U3/U4）
+        // 检查属性类型是否为联合类型（Union.U2/U3）
         val unionTypeName = getUnionTypeName(prop.type)
         if (unionTypeName != null) {
             // 对于联合类型，只为联合类型本身生成一个 DSL 扩展函数
@@ -88,7 +88,7 @@ class DslExtensionCollector(
                   * extension function for union type: ${prop.type.toTypeString()}
                   */
             """.trimIndent()
-            
+
             Logger.debug("为联合类型属性 $klass#${prop.name}: ${prop.type.toTypeString()} 生成 DSL 扩展函数", 6)
             return listOf(KotlinExtensionFun(klass, unionTypeName, kdoc))
         }
@@ -109,7 +109,7 @@ class DslExtensionCollector(
     }
 
     /**
-     * 检查类型是否为联合类型（Union.U2/U3/U4），如果是则返回联合类型的名称
+     * 检查类型是否为联合类型（Union.U2/U3），如果是则返回联合类型的名称
      * 用于确定是否为联合类型，以便只为联合类型本身生成 DSL 扩展函数
      */
     private fun getUnionTypeName(type: KotlinType): String? {

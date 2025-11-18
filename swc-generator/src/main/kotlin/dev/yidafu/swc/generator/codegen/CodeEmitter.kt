@@ -64,6 +64,20 @@ class CodeEmitter(
             Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
         } else {
             config.outputTypesPath?.let { path ->
+                // 调试：检查 ForOfStatement 和 ComputedPropName
+                val forOfStatement = transformResult.classDecls.find { it.name.removeSurrounding("`") == "ForOfStatement" }
+                val computedPropName = transformResult.classDecls.find { it.name.removeSurrounding("`") == "ComputedPropName" }
+                if (forOfStatement != null) {
+                    Logger.debug("  CodeEmitter 找到 ForOfStatement: modifier=${forOfStatement.modifier}", 4)
+                } else {
+                    Logger.warn("  CodeEmitter 未找到 ForOfStatement，总类数: ${transformResult.classDecls.size}")
+                }
+                if (computedPropName != null) {
+                    Logger.debug("  CodeEmitter 找到 ComputedPropName: modifier=${computedPropName.modifier}", 4)
+                } else {
+                    Logger.warn("  CodeEmitter 未找到 ComputedPropName，总类数: ${transformResult.classDecls.size}")
+                }
+
                 TypesGenerator(transformResult.classDecls.toMutableList()).use { generator ->
                     // 添加类型别名
                     transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->

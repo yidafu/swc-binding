@@ -10,22 +10,17 @@ import dev.yidafu.swc.generator.codegen.pipeline.GenerationStage
 import dev.yidafu.swc.generator.codegen.pipeline.WriteFilesStage
 import dev.yidafu.swc.generator.codegen.poet.PoetConstants
 import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
+import dev.yidafu.swc.generator.config.SerializerConfig
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
-import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.kotlin.computeSerialName
 import dev.yidafu.swc.generator.model.kotlin.getClassName
 import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.util.NameUtils
 import dev.yidafu.swc.generator.util.NameUtils.normalized
-import dev.yidafu.swc.generator.util.NameUtils.removeBackticks
 import dev.yidafu.swc.generator.util.NameUtils.simpleNameOf
-import dev.yidafu.swc.generator.util.NameUtils.sortMapKeysByNormalized
-import dev.yidafu.swc.generator.util.NameUtils.sortNamesByNormalized
 import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
-import dev.yidafu.swc.generator.config.Hardcoded
-import dev.yidafu.swc.generator.config.SerializerConfig
 
 /**
  * serializer.kt 生成器（使用 KotlinPoet）
@@ -34,8 +29,8 @@ import dev.yidafu.swc.generator.config.SerializerConfig
 class SerializerGenerator(
     private val writer: GeneratedFileWriter = GeneratedFileWriter()
 ) : Closeable {
-    private val customSubclassSerializers = mapOf<String, String>()
     private val skipPolymorphicInterfaces = setOf<String>()
+    private val interfaceToImplMap: Map<String, String> = SerializerConfig.interfaceToImplMap
 
     private val pipeline = GenerationPipeline(
         listOf(
@@ -60,6 +55,7 @@ class SerializerGenerator(
      * 写入文件
      */
     fun writeToFile(outputPath: String, classDecls: List<KotlinDeclaration.ClassDecl>) {
+        // 不再过滤类型，使用所有类型（包括 Identifier、BindingIdentifier、TemplateLiteral、TsTemplateLiteralType）
         val context = SerializerGenerationContext(Paths.get(outputPath), classDecls)
         pipeline.execute(context)
         Logger.success("Generated: $outputPath (${classDecls.size} 个类型)")
@@ -74,11 +70,16 @@ class SerializerGenerator(
             .filter { it.modifier is ClassModifier.SealedInterface }
             .map { it.name.removeSurrounding("`") }
             .toSet()
-        val serializableBases: Set<String> = sealedBases + Hardcoded.Serializer.additionalOpenBases
-        val polymorphicGroups = buildPolymorphicGroups(classDecls, serializableBases)
+        val serializableBases: Set<String> = sealedBases + SerializerConfig.additionalOpenBases
+        val polymorphicGroups = buildPolymorphicGroups(classDecls, serializableBases).toMutableMap()
+        
+        // 为 customType.kt 中定义的接口添加多态注册
+        addCustomTypePolymorphicRegistrations(polymorphicGroups)
+        
         // 语义校验：所有将作为 polymorphic 父的类型必须已标注 @Serializable
         validateSerializableParents(classDecls, polymorphicGroups)
         Logger.debug("  多态类型数: ${polymorphicGroups.values.sumOf { it.size }}", 4)
+        
         val fileBuilder = createFileBuilder(
             PoetConstants.PKG_TYPES, "serializer",
             "kotlinx.serialization" to "DeserializationStrategy",
@@ -100,8 +101,8 @@ class SerializerGenerator(
             }
         }
         // 确保至少输出空的模块属性，避免下游引用缺失
-        val hasDefault = polymorphicGroups.containsKey(Hardcoded.Serializer.DEFAULT_DISCRIMINATOR)
-        val hasSyntax = polymorphicGroups.containsKey(Hardcoded.Serializer.SYNTAX_DISCRIMINATOR)
+        val hasDefault = polymorphicGroups.containsKey(SerializerConfig.DEFAULT_DISCRIMINATOR)
+        val hasSyntax = polymorphicGroups.containsKey(SerializerConfig.SYNTAX_DISCRIMINATOR)
         if (!hasDefault) {
             fileBuilder.addProperty(
                 PropertySpec.builder("swcSerializersModule", PoetConstants.Serialization.Modules.SERIALIZERS_MODULE)
@@ -343,7 +344,8 @@ class SerializerGenerator(
         val compact = compactAndFilterMappings(
             remappedToSerializableAncestor,
             rawToNormalized,
-            childToParents
+            childToParents,
+            classDecls
         )
         // 3) 向所有可序列化祖先扩散
         val expanded = expandToAllSerializableAncestors(
@@ -351,7 +353,8 @@ class SerializerGenerator(
             serializableBases,
             rawToNormalized,
             normalizedToRaw,
-            childToParents
+            childToParents,
+            classDecls
         )
 
         val finalMap = LinkedHashMap<String, List<String>>().apply {
@@ -386,7 +389,8 @@ class SerializerGenerator(
     private fun compactAndFilterMappings(
         remapped: Map<String, LinkedHashSet<String>>,
         rawToNormalized: Map<String, String>,
-        childToParents: Map<String, List<String>>
+        childToParents: Map<String, List<String>>,
+        classDecls: List<KotlinDeclaration.ClassDecl>
     ): LinkedHashMap<String, List<String>> {
         val compact = LinkedHashMap<String, List<String>>()
         remapped.forEach { (rawParent, childrenSet) ->
@@ -407,7 +411,8 @@ class SerializerGenerator(
         serializableBases: Set<String>,
         rawToNormalized: Map<String, String>,
         normalizedToRaw: Map<String, String>,
-        childToParents: Map<String, List<String>>
+        childToParents: Map<String, List<String>>,
+        classDecls: List<KotlinDeclaration.ClassDecl>
     ): LinkedHashMap<String, LinkedHashSet<String>> {
         val expanded = LinkedHashMap<String, LinkedHashSet<String>>()
         compact.forEach { (rawParent, children) ->
@@ -419,7 +424,9 @@ class SerializerGenerator(
                 if (serializableBases.contains(ancClean)) {
                     val ancRaw = normalizedToRaw[anc] ?: anc
                     val set = expanded.getOrPut(ancRaw) { LinkedHashSet() }
-                    set.addAll(children)
+                    children.forEach { child ->
+                        set.add(child)
+                    }
                 }
             }
         }
@@ -494,10 +501,10 @@ class SerializerGenerator(
         val groupedResult = LinkedHashMap<String, LinkedHashMap<String, List<String>>>()
         orderedResult.forEach { (rawParent, children) ->
             val normalizedParent = rawToNormalized[rawParent] ?: rawParent.removeSurrounding("`", "`")
-            val discriminator = if (clean(normalizedParent) in Hardcoded.Serializer.configInterfaceNames) {
-                Hardcoded.Serializer.SYNTAX_DISCRIMINATOR
+            val discriminator = if (clean(normalizedParent) in SerializerConfig.configInterfaceNames) {
+                SerializerConfig.SYNTAX_DISCRIMINATOR
             } else {
-                Hardcoded.Serializer.DEFAULT_DISCRIMINATOR
+                SerializerConfig.DEFAULT_DISCRIMINATOR
             }
             groupedResult
                 .getOrPut(discriminator) { LinkedHashMap() }
@@ -631,8 +638,6 @@ class SerializerGenerator(
     private val ancestorsCache = mutableMapOf<String, List<String>>()
     private val ancestorsWithSelfCache = mutableMapOf<String, List<String>>()
 
-    
-
     /**
      * 创建 swcSerializersModule 属性
      */
@@ -662,19 +667,37 @@ class SerializerGenerator(
             .add("SerializersModule {\n")
             .apply {
                 indent()
-                // 防御性排序：父 key 与子类名基于去反引号后的字典序
-                val orderedParents = polymorphicMap.keys.sortedBy { clean(it) }
+                // 自定义排序：customType 接口保持 interfaceToImplMap 中定义的顺序，其他接口按字母顺序
+                val customTypeInterfaces = interfaceToImplMap.keys.toSet()
+                val customTypeOrder = interfaceToImplMap.keys.toList()
+                val orderedParents = polymorphicMap.keys.sortedWith { a, b ->
+                    val aIsCustomType = clean(a) in customTypeInterfaces
+                    val bIsCustomType = clean(b) in customTypeInterfaces
+                    when {
+                        aIsCustomType && bIsCustomType -> {
+                            // 两个都是 customType 接口，按照 interfaceToImplMap 的顺序
+                            val aIndex = customTypeOrder.indexOf(clean(a))
+                            val bIndex = customTypeOrder.indexOf(clean(b))
+                            aIndex.compareTo(bIndex)
+                        }
+                        aIsCustomType -> 1  // customType 接口放在最后
+                        bIsCustomType -> -1
+                        else -> clean(a).compareTo(clean(b))  // 其他接口按字母顺序
+                    }
+                }
                 orderedParents.forEach { parent ->
                     val children = polymorphicMap.getValue(parent).sortedBy { clean(it) }
-                    add("polymorphic(%L::class) {\n", parent)
+                    val parentClean = clean(parent)
+                    val parentClassName = ClassName(PoetConstants.PKG_TYPES, parentClean)
+                    add("polymorphic(%T::class) {\n", parentClassName)
                     indent()
                     children.forEach { child ->
-                        val serializer = customSubclassSerializers[clean(child)]
-                        if (serializer != null) {
-                            add("subclass(%L::class, %L)\n", child, serializer)
-                        } else {
-                            add("subclass(%L::class)\n", child)
-                        }
+                        // 对于配置中定义的接口类型，使用对应的 Impl 类型
+                        val childClean = clean(child)
+                        val implClassName = interfaceToImplMap[childClean] ?: childClean
+                        // 使用 ClassName 确保正确处理类名（包括反引号的情况）
+                        val className = ClassName(PoetConstants.PKG_TYPES, implClassName)
+                        add("subclass(%T::class)\n", className)
                     }
                     unindent()
                     add("}\n")
@@ -686,15 +709,15 @@ class SerializerGenerator(
     }
 
     private fun buildSerializerModuleOrder(discriminators: Set<String>): List<String> {
-        val prioritized = listOf(Hardcoded.Serializer.DEFAULT_DISCRIMINATOR, Hardcoded.Serializer.SYNTAX_DISCRIMINATOR)
+        val prioritized = listOf(SerializerConfig.DEFAULT_DISCRIMINATOR, SerializerConfig.SYNTAX_DISCRIMINATOR)
         return prioritized.filter { discriminators.contains(it) } +
             discriminators.filterNot { it in prioritized }
     }
 
     private fun resolveModulePropertyName(discriminator: String): String {
         return when (discriminator) {
-            Hardcoded.Serializer.DEFAULT_DISCRIMINATOR -> "swcSerializersModule"
-            Hardcoded.Serializer.SYNTAX_DISCRIMINATOR -> "swcConfigSerializersModule"
+            SerializerConfig.DEFAULT_DISCRIMINATOR -> "swcSerializersModule"
+            SerializerConfig.SYNTAX_DISCRIMINATOR -> "swcConfigSerializersModule"
             else -> "swc${discriminator.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}SerializersModule"
         }
     }
@@ -716,8 +739,8 @@ class SerializerGenerator(
     ) {
         val byNormalized = classDecls.associateBy { clean(it.getClassName()) }
         val missingDetails = mutableListOf<String>()
-        val policy = Hardcoded.Serializer.missingSerializablePolicy
-        val openBases = Hardcoded.Serializer.additionalOpenBases
+        val policy = SerializerConfig.missingSerializablePolicy
+        val openBases = SerializerConfig.additionalOpenBases
 
         groupedByDiscriminator.forEach { (discriminator, parentMap) ->
             val moduleName = resolveModulePropertyName(discriminator)
@@ -751,6 +774,41 @@ class SerializerGenerator(
             Logger.error("以下多态基类未标注 @Serializable：")
             missingDetails.forEach { Logger.error(" - $it") }
             throw IllegalStateException("Polymorphic parents must be annotated with @Serializable")
+        }
+    }
+
+    /**
+     * 为 customType.kt 中定义的接口添加多态注册
+     * 这些接口不在生成的类型列表中，需要手动添加
+     */
+    private fun addCustomTypePolymorphicRegistrations(
+        polymorphicGroups: MutableMap<String, LinkedHashMap<String, List<String>>>
+    ) {
+        // 为 interfaceToImplMap 中的每个接口添加多态注册
+        // 按照 interfaceToImplMap 的定义顺序添加，确保顺序正确
+        interfaceToImplMap.entries.forEach { (interfaceName, implName) ->
+            val defaultGroup = polymorphicGroups.getOrPut(SerializerConfig.DEFAULT_DISCRIMINATOR) { LinkedHashMap() }
+            // 对于 customType.kt 中的接口，直接使用配置的 implName，确保正确
+            if (!defaultGroup.containsKey(interfaceName)) {
+                // 如果不存在，直接添加
+                defaultGroup[interfaceName] = listOf(implName)
+                Logger.debug("  添加 customType.kt 多态注册: $interfaceName -> $implName", 4)
+            } else {
+                // 如果已存在，替换为正确的实现类（因为 customType.kt 中的接口有明确的实现类）
+                val existing = defaultGroup[interfaceName]?.toMutableList() ?: mutableListOf()
+                // 移除可能错误的实现类，添加正确的
+                if (!existing.contains(implName)) {
+                    existing.add(implName)
+                }
+                // 确保 implName 是第一个（主要实现类）
+                val updated = if (existing.firstOrNull() != implName) {
+                    listOf(implName) + existing.filter { it != implName }
+                } else {
+                    existing
+                }
+                defaultGroup[interfaceName] = updated
+                Logger.debug("  更新 customType.kt 多态注册: $interfaceName -> ${updated.joinToString(", ")}", 4)
+            }
         }
     }
 

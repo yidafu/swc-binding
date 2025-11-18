@@ -1,7 +1,5 @@
 package dev.yidafu.swc.generator.util
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 
 object NameUtils {
@@ -35,5 +33,3 @@ object NameUtils {
         return ordered
     }
 }
-
-

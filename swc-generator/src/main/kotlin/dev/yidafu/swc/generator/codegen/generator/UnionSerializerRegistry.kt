@@ -12,7 +12,7 @@ object UnionSerializerRegistry {
     data class UnionUsage(
         val ownerSimpleName: String,
         val propertyName: String,
-        val unionKind: String, // "U2" | "U3" | "U4" | "U5"
+        val unionKind: String, // "U2" | "U3"
         val typeArguments: List<TypeName>, // 允许参数化类型（如 Array<String>）
         val isArray: Boolean,
         val isNullableElement: List<Boolean> // per-type-arg nullability flags
@@ -39,7 +39,7 @@ object UnionSerializerRegistry {
      * 可选地包含可空标记以避免碰撞（受配置控制）。
      */
     fun canonicalToken(typeName: TypeName): String {
-        val includeNull = dev.yidafu.swc.generator.config.Hardcoded.Union.includeNullabilityInToken
+        val includeNull = dev.yidafu.swc.generator.config.UnionConfig.includeNullabilityInToken
         val tn = if (!includeNull && typeName.isNullable) typeName.copy(nullable = false) else typeName
         return when (tn) {
             is ParameterizedTypeName -> {
@@ -50,7 +50,12 @@ object UnionSerializerRegistry {
                 base + args + nullTag
             }
             is ClassName -> {
-                val base = tn.simpleNames.joinToString("")
+                // 对于嵌套类型，只使用最后一个 simpleName（例如 JsFormatOptions.JsFormatOptionsComments -> JsFormatOptionsComments）
+                val base = if (tn.simpleNames.size > 1) {
+                    tn.simpleNames.last()
+                } else {
+                    tn.simpleNames.joinToString("")
+                }
                 val nullTag = if (includeNull && typeName.isNullable) "N" else ""
                 base + nullTag
             }
@@ -73,5 +78,3 @@ object UnionSerializerRegistry {
         return "${unionKind}${middle}__Serializer"
     }
 }
-
-

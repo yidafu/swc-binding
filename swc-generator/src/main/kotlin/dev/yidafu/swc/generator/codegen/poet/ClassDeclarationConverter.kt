@@ -108,4 +108,3 @@ object ClassDeclarationConverter {
         return if (newModifier == prop.modifier) prop else prop.copy(modifier = newModifier)
     }
 }
-

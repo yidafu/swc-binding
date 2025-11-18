@@ -31,5 +31,3 @@ class SerializerModuleOptInTest : AnnotationSpec() {
         content.shouldContain("public val swcConfigSerializersModule: SerializersModule")
     }
 }
-
-

@@ -3,7 +3,6 @@ package dev.yidafu.swc.generator.codegen.generator.types.stages
 import dev.yidafu.swc.generator.codegen.generator.types.TypesGenerationContext
 import dev.yidafu.swc.generator.codegen.generator.types.TypesPostProcessor
 import dev.yidafu.swc.generator.codegen.pipeline.GenerationStage
-import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFile
 import dev.yidafu.swc.generator.util.Logger
 
 class CollectTypesFileStage(
@@ -19,4 +18,3 @@ class CollectTypesFileStage(
         }
     }
 }
-

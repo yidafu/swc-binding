@@ -17,3 +17,5 @@ rules:
     # 将以下 TS 接口生成为 Kotlin 类
     toKotlinClass:
       - "EsParserConfig"
+      - "ForOfStatement"
+      - "ComputedPropName"

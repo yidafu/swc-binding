@@ -31,6 +31,20 @@ class CodeGenStage(
         val classDecls = processedDeclarations.filterIsInstance<KotlinDeclaration.ClassDecl>()
         val typeAliases = processedDeclarations.filterIsInstance<KotlinDeclaration.TypeAliasDecl>()
 
+        // 调试：检查 ForOfStatement 和 ComputedPropName
+        val forOfStatement = classDecls.find { it.name.removeSurrounding("`") == "ForOfStatement" }
+        val computedPropName = classDecls.find { it.name.removeSurrounding("`") == "ComputedPropName" }
+        if (forOfStatement != null) {
+            Logger.debug("找到 ForOfStatement: modifier=${forOfStatement.modifier}", 4)
+        } else {
+            Logger.warn("未找到 ForOfStatement 在 classDecls 中")
+        }
+        if (computedPropName != null) {
+            Logger.debug("找到 ComputedPropName: modifier=${computedPropName.modifier}", 4)
+        } else {
+            Logger.warn("未找到 ComputedPropName 在 classDecls 中")
+        }
+
         // 创建属性映射（从上下文中获取或创建空的）
         val classAllPropertiesMap = context.getMetadata<Map<String, List<KotlinDeclaration.PropertyDecl>>>("classAllPropertiesMap") ?: emptyMap()
 

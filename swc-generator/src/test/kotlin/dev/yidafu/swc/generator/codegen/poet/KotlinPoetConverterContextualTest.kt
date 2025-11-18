@@ -34,4 +34,3 @@ class KotlinPoetConverterContextualTest : AnnotationSpec() {
         content.shouldContain("Union.U2")
     }
 }
-

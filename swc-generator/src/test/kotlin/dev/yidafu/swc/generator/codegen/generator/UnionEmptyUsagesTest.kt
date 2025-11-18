@@ -24,5 +24,3 @@ class UnionEmptyUsagesTest : AnnotationSpec() {
         content.shouldContain("No Union.Ux usages collected.")
     }
 }
-
-

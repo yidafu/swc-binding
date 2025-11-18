@@ -43,4 +43,3 @@ object TypeAliasRulesConfig {
         return FORCE_NULLABLE_INTERFACES.contains(interfaceName)
     }
 }
-

@@ -2,12 +2,11 @@ package dev.yidafu.swc.generator.codegen.poet
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import dev.yidafu.swc.generator.model.kotlin.*
-import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.util.CacheManager
-import dev.yidafu.swc.generator.monitor.PerformanceMonitor
-import dev.yidafu.swc.generator.config.Hardcoded
 import dev.yidafu.swc.generator.config.InterfaceHeuristicsConfig
+import dev.yidafu.swc.generator.model.kotlin.*
+import dev.yidafu.swc.generator.monitor.PerformanceMonitor
+import dev.yidafu.swc.generator.util.CacheManager
+import dev.yidafu.swc.generator.util.Logger
 
 /**
  * ADT 到 KotlinPoet 的核心转换器
@@ -90,43 +89,40 @@ object KotlinPoetConverter {
             convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
         }
 
-        // 为 ParserConfig 子类添加 @SerialName 注解（用于与 Rust 端兼容）
-        // 同时为所有 Node 派生类（实现了密封接口的类）添加 @SerialName，使用类名作为序列化名称
-        val className = decl.name.removeSurrounding("`")
-        val hasSerialName = decl.annotations.any { it.name == "SerialName" }
-        val nodeDerived = decl.name == "Node" || ClassDeclarationConverter.isDerivedFromNode(decl.parents, declLookup)
-        // 检查是否实现了任何密封接口（如 ModuleItem, Statement, Declaration 等）
-        val implementsSealedInterface = ClassDeclarationConverter.implementsSealedInterface(decl.parents, declLookup)
-        
-        if (!hasSerialName) {
-            when (className) {
-                "EsParserConfig" -> {
-                    builder.addAnnotation(
-                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                            .addMember("%S", "ecmascript")
-                            .build()
-                    )
-                }
-                "TsParserConfig" -> {
-                    builder.addAnnotation(
-                        AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                            .addMember("%S", "typescript")
-                            .build()
-                    )
-                }
-                else -> {
-                    // 对于所有 Node 派生类或实现了密封接口的类，如果没有 @SerialName，则使用类名作为序列化名称
-                    // 这样可以确保多态序列化时，JSON 中的 type 字段值与序列化名称匹配
-                    if ((nodeDerived || implementsSealedInterface) && decl.modifier !is ClassModifier.Interface && decl.modifier !is ClassModifier.SealedInterface) {
-                        builder.addAnnotation(
-                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                                .addMember("%S", className)
-                                .build()
-                        )
-                    }
-                }
-            }
-        }
+        // 不再自动添加 @SerialName 注解
+        // 如果需要 @SerialName，应该在类声明中显式添加
+        // val className = decl.name.removeSurrounding("`")
+        // val hasSerialName = decl.annotations.any { it.name == "SerialName" }
+        // val nodeDerived = decl.name == "Node" || ClassDeclarationConverter.isDerivedFromNode(decl.parents, declLookup)
+        // val implementsSealedInterface = ClassDeclarationConverter.implementsSealedInterface(decl.parents, declLookup)
+        //
+        // if (!hasSerialName) {
+        //     when (className) {
+        //         "EsParserConfig" -> {
+        //             builder.addAnnotation(
+        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                     .addMember("%S", "ecmascript")
+        //                     .build()
+        //             )
+        //         }
+        //         "TsParserConfig" -> {
+        //             builder.addAnnotation(
+        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                     .addMember("%S", "typescript")
+        //                     .build()
+        //             )
+        //         }
+        //         else -> {
+        //             if ((nodeDerived || implementsSealedInterface) && decl.modifier !is ClassModifier.Interface && decl.modifier !is ClassModifier.SealedInterface) {
+        //                 builder.addAnnotation(
+        //                     AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+        //                         .addMember("%S", className)
+        //                         .build()
+        //                 )
+        //             }
+        //         }
+        //     }
+        // }
 
         // 添加类型参数
         if (decl.typeParameters.isNotEmpty()) {
@@ -145,7 +141,8 @@ object KotlinPoetConverter {
         when (decl.modifier) {
             is ClassModifier.DataClass -> {
                 DataClassConverter.addDataClassProperties(
-                    builder, decl,
+                    builder,
+                    decl,
                     convertType = { convertType(it) },
                     addUnionAnnotation = { owner, prop, type, paramBuilder ->
                         addUnionWithAnnotationAndCollectForParam(owner, prop, type, paramBuilder)
@@ -154,14 +151,17 @@ object KotlinPoetConverter {
             }
             is ClassModifier.EnumClass -> {
                 EnumClassConverter.addEnumClassProperties(
-                    builder, decl,
+                    builder,
+                    decl,
                     convertType = { convertType(it) }
                 )
             }
             is ClassModifier.Interface, is ClassModifier.SealedInterface -> {
                 val nodeDerived = decl.name == "Node" || ClassDeclarationConverter.isDerivedFromNode(decl.parents, declLookup)
                 InterfaceClassConverter.addInterfaceProperties(
-                    builder, decl, nodeDerived,
+                    builder,
+                    decl,
+                    nodeDerived,
                     convertType = { convertType(it) },
                     addUnionAnnotation = { owner, prop, type, propBuilder ->
                         addUnionWithAnnotationAndCollectForProperty(owner, prop, type, propBuilder)
@@ -174,7 +174,7 @@ object KotlinPoetConverter {
                 val hasSpanDerived = ClassDeclarationConverter.isDerivedFrom(decl.parents, declLookup, "HasSpan")
                 val configDerived = ClassDeclarationConverter.isDerivedFrom(decl.parents, declLookup, "ParserConfig") ||
                     ClassDeclarationConverter.isDerivedFrom(decl.parents, declLookup, "BaseParseOptions")
-                
+
                 RegularClassConverter.addRegularClassProperties(
                     builder, decl, nodeDerived, hasSpanDerived, configDerived, declLookup,
                     convertType = { convertType(it) },
@@ -301,8 +301,7 @@ object KotlinPoetConverter {
 
     /**
      * 计算联合类型使用情况
-     * 
-     * 注意：此方法只检测联合类型（Union.U2/U3/U4）。
+     * * 注意：此方法只检测联合类型（Union.U2/U3）。
      * 如果联合类型已被替换为公共父接口（通过 TypeConverter.convertInterfaceUnion），
      * 此方法会返回 null，表示不需要联合类型序列化器。
      * 公共父接口应使用标准的多态序列化（polymorphic serialization），而不是联合类型序列化器。
@@ -395,6 +394,11 @@ object KotlinPoetConverter {
                                 base
                             }
                         }
+                    }
+                    is KotlinType.Nested -> {
+                        val parent = inner.parent.removePrefix("`").removeSuffix("`")
+                        val name = inner.name.removePrefix("`").removeSuffix("`")
+                        ClassName("dev.yidafu.swc.generated", parent, name)
                     }
                     is KotlinType.StringType -> ClassName("kotlin", "String")
                     is KotlinType.Int -> ClassName("kotlin", "Int")
@@ -608,6 +612,4 @@ object KotlinPoetConverter {
             else -> false
         }
     }
-
-
 }

@@ -133,7 +133,8 @@ fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
             KotlinDeclaration.Annotation("SwcDslMarker"),
             KotlinDeclaration.Annotation("Serializable"),
             KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
-            KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))),
+            // 不再添加 @SerialName 注解
+            // KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))),
             KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi")))
         ),
         properties = properties.map { prop ->
@@ -208,8 +209,11 @@ fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
 /**
  * 计算SerialName
  * 优先使用从 TypeScript 接口的 type 字段提取的字面量值
+ * 考虑 @SerialName 冲突情况（如 BindingIdentifier 和 Identifier）
  */
 fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String {
+    val cleanName = name.removeSurrounding("`")
+    
     // 首先尝试从 type 属性的默认值中提取字面量值
     val typeProperty = properties.find { it.name.removeSurrounding("`") == "type" }
     val typeFieldLiteralValue = typeProperty?.defaultValue?.let { defaultValue ->
@@ -217,13 +221,28 @@ fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String
             is Expression.StringLiteral -> defaultValue.value
             else -> null
         }
+    } ?: dev.yidafu.swc.generator.config.CodeGenerationRules.getTypeFieldLiteralValue(cleanName)
+
+    // 特殊处理：检测已知的 @SerialName 冲突
+    // 1. BindingIdentifier 和 Identifier 有相同的 type 值 "Identifier"
+    // 2. TsTemplateLiteralType 和 TemplateLiteral 有相同的 type 值 "TemplateLiteral"
+    // 为了避免 @SerialName 冲突，这些类型使用接口名称
+    val hasSerialNameConflict = when {
+        cleanName == "BindingIdentifier" && typeFieldLiteralValue == "Identifier" -> true
+        cleanName == "TsTemplateLiteralType" && typeFieldLiteralValue == "TemplateLiteral" -> true
+        else -> false
     }
-    
+
+    // 如果检测到冲突，使用类名称
+    if (hasSerialNameConflict && discriminator == "type") {
+        return cleanName
+    }
+
     // 如果找到了 type 字段的字面量值，优先使用它
     if (typeFieldLiteralValue != null && discriminator == "type") {
         return typeFieldLiteralValue
     }
-    
+
     return when (discriminator) {
         "type" -> {
             when {

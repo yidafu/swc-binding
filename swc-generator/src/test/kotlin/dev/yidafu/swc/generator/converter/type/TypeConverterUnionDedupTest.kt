@@ -73,5 +73,3 @@ class TypeConverterUnionDedupTest : AnnotationSpec() {
         g.params[1] shouldBe KotlinType.StringType
     }
 }
-
-
