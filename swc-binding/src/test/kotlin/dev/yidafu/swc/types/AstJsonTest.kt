@@ -2,12 +2,11 @@ package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.astJson
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.generated.Span
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class AstJsonTest : AnnotationSpec() {
     @Test

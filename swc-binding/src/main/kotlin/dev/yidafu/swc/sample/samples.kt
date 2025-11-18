@@ -13,14 +13,14 @@ fun parseSyncBasicUsage() {
           console.log(foo);
           """,
         """{"syntax":"ecmascript"}""",
-        "temp.js",
+        "temp.js"
     )
 }
 
 fun parseFileSyncBasicUsage() {
     SwcNative().parseFileSync(
         "path/to/js/code.js",
-        """{"syntax":"ecmascript"}""",
+        """{"syntax":"ecmascript"}"""
     )
 }
 
@@ -33,7 +33,7 @@ fun parseSyncEsSample() {
         esParseOptions {
             allowReturnOutsideFunction = true
         },
-        "temp.js",
+        "temp.js"
     )
 }
 
@@ -47,7 +47,7 @@ fun parseSyncJsxSample() {
         esParseOptions {
             jsx = true
         },
-        "temp.js",
+        "temp.js"
     )
 }
 
@@ -60,7 +60,7 @@ fun parseSyncTsSample() {
         tsParseOptions {
             tsx = true
         },
-        "temp.js",
+        "temp.js"
     )
 }
 
@@ -69,7 +69,7 @@ fun parseFileSyncEsSample() {
         "path/to/js/code.js",
         esParseOptions {
             dynamicImport = true
-        },
+        }
     )
 }
 
@@ -86,7 +86,7 @@ fun createExampleDsl() {
                                         span = emptySpan()
                                         value = "x"
                                     }
-                            },
+                            }
                         )
                     source =
                         stringLiteral {
@@ -113,9 +113,9 @@ fun createExampleDsl() {
                                                 kind = TsKeywordTypeKind.STRING
                                             }
                                     }
-                            },
+                            }
                         )
-                },
+                }
             )
     }
 }

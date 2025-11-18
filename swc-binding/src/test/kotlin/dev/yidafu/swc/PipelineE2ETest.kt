@@ -40,5 +40,3 @@ class PipelineE2ETest : AnnotationSpec() {
         assertTrue(pretty.code.isNotEmpty())
     }
 }
-
-

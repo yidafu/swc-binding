@@ -3,12 +3,12 @@ package dev.yidafu.swc
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for JSON utility functions in json.kt
@@ -35,11 +35,11 @@ class JsonUtilsTest : AnnotationSpec() {
         println("=== Raw AST JSON from parseSync ===")
         println(jsonStr)
         println("=== End of Raw AST JSON ===")
-        
+
         // 检查 JSON 中是否包含 ctxt 字段
         val hasCtxt = jsonStr.contains("\"ctxt\"")
         println("Raw JSON contains 'ctxt' field: $hasCtxt")
-        
+
         // 统计 span 对象数量
         val spanCount = jsonStr.split("\"span\"").size - 1
         val ctxtCount = jsonStr.split("\"ctxt\"").size - 1
@@ -334,4 +334,3 @@ class JsonUtilsTest : AnnotationSpec() {
         // Should properly escape special characters
     }
 }
-

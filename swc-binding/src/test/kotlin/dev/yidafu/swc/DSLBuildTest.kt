@@ -2,13 +2,12 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import kotlin.test.assertEquals
-import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertNotNull
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class DSLBuildTest : AnnotationSpec() {
     private val swcNative = SwcNative()
@@ -782,13 +781,13 @@ class DSLBuildTest : AnnotationSpec() {
                                     argument {
                                         expression = arrowFunctionExpression {
                                             span = emptySpan()
-                                    params = arrayOf(
-                                        identifier {
-                                            span = emptySpan()
-                                            value = "x"
-                                            optional = false
-                                        } as Pattern
-                                    )
+                                            params = arrayOf(
+                                                identifier {
+                                                    span = emptySpan()
+                                                    value = "x"
+                                                    optional = false
+                                                } as Pattern
+                                            )
                                             body = binaryExpression {
                                                 span = emptySpan()
                                                 operator = BinaryOperator.Multiplication
@@ -821,4 +820,3 @@ class DSLBuildTest : AnnotationSpec() {
         assertTrue(output.code.isNotEmpty())
     }
 }
-

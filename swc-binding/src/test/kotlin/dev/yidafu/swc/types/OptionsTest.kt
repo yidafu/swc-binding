@@ -3,14 +3,20 @@ package dev.yidafu.swc.generated
 import dev.yidafu.swc.Union
 import dev.yidafu.swc.generated.dsl.jscConfig
 import dev.yidafu.swc.generated.dsl.options
-import dev.yidafu.swc.generated.MatchPattern
-import kotlin.test.assertEquals
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class OptionsTest : AnnotationSpec() {
+    private val testJson = Json {
+        // Don't include null values - only serialize non-null fields
+        explicitNulls = false
+        // Include default values
+        encodeDefaults = true
+    }
+
     @Test
     fun `encode options`() {
         val opt = options {
@@ -29,7 +35,7 @@ class OptionsTest : AnnotationSpec() {
             )
         }
 
-        val output = Json.encodeToString(opt)
+        val output = testJson.encodeToString(opt)
 
         assertEquals(
             output,

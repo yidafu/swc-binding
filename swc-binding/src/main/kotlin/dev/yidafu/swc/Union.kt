@@ -8,38 +8,121 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlin.jvm.JvmStatic
 
 /**
- * Union 类型用于表示 TypeScript 中的联合类型
- * 例如: string | number | boolean 对应 Union.U3<String, Number, Boolean>
+ * Union types for representing TypeScript union types in Kotlin.
+ *
+ * TypeScript union types like `string | number | boolean` are represented
+ * using Union classes (U2, U3) in Kotlin.
+ *
+ * ## Usage Examples
+ *
+ * ### Binary Union (U2)
+ * ```kotlin
+ * // TypeScript: string | number
+ * val value: Union.U2<String, Number> = Union.U2.ofA("hello")
+ * // or
+ * val value2: Union.U2<String, Number> = Union.U2.ofB(42)
+ *
+ * // Check which type it is
+ * if (value.isA()) {
+ *     println(value.valueOfA()) // "hello"
+ * }
+ * ```
+ *
+ * ### Ternary Union (U3)
+ * ```kotlin
+ * // TypeScript: string | number | boolean
+ * val value: Union.U3<String, Number, Boolean> = Union.U3.ofA("hello")
+ * // or
+ * val value2: Union.U3<String, Number, Boolean> = Union.U3.ofB(42)
+ * val value3: Union.U3<String, Number, Boolean> = Union.U3.ofC(true)
+ * ```
+ *
+ * ### Serialization
+ * Union types are automatically serialized/deserialized when used in AST nodes.
+ * The serializer will try each type in order until one succeeds.
+ *
+ * @see Union.U2 for binary unions
+ * @see Union.U3 for ternary unions
  */
 @Serializable
 sealed class Union {
 
     /**
-     * 二元联合类型: A | B
+     * Binary union type: A | B
+     *
+     * Represents a TypeScript union type with two possible types.
+     * Only one of `a` or `b` should be non-null at a time.
+     *
+     * @param A First possible type
+     * @param B Second possible type
+     *
+     * @example
+     * ```kotlin
+     * // TypeScript: string | number
+     * val stringValue = Union.U2.ofA<String, Number>("hello")
+     * val numberValue = Union.U2.ofB<String, Number>(42)
+     *
+     * // Check and access value
+     * when {
+     *     stringValue.isA() -> println(stringValue.valueOfA())
+     *     stringValue.isB() -> println(stringValue.valueOfB())
+     * }
+     * ```
      */
     @Serializable(with = U2.U2Serializer::class)
     data class U2<A, B>(
         val a: A? = null,
         val b: B? = null
     ) : Union() {
+        /**
+         * Check if this union contains type A
+         */
         fun isA(): Boolean = a != null
+
+        /**
+         * Check if this union contains type B
+         */
         fun isB(): Boolean = b != null
 
+        /**
+         * Get the value of type A, or null if this union contains type B
+         */
         fun valueOfA(): A? = a
+
+        /**
+         * Get the value of type B, or null if this union contains type A
+         */
         fun valueOfB(): B? = b
 
         companion object {
+            /**
+             * Create a U2 union with type A value.
+             *
+             * This method is available as a static method in Java.
+             *
+             * @example Java usage:
+             * ```java
+             * Union.U2<String, Number> value = Union.U2.ofA("hello");
+             * ```
+             */
+            @JvmStatic
             fun <A, B> ofA(value: A): U2<A, B> = U2(a = value)
+
+            /**
+             * Create a U2 union with type B value.
+             *
+             * This method is available as a static method in Java.
+             *
+             * @example Java usage:
+             * ```java
+             * Union.U2<String, Number> value = Union.U2.ofB(42);
+             * ```
+             */
+            @JvmStatic
             fun <A, B> ofB(value: B): U2<A, B> = U2(b = value)
 
             fun <A, B> serializerFor(
@@ -86,7 +169,22 @@ sealed class Union {
     }
 
     /**
-     * 三元联合类型: A | B | C
+     * Ternary union type: A | B | C
+     *
+     * Represents a TypeScript union type with three possible types.
+     * Only one of `a`, `b`, or `c` should be non-null at a time.
+     *
+     * @param A First possible type
+     * @param B Second possible type
+     * @param C Third possible type
+     *
+     * @example
+     * ```kotlin
+     * // TypeScript: string | number | boolean
+     * val stringValue = Union.U3.ofA<String, Number, Boolean>("hello")
+     * val numberValue = Union.U3.ofB<String, Number, Boolean>(42)
+     * val boolValue = Union.U3.ofC<String, Number, Boolean>(true)
+     * ```
      */
     @Serializable(with = U3.U3Serializer::class)
     data class U3<A, B, C>(
@@ -94,17 +192,56 @@ sealed class Union {
         val b: B? = null,
         val c: C? = null
     ) : Union() {
+        /**
+         * Check if this union contains type A
+         */
         fun isA(): Boolean = a != null
+
+        /**
+         * Check if this union contains type B
+         */
         fun isB(): Boolean = b != null
+
+        /**
+         * Check if this union contains type C
+         */
         fun isC(): Boolean = c != null
 
+        /**
+         * Get the value of type A, or null if this union contains another type
+         */
         fun valueOfA(): A? = a
+
+        /**
+         * Get the value of type B, or null if this union contains another type
+         */
         fun valueOfB(): B? = b
+
+        /**
+         * Get the value of type C, or null if this union contains another type
+         */
         fun valueOfC(): C? = c
 
         companion object {
+            /**
+             * Create a U3 union with type A value.
+             * Available as a static method in Java.
+             */
+            @JvmStatic
             fun <A, B, C> ofA(value: A): U3<A, B, C> = U3(a = value)
+
+            /**
+             * Create a U3 union with type B value.
+             * Available as a static method in Java.
+             */
+            @JvmStatic
             fun <A, B, C> ofB(value: B): U3<A, B, C> = U3(b = value)
+
+            /**
+             * Create a U3 union with type C value.
+             * Available as a static method in Java.
+             */
+            @JvmStatic
             fun <A, B, C> ofC(value: C): U3<A, B, C> = U3(c = value)
 
             fun <A, B, C> serializerFor(
@@ -123,82 +260,17 @@ sealed class Union {
                 buildClassSerialDescriptor("dev.yidafu.swc.Union.U3")
 
             override fun serialize(encoder: Encoder, value: U3<A, B, C>) {
-                // 对于 JsonEncoder，确保 type 字段被正确添加
-                if (encoder is JsonEncoder) {
-                    val json = encoder.json
-                    value.a?.let {
-                        // 序列化为 JSON 元素，然后确保包含 type 字段
-                        val jsonElement = json.encodeToJsonElement(aSerializer, it)
-                        val jsonObj = if (jsonElement is JsonObject) {
-                            jsonElement
-                        } else {
-                            buildJsonObject { put("value", jsonElement) }
-                        }
-                        // 如果缺少 type 字段，添加它
-                        val finalObj = if (!jsonObj.containsKey("type")) {
-                            val typeName = aSerializer.descriptor.serialName
-                            buildJsonObject {
-                                put("type", typeName)
-                                jsonObj.forEach { (key, value) -> put(key, value) }
-                            }
-                        } else {
-                            jsonObj
-                        }
-                        encoder.encodeJsonElement(finalObj)
-                        return
-                    }
-                    value.b?.let {
-                        val jsonElement = json.encodeToJsonElement(bSerializer, it)
-                        val jsonObj = if (jsonElement is JsonObject) {
-                            jsonElement
-                        } else {
-                            buildJsonObject { put("value", jsonElement) }
-                        }
-                        val finalObj = if (!jsonObj.containsKey("type")) {
-                            val typeName = bSerializer.descriptor.serialName
-                            buildJsonObject {
-                                put("type", typeName)
-                                jsonObj.forEach { (key, value) -> put(key, value) }
-                            }
-                        } else {
-                            jsonObj
-                        }
-                        encoder.encodeJsonElement(finalObj)
-                        return
-                    }
-                    value.c?.let {
-                        val jsonElement = json.encodeToJsonElement(cSerializer, it)
-                        val jsonObj = if (jsonElement is JsonObject) {
-                            jsonElement
-                        } else {
-                            buildJsonObject { put("value", jsonElement) }
-                        }
-                        val finalObj = if (!jsonObj.containsKey("type")) {
-                            val typeName = cSerializer.descriptor.serialName
-                            buildJsonObject {
-                                put("type", typeName)
-                                jsonObj.forEach { (key, value) -> put(key, value) }
-                            }
-                        } else {
-                            jsonObj
-                        }
-                        encoder.encodeJsonElement(finalObj)
-                        return
-                    }
-                } else {
-                    // 非 JSON encoder，使用原始逻辑
-                    value.a?.let {
-                        encoder.encodeSerializableValue(aSerializer, it)
-                        return
-                    }
-                    value.b?.let {
-                        encoder.encodeSerializableValue(bSerializer, it)
-                        return
-                    }
-                    value.c?.let {
-                        encoder.encodeSerializableValue(cSerializer, it)
-                        return
-                    }
+                value.a?.let {
+                    encoder.encodeSerializableValue(aSerializer, it)
+                    return
+                }
+                value.b?.let {
+                    encoder.encodeSerializableValue(bSerializer, it)
+                    return
+                }
+                value.c?.let {
+                    encoder.encodeSerializableValue(cSerializer, it)
+                    return
                 }
                 throw SerializationException("Union.U3 requires one value to be non-null")
             }
@@ -218,188 +290,6 @@ sealed class Union {
                     .onSuccess { return U3(c = it) }
 
                 throw SerializationException("Unable to deserialize value as type A, B, or C")
-            }
-        }
-    }
-
-    /**
-     * 四元联合类型: A | B | C | D
-     */
-    @Serializable(with = U4.U4Serializer::class)
-    data class U4<A, B, C, D>(
-        val a: A? = null,
-        val b: B? = null,
-        val c: C? = null,
-        val d: D? = null
-    ) : Union() {
-        fun isA(): Boolean = a != null
-        fun isB(): Boolean = b != null
-        fun isC(): Boolean = c != null
-        fun isD(): Boolean = d != null
-
-        fun valueOfA(): A? = a
-        fun valueOfB(): B? = b
-        fun valueOfC(): C? = c
-        fun valueOfD(): D? = d
-
-        companion object {
-            fun <A, B, C, D> ofA(value: A): U4<A, B, C, D> = U4(a = value)
-            fun <A, B, C, D> ofB(value: B): U4<A, B, C, D> = U4(b = value)
-            fun <A, B, C, D> ofC(value: C): U4<A, B, C, D> = U4(c = value)
-            fun <A, B, C, D> ofD(value: D): U4<A, B, C, D> = U4(d = value)
-
-            fun <A, B, C, D> serializerFor(
-                aSerializer: KSerializer<A>,
-                bSerializer: KSerializer<B>,
-                cSerializer: KSerializer<C>,
-                dSerializer: KSerializer<D>
-            ): KSerializer<U4<A, B, C, D>> =
-                U4Serializer(aSerializer, bSerializer, cSerializer, dSerializer)
-        }
-
-        class U4Serializer<A, B, C, D>(
-            private val aSerializer: KSerializer<A>,
-            private val bSerializer: KSerializer<B>,
-            private val cSerializer: KSerializer<C>,
-            private val dSerializer: KSerializer<D>
-        ) : KSerializer<U4<A, B, C, D>> {
-            override val descriptor: SerialDescriptor =
-                buildClassSerialDescriptor("dev.yidafu.swc.Union.U4")
-
-            override fun serialize(encoder: Encoder, value: U4<A, B, C, D>) {
-                value.a?.let {
-                    encoder.encodeSerializableValue(aSerializer, it)
-                    return
-                }
-                value.b?.let {
-                    encoder.encodeSerializableValue(bSerializer, it)
-                    return
-                }
-                value.c?.let {
-                    encoder.encodeSerializableValue(cSerializer, it)
-                    return
-                }
-                value.d?.let {
-                    encoder.encodeSerializableValue(dSerializer, it)
-                    return
-                }
-                throw SerializationException("Union.U4 requires one value to be non-null")
-            }
-
-            override fun deserialize(decoder: Decoder): U4<A, B, C, D> {
-                if (decoder !is JsonDecoder) {
-                    throw SerializationException("Union.U4 serializer currently supports only Json format")
-                }
-                val element = decoder.decodeJsonElement()
-                val json = decoder.json
-
-                runCatching { json.decodeFromJsonElement(aSerializer, element) }
-                    .onSuccess { return U4(a = it) }
-                runCatching { json.decodeFromJsonElement(bSerializer, element) }
-                    .onSuccess { return U4(b = it) }
-                runCatching { json.decodeFromJsonElement(cSerializer, element) }
-                    .onSuccess { return U4(c = it) }
-                runCatching { json.decodeFromJsonElement(dSerializer, element) }
-                    .onSuccess { return U4(d = it) }
-
-                throw SerializationException("Unable to deserialize value as type A, B, C, or D")
-            }
-        }
-    }
-
-    /**
-     * 五元联合类型: A | B | C | D | E
-     */
-    @Serializable(with = U5.U5Serializer::class)
-    data class U5<A, B, C, D, E>(
-        val a: A? = null,
-        val b: B? = null,
-        val c: C? = null,
-        val d: D? = null,
-        val e: E? = null
-    ) : Union() {
-        fun isA(): Boolean = a != null
-        fun isB(): Boolean = b != null
-        fun isC(): Boolean = c != null
-        fun isD(): Boolean = d != null
-        fun isE(): Boolean = e != null
-
-        fun valueOfA(): A? = a
-        fun valueOfB(): B? = b
-        fun valueOfC(): C? = c
-        fun valueOfD(): D? = d
-        fun valueOfE(): E? = e
-
-        companion object {
-            fun <A, B, C, D, E> ofA(value: A): U5<A, B, C, D, E> = U5(a = value)
-            fun <A, B, C, D, E> ofB(value: B): U5<A, B, C, D, E> = U5(b = value)
-            fun <A, B, C, D, E> ofC(value: C): U5<A, B, C, D, E> = U5(c = value)
-            fun <A, B, C, D, E> ofD(value: D): U5<A, B, C, D, E> = U5(d = value)
-            fun <A, B, C, D, E> ofE(value: E): U5<A, B, C, D, E> = U5(e = value)
-
-            fun <A, B, C, D, E> serializerFor(
-                aSerializer: KSerializer<A>,
-                bSerializer: KSerializer<B>,
-                cSerializer: KSerializer<C>,
-                dSerializer: KSerializer<D>,
-                eSerializer: KSerializer<E>
-            ): KSerializer<U5<A, B, C, D, E>> =
-                U5Serializer(aSerializer, bSerializer, cSerializer, dSerializer, eSerializer)
-        }
-
-        class U5Serializer<A, B, C, D, E>(
-            private val aSerializer: KSerializer<A>,
-            private val bSerializer: KSerializer<B>,
-            private val cSerializer: KSerializer<C>,
-            private val dSerializer: KSerializer<D>,
-            private val eSerializer: KSerializer<E>
-        ) : KSerializer<U5<A, B, C, D, E>> {
-            override val descriptor: SerialDescriptor =
-                buildClassSerialDescriptor("dev.yidafu.swc.Union.U5")
-
-            override fun serialize(encoder: Encoder, value: U5<A, B, C, D, E>) {
-                value.a?.let {
-                    encoder.encodeSerializableValue(aSerializer, it)
-                    return
-                }
-                value.b?.let {
-                    encoder.encodeSerializableValue(bSerializer, it)
-                    return
-                }
-                value.c?.let {
-                    encoder.encodeSerializableValue(cSerializer, it)
-                    return
-                }
-                value.d?.let {
-                    encoder.encodeSerializableValue(dSerializer, it)
-                    return
-                }
-                value.e?.let {
-                    encoder.encodeSerializableValue(eSerializer, it)
-                    return
-                }
-                throw SerializationException("Union.U5 requires one value to be non-null")
-            }
-
-            override fun deserialize(decoder: Decoder): U5<A, B, C, D, E> {
-                if (decoder !is JsonDecoder) {
-                    throw SerializationException("Union.U5 serializer currently supports only Json format")
-                }
-                val element = decoder.decodeJsonElement()
-                val json = decoder.json
-
-                runCatching { json.decodeFromJsonElement(aSerializer, element) }
-                    .onSuccess { return U5(a = it) }
-                runCatching { json.decodeFromJsonElement(bSerializer, element) }
-                    .onSuccess { return U5(b = it) }
-                runCatching { json.decodeFromJsonElement(cSerializer, element) }
-                    .onSuccess { return U5(c = it) }
-                runCatching { json.decodeFromJsonElement(dSerializer, element) }
-                    .onSuccess { return U5(d = it) }
-                runCatching { json.decodeFromJsonElement(eSerializer, element) }
-                    .onSuccess { return U5(e = it) }
-
-                throw SerializationException("Unable to deserialize value as type A, B, C, D, or E")
             }
         }
     }

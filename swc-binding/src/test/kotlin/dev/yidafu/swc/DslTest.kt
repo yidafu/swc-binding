@@ -1,18 +1,18 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.createIdentifier
 import dev.yidafu.swc.generated.dsl.esParseOptions
 import dev.yidafu.swc.generated.dsl.module
 import dev.yidafu.swc.generated.dsl.options
 import dev.yidafu.swc.generated.dsl.tsParseOptions
-// 使用生成的 DSL
-import dev.yidafu.swc.generated.dsl.span as genSpan
+import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.serialization.encodeToString
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import io.kotest.matchers.types.shouldBeInstanceOf
-import io.kotest.core.spec.style.AnnotationSpec
-import kotlin.test.Test
 
 /**
  * Tests for DSL functions in dsl.kt
@@ -164,7 +164,6 @@ class DslTest : AnnotationSpec() {
         assertEquals(true, config.comments)
     }
 
-
     // (span DSL tests removed to avoid conflicts)
 
     // ==================== emptySpan DSL tests ====================
@@ -258,5 +257,160 @@ class DslTest : AnnotationSpec() {
         assertNotNull(opts.jsc)
         assertEquals(JscTarget.ES2020, opts.jsc!!.target)
     }
-}
 
+    // ==================== Span default value tests ====================
+
+    @Test
+    fun `Identifier has default span as emptySpan`() {
+        val identifier = createIdentifier { }
+
+        assertNotNull(identifier.span)
+        assertEquals(0, identifier.span.start)
+        assertEquals(0, identifier.span.end)
+        assertEquals(0, identifier.span.ctxt)
+    }
+
+    @Test
+    fun `Module has default span as emptySpan`() {
+        val module = Module()
+
+        assertNotNull(module.span)
+        assertEquals(0, module.span.start)
+        assertEquals(0, module.span.end)
+        assertEquals(0, module.span.ctxt)
+    }
+
+    @Test
+    fun `ArrayExpression has default span as emptySpan`() {
+        val arrayExpr = ArrayExpression()
+
+        assertNotNull(arrayExpr.span)
+        assertEquals(0, arrayExpr.span.start)
+        assertEquals(0, arrayExpr.span.end)
+        assertEquals(0, arrayExpr.span.ctxt)
+    }
+
+    @Test
+    fun `serialize Identifier with default span includes ctxt field`() {
+        val identifier = createIdentifier {
+            value = "test"
+            optional = false
+            // span 使用默认值 emptySpan()
+        }
+
+        val json = astJson.encodeToString<Identifier>(identifier)
+
+        // 验证 JSON 包含 ctxt 字段
+        assertTrue(json.contains("\"ctxt\""), "JSON should contain ctxt field: $json")
+        assertTrue(json.contains("\"ctxt\":0"), "JSON should contain ctxt:0: $json")
+    }
+
+    @Test
+    fun `serialize Module with default span includes ctxt field`() {
+        val module = Module().apply {
+            body = arrayOf()
+            // span 使用默认值 emptySpan()
+        }
+
+        val json = astJson.encodeToString<Module>(module)
+
+        // 验证 JSON 包含 ctxt 字段
+        assertTrue(json.contains("\"ctxt\""), "JSON should contain ctxt field: $json")
+        assertTrue(json.contains("\"span\""), "JSON should contain span field: $json")
+
+        // 验证 span 对象中包含 ctxt
+        val spanStartIndex = json.indexOf("\"span\":{")
+        if (spanStartIndex != -1) {
+            val spanEndIndex = json.indexOf("}", spanStartIndex + 8)
+            if (spanEndIndex != -1) {
+                val spanContent = json.substring(spanStartIndex, spanEndIndex + 1)
+                assertTrue(spanContent.contains("\"ctxt\""), "Span object should contain ctxt: $spanContent")
+            }
+        }
+    }
+
+    @Test
+    fun `serialize ArrayExpression with default span includes ctxt field`() {
+        val arrayExpr = ArrayExpression().apply {
+            elements = arrayOf()
+            // span 使用默认值 emptySpan()
+        }
+
+        val json = astJson.encodeToString<ArrayExpression>(arrayExpr)
+
+        // 验证 JSON 包含 ctxt 字段
+        assertTrue(json.contains("\"ctxt\""), "JSON should contain ctxt field: $json")
+    }
+
+    @Test
+    fun `serialize complex AST with multiple default spans includes ctxt fields`() {
+        val module = Module().apply {
+            body = arrayOf(
+                VariableDeclaration().apply {
+                    kind = VariableDeclarationKind.CONST
+                    declare = false
+                    declarations = arrayOf(
+                        VariableDeclarator().apply {
+                            id = createIdentifier {
+                                value = "x"
+                                optional = false
+                            }
+                            init = NumericLiteral().apply {
+                                value = 42.0
+                                raw = "42"
+                            }
+                        }
+                    )
+                }
+            )
+        }
+
+        val json = astJson.encodeToString<Module>(module)
+
+        // 验证 JSON 包含多个 ctxt 字段（每个 span 对象一个）
+        val ctxtCount = json.split("\"ctxt\"").size - 1
+        assertTrue(ctxtCount >= 1, "JSON should contain at least one ctxt field, found: $ctxtCount")
+
+        // 验证所有 span 对象都包含 ctxt
+        var index = 0
+        var spanCount = 0
+        var spansWithCtxt = 0
+
+        while (true) {
+            val spanIndex = json.indexOf("\"span\":{", index)
+            if (spanIndex == -1) break
+
+            spanCount++
+            // 查找对应的结束括号
+            var depth = 0
+            var endIndex = spanIndex + 8
+            var found = false
+
+            while (endIndex < json.length) {
+                when (json[endIndex]) {
+                    '{' -> depth++
+                    '}' -> {
+                        if (depth == 0) {
+                            found = true
+                            break
+                        }
+                        depth--
+                    }
+                }
+                endIndex++
+            }
+
+            if (found) {
+                val spanContent = json.substring(spanIndex, endIndex + 1)
+                if (spanContent.contains("\"ctxt\"")) {
+                    spansWithCtxt++
+                }
+            }
+
+            index = spanIndex + 8
+        }
+
+        assertTrue(spanCount > 0, "Should find at least one span object")
+        assertEquals(spanCount, spansWithCtxt, "All span objects should contain ctxt field")
+    }
+}

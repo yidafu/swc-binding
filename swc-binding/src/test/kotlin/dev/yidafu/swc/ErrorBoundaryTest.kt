@@ -25,5 +25,3 @@ class ErrorBoundaryTest : AnnotationSpec() {
         // 空字符串会被解析为一个空模块，body 可能为空或包含单个分号
     }
 }
-
-

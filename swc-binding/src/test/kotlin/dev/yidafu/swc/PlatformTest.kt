@@ -1,8 +1,8 @@
 package dev.yidafu.swc
 
-import kotlin.test.assertEquals
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class PlatformTest : AnnotationSpec() {
     @Test

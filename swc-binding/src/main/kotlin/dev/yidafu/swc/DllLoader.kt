@@ -4,7 +4,33 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
+/**
+ * Utility object for loading native SWC library files.
+ *
+ * This object handles platform detection and loading of the appropriate
+ * native library (DLL/dylib/so) for the current operating system and architecture.
+ *
+ * ## Supported Platforms
+ * - **Linux**: x64 (musl) and ARM64 (GNU)
+ * - **macOS**: x64 (Apple) and ARM64 (Apple)
+ * - **Windows**: x64 (GNU) and ARM64 (GNU)
+ *
+ * ## Usage
+ * The library is automatically loaded when [SwcNative] is instantiated.
+ * If the library is not found in the system path, it will be extracted
+ * from JAR resources to a temporary directory and loaded from there.
+ *
+ * @example
+ * ```kotlin
+ * // Library loading happens automatically
+ * val swc = SwcNative() // DllLoader is used internally
+ * ```
+ */
 object DllLoader {
+    /**
+     * Absolute path to the extracted native library file.
+     * This is cached after the first extraction to avoid repeated file operations.
+     */
     var outAbsPath: String = ""
 
     sealed class Platform {

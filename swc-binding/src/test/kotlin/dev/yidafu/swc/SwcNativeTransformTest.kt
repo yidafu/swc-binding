@@ -1,0 +1,395 @@
+package dev.yidafu.swc
+
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
+
+/**
+ * Tests for code transformation with different ES targets (sync and async)
+ */
+class SwcNativeTransformTest : AnnotationSpec() {
+    private val swcNative = SwcNative()
+
+    private fun getResource(filename: String): String {
+        return SwcNativeTransformTest::class.java.classLoader.getResource(filename)!!.file!!
+    }
+
+    @Test
+    fun `transform with es5 target`() {
+        val output = swcNative.transformSync(
+            "const x = 1;",
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    @Test
+    fun `transform arrow function to ES5`() {
+        val output = swcNative.transformSync(
+            "const add = (a, b) => a + b;",
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(!output.code.contains("=>"))
+    }
+
+    @Test
+    fun `transform class to ES5`() {
+        val output = swcNative.transformSync(
+            """
+            class Animal {
+                constructor(name) {
+                    this.name = name;
+                }
+                speak() {
+                    return this.name + " makes a sound";
+                }
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(!output.code.contains("class"), "ES5 target should not contain class syntax")
+    }
+
+    @Test
+    fun `transform const and let to var for ES5`() {
+        val output = swcNative.transformSync(
+            """
+            const x = 1;
+            let y = 2;
+            {
+                const z = 3;
+                let w = 4;
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    @Test
+    fun `transform template literals to ES5`() {
+        val output = swcNative.transformSync(
+            """
+            const name = "World";
+            const greeting = `Hello, World!`;
+            const multiLine = `Line 1
+            Line 2`;
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(!output.code.contains("`"), "ES5 target should not contain template literals")
+    }
+
+    @Test
+    fun `transform destructuring to ES5`() {
+        val output = swcNative.transformSync(
+            """
+            const [a, b] = [1, 2];
+            const { x, y } = { x: 10, y: 20 };
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    @Test
+    fun `transform spread operator to ES5`() {
+        val output = swcNative.transformSync(
+            """
+            const arr = [...[1, 2], 3];
+            const obj = { ...{ a: 1 }, b: 2 };
+            func(...args);
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES5
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    @Test
+    fun `transform with ES2015 target`() {
+        val output = swcNative.transformSync(
+            """
+            const x = 1;
+            let y = 2;
+            class MyClass {
+                constructor() {
+                    this.value = 42;
+                }
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES2015
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(output.code.contains("const") || output.code.contains("var"))
+    }
+
+    @Test
+    fun `transform with ES2020 target`() {
+        val output = swcNative.transformSync(
+            """
+            const value = foo ?? 'default';
+            const result = obj?.property?.nested;
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions {
+                        nullishCoalescing = true
+                        optionalChaining = true
+                    }
+                    target = JscTarget.ES2020
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    @Test
+    fun `transform with ES2022 target`() {
+        val output = swcNative.transformSync(
+            """
+            class MyClass {
+                #privateField = 42;
+                static #privateStaticField = 100;
+                
+                #privateMethod() {
+                    return this.#privateField;
+                }
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions { }
+                    target = JscTarget.ES2022
+                }
+            }
+        )
+        assertNotNull(output.code)
+    }
+
+    // ==================== Async Transform Tests ====================
+
+    @Test
+    fun `transformAsync with lambda callback`() {
+        val latch = CountDownLatch(1)
+        var result: TransformOutput? = null
+
+        swcNative.transformAsync(
+            code = "const x = 1;",
+            isModule = false,
+            options = options {
+                jsc = JscConfig().apply {
+                    parser = esParseOptions { }
+                }
+            },
+            onSuccess = {
+                result = it
+                latch.countDown()
+            },
+            onError = {
+                fail("Transform should not fail: $it")
+            }
+        )
+
+        assertTrue(latch.await(10, TimeUnit.SECONDS), "Timeout waiting for transform")
+        assertNotNull(result)
+        assertNotNull(result!!.code)
+        assertTrue(result!!.code.isNotEmpty())
+    }
+
+    @Test
+    fun `transformAsync with coroutine`() = runBlocking {
+        val result = swcNative.transformAsync(
+            code = "const x = 1;",
+            isModule = false,
+            options = options {
+                jsc = JscConfig().apply {
+                    parser = esParseOptions { }
+                }
+            }
+        )
+
+        assertNotNull(result)
+        assertNotNull(result.code)
+        assertTrue(result.code.isNotEmpty())
+    }
+
+    @Test
+    fun `transformAsync error handling`() {
+        val latch = CountDownLatch(1)
+        var errorMsg: String? = null
+
+        swcNative.transformAsync(
+            code = "const x = ;", // Invalid syntax
+            isModule = false,
+            options = options {
+                jsc = JscConfig().apply {
+                    parser = esParseOptions { }
+                }
+            },
+            onSuccess = {
+                fail("Transform should fail for invalid syntax")
+            },
+            onError = {
+                errorMsg = it
+                latch.countDown()
+            }
+        )
+
+        assertTrue(latch.await(10, TimeUnit.SECONDS))
+        assertNotNull(errorMsg)
+    }
+
+    @Test
+    fun `transformFileAsync with lambda`() {
+        val latch = CountDownLatch(1)
+        var result: TransformOutput? = null
+
+        swcNative.transformFileAsync(
+            filepath = getResource("test.js"),
+            isModule = false,
+            options = options {
+                jsc = JscConfig().apply {
+                    parser = esParseOptions { }
+                }
+            },
+            onSuccess = {
+                result = it
+                latch.countDown()
+            },
+            onError = {
+                fail("Transform file should not fail: $it")
+            }
+        )
+
+        assertTrue(latch.await(10, TimeUnit.SECONDS))
+        assertNotNull(result)
+        assertNotNull(result!!.code)
+    }
+
+    @Test
+    fun `transformFileAsync with coroutine`() = runBlocking {
+        val result = swcNative.transformFileAsync(
+            filepath = getResource("test.js"),
+            isModule = false,
+            options = options {
+                jsc = JscConfig().apply {
+                    parser = esParseOptions { }
+                }
+            }
+        )
+
+        assertNotNull(result)
+        assertNotNull(result.code)
+        assertTrue(result.code.isNotEmpty())
+    }
+
+    // ==================== JSX Transform Tests ====================
+
+    @Test
+    fun `transform JSX to JavaScript`() {
+        val output = swcNative.transformSync(
+            """
+            function App() {
+                return <div>Hello World</div>;
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions {
+                        jsx = true
+                    }
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(!output.code.contains("<"), "Transformed code should not contain JSX syntax")
+    }
+
+    @Test
+    fun `transform TSX to JavaScript`() {
+        val output = swcNative.transformSync(
+            """
+            interface Props {
+                name: string;
+            }
+            
+            function Greeting(props: Props) {
+                return <div>Hello, {props.name}!</div>;
+            }
+            """.trimIndent(),
+            false,
+            options {
+                jsc = jscConfig {
+                    parser = tsParseOptions {
+                        tsx = true
+                    }
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(!output.code.contains("interface"), "Transformed code should not contain TypeScript syntax")
+        assertTrue(!output.code.contains("<"), "Transformed code should not contain JSX syntax")
+    }
+}
+

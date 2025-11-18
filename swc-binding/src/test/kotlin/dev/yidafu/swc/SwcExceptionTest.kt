@@ -1,10 +1,10 @@
 package dev.yidafu.swc
 
-import kotlin.test.assertEquals
-import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertNotNull
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class SwcExceptionTest : AnnotationSpec() {
 

@@ -3,13 +3,13 @@ package dev.yidafu.swc
 import dev.yidafu.swc.generated.Argument
 import dev.yidafu.swc.generated.ArrayExpression
 import dev.yidafu.swc.generated.NumericLiteral
-import dev.yidafu.swc.generated.dsl.createArrayExpression
 import dev.yidafu.swc.generated.dsl.argument
+import dev.yidafu.swc.generated.dsl.createArrayExpression
+import io.kotest.core.spec.style.AnnotationSpec
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import io.kotest.core.spec.style.AnnotationSpec
-import kotlin.test.Test
 
 class ArrayExpressionTest : AnnotationSpec() {
 
@@ -57,5 +57,3 @@ class ArrayExpressionTest : AnnotationSpec() {
         assertNull(arr.elements!![2])
     }
 }
-
-

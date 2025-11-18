@@ -2,13 +2,13 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class OptionsBuilderTest : AnnotationSpec() {
 

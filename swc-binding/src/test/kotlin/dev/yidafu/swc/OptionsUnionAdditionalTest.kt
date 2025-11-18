@@ -49,5 +49,3 @@ class OptionsUnionAdditionalTest : AnnotationSpec() {
         assertTrue(opt.jsc?.externalHelpers == true)
     }
 }
-
-

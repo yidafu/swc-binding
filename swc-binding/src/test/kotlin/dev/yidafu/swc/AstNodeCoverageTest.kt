@@ -2,13 +2,12 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertNotNull
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
-import kotlin.test.assertEquals
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class AstNodeCoverageTest : AnnotationSpec() {
     private val swcNative = SwcNative()
@@ -280,7 +279,7 @@ class AstNodeCoverageTest : AnnotationSpec() {
             assertNotNull(switchStmt.discriminant)
             assertNotNull(switchStmt.cases)
             assertTrue(switchStmt.cases!!.size >= 3)
-            
+
             val firstCase = switchStmt.cases!![0].shouldBeInstanceOf<SwitchCase>()
             assertNotNull(firstCase.test)
             assertNotNull(firstCase.consequent)
@@ -336,7 +335,7 @@ class AstNodeCoverageTest : AnnotationSpec() {
             assertNotNull(tryStmt.block)
             assertNotNull(tryStmt.handler)
             assertNotNull(tryStmt.finalizer)
-            
+
             val catchClause = tryStmt.handler.shouldBeInstanceOf<CatchClause>()
             assertNotNull(catchClause.param)
             assertNotNull(catchClause.body)
@@ -737,4 +736,3 @@ class AstNodeCoverageTest : AnnotationSpec() {
         }
     }
 }
-

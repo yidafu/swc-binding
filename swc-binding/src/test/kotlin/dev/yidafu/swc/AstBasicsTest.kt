@@ -2,13 +2,14 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
+import dev.yidafu.swc.generated.dsl.createIdentifier
 import dev.yidafu.swc.generated.dsl.createModule
 import dev.yidafu.swc.generated.dsl.createVariableDeclarator
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.encodeToString
 
 class AstBasicsTest : AnnotationSpec() {
@@ -76,7 +77,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
 
         val json = astJson.encodeToString(s)
-        
+
         // 验证 JSON 包含 ctxt 字段
         json shouldBe """{"start":5,"end":15,"ctxt":2}"""
     }
@@ -90,7 +91,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
 
         val json = astJson.encodeToString(s)
-        
+
         // 验证 JSON 包含 ctxt 字段（即使使用默认值）
         json shouldBe """{"start":1,"end":10,"ctxt":0}"""
         json shouldContain "\"ctxt\""
@@ -106,7 +107,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
 
         val json = astJson.encodeToString(s)
-        
+
         // 验证 JSON 包含 ctxt 字段
         json shouldBe """{"start":0,"end":0,"ctxt":0}"""
         json shouldContain "\"ctxt\""
@@ -126,7 +127,7 @@ class AstBasicsTest : AnnotationSpec() {
     @Test
     fun `serialize Identifier with nested Span includes ctxt field`() {
         // 测试嵌套在 AST 节点中的 Span 是否包含 ctxt 字段
-        val id = Identifier().apply {
+        val id = createIdentifier {
             value = "testVar"
             optional = false
             span = span().apply {
@@ -137,7 +138,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
 
         val json = astJson.encodeToString<Identifier>(id)
-        
+
         // 验证 JSON 中的嵌套 Span 包含 ctxt 字段
         json shouldContain "\"ctxt\""
         json shouldContain "\"span\""
@@ -156,27 +157,27 @@ class AstBasicsTest : AnnotationSpec() {
         ) as Module
 
         val json = astJson.encodeToString<Program>(module)
-        
+
         // 验证 JSON 中包含 ctxt 字段（应该出现在所有 Span 对象中）
         json shouldContain "\"ctxt\""
-        
+
         // 检查所有 "span" 对象后是否都有 "ctxt" 字段
         // 使用更精确的方法：查找所有 "span":{ 并检查对应的对象
         var index = 0
         var spanCount = 0
         var ctxtCount = 0
         val jsonLower = json.lowercase()
-        
+
         while (true) {
             val spanIndex = jsonLower.indexOf("\"span\":{", index)
             if (spanIndex == -1) break
-            
+
             spanCount++
             // 找到对应的结束括号（需要处理嵌套）
             var depth = 0
             var endIndex = spanIndex + 8 // 跳过 "span":{
             var found = false
-            
+
             while (endIndex < json.length) {
                 when (json[endIndex]) {
                     '{' -> depth++
@@ -190,7 +191,7 @@ class AstBasicsTest : AnnotationSpec() {
                 }
                 endIndex++
             }
-            
+
             if (found) {
                 val spanContent = json.substring(spanIndex, endIndex + 1)
                 if (spanContent.contains("\"ctxt\"")) {
@@ -200,18 +201,18 @@ class AstBasicsTest : AnnotationSpec() {
                     println("Found span without ctxt: ${spanContent.take(150)}")
                 }
             }
-            
+
             index = spanIndex + 8
         }
-        
+
         println("Total spans found: $spanCount, spans with ctxt: $ctxtCount")
-        
+
         // 所有 span 对象都应该包含 ctxt 字段
         if (spanCount > 0) {
             spanCount shouldBe ctxtCount
         }
     }
-    
+
     @Test
     fun `printSync serialized JSON includes ctxt in all Spans`() {
         // 测试 printSync 序列化的 JSON 中所有 Span 都包含 ctxt
@@ -225,23 +226,23 @@ class AstBasicsTest : AnnotationSpec() {
         val programJson = astJson.encodeToString<Program>(module)
         val fixedProgram = astJson.decodeFromString<Program>(programJson)
         val finalJson = astJson.encodeToString<Program>(fixedProgram)
-        
+
         // 检查所有 span 对象
         var index = 0
         var spanCount = 0
         var ctxtCount = 0
         val jsonLower = finalJson.lowercase()
-        
+
         while (true) {
             val spanIndex = jsonLower.indexOf("\"span\":{", index)
             if (spanIndex == -1) break
-            
+
             spanCount++
             // 找到对应的结束括号
             var depth = 0
             var endIndex = spanIndex + 8
             var found = false
-            
+
             while (endIndex < finalJson.length) {
                 when (finalJson[endIndex]) {
                     '{' -> depth++
@@ -255,7 +256,7 @@ class AstBasicsTest : AnnotationSpec() {
                 }
                 endIndex++
             }
-            
+
             if (found) {
                 val spanContent = finalJson.substring(spanIndex, endIndex + 1)
                 if (spanContent.contains("\"ctxt\"")) {
@@ -264,12 +265,12 @@ class AstBasicsTest : AnnotationSpec() {
                     println("printSync: Found span without ctxt: ${spanContent.take(150)}")
                 }
             }
-            
+
             index = spanIndex + 8
         }
-        
+
         println("printSync: Total spans: $spanCount, with ctxt: $ctxtCount")
-        
+
         // 所有 span 对象都应该包含 ctxt 字段
         if (spanCount > 0) {
             spanCount shouldBe ctxtCount
@@ -278,7 +279,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `create IdentifierImpl`() {
-        val id = Identifier().apply {
+        val id = createIdentifier {
             value = "testVar"
             optional = false
             span = emptySpan()
@@ -290,7 +291,7 @@ class AstBasicsTest : AnnotationSpec() {
 
     @Test
     fun `serialize Identifier`() {
-        val id = Identifier().apply {
+        val id = createIdentifier {
             value = "myVar"
             optional = false
             span = emptySpan()
@@ -390,7 +391,7 @@ class AstBasicsTest : AnnotationSpec() {
     fun `create VariableDeclaratorImpl`() {
         val decl = createVariableDeclarator {
             span = emptySpan()
-            id = Identifier().apply {
+            id = createIdentifier {
                 value = "x"
                 span = emptySpan()
             }
