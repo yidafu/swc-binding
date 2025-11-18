@@ -48,16 +48,15 @@ impl MinifyTarget {
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn minifySync(mut env: JNIEnv, _: JClass, code: JString, opts: JString) -> jstring {
-    let code: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&opts)
-        .expect("Couldn't get java string!")
-        .into();
-    // crate::util::init_default_trace_subscriber();
-    let result = perform_minify_sync_work(&code, &opts);
+    let code_str = match crate::util::get_java_string_or_throw(&mut env, &code) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let opts_str = match crate::util::get_java_string_or_throw(&mut env, &opts) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let result = perform_minify_sync_work(&code_str, &opts_str);
     process_output(env, result)
 }
 
@@ -85,28 +84,23 @@ fn perform_minify_sync_work(code: &str, opts: &str) -> SwcResult<TransformOutput
 /// Async minify method - uses callback
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn minifyAsync(mut env: JNIEnv, _: JClass, code: JString, opts: JString, callback: JObject) {
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(code) = crate::util::get_java_string_async(&mut env, &code) else {
+        return;
     };
-
-    let code: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&opts)
-        .expect("Couldn't get java string!")
-        .into();
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &opts) else {
+        return;
+    };
 
     thread::spawn(move || {
-        let result = perform_minify_work(&code, &opts);
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_minify_work(&code, &opts),
+            "Internal error: panic in minify work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 }
 

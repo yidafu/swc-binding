@@ -25,14 +25,21 @@ pub fn transformSync(
     is_module: jboolean,
     options: JString,
 ) -> jstring {
-    let s: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
+    // Safely get Java strings, return error if failed
+    let s = match crate::util::get_java_string_safe(&mut env, &code) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e);
+            return JString::default().into_raw();
+        }
+    };
+    let opts = match crate::util::get_java_string_safe(&mut env, &options) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e);
+            return JString::default().into_raw();
+        }
+    };
     let is_module = is_module == 1;
     let result = perform_transform_sync_work(&s, is_module, &opts);
     process_output(env, result)
@@ -87,14 +94,25 @@ pub fn transformFileSync(
     is_module: jboolean,
     options: JString,
 ) -> jstring {
-    let s: String = env
-        .get_string(&filepath)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
+    // Safely get Java strings, return error if failed
+    let s = match crate::util::get_java_string_safe(&mut env, &filepath) {
+        Ok(s) => s,
+        Err(e) => {
+            if let Err(throw_err) = env.throw(e) {
+                eprintln!("Failed to throw exception: {:?}", throw_err);
+            }
+            return JString::default().into_raw();
+        }
+    };
+    let opts = match crate::util::get_java_string_safe(&mut env, &options) {
+        Ok(s) => s,
+        Err(e) => {
+            if let Err(throw_err) = env.throw(e) {
+                eprintln!("Failed to throw exception: {:?}", throw_err);
+            }
+            return JString::default().into_raw();
+        }
+    };
     let is_module = is_module == 1;
     let result = perform_transform_file_sync_work(&s, is_module, &opts);
     process_output(env, result)
@@ -144,29 +162,24 @@ pub fn transformAsync(
     options: JString,
     callback: JObject,
 ) {
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(s) = crate::util::get_java_string_async(&mut env, &code) else {
+        return;
     };
-
-    let s: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &options) else {
+        return;
+    };
     let is_module = is_module == 1;
 
     thread::spawn(move || {
-        let result = perform_transform_work(&s, is_module, &opts);
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_transform_work(&s, is_module, &opts),
+            "Internal error: panic in transform work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 }
 
@@ -180,29 +193,24 @@ pub fn transformFileAsync(
     options: JString,
     callback: JObject,
 ) {
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(s) = crate::util::get_java_string_async(&mut env, &filepath) else {
+        return;
     };
-
-    let s: String = env
-        .get_string(&filepath)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &options) else {
+        return;
+    };
     let is_module = is_module == 1;
 
     thread::spawn(move || {
-        let result = perform_transform_file_work(&s, is_module, &opts);
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_transform_file_work(&s, is_module, &opts),
+            "Internal error: panic in transform file work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 }
 

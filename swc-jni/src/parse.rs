@@ -27,20 +27,19 @@ pub fn parseSync(
     options: JString,
     filename: JString,
 ) -> jstring {
-    let src: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
-    let filename: String = env
-        .get_string(&filename)
-        .expect("Couldn't get java string!")
-        .into();
-    // crate::util::init_default_trace_subscriber();
-    let result = perform_parse_sync_work(&src, &opts, &filename);
+    let src = match crate::util::get_java_string_or_throw(&mut env, &code) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let opts = match crate::util::get_java_string_or_throw(&mut env, &options) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let filename_str = match crate::util::get_java_string_or_throw(&mut env, &filename) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let result = perform_parse_sync_work(&src, &opts, &filename_str);
     process_result(env, result)
 }
 
@@ -90,14 +89,25 @@ fn perform_parse_sync_work(src: &str, opts: &str, filename: &str) -> SwcResult<P
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn parseFileSync(mut env: JNIEnv, _: JClass, filepath: JString, options: JString) -> jstring {
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
-    let path: String = env
-        .get_string(&filepath)
-        .expect("Couldn't get java string!")
-        .into();
+    // Safely get Java strings, return error if failed
+    let opts = match crate::util::get_java_string_safe(&mut env, &options) {
+        Ok(s) => s,
+        Err(e) => {
+            if let Err(throw_err) = env.throw(e) {
+                eprintln!("Failed to throw exception: {:?}", throw_err);
+            }
+            return JString::default().into_raw();
+        }
+    };
+    let path = match crate::util::get_java_string_safe(&mut env, &filepath) {
+        Ok(s) => s,
+        Err(e) => {
+            if let Err(throw_err) = env.throw(e) {
+                eprintln!("Failed to throw exception: {:?}", throw_err);
+            }
+            return JString::default().into_raw();
+        }
+    };
 
     // crate::util::init_default_trace_subscriber();
     let result = perform_parse_file_sync_work(&path, &opts);
@@ -150,38 +160,26 @@ pub fn parseAsync(
     callback: JObject,
 ) {
     // 1. Get JavaVM (for cross-thread Java calls)
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    // 2. Create global reference to callback
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(src) = crate::util::get_java_string_async(&mut env, &code) else {
+        return;
+    };
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &options) else {
+        return;
+    };
+    let Some(file) = crate::util::get_java_string_async(&mut env, &filename) else {
+        return;
     };
 
-    // 3. Extract parameters (must be done in JNI thread)
-    let src: String = env
-        .get_string(&code)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
-    let file: String = env
-        .get_string(&filename)
-        .expect("Couldn't get java string!")
-        .into();
-
-    // 4. Execute parse in new thread (returns immediately, non-blocking)
     thread::spawn(move || {
-        // Perform actual parse work
-        let result = perform_parse_work(&src, &opts, &file);
-
-        // 5. Attach to JVM and callback Java
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_parse_work(&src, &opts, &file),
+            "Internal error: panic in parse work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 
     // Method returns immediately
@@ -196,28 +194,23 @@ pub fn parseFileAsync(
     options: JString,
     callback: JObject,
 ) {
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &options) else {
+        return;
     };
-
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
-    let path: String = env
-        .get_string(&filepath)
-        .expect("Couldn't get java string!")
-        .into();
+    let Some(path) = crate::util::get_java_string_async(&mut env, &filepath) else {
+        return;
+    };
 
     thread::spawn(move || {
-        let result = perform_parse_file_work(&path, &opts);
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_parse_file_work(&path, &opts),
+            "Internal error: panic in parse file work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 }
 

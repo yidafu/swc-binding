@@ -19,17 +19,16 @@ use crate::get_compiler;
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn printSync(mut env: JNIEnv, _: JClass, program: JString, options: JString) -> jstring {
-    let program: String = env
-        .get_string(&program)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
-    // crate::util::init_default_trace_subscriber();
+    let program_str = match crate::util::get_java_string_or_throw(&mut env, &program) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
+    let opts = match crate::util::get_java_string_or_throw(&mut env, &options) {
+        Some(s) => s,
+        None => return JString::default().into_raw(),
+    };
 
-    let result = perform_print_sync_work(&program, &opts);
+    let result = perform_print_sync_work(&program_str, &opts);
     process_output(env, result)
 }
 
@@ -67,7 +66,6 @@ fn perform_print_sync_work(program_str: &str, opts: &str) -> SwcResult<Transform
 
     // Defaults to es3
     let _codegen_target = options.codegen_target().unwrap_or_default();
-
     let result = GLOBALS.set(&Default::default(), || {
         let print_args = PrintArgs {
             output_path: options.output_path,
@@ -107,28 +105,23 @@ pub fn printAsync(
     options: JString,
     callback: JObject,
 ) {
-    let jvm = match env.get_java_vm() {
-        Ok(vm) => vm,
-        Err(_) => return,
+    let Some((jvm, callback_ref)) = crate::util::setup_async_callback(&mut env, callback) else {
+        return;
     };
 
-    let callback_ref = match env.new_global_ref(callback) {
-        Ok(r) => r,
-        Err(_) => return,
+    let Some(program) = crate::util::get_java_string_async(&mut env, &program) else {
+        return;
     };
-
-    let program: String = env
-        .get_string(&program)
-        .expect("Couldn't get java string!")
-        .into();
-    let opts: String = env
-        .get_string(&options)
-        .expect("Couldn't get java string!")
-        .into();
+    let Some(opts) = crate::util::get_java_string_async(&mut env, &options) else {
+        return;
+    };
 
     thread::spawn(move || {
-        let result = perform_print_work(&program, &opts);
-        callback_java(jvm, callback_ref, result);
+        let callback_result = crate::util::execute_with_panic_protection(
+            || perform_print_work(&program, &opts),
+            "Internal error: panic in print work",
+        );
+        callback_java(jvm, callback_ref, callback_result);
     });
 }
 
