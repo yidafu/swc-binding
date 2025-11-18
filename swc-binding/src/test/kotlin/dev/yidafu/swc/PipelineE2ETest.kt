@@ -17,7 +17,7 @@ class PipelineE2ETest : AnnotationSpec() {
               name: string
               age: number
             }
-            const greet = (u: User) => `Hello, ${"$"}{u.name}!`
+            const greet = (u: User) => `Hello, ${'$'}{u.name}!`
             export const answer: number = 42
         """.trimIndent()
 

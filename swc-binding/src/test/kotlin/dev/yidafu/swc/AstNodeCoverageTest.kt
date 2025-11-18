@@ -698,8 +698,8 @@ class AstNodeCoverageTest : AnnotationSpec() {
     fun `parse SequenceExpression`() {
         val output = swcNative.parseSync(
             """
-            (a = 1, b = 2, c = 3);
-            (x++, y++, z++);
+            a = 1, b = 2, c = 3;
+            x++, y++, z++;
             """.trimIndent(),
             esParseOptions { },
             "test.js"
@@ -727,9 +727,8 @@ class AstNodeCoverageTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
         val module = output as Module
         module.body?.let { items ->
-            val declaration = items[0].shouldBeInstanceOf<VariableDeclaration>()
-            val declarator = declaration.declarations?.get(0)?.shouldBeInstanceOf<VariableDeclarator>()
-            val taggedTemplate = declarator?.init?.shouldBeInstanceOf<TaggedTemplateExpression>()
+            val exprStmt = items[0].shouldBeInstanceOf<ExpressionStatement>()
+            val taggedTemplate = exprStmt.expression.shouldBeInstanceOf<TaggedTemplateExpression>()
             assertNotNull(taggedTemplate)
             assertNotNull(taggedTemplate.tag)
             assertNotNull(taggedTemplate.template)

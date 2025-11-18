@@ -195,6 +195,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                     "end": 171,
                     "ctxt": 0
                   },
+                  "ctxt": 0,
                   "body": [{
                     "type": "ImportDeclaration",
                     "span": {
@@ -202,6 +203,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                       "end": 130,
                       "ctxt": 0
                     },
+                    "ctxt": 0,
                     "specifiers": [{
                       "type": "ImportDefaultSpecifier",
                       "span": {
@@ -209,13 +211,15 @@ class SwcNativeBasicTest : AnnotationSpec() {
                         "end": 112,
                         "ctxt": 0
                       },
+                      "ctxt": 0,
                       "local": {
                         "type": "Identifier",
-                        "span": {
-                          "start": 111,
-                          "end": 112,
-                          "ctxt": 2
-                        },
+                      "span": {
+                        "start": 111,
+                        "end": 112,
+                        "ctxt": 2
+                      },
+                      "ctxt": 2,
                         "value": "x",
                         "optional": false
                       }
@@ -227,6 +231,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                         "end": 129,
                         "ctxt": 0
                       },
+                      "ctxt": 0,
                       "value": "./test.js",
                       "raw": "'./test.js'"
                     },
@@ -250,6 +255,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                       "end": 144,
                       "ctxt": 0
                     },
+                    "ctxt": 0,
                     "decorators": [],
                     "body": [],
                     "superClass": null,
@@ -275,6 +281,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                       "end": 171,
                       "ctxt": 0
                     },
+                    "ctxt": 0,
                     "decorators": [],
                     "body": [],
                     "superClass": {
@@ -284,6 +291,7 @@ class SwcNativeBasicTest : AnnotationSpec() {
                         "end": 167,
                         "ctxt": 2
                       },
+                      "ctxt": 2,
                       "value": "Foo",
                       "optional": false
                     },
