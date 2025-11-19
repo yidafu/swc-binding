@@ -5,7 +5,6 @@ import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertNotNull
 
 /**
  * Tests for ES2015 (ES6) features
@@ -583,4 +582,3 @@ class ES2015FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

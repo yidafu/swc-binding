@@ -3,7 +3,6 @@
 
 package dev.yidafu.swc.generated
 
-import dev.yidafu.swc.generated.SwcDslMarker
 import dev.yidafu.swc.emptySpan
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -12,9 +11,19 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 
 @SwcDslMarker
-interface Identifier : ExpressionBase, Expression, JSXObject, JSXElementName, JSXAttributeName,
-        ModuleExportName, Property, PropertyName, TsEntityName, TsThisTypeOrIdent, TsEnumMemberId,
-        TsModuleName {
+interface Identifier :
+    ExpressionBase,
+    Expression,
+    JSXObject,
+    JSXElementName,
+    JSXAttributeName,
+    ModuleExportName,
+    Property,
+    PropertyName,
+    TsEntityName,
+    TsThisTypeOrIdent,
+    TsEnumMemberId,
+    TsModuleName {
     // conflict with @SerialName
     //  var type: String?
     var `value`: String?
@@ -33,7 +42,6 @@ interface BindingIdentifier : PatternBase, Pattern, TsParameterPropertyParameter
     override var span: Span
 }
 
-
 @OptIn(ExperimentalSerializationApi::class)
 @SwcDslMarker
 @Serializable
@@ -44,16 +52,17 @@ class IdentifierImpl() : Identifier, BindingIdentifier {
     //  override var type : String? = "Identifier"
     @EncodeDefault
     override var `value`: String? = null
+
     @EncodeDefault
     override var optional: Boolean? = null
     override var span: Span = emptySpan()
+
     @EncodeDefault
     override var ctxt: Int = 0
     override var typeAnnotation: TsTypeAnnotation? = null
 }
 
 typealias BindingIdentifierImpl = IdentifierImpl
-
 
 @SwcDslMarker
 interface TemplateLiteral : ExpressionBase, Expression {
@@ -83,8 +92,10 @@ class TemplateLiteralImpl : TemplateLiteral, TsTemplateLiteralType {
     //  override var type : String? = "TemplateLiteral"
     @EncodeDefault
     override var types: Array<TsType>? = null
+
     @EncodeDefault
     override var expressions: Array<Expression>? = null
+
     @EncodeDefault
     override var quasis: Array<TemplateElement>? = null
     override var span: Span = emptySpan()

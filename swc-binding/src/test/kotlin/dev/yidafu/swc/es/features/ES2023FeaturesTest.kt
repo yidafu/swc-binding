@@ -105,4 +105,3 @@ class ES2023FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

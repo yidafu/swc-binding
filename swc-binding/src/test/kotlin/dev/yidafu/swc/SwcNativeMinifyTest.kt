@@ -2,10 +2,8 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.Union
 import io.kotest.core.spec.style.ShouldSpec
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotNull
@@ -173,7 +171,7 @@ class SwcNativeMinifyTest : ShouldSpec({
                 return temporaryResult;
             }
         """.trimIndent()
-        
+
         // Test with compress disabled (minify still runs but compression is disabled)
         val result1 = swcNative.minifySync(
             code,

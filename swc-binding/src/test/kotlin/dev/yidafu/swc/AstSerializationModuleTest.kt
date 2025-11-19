@@ -131,7 +131,7 @@ class AstSerializationModuleTest : ShouldSpec({
         val json = astJson.encodeToString(importDecl)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"ImportDeclaration\""
-        
+
         val deserialized = astJson.decodeFromString<ModuleDeclaration>(json)
         deserialized.shouldBeInstanceOf<ImportDeclaration>()
         (deserialized as ImportDeclaration).specifiers.shouldNotBeNull()

@@ -36,7 +36,7 @@ class AstSerializationStatementTest : ShouldSpec({
         val json = astJson.encodeToString(ifStmt)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"IfStatement\""
-        
+
         val deserialized = astJson.decodeFromString<Statement>(json)
         deserialized.shouldBeInstanceOf<IfStatement>()
         (deserialized as IfStatement).test.shouldBeInstanceOf<BooleanLiteral>()
@@ -95,7 +95,7 @@ class AstSerializationStatementTest : ShouldSpec({
         val json = astJson.encodeToString(forStmt as Statement)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"ForStatement\""
-        
+
         val deserialized = astJson.decodeFromString<Statement>(json)
         deserialized.shouldBeInstanceOf<ForStatement>()
         (deserialized as ForStatement).init.shouldBeInstanceOf<VariableDeclaration>()

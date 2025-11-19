@@ -25,7 +25,7 @@ object TruePlusMinusSerializer : KSerializer<TruePlusMinus> {
     override fun serialize(encoder: Encoder, value: TruePlusMinus) {
         val jsonEncoder = encoder as? JsonEncoder
             ?: error("TruePlusMinusSerializer can only be used with JsonEncoder")
-        
+
         val stringValue = when (value) {
             TruePlusMinus.TRUE -> "true"
             TruePlusMinus.Addition -> "+"
@@ -37,16 +37,16 @@ object TruePlusMinusSerializer : KSerializer<TruePlusMinus> {
     override fun deserialize(decoder: Decoder): TruePlusMinus {
         val jsonDecoder = decoder as? JsonDecoder
             ?: error("TruePlusMinusSerializer can only be used with JsonDecoder")
-        
+
         val element = jsonDecoder.decodeJsonElement()
         val primitive = element.jsonPrimitive
-        
+
         // Handle boolean true
         val booleanValue = primitive.booleanOrNull
         if (booleanValue == true) {
             return TruePlusMinus.TRUE
         }
-        
+
         // Handle string values
         val stringValue = primitive.content
         return when (stringValue) {

@@ -121,4 +121,3 @@ class ES2022FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

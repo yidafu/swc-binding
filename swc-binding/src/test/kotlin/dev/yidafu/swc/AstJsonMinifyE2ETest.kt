@@ -6,8 +6,6 @@ import dev.yidafu.swc.util.NodeJsHelper
 import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Disabled
-import kotlin.test.Ignore
 
 /**
  * E2E tests for minify method - comparing minified code from Kotlin and @swc/core
@@ -16,7 +14,7 @@ import kotlin.test.Ignore
 @Ignored
 class AstJsonMinifyE2ETest : ShouldSpec({
     val swcNative = SwcNative()
-    
+
     // Helper functions
     fun normalizeCode(code: String): String {
         return code
@@ -53,7 +51,7 @@ class AstJsonMinifyE2ETest : ShouldSpec({
 
     should("minify simple JavaScript code") {
         if (!NodeJsHelper.isNodeJsAvailable()) return@should
-        
+
         val code = """
             function add(a, b) {
                 return a + b;
@@ -147,6 +145,4 @@ class AstJsonMinifyE2ETest : ShouldSpec({
 
         kotlinCode shouldBe swcCode
     }
-
 })
-

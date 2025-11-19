@@ -64,7 +64,7 @@ class AstSerializationExpressionTest : ShouldSpec({
         val json = astJson.encodeToString(callExpr)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"CallExpression\""
-        
+
         val deserialized = astJson.decodeFromString<Expression>(json)
         deserialized.shouldBeInstanceOf<CallExpression>()
         (deserialized as CallExpression).callee.shouldBeInstanceOf<Identifier>()
@@ -104,7 +104,7 @@ class AstSerializationExpressionTest : ShouldSpec({
         val json = astJson.encodeToString(arrayExpr)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"ArrayExpression\""
-        
+
         val deserialized = astJson.decodeFromString<Expression>(json)
         deserialized.shouldBeInstanceOf<ArrayExpression>()
         (deserialized as ArrayExpression).elements.shouldNotBeNull()
@@ -132,7 +132,7 @@ class AstSerializationExpressionTest : ShouldSpec({
         val json = astJson.encodeToString(objExpr)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"ObjectExpression\""
-        
+
         val deserialized = astJson.decodeFromString<Expression>(json)
         deserialized.shouldBeInstanceOf<ObjectExpression>()
         (deserialized as ObjectExpression).properties.shouldNotBeNull()

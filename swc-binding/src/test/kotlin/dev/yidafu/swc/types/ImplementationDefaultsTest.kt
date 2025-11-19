@@ -2,7 +2,6 @@ package dev.yidafu.swc.generated
 
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class ImplementationDefaultsTest : AnnotationSpec() {

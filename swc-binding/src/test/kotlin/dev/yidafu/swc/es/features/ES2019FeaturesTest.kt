@@ -135,4 +135,3 @@ class ES2019FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

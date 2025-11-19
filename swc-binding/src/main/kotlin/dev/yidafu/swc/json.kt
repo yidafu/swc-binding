@@ -2,7 +2,6 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.Program
 import dev.yidafu.swc.generated.TruePlusMinus
-import dev.yidafu.swc.TruePlusMinusSerializer
 import dev.yidafu.swc.generated.swcConfigSerializersModule
 import dev.yidafu.swc.generated.swcSerializersModule
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -15,10 +14,8 @@ import kotlin.jvm.JvmStatic
 /**
  * Extended serializers module for SWC AST nodes.
  * Includes the generated serializers module and handles polymorphic types.
- * 
- * Implementation classes (*Impl) from customType.kt are handled by the generated polymorphic module.
- * 
- * Note: 所有使用 @JsonClassDiscriminator("type") 的类都应该有显式的 type 字段（使用 @EncodeDefault），
+ * * Implementation classes (*Impl) from customType.kt are handled by the generated polymorphic module.
+ * * Note: 所有使用 @JsonClassDiscriminator("type") 的类都应该有显式的 type 字段（使用 @EncodeDefault），
  * 以确保即使它们不是多态类型，也能在序列化时输出 type 字段。
  */
 @OptIn(ExperimentalSerializationApi::class)
@@ -62,7 +59,7 @@ val astJson = Json {
     // 需要 classDiscriminator 配置，与 @JsonClassDiscriminator("type") 配合使用
     // @JsonClassDiscriminator 指定使用 type 属性作为 discriminator
     // classDiscriminator 指定 JSON 中的字段名为 "type"
-    // 
+    //
     // 注意：@JsonClassDiscriminator 只在多态序列化时才会自动添加 discriminator 字段。
     // 对于非多态类型的序列化（如 Array<VariableDeclarator>），这些类已经有显式的 type 字段
     // （使用 @EncodeDefault），配合 encodeDefaults = true 配置，确保 type 字段会被序列化。

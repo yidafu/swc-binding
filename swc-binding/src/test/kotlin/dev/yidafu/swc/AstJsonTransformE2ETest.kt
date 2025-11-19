@@ -7,7 +7,6 @@ import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
-import kotlin.test.Ignore
 
 /**
  * E2E tests for transform method - comparing transformed code from Kotlin and @swc/core
@@ -32,19 +31,19 @@ class AstJsonTransformE2ETest : ShouldSpec({
     fun convertToSwcTransformOptions(options: Options, isModule: Boolean = false): String {
         val jsc = options.jsc
         val parser = jsc?.parser
-        
+
         // Get serialized target name using configJson
         val target = jsc?.target?.let {
             configJson.encodeToString(it).trim('"')
         } ?: "es5"
-        
+
         // Determine syntax from parser type
         val syntax = when (parser) {
             is EsParserConfig -> "ecmascript"
             is TsParserConfig -> "typescript"
             else -> "ecmascript"
         }
-        
+
         val tsx = (parser as? TsParserConfig)?.tsx ?: false
         val decorators = when (parser) {
             is EsParserConfig -> parser.decorators ?: false
@@ -147,4 +146,3 @@ class AstJsonTransformE2ETest : ShouldSpec({
         kotlinCode shouldBe swcCode
     }
 })
-

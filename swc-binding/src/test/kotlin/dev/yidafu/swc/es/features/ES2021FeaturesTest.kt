@@ -96,4 +96,3 @@ class ES2021FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

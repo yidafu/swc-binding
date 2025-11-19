@@ -83,7 +83,7 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
 
             val json = astJson.encodeToString(declarator)
             val deserialized = astJson.decodeFromString<VariableDeclarator>(json)
-            
+
             deserialized.id.shouldNotBeNull()
             (deserialized.id as Identifier).value shouldBe "y"
             deserialized.init.shouldBeNull()
@@ -155,7 +155,7 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
 
             val json = astJson.encodeToString(param)
             val deserialized = astJson.decodeFromString<Param>(json)
-            
+
             deserialized.decorators.shouldNotBeNull()
             deserialized.decorators!!.size shouldBe 1
         }
@@ -223,7 +223,7 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
 
             val json = astJson.encodeToString(blockStmt)
             val deserialized = astJson.decodeFromString<BlockStatement>(json)
-            
+
             deserialized.stmts.shouldNotBeNull()
             deserialized.stmts!!.size shouldBe 0
         }
@@ -308,7 +308,7 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
 
             val json = astJson.encodeToString(openingElement)
             val deserialized = astJson.decodeFromString<JSXOpeningElement>(json)
-            
+
             deserialized.name.shouldNotBeNull()
             deserialized.name!!.shouldBeInstanceOf<JSXMemberExpression>()
         }
@@ -368,7 +368,7 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
 
             val json = astJson.encodeToString(closingElement)
             val deserialized = astJson.decodeFromString<JSXClosingElement>(json)
-            
+
             deserialized.name.shouldNotBeNull()
             deserialized.name!!.shouldBeInstanceOf<JSXNamespacedName>()
             (deserialized.name as JSXNamespacedName).name.shouldNotBeNull()
@@ -376,4 +376,3 @@ class AstSerializationSpecificTypesTest : ShouldSpec({
         }
     }
 })
-

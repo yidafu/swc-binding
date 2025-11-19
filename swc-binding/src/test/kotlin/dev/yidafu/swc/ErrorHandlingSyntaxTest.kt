@@ -5,7 +5,6 @@ import dev.yidafu.swc.generated.dsl.*
 import io.kotest.core.spec.style.ShouldSpec
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**

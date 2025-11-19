@@ -4,13 +4,12 @@ import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.net.URL
 import kotlinx.coroutines.runBlocking
+import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -231,5 +230,4 @@ class SwcNativeBasicTest : ShouldSpec({
             result.shouldBeInstanceOf<Module>()
         }
     }
-
 })

@@ -1,9 +1,9 @@
 package dev.yidafu.swc.util
 
-import java.io.File
-import java.net.URLDecoder
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.net.URLDecoder
 
 /**
  * Helper class for executing Node.js scripts in tests.
@@ -13,14 +13,14 @@ object NodeJsHelper {
     private val scriptPath: String by lazy {
         val resource = NodeJsHelper::class.java.classLoader.getResource("scripts/generate-ast-json.js")
             ?: throw IllegalStateException("Cannot find generate-ast-json.js script")
-        
+
         // Handle both file:// URLs and regular file paths
         val path = if (resource.protocol == "file") {
             URLDecoder.decode(resource.path, "UTF-8")
         } else {
             resource.file ?: throw IllegalStateException("Cannot get file path from resource: $resource")
         }
-        
+
         File(path).absolutePath
     }
 
@@ -39,8 +39,7 @@ object NodeJsHelper {
 
     /**
      * Execute Node.js script with given mode, code, and options.
-     * 
-     * @param mode Operation mode: "parse", "transform", or "minify"
+     * * @param mode Operation mode: "parse", "transform", or "minify"
      * @param code Source code
      * @param options Options as JSON string
      * @return Output from the script
@@ -111,4 +110,3 @@ object NodeJsHelper {
         return executeScript("minify", code, options)
     }
 }
-

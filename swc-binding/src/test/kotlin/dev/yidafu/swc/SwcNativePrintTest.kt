@@ -280,7 +280,7 @@ class SwcNativePrintTest : ShouldSpec({
 
         val program = swcNative.parseSync(code, esParseOptions { }, "test.js")
         assertNotNull(program)
-        
+
         // Note: printSync may fail with certain AST nodes due to serialization issues
         // Just verify parsing succeeds, and if printSync works, verify output
         try {
@@ -396,4 +396,3 @@ class SwcNativePrintTest : ShouldSpec({
         }
     }
 })
-

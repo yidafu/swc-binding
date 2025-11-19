@@ -3,10 +3,6 @@ package dev.yidafu.swc
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Tests for JSX syntax parsing

@@ -8,8 +8,6 @@ import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
-import kotlin.test.Ignore
-import kotlin.test.assertNotNull
 
 /**
  * E2E tests for parse method - comparing AST JSON from Kotlin and @swc/core
@@ -32,7 +30,7 @@ class AstJsonParseE2ETest : ShouldSpec({
                     .trim('"') // Remove quotes from JSON string
             } ?: "es5"
         }
-        
+
         return when (options) {
             is EsParserConfig -> {
                 val syntax = "ecmascript"
@@ -41,7 +39,7 @@ class AstJsonParseE2ETest : ShouldSpec({
                 val isModule = true
                 val comments = options.comments ?: false
                 val script = options.script ?: false
-                
+
                 """{"syntax":"$syntax","target":"$target","isModule":$isModule,"comments":$comments,"script":$script}"""
             }
             is TsParserConfig -> {
@@ -53,7 +51,7 @@ class AstJsonParseE2ETest : ShouldSpec({
                 val script = options.script ?: false
                 val tsx = options.tsx ?: false
                 val decorators = options.decorators ?: false
-                
+
                 """{"syntax":"$syntax","target":"$target","isModule":$isModule,"comments":$comments,"script":$script,"tsx":$tsx,"decorators":$decorators}"""
             }
             else -> {
@@ -211,6 +209,4 @@ class AstJsonParseE2ETest : ShouldSpec({
         }
         areEqual shouldBe true
     }
-
 })
-

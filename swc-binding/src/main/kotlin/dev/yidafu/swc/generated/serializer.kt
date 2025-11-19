@@ -2,24 +2,22 @@
 
 package dev.yidafu.swc.generated
 
-import kotlin.OptIn
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import kotlin.OptIn
 
 @OptIn(ExperimentalSerializationApi::class)
 public val swcSerializersModule: SerializersModule = SerializersModule {
-      polymorphic(BaseModuleConfig::class) {
+    polymorphic(BaseModuleConfig::class) {
         subclass(AmdConfig::class)
         subclass(CommonJsConfig::class)
         subclass(Es6Config::class)
         subclass(NodeNextConfig::class)
         subclass(UmdConfig::class)
-      }
-      polymorphic(ClassMember::class) {
+    }
+    polymorphic(ClassMember::class) {
         subclass(ClassMethod::class)
         subclass(ClassProperty::class)
         subclass(Constructor::class)
@@ -28,8 +26,8 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(PrivateProperty::class)
         subclass(StaticBlock::class)
         subclass(TsIndexSignature::class)
-      }
-      polymorphic(Declaration::class) {
+    }
+    polymorphic(Declaration::class) {
         subclass(ClassDeclaration::class)
         subclass(FunctionDeclaration::class)
         subclass(TsEnumDeclaration::class)
@@ -37,18 +35,18 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsModuleDeclaration::class)
         subclass(TsTypeAliasDeclaration::class)
         subclass(VariableDeclaration::class)
-      }
-      polymorphic(DefaultDecl::class) {
+    }
+    polymorphic(DefaultDecl::class) {
         subclass(ClassExpression::class)
         subclass(FunctionExpression::class)
         subclass(TsInterfaceDeclaration::class)
-      }
-      polymorphic(ExportSpecifier::class) {
+    }
+    polymorphic(ExportSpecifier::class) {
         subclass(ExportDefaultSpecifier::class)
         subclass(ExportNamespaceSpecifier::class)
         subclass(NamedExportSpecifier::class)
-      }
-      polymorphic(Expression::class) {
+    }
+    polymorphic(Expression::class) {
         subclass(ArrayExpression::class)
         subclass(ArrowFunctionExpression::class)
         subclass(AssignmentExpression::class)
@@ -93,8 +91,8 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(UnaryExpression::class)
         subclass(UpdateExpression::class)
         subclass(YieldExpression::class)
-      }
-      polymorphic(ExpressionBase::class) {
+    }
+    polymorphic(ExpressionBase::class) {
         subclass(ArrayExpression::class)
         subclass(ArrowFunctionExpression::class)
         subclass(AssignmentExpression::class)
@@ -125,21 +123,21 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(UnaryExpression::class)
         subclass(UpdateExpression::class)
         subclass(YieldExpression::class)
-      }
-      polymorphic(Fn::class) {
+    }
+    polymorphic(Fn::class) {
         subclass(FunctionDeclaration::class)
         subclass(FunctionExpression::class)
         subclass(MethodProperty::class)
         default { MethodProperty.serializer() }
-      }
-      polymorphic(HasDecorator::class) {
+    }
+    polymorphic(HasDecorator::class) {
         subclass(TsParameterProperty::class)
-      }
-      polymorphic(HasInterpreter::class) {
+    }
+    polymorphic(HasInterpreter::class) {
         subclass(Module::class)
         subclass(Script::class)
-      }
-      polymorphic(HasSpan::class) {
+    }
+    polymorphic(HasSpan::class) {
         subclass(AssignmentPatternProperty::class)
         subclass(BigIntLiteral::class)
         subclass(BooleanLiteral::class)
@@ -249,13 +247,13 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(VariableDeclaration::class)
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
-      }
-      polymorphic(ImportSpecifier::class) {
+    }
+    polymorphic(ImportSpecifier::class) {
         subclass(ImportDefaultSpecifier::class)
         subclass(ImportNamespaceSpecifier::class)
         subclass(NamedImportSpecifier::class)
-      }
-      polymorphic(JSXAttrValue::class) {
+    }
+    polymorphic(JSXAttrValue::class) {
         subclass(BigIntLiteral::class)
         subclass(BooleanLiteral::class)
         subclass(JSXElement::class)
@@ -266,28 +264,28 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(NumericLiteral::class)
         subclass(RegExpLiteral::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(JSXAttributeName::class) {
+    }
+    polymorphic(JSXAttributeName::class) {
         subclass(IdentifierImpl::class)
         subclass(JSXNamespacedName::class)
-      }
-      polymorphic(JSXAttributeOrSpread::class) {
+    }
+    polymorphic(JSXAttributeOrSpread::class) {
         subclass(JSXAttribute::class)
         subclass(SpreadElement::class)
-      }
-      polymorphic(JSXElementChild::class) {
+    }
+    polymorphic(JSXElementChild::class) {
         subclass(JSXElement::class)
         subclass(JSXExpressionContainer::class)
         subclass(JSXFragment::class)
         subclass(JSXSpreadChild::class)
         subclass(JSXText::class)
-      }
-      polymorphic(JSXElementName::class) {
+    }
+    polymorphic(JSXElementName::class) {
         subclass(IdentifierImpl::class)
         subclass(JSXMemberExpression::class)
         subclass(JSXNamespacedName::class)
-      }
-      polymorphic(JSXExpression::class) {
+    }
+    polymorphic(JSXExpression::class) {
         subclass(ArrayExpression::class)
         subclass(ArrowFunctionExpression::class)
         subclass(AssignmentExpression::class)
@@ -332,16 +330,16 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(UnaryExpression::class)
         subclass(UpdateExpression::class)
         subclass(YieldExpression::class)
-      }
-      polymorphic(JSXObject::class) {
+    }
+    polymorphic(JSXObject::class) {
         subclass(IdentifierImpl::class)
         subclass(JSXMemberExpression::class)
-      }
-      polymorphic(JsClass::class) {
+    }
+    polymorphic(JsClass::class) {
         subclass(ClassDeclaration::class)
         subclass(ClassExpression::class)
-      }
-      polymorphic(Literal::class) {
+    }
+    polymorphic(Literal::class) {
         subclass(BigIntLiteral::class)
         subclass(BooleanLiteral::class)
         subclass(JSXText::class)
@@ -349,16 +347,16 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(NumericLiteral::class)
         subclass(RegExpLiteral::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(ModuleConfig::class) {
+    }
+    polymorphic(ModuleConfig::class) {
         subclass(AmdConfig::class)
         subclass(CommonJsConfig::class)
         subclass(Es6Config::class)
         subclass(NodeNextConfig::class)
         subclass(SystemjsConfig::class)
         subclass(UmdConfig::class)
-      }
-      polymorphic(ModuleDeclaration::class) {
+    }
+    polymorphic(ModuleDeclaration::class) {
         subclass(ExportAllDeclaration::class)
         subclass(ExportDeclaration::class)
         subclass(ExportDefaultDeclaration::class)
@@ -368,12 +366,12 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsExportAssignment::class)
         subclass(TsImportEqualsDeclaration::class)
         subclass(TsNamespaceExportDeclaration::class)
-      }
-      polymorphic(ModuleExportName::class) {
+    }
+    polymorphic(ModuleExportName::class) {
         subclass(IdentifierImpl::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(ModuleItem::class) {
+    }
+    polymorphic(ModuleItem::class) {
         subclass(BlockStatementImpl::class)
         subclass(BreakStatement::class)
         subclass(ClassDeclaration::class)
@@ -408,8 +406,8 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(VariableDeclaration::class)
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
-      }
-      polymorphic(Node::class) {
+    }
+    polymorphic(Node::class) {
         subclass(ArrayExpression::class)
         subclass(ArrayPattern::class)
         subclass(ArrowFunctionExpression::class)
@@ -573,13 +571,13 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
         subclass(YieldExpression::class)
-      }
-      polymorphic(ObjectPatternProperty::class) {
+    }
+    polymorphic(ObjectPatternProperty::class) {
         subclass(AssignmentPatternProperty::class)
         subclass(KeyValuePatternProperty::class)
         subclass(RestElement::class)
-      }
-      polymorphic(Pattern::class) {
+    }
+    polymorphic(Pattern::class) {
         subclass(ArrayExpression::class)
         subclass(ArrayPattern::class)
         subclass(ArrowFunctionExpression::class)
@@ -629,34 +627,34 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(UnaryExpression::class)
         subclass(UpdateExpression::class)
         subclass(YieldExpression::class)
-      }
-      polymorphic(PatternBase::class) {
+    }
+    polymorphic(PatternBase::class) {
         subclass(ArrayPattern::class)
         subclass(AssignmentPattern::class)
         subclass(BindingIdentifierImpl::class)
         subclass(ObjectPattern::class)
         subclass(RestElement::class)
-      }
-      polymorphic(Program::class) {
+    }
+    polymorphic(Program::class) {
         subclass(Module::class)
         subclass(Script::class)
-      }
-      polymorphic(Property::class) {
+    }
+    polymorphic(Property::class) {
         subclass(AssignmentProperty::class)
         subclass(GetterProperty::class)
         subclass(IdentifierImpl::class)
         subclass(KeyValueProperty::class)
         subclass(MethodProperty::class)
         subclass(SetterProperty::class)
-      }
-      polymorphic(PropertyName::class) {
+    }
+    polymorphic(PropertyName::class) {
         subclass(BigIntLiteral::class)
         subclass(ComputedPropName::class)
         subclass(IdentifierImpl::class)
         subclass(NumericLiteral::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(Statement::class) {
+    }
+    polymorphic(Statement::class) {
         subclass(BlockStatementImpl::class)
         subclass(BreakStatement::class)
         subclass(ClassDeclaration::class)
@@ -682,54 +680,54 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(VariableDeclaration::class)
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
-      }
-      polymorphic(TsEntityName::class) {
+    }
+    polymorphic(TsEntityName::class) {
         subclass(IdentifierImpl::class)
         subclass(TsQualifiedName::class)
-      }
-      polymorphic(TsEnumMemberId::class) {
+    }
+    polymorphic(TsEnumMemberId::class) {
         subclass(IdentifierImpl::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(TsFnOrConstructorType::class) {
+    }
+    polymorphic(TsFnOrConstructorType::class) {
         subclass(TsConstructorType::class)
         subclass(TsFunctionType::class)
-      }
-      polymorphic(TsFnParameter::class) {
+    }
+    polymorphic(TsFnParameter::class) {
         subclass(ArrayPattern::class)
         subclass(BindingIdentifierImpl::class)
         subclass(ObjectPattern::class)
         subclass(RestElement::class)
-      }
-      polymorphic(TsLiteral::class) {
+    }
+    polymorphic(TsLiteral::class) {
         subclass(BigIntLiteral::class)
         subclass(BooleanLiteral::class)
         subclass(NumericLiteral::class)
         subclass(StringLiteral::class)
         subclass(TsTemplateLiteralTypeImpl::class)
-      }
-      polymorphic(TsModuleName::class) {
+    }
+    polymorphic(TsModuleName::class) {
         subclass(IdentifierImpl::class)
         subclass(StringLiteral::class)
-      }
-      polymorphic(TsModuleReference::class) {
+    }
+    polymorphic(TsModuleReference::class) {
         subclass(IdentifierImpl::class)
         subclass(TsExternalModuleReference::class)
         subclass(TsQualifiedName::class)
-      }
-      polymorphic(TsNamespaceBody::class) {
+    }
+    polymorphic(TsNamespaceBody::class) {
         subclass(TsModuleBlock::class)
         subclass(TsNamespaceDeclaration::class)
-      }
-      polymorphic(TsParameterPropertyParameter::class) {
+    }
+    polymorphic(TsParameterPropertyParameter::class) {
         subclass(AssignmentPattern::class)
         subclass(BindingIdentifierImpl::class)
-      }
-      polymorphic(TsThisTypeOrIdent::class) {
+    }
+    polymorphic(TsThisTypeOrIdent::class) {
         subclass(IdentifierImpl::class)
         subclass(TsThisType::class)
-      }
-      polymorphic(TsType::class) {
+    }
+    polymorphic(TsType::class) {
         subclass(TsArrayType::class)
         subclass(TsConditionalType::class)
         subclass(TsConstructorType::class)
@@ -752,8 +750,8 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsTypeQuery::class)
         subclass(TsTypeReference::class)
         subclass(TsUnionType::class)
-      }
-      polymorphic(TsTypeElement::class) {
+    }
+    polymorphic(TsTypeElement::class) {
         subclass(TsCallSignatureDeclaration::class)
         subclass(TsConstructSignatureDeclaration::class)
         subclass(TsGetterSignature::class)
@@ -761,56 +759,56 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsMethodSignature::class)
         subclass(TsPropertySignature::class)
         subclass(TsSetterSignature::class)
-      }
-      polymorphic(TsTypeQueryExpr::class) {
+    }
+    polymorphic(TsTypeQueryExpr::class) {
         subclass(IdentifierImpl::class)
         subclass(TsImportType::class)
         subclass(TsQualifiedName::class)
-      }
-      polymorphic(TsUnionOrIntersectionType::class) {
+    }
+    polymorphic(TsUnionOrIntersectionType::class) {
         subclass(TsIntersectionType::class)
         subclass(TsUnionType::class)
-      }
-      polymorphic(Identifier::class) {
-        subclass(IdentifierImpl::class)
-      }
-      polymorphic(BindingIdentifier::class) {
-        subclass(BindingIdentifierImpl::class)
-      }
-      polymorphic(TemplateLiteral::class) {
-        subclass(TemplateLiteralImpl::class)
-      }
-      polymorphic(TsTemplateLiteralType::class) {
-        subclass(TsTemplateLiteralTypeImpl::class)
-      }
-      polymorphic(VariableDeclarator::class) {
-        subclass(VariableDeclaratorImpl::class)
-      }
-      polymorphic(Param::class) {
-        subclass(ParamImpl::class)
-      }
-      polymorphic(BlockStatement::class) {
-        subclass(BlockStatementImpl::class)
-      }
-      polymorphic(JSXOpeningElement::class) {
-        subclass(JSXOpeningElementImpl::class)
-      }
-      polymorphic(JSXClosingElement::class) {
-        subclass(JSXClosingElementImpl::class)
-      }
     }
+    polymorphic(Identifier::class) {
+        subclass(IdentifierImpl::class)
+    }
+    polymorphic(BindingIdentifier::class) {
+        subclass(BindingIdentifierImpl::class)
+    }
+    polymorphic(TemplateLiteral::class) {
+        subclass(TemplateLiteralImpl::class)
+    }
+    polymorphic(TsTemplateLiteralType::class) {
+        subclass(TsTemplateLiteralTypeImpl::class)
+    }
+    polymorphic(VariableDeclarator::class) {
+        subclass(VariableDeclaratorImpl::class)
+    }
+    polymorphic(Param::class) {
+        subclass(ParamImpl::class)
+    }
+    polymorphic(BlockStatement::class) {
+        subclass(BlockStatementImpl::class)
+    }
+    polymorphic(JSXOpeningElement::class) {
+        subclass(JSXOpeningElementImpl::class)
+    }
+    polymorphic(JSXClosingElement::class) {
+        subclass(JSXClosingElementImpl::class)
+    }
+}
 
 @OptIn(ExperimentalSerializationApi::class)
 public val swcConfigSerializersModule: SerializersModule = SerializersModule {
-      polymorphic(BaseParseOptions::class) {
+    polymorphic(BaseParseOptions::class) {
         subclass(EsParserConfig::class)
         subclass(TsParserConfig::class)
-      }
-      polymorphic(Config::class) {
-        subclass(Options::class)
-      }
-      polymorphic(ParserConfig::class) {
-        subclass(EsParserConfig::class)
-        subclass(TsParserConfig::class)
-      }
     }
+    polymorphic(Config::class) {
+        subclass(Options::class)
+    }
+    polymorphic(ParserConfig::class) {
+        subclass(EsParserConfig::class)
+        subclass(TsParserConfig::class)
+    }
+}

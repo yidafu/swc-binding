@@ -120,4 +120,3 @@ class ES2024FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

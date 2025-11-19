@@ -6,7 +6,6 @@ import io.kotest.core.spec.style.ShouldSpec
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class UnionSerializationRoundTripTest : ShouldSpec({
@@ -18,7 +17,7 @@ class UnionSerializationRoundTripTest : ShouldSpec({
         }
         val node = ArrowFunctionExpression().apply {
             // body 的类型是 Node?，可以直接赋值 BlockStatement 或 Expression
-            body = createBlockStatement {  }
+            body = createBlockStatement { }
         }
         val encoded = json.encodeToString(node)
         val decoded = json.decodeFromString<ArrowFunctionExpression>(encoded)

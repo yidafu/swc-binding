@@ -116,4 +116,3 @@ class ES2017FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

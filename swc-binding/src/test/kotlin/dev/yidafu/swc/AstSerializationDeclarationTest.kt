@@ -37,7 +37,7 @@ class AstSerializationDeclarationTest : ShouldSpec({
         val json = astJson.encodeToString(decl)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"VariableDeclaration\""
-        
+
         val deserialized = astJson.decodeFromString<Declaration>(json)
         deserialized.shouldBeInstanceOf<VariableDeclaration>()
         (deserialized as VariableDeclaration).kind shouldBe VariableDeclarationKind.VAR
@@ -84,7 +84,7 @@ class AstSerializationDeclarationTest : ShouldSpec({
         val json = astJson.encodeToString(funcDecl)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"FunctionDeclaration\""
-        
+
         val deserialized = astJson.decodeFromString<Declaration>(json)
         deserialized.shouldBeInstanceOf<FunctionDeclaration>()
         (deserialized as FunctionDeclaration).identifier.shouldNotBeNull()

@@ -45,4 +45,3 @@ class ES2016FeaturesTest : ShouldSpec({
         output.shouldBeInstanceOf<Module>()
     }
 })
-

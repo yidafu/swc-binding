@@ -92,7 +92,7 @@ class AstSerializationBasicTest : ShouldSpec({
         val json = astJson.encodeToString(literal)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"NumericLiteral\""
-        
+
         val deserialized = astJson.decodeFromString<Literal>(json)
         deserialized.shouldBeInstanceOf<NumericLiteral>()
         (deserialized as NumericLiteral).value shouldBe 42.0
@@ -108,7 +108,7 @@ class AstSerializationBasicTest : ShouldSpec({
         val json = astJson.encodeToString(literal)
         json.shouldNotBeNull()
         json shouldContain "\"type\":\"BooleanLiteral\""
-        
+
         val deserialized = astJson.decodeFromString<Literal>(json)
         deserialized.shouldBeInstanceOf<BooleanLiteral>()
         (deserialized as BooleanLiteral).value shouldBe true

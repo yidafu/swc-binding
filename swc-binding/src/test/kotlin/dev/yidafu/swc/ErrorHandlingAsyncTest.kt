@@ -41,40 +41,40 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("transformAsync coroutine throws exception on error") {
         kotlinx.coroutines.runBlocking {
-                    val exception = try {
-                    swcNative.transformAsync(
+            val exception = try {
+                swcNative.transformAsync(
                     code = "const x = ;", // Invalid syntax
                     isModule = false,
                     options = options {
-                    jsc = jscConfig {
-                        parser = esParseOptions { }
+                        jsc = jscConfig {
+                            parser = esParseOptions { }
+                        }
                     }
-                    }
-                    )
-                    null
-                    } catch (e: RuntimeException) {
-                    e
-                    }
+                )
+                null
+            } catch (e: RuntimeException) {
+                e
+            }
 
-                    assertNotNull(exception?.message)
-                    }
-                    }
+            assertNotNull(exception?.message)
+        }
+    }
 
-                    should("printAsync with invalid program triggers error callback") {
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    var errorOccurred = false
+    should("printAsync with invalid program triggers error callback") {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var errorOccurred = false
 
-                    val program = swcNative.parseSync(";", esParseOptions { }, "empty.js") as Module
+        val program = swcNative.parseSync(";", esParseOptions { }, "empty.js") as Module
 
-                    swcNative.printAsync(
-                    program = program,
-                    options = options { },
-                    onSuccess = {
-                    latch.countDown()
-                    },
-                    onError = {
-                    errorOccurred = true
-                    latch.countDown()
+        swcNative.printAsync(
+            program = program,
+            options = options { },
+            onSuccess = {
+                latch.countDown()
+            },
+            onError = {
+                errorOccurred = true
+                latch.countDown()
             }
         )
 
@@ -83,31 +83,31 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("printAsync coroutine throws exception on error") {
         kotlinx.coroutines.runBlocking {
-                    val program = swcNative.parseSync(
-                    "const x = 1;",
-                    esParseOptions { },
-                    "test.js"
-                    ) as Module
+            val program = swcNative.parseSync(
+                "const x = 1;",
+                esParseOptions { },
+                "test.js"
+            ) as Module
 
-                    val result = swcNative.printAsync(program, options { })
+            val result = swcNative.printAsync(program, options { })
 
-                    assertNotNull(result.code)
-                    }
-                    }
+            assertNotNull(result.code)
+        }
+    }
 
-                    should("minifyAsync with invalid program triggers error callback") {
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    var errorOccurred = false
+    should("minifyAsync with invalid program triggers error callback") {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var errorOccurred = false
 
-                    swcNative.minifyAsync(
-                    src = ";",
-                    options = JsMinifyOptions(),
-                    onSuccess = {
-                    latch.countDown()
-                    },
-                    onError = {
-                    errorOccurred = true
-                    latch.countDown()
+        swcNative.minifyAsync(
+            src = ";",
+            options = JsMinifyOptions(),
+            onSuccess = {
+                latch.countDown()
+            },
+            onError = {
+                errorOccurred = true
+                latch.countDown()
             }
         )
 
@@ -116,26 +116,26 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("minifyAsync coroutine throws exception on error") {
         kotlinx.coroutines.runBlocking {
-                    val result = swcNative.minifyAsync("function test() { return 42; }", JsMinifyOptions())
+            val result = swcNative.minifyAsync("function test() { return 42; }", JsMinifyOptions())
 
-                    assertNotNull(result.code)
-                    }
-                    }
+            assertNotNull(result.code)
+        }
+    }
 
-                    should("parseAsync with invalid syntax triggers error callback") {
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    var errorOccurred = false
+    should("parseAsync with invalid syntax triggers error callback") {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var errorOccurred = false
 
-                    swcNative.parseAsync(
-                    code = "const x = ;", // Invalid syntax
-                    options = esParseOptions { },
-                    filename = "test.js",
-                    onSuccess = {
-                    fail("Parse should fail for invalid syntax")
-                    },
-                    onError = {
-                    errorOccurred = true
-                    latch.countDown()
+        swcNative.parseAsync(
+            code = "const x = ;", // Invalid syntax
+            options = esParseOptions { },
+            filename = "test.js",
+            onSuccess = {
+                fail("Parse should fail for invalid syntax")
+            },
+            onError = {
+                errorOccurred = true
+                latch.countDown()
             }
         )
 
@@ -145,34 +145,34 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("parseAsync coroutine throws exception on error") {
         kotlinx.coroutines.runBlocking {
-                    val exception = try {
-                    swcNative.parseAsync(
+            val exception = try {
+                swcNative.parseAsync(
                     code = "const x = ;", // Invalid syntax
                     options = esParseOptions { },
                     filename = "test.js"
-                    )
-                    null
-                    } catch (e: RuntimeException) {
-                    e
-                    }
+                )
+                null
+            } catch (e: RuntimeException) {
+                e
+            }
 
-                    assertNotNull(exception?.message)
-                    }
-                    }
+            assertNotNull(exception?.message)
+        }
+    }
 
-                    should("parseFileAsync with non-existent file triggers error callback") {
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    var errorOccurred = false
+    should("parseFileAsync with non-existent file triggers error callback") {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var errorOccurred = false
 
-                    swcNative.parseFileAsync(
-                    filepath = "/non/existent/path/file.js",
-                    options = esParseOptions { },
-                    onSuccess = {
-                    fail("Parse file should fail for non-existent file")
-                    },
-                    onError = {
-                    errorOccurred = true
-                    latch.countDown()
+        swcNative.parseFileAsync(
+            filepath = "/non/existent/path/file.js",
+            options = esParseOptions { },
+            onSuccess = {
+                fail("Parse file should fail for non-existent file")
+            },
+            onError = {
+                errorOccurred = true
+                latch.countDown()
             }
         )
 
@@ -182,38 +182,38 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("parseFileAsync coroutine throws exception on non-existent file") {
         kotlinx.coroutines.runBlocking {
-                    val exception = try {
-                    swcNative.parseFileAsync(
+            val exception = try {
+                swcNative.parseFileAsync(
                     filepath = "/non/existent/path/file.js",
                     options = esParseOptions { }
-                    )
-                    null
-                    } catch (e: RuntimeException) {
-                    e
-                    }
+                )
+                null
+            } catch (e: RuntimeException) {
+                e
+            }
 
-                    assertNotNull(exception?.message)
-                    }
-                    }
+            assertNotNull(exception?.message)
+        }
+    }
 
-                    should("transformFileAsync with non-existent file triggers error callback") {
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    var errorOccurred = false
+    should("transformFileAsync with non-existent file triggers error callback") {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var errorOccurred = false
 
-                    swcNative.transformFileAsync(
-                    filepath = "/non/existent/path/file.js",
-                    isModule = false,
-                    options = options {
-                    jsc = jscConfig {
+        swcNative.transformFileAsync(
+            filepath = "/non/existent/path/file.js",
+            isModule = false,
+            options = options {
+                jsc = jscConfig {
                     parser = esParseOptions { }
-                    }
-                    },
-                    onSuccess = {
-                    fail("Transform file should fail for non-existent file")
-                    },
-                    onError = {
-                    errorOccurred = true
-                    latch.countDown()
+                }
+            },
+            onSuccess = {
+                fail("Transform file should fail for non-existent file")
+            },
+            onError = {
+                errorOccurred = true
+                latch.countDown()
             }
         )
 
@@ -223,22 +223,22 @@ class ErrorHandlingAsyncTest : ShouldSpec({
 
     should("transformFileAsync coroutine throws exception on non-existent file") {
         kotlinx.coroutines.runBlocking {
-                    val exception = try {
-                    swcNative.transformFileAsync(
+            val exception = try {
+                swcNative.transformFileAsync(
                     filepath = "/non/existent/path/file.js",
                     isModule = false,
                     options = options {
-                    jsc = jscConfig {
-                        parser = esParseOptions { }
+                        jsc = jscConfig {
+                            parser = esParseOptions { }
+                        }
                     }
-                    }
-                    )
-                    null
-                    } catch (e: RuntimeException) {
-                    e
-                    }
+                )
+                null
+            } catch (e: RuntimeException) {
+                e
+            }
 
-                    assertNotNull(exception?.message)
-                    }
-                    }
-                    })
+            assertNotNull(exception?.message)
+        }
+    }
+})
