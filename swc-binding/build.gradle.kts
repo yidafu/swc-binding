@@ -37,3 +37,12 @@ publishMan {
     name.set("swc binding")
     description.set("swc jvm binding by kotlin")
 }
+
+ktlint {
+    filter {
+        exclude { element ->
+            val path = element.file.path
+            path.contains("/generated/dsl/") || path.contains("/generated/ast/")
+        }
+    }
+}
