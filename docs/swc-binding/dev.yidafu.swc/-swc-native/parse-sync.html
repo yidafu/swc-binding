@@ -40,7 +40,7 @@
             </a>
     </div>
     <div>
-0.6.0    </div>
+0.7.0    </div>
     <div class="pull-right d-flex">
         <div class="filter-section" id="filter-section">
                 <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":swc-binding:dokkaHtml/main">jvm</button>
@@ -59,9 +59,9 @@
   <div class="cover ">
     <h1 class="cover"><span>parse</span><wbr></wbr><span><span>Sync</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">external </span><span class="token keyword">fun </span><a href="parse-sync.html"><span class="token function">parseSync</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">options<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">filename<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div><p class="paragraph">external native method. recommend using <code class="lang-kotlin">parseSync(code: String, options: ParserConfig, filename: String?): Program</code></p><p class="paragraph"><a href="https://swc.rs/docs/usage/core#parsesync">swc#parsesync</a></p><p class="paragraph">you could use this method only when the overhead method was broken</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">ast tree json string</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>code</span></span></u></div></span></div><div><div class="title"><p class="paragraph">source code</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>options</span></span></u></div></span></div><div><div class="title"><p class="paragraph">options json string. see <a href="../../dev.yidafu.swc.types/-parser-config/index.html">dev.yidafu.swc.types.ParserConfig</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>filename</span></span></u></div></span></div><div><div class="title"><p class="paragraph">js file name</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-runtime-exception/index.html"><span>Runtime</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>Swc</span><wbr></wbr><span>Any</span><wbr></wbr><span><span>Exception</span></span></div></span></div><div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">external </span><span class="token keyword">fun </span><a href="parse-sync.html"><span class="token function">parseSync</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">options<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">filename<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></div><p class="paragraph">external native method. recommend using <code class="lang-kotlin">parseSync(code: String, options: ParserConfig, filename: String?): Program</code></p><p class="paragraph"><a href="https://swc.rs/docs/usage/core#parsesync">swc#parsesync</a></p><p class="paragraph">you could use this method only when the overhead method was broken</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">ast tree json string</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>code</span></span></u></div></span></div><div><div class="title"><p class="paragraph">source code</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>options</span></span></u></div></span></div><div><div class="title"><p class="paragraph">options json string. see <a href="../../dev.yidafu.swc.generated/-parser-config/index.html">dev.yidafu.swc.generated.ParserConfig</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>filename</span></span></u></div></span></div><div><div class="title"><p class="paragraph">js file name</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/RuntimeException.html"><span>Runtime</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>Swc</span><wbr></wbr><span>Any</span><wbr></wbr><span><span>Exception</span></span></div></span></div><div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 fun main() { 
    //sampleStart 
    SwcNative().parseSync(
@@ -73,52 +73,51 @@ fun main() {
     &quot;temp.js&quot;
 ) 
    //sampleEnd
-}</code></pre></div><hr><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="parse-sync.html"><span class="token function">parseSync</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">options<span class="token operator">: </span><a href="../../dev.yidafu.swc.types/-parser-config/index.html">ParserConfig</a><span class="token punctuation">, </span></span><span class="parameter ">filename<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../dev.yidafu.swc.types/-program/index.html">Program</a></div><p class="paragraph">parse js code to AST Tree</p><p class="paragraph"><a href="https://swc.rs/docs/usage/core#parsesync">swc#parsesync</a></p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">ast tree</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>code</span></span></u></div></span></div><div><div class="title"><p class="paragraph">source code</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>options</span></span></u></div></span></div><div><div class="title"><p class="paragraph">parse option</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>filename</span></span></u></div></span></div><div><div class="title"><p class="paragraph">source code filename</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-runtime-exception/index.html"><span>Runtime</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+}</code></pre></div><hr><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword"></span><span class="token keyword">fun </span><a href="parse-sync.html"><span class="token function">parseSync</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">options<span class="token operator">: </span><a href="../../dev.yidafu.swc.generated/-parser-config/index.html">ParserConfig</a><span class="token punctuation">, </span></span><span class="parameter ">filename<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../dev.yidafu.swc.generated/-program/index.html">Program</a></div><p class="paragraph">Parse JavaScript/TypeScript code to AST Tree synchronously.</p><p class="paragraph"><a href="https://swc.rs/docs/usage/core#parsesync">swc#parsesync</a></p><p class="paragraph">This method is Java-friendly and can be called from Java code. For Java usage, you can pass <code class="lang-kotlin">null</code> for the filename parameter.</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">Parsed AST tree</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>code</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Source code to parse</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>options</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Parser configuration</p></div></div></div></div><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>filename</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Source code filename (can be null)</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/RuntimeException.html"><span>Runtime</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if parsing fails</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 fun main() { 
    //sampleStart 
    SwcNative().parseSync(
     &quot;&quot;&quot;
-      const foo = &quot;bar&quot;;
-      console.log(foo);
+    const foo = &quot;bar&quot;;
+    console.log(foo);
     &quot;&quot;&quot;.trimIndent(),
     esParseOptions {
-        target = &quot;es5&quot;
+        allowReturnOutsideFunction = true
     },
     &quot;temp.js&quot;
 ) 
    //sampleEnd
 }</code></pre></div><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 fun main() { 
    //sampleStart 
    SwcNative().parseSync(
     &quot;&quot;&quot;
-      const foo: string = &quot;bar&quot;;
-      console.log(foo);
+    const foo: string = &quot;bar&quot;;
+    console.log(foo);
     &quot;&quot;&quot;.trimIndent(),
     tsParseOptions {
-        target = &quot;es5&quot;
+        tsx = true
     },
     &quot;temp.js&quot;
 ) 
    //sampleEnd
 }</code></pre></div><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 fun main() { 
    //sampleStart 
    SwcNative().parseSync(
     &quot;&quot;&quot;
-      function App() {
-        return &lt;div&gt;App&lt;/div&gt;
-      }
+    function App() {
+      return &lt;div&gt;App&lt;/div&gt;
+    }
     &quot;&quot;&quot;.trimIndent(),
     esParseOptions {
         jsx = true
-        target = &quot;es5&quot;
     },
     &quot;temp.js&quot;
 ) 
@@ -126,7 +125,7 @@ fun main() {
 }</code></pre></div></div></div>
 </div>
       <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
                 class="pull-right"><span>Generated by </span><a
                 href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
       </div>
