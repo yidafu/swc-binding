@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.668427
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T19:39:08.215841
 
 package dev.yidafu.swc.generated
 
@@ -13,4 +13,5 @@ import kotlin.Nothing
  * conflict with @SerialName
  * remove class property `var type: String?`
  */
+@JsonClassDiscriminator("type")
 public interface Node

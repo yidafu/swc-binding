@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.061003
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.230632
 
 package dev.yidafu.swc.generated.dsl
 
@@ -65,13 +65,6 @@ public fun RestElement.span(block: Span.() -> Unit): Span = Span().apply(block)
 
 /**
  * RestElement#argument: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun RestElement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
-    BindingIdentifierImpl().apply(block)
-
-/**
- * RestElement#argument: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun RestElement.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -96,13 +89,6 @@ public fun RestElement.assignmentPattern(block: AssignmentPattern.() -> Unit): A
  * extension function for create Pattern? -> Invalid
  */
 public fun RestElement.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * RestElement#argument: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun RestElement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * RestElement#argument: Pattern?
@@ -243,13 +229,6 @@ public fun RestElement.metaProperty(block: MetaProperty.() -> Unit): MetaPropert
  */
 public fun RestElement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * RestElement#argument: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun RestElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * RestElement#argument: Pattern?
@@ -396,3 +375,24 @@ public fun RestElement.numericLiteral(block: NumericLiteral.() -> Unit): Numeric
  */
 public fun RestElement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * RestElement#argument: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun RestElement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
+    BindingIdentifierImpl().apply(block)
+
+/**
+ * RestElement#argument: Pattern?
+ * extension function for create Pattern? -> Identifier
+ */
+public fun RestElement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * RestElement#argument: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun RestElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

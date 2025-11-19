@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.998537
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.074197
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TemplateLiteral#expressions: Array<Expression>?
- * extension function for create Array<Expression>? -> Identifier
- */
-public fun TemplateLiteral.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TemplateLiteral#expressions: Array<Expression>?
@@ -348,6 +341,13 @@ public fun TemplateLiteral.numericLiteral(block: NumericLiteral.() -> Unit): Num
  */
 public fun TemplateLiteral.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TemplateLiteral#expressions: Array<Expression>?
+ * extension function for create Array<Expression>? -> Identifier
+ */
+public fun TemplateLiteral.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TemplateLiteral#quasis: Array<TemplateElement>?

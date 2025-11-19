@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.983458
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T20:51:47.088217
 
 package dev.yidafu.swc.generated
 

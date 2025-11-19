@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.978206
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T21:30:51.06596
 
 package dev.yidafu.swc.generated
 
@@ -13,6 +13,16 @@ import kotlin.Boolean
 import kotlin.Int
 import kotlin.Nothing
 import kotlin.OptIn
+@JsonClassDiscriminator("type")
+public interface JSXOpeningElement : Node, HasSpan {
+    public var name: JSXElementName?
+
+    public var attributes: Array<JSXAttributeOrSpread>?
+
+    public var selfClosing: Boolean?
+
+    public var typeArguments: TsTypeParameterInstantiation?
+}
 
 /**
  * conflict with @SerialName
@@ -23,15 +33,15 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("JSXOpeningElement")
 @SwcDslMarker
-public class JSXOpeningElement : Node, HasSpan {
+public class JSXOpeningElementImpl : JSXOpeningElement {
     @EncodeDefault
-    public var name: JSXElementName? = null
+    public override var name: JSXElementName? = null
     @EncodeDefault
-    public var attributes: Array<JSXAttributeOrSpread>? = null
+    public override var attributes: Array<JSXAttributeOrSpread>? = null
     @EncodeDefault
-    public var selfClosing: Boolean? = null
+    public override var selfClosing: Boolean? = null
     @EncodeDefault
-    public var typeArguments: TsTypeParameterInstantiation? = null
-
+    public override var typeArguments: TsTypeParameterInstantiation? = null
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

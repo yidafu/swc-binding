@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.148922
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.281683
 
 package dev.yidafu.swc.generated.dsl
 
@@ -19,17 +19,17 @@ public fun TsTypeQuery.tsImportType(block: TsImportType.() -> Unit): TsImportTyp
 
 /**
  * TsTypeQuery#exprName: TsTypeQueryExpr?
- * extension function for create TsTypeQueryExpr? -> Identifier
- */
-public fun TsTypeQuery.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * TsTypeQuery#exprName: TsTypeQueryExpr?
  * extension function for create TsTypeQueryExpr? -> TsQualifiedName
  */
 public fun TsTypeQuery.tsQualifiedName(block: TsQualifiedName.() -> Unit): TsQualifiedName =
     TsQualifiedName().apply(block)
+
+/**
+ * TsTypeQuery#exprName: TsTypeQueryExpr?
+ * extension function for create TsTypeQueryExpr? -> Identifier
+ */
+public fun TsTypeQuery.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsTypeQuery#typeArguments: TsTypeParameterInstantiation?

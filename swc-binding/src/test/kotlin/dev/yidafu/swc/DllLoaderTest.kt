@@ -1,28 +1,24 @@
 package dev.yidafu.swc
 
-import io.kotest.core.spec.style.AnnotationSpec
-import kotlin.test.Test
+import io.kotest.core.spec.style.ShouldSpec
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class DllLoaderTest : AnnotationSpec() {
+class DllLoaderTest : ShouldSpec({
 
-    @Test
-    fun `detect current platform`() {
+    should("detect current platform") {
         val platform = DllLoader.Platform.current
         assertNotNull(platform)
     }
 
-    @Test
-    fun `platform toString returns readable name`() {
+    should("platform toString returns readable name") {
         val platformStr = DllLoader.Platform.current.toString()
         assertNotNull(platformStr)
         assertTrue(platformStr.isNotEmpty())
     }
 
-    @Test
-    fun `Mac platform detection`() {
+    should("Mac platform detection") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Mac) {
             // 在 Mac 平台上测试
@@ -35,8 +31,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Linux platform methods`() {
+    should("Linux platform methods") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Linux) {
             val isArm = platform.isArm()
@@ -48,8 +43,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Windows platform detection`() {
+    should("Windows platform detection") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Windows) {
             val isArm = platform.isArm()
@@ -61,8 +55,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `copyDll2Temp returns valid path`() {
+    should("copyDll2Temp returns valid path") {
         val path = DllLoader.copyDll2Temp("swc_jni")
 
         assertNotNull(path)
@@ -70,15 +63,13 @@ class DllLoaderTest : AnnotationSpec() {
         assertTrue(path.contains("swc_jni") || path.contains("swc-jni"))
     }
 
-    @Test
-    fun `copyDll2Temp creates file in temp directory`() {
+    should("copyDll2Temp creates file in temp directory") {
         val path = DllLoader.copyDll2Temp("swc_jni")
 
         assertTrue(path.startsWith(System.getProperty("java.io.tmpdir")))
     }
 
-    @Test
-    fun `copyDll2Temp is idempotent`() {
+    should("copyDll2Temp is idempotent") {
         val path1 = DllLoader.copyDll2Temp("swc_jni")
         val path2 = DllLoader.copyDll2Temp("swc_jni")
 
@@ -86,16 +77,14 @@ class DllLoaderTest : AnnotationSpec() {
         assertEquals(path1, path2)
     }
 
-    @Test
-    fun `outAbsPath is populated after copyDll2Temp`() {
+    should("outAbsPath is populated after copyDll2Temp") {
         DllLoader.copyDll2Temp("swc_jni")
 
         assertNotNull(DllLoader.outAbsPath)
         assertTrue(DllLoader.outAbsPath.isNotEmpty())
     }
 
-    @Test
-    fun `platform detection covers all major platforms`() {
+    should("platform detection covers all major platforms") {
         val platform = DllLoader.Platform.current
 
         assertTrue(
@@ -107,8 +96,7 @@ class DllLoaderTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `DLL path contains correct extension for platform`() {
+    should("DLL path contains correct extension for platform") {
         val path = DllLoader.copyDll2Temp("swc_jni")
         val platform = DllLoader.Platform.current
 
@@ -120,8 +108,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Mac M1 or Intel detection is consistent`() {
+    should("Mac M1 or Intel detection is consistent") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Mac) {
             val isIntel = platform.isIntel()
@@ -132,8 +119,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Linux ARM or Intel detection is consistent`() {
+    should("Linux ARM or Intel detection is consistent") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Linux) {
             // 只是验证方法能调用，不会抛异常
@@ -142,8 +128,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Windows ARM or Intel detection is consistent`() {
+    should("Windows ARM or Intel detection is consistent") {
         val platform = DllLoader.Platform.current
         if (platform is DllLoader.Platform.Windows) {
             val isArm = platform.isArm()
@@ -154,8 +139,7 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `DLL path contains platform-specific directory`() {
+    should("DLL path contains platform-specific directory") {
         val path = DllLoader.copyDll2Temp("swc_jni")
         val platform = DllLoader.Platform.current
 
@@ -175,20 +159,17 @@ class DllLoaderTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `Solaris platform toString`() {
+    should("Solaris platform toString") {
         val solaris = DllLoader.Platform.Solaris
         assertEquals("Solaris", solaris.toString())
     }
 
-    @Test
-    fun `FreeBSD platform toString`() {
+    should("FreeBSD platform toString") {
         val freeBSD = DllLoader.Platform.FreeBSD
         assertEquals("FreeBSD", freeBSD.toString())
     }
 
-    @Test
-    fun `copyDll2Temp path includes library name`() {
+    should("copyDll2Temp path includes library name") {
         val path = DllLoader.copyDll2Temp("swc_jni")
         val platform = DllLoader.Platform.current
 
@@ -199,4 +180,4 @@ class DllLoaderTest : AnnotationSpec() {
             else -> {}
         }
     }
-}
+})

@@ -1,12 +1,11 @@
 package dev.yidafu.swc
 
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -21,13 +20,12 @@ import kotlin.test.assertTrue
  * - Value access methods (valueOfA, valueOfB, valueOfC)
  * - Serialization/deserialization using serializerFor
  */
-class UnionTest : AnnotationSpec() {
-    private val format = Json
+class UnionTest : ShouldSpec({
+    val format = Json
 
     // ==================== U2 tests ====================
 
-    @Test
-    fun `U2 ofA creates union with A value`() {
+    should("U2 ofA creates union with A value") {
         val union = Union.U2.ofA<String, Double>("test")
 
         assertTrue(union.isA())
@@ -36,8 +34,7 @@ class UnionTest : AnnotationSpec() {
         assertNull(union.valueOfB())
     }
 
-    @Test
-    fun `U2 ofB creates union with B value`() {
+    should("U2 ofB creates union with B value") {
         val union = Union.U2.ofB<String, Double>(42.0)
 
         assertFalse(union.isA())
@@ -46,8 +43,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals(42.0, union.valueOfB())
     }
 
-    @Test
-    fun `U2 constructor with both null throws on serialize`() {
+    should("U2 constructor with both null throws on serialize") {
         val union = Union.U2<String, Double>(a = null, b = null)
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
 
@@ -56,8 +52,7 @@ class UnionTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `U2 serialize with A value`() {
+    should("U2 serialize with A value") {
         val union = Union.U2.ofA<String, Double>("hello")
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val json = format.encodeToString(serializer, union)
@@ -65,8 +60,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("\"hello\"", json)
     }
 
-    @Test
-    fun `U2 serialize with B value`() {
+    should("U2 serialize with B value") {
         val union = Union.U2.ofB<String, Double>(3.14)
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val json = format.encodeToString(serializer, union)
@@ -74,8 +68,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("3.14", json)
     }
 
-    @Test
-    fun `U2 deserialize string value`() {
+    should("U2 deserialize string value") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "\"world\"")
 
@@ -83,8 +76,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("world", decoded.valueOfA())
     }
 
-    @Test
-    fun `U2 deserialize number value`() {
+    should("U2 deserialize number value") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "99.9")
 
@@ -92,8 +84,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals(99.9, decoded.valueOfB())
     }
 
-    @Test
-    fun `U2 deserialize invalid value throws`() {
+    should("U2 deserialize invalid value throws") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
 
         assertFailsWith<SerializationException> {
@@ -101,8 +92,7 @@ class UnionTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `U2 with multiple non-null values uses first`() {
+    should("U2 with multiple non-null values uses first") {
         val union = Union.U2<String, Double>(a = "first", b = 42.0)
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
 
@@ -111,8 +101,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("\"first\"", json)
     }
 
-    @Test
-    fun `U2 deserialize empty string`() {
+    should("U2 deserialize empty string") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "\"\"")
 
@@ -120,8 +109,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("", decoded.valueOfA())
     }
 
-    @Test
-    fun `U2 deserialize zero`() {
+    should("U2 deserialize zero") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "0")
 
@@ -131,8 +119,7 @@ class UnionTest : AnnotationSpec() {
 
     // ==================== U3 tests ====================
 
-    @Test
-    fun `U3 ofA creates union with A value`() {
+    should("U3 ofA creates union with A value") {
         val union = Union.U3.ofA<String, Double, Boolean>("test")
 
         assertTrue(union.isA())
@@ -143,8 +130,7 @@ class UnionTest : AnnotationSpec() {
         assertNull(union.valueOfC())
     }
 
-    @Test
-    fun `U3 ofB creates union with B value`() {
+    should("U3 ofB creates union with B value") {
         val union = Union.U3.ofB<String, Double, Boolean>(42.0)
 
         assertFalse(union.isA())
@@ -155,8 +141,7 @@ class UnionTest : AnnotationSpec() {
         assertNull(union.valueOfC())
     }
 
-    @Test
-    fun `U3 ofC creates union with C value`() {
+    should("U3 ofC creates union with C value") {
         val union = Union.U3.ofC<String, Double, Boolean>(true)
 
         assertFalse(union.isA())
@@ -167,8 +152,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals(true, union.valueOfC())
     }
 
-    @Test
-    fun `U3 constructor with all null throws on serialize`() {
+    should("U3 constructor with all null throws on serialize") {
         val union = Union.U3<String, Double, Boolean>(a = null, b = null, c = null)
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
 
@@ -177,8 +161,7 @@ class UnionTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `U3 serialize with A value`() {
+    should("U3 serialize with A value") {
         val union = Union.U3.ofA<String, Double, Boolean>("test")
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val json = format.encodeToString(serializer, union)
@@ -186,8 +169,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("\"test\"", json)
     }
 
-    @Test
-    fun `U3 serialize with B value`() {
+    should("U3 serialize with B value") {
         val union = Union.U3.ofB<String, Double, Boolean>(2.5)
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val json = format.encodeToString(serializer, union)
@@ -195,8 +177,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("2.5", json)
     }
 
-    @Test
-    fun `U3 serialize with C value`() {
+    should("U3 serialize with C value") {
         val union = Union.U3.ofC<String, Double, Boolean>(false)
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val json = format.encodeToString(serializer, union)
@@ -204,8 +185,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("false", json)
     }
 
-    @Test
-    fun `U3 deserialize string value`() {
+    should("U3 deserialize string value") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "\"word\"")
 
@@ -213,8 +193,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("word", decoded.valueOfA())
     }
 
-    @Test
-    fun `U3 deserialize number value`() {
+    should("U3 deserialize number value") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "3.14")
 
@@ -222,8 +201,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals(3.14, decoded.valueOfB())
     }
 
-    @Test
-    fun `U3 deserialize boolean value`() {
+    should("U3 deserialize boolean value") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "true")
 
@@ -231,8 +209,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals(true, decoded.valueOfC())
     }
 
-    @Test
-    fun `U3 deserialize invalid value throws`() {
+    should("U3 deserialize invalid value throws") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
 
         assertFailsWith<SerializationException> {
@@ -240,8 +217,7 @@ class UnionTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `U3 with multiple non-null values uses first`() {
+    should("U3 with multiple non-null values uses first") {
         val union = Union.U3<String, Double, Boolean>(a = "first", b = 42.0, c = true)
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
 
@@ -250,8 +226,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("\"first\"", json)
     }
 
-    @Test
-    fun `U3 deserialize false boolean`() {
+    should("U3 deserialize false boolean") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "false")
 
@@ -261,8 +236,7 @@ class UnionTest : AnnotationSpec() {
 
     // ==================== Type compatibility tests ====================
 
-    @Test
-    fun `U2 can handle numeric string`() {
+    should("U2 can handle numeric string") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "\"123\"")
 
@@ -270,8 +244,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("123", decoded.valueOfA())
     }
 
-    @Test
-    fun `U2 can handle string that looks like number`() {
+    should("U2 can handle string that looks like number") {
         val serializer = Union.U2.serializerFor(String.serializer(), Double.serializer())
         val decoded = format.decodeFromString(serializer, "\"3.14\"")
 
@@ -279,8 +252,7 @@ class UnionTest : AnnotationSpec() {
         assertEquals("3.14", decoded.valueOfA())
     }
 
-    @Test
-    fun `U3 boolean true deserializes correctly`() {
+    should("U3 boolean true deserializes correctly") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "true")
 
@@ -288,12 +260,11 @@ class UnionTest : AnnotationSpec() {
         assertEquals(true, decoded.valueOfC())
     }
 
-    @Test
-    fun `U3 boolean false deserializes correctly`() {
+    should("U3 boolean false deserializes correctly") {
         val serializer = Union.U3.serializerFor(String.serializer(), Double.serializer(), Boolean.serializer())
         val decoded = format.decodeFromString(serializer, "false")
 
         assertTrue(decoded.isC())
         assertEquals(false, decoded.valueOfC())
     }
-}
+})

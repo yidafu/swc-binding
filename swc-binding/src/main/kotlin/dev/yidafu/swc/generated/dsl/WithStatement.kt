@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.117409
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.321678
 
 package dev.yidafu.swc.generated.dsl
 
@@ -9,6 +9,7 @@ import dev.yidafu.swc.generated.AwaitExpression
 import dev.yidafu.swc.generated.BigIntLiteral
 import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -74,13 +75,6 @@ import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * WithStatement#`object`: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun WithStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * WithStatement#`object`: Expression?
@@ -221,13 +215,6 @@ public fun WithStatement.metaProperty(block: MetaProperty.() -> Unit): MetaPrope
  */
 public fun WithStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * WithStatement#`object`: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun WithStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * WithStatement#`object`: Expression?
@@ -382,11 +369,18 @@ public fun WithStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntL
     BigIntLiteral().apply(block)
 
 /**
- * WithStatement#body: Statement?
- * extension function for create Statement? -> BlockStatement
+ * WithStatement#`object`: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun WithStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+public fun WithStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * WithStatement#`object`: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun WithStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * WithStatement#body: Statement?
@@ -548,3 +542,10 @@ public fun WithStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit):
  */
 public fun WithStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * WithStatement#body: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun WithStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

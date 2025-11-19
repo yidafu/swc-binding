@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.943212
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.012735
 
 package dev.yidafu.swc.generated.dsl
 
@@ -57,13 +57,6 @@ import kotlin.Unit
  * extension function for create Span? -> Span
  */
 public fun SpreadElement.span(block: Span.() -> Unit): Span = Span().apply(block)
-
-/**
- * SpreadElement#arguments: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun SpreadElement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * SpreadElement#arguments: Expression?
@@ -204,13 +197,6 @@ public fun SpreadElement.metaProperty(block: MetaProperty.() -> Unit): MetaPrope
  */
 public fun SpreadElement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * SpreadElement#arguments: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun SpreadElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * SpreadElement#arguments: Expression?
@@ -363,3 +349,17 @@ public fun SpreadElement.numericLiteral(block: NumericLiteral.() -> Unit): Numer
  */
 public fun SpreadElement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * SpreadElement#arguments: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun SpreadElement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SpreadElement#arguments: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun SpreadElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

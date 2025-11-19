@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.894767
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.960273
 
 package dev.yidafu.swc.generated.dsl
 
@@ -10,13 +10,6 @@ import dev.yidafu.swc.generated.IdentifierImpl
 import dev.yidafu.swc.generated.NumericLiteral
 import dev.yidafu.swc.generated.StringLiteral
 import kotlin.Unit
-
-/**
- * ClassMethod#key: PropertyName?
- * extension function for create PropertyName? -> Identifier
- */
-public fun ClassMethod.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ClassMethod#key: PropertyName?
@@ -45,3 +38,10 @@ public fun ClassMethod.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLit
  */
 public fun ClassMethod.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName =
     ComputedPropName().apply(block)
+
+/**
+ * ClassMethod#key: PropertyName?
+ * extension function for create PropertyName? -> Identifier
+ */
+public fun ClassMethod.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)

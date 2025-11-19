@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.037959
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.162021
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * JSXSpreadChild#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun JSXSpreadChild.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * JSXSpreadChild#expression: Expression?
@@ -197,13 +190,6 @@ public fun JSXSpreadChild.metaProperty(block: MetaProperty.() -> Unit): MetaProp
  */
 public fun JSXSpreadChild.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * JSXSpreadChild#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun JSXSpreadChild.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * JSXSpreadChild#expression: Expression?
@@ -356,3 +342,17 @@ public fun JSXSpreadChild.numericLiteral(block: NumericLiteral.() -> Unit): Nume
  */
 public fun JSXSpreadChild.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * JSXSpreadChild#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun JSXSpreadChild.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * JSXSpreadChild#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun JSXSpreadChild.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

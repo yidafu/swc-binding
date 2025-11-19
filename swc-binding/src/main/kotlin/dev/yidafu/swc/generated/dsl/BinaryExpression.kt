@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.964318
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.027735
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * BinaryExpression#right: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun BinaryExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * BinaryExpression#right: Expression?
@@ -190,13 +183,6 @@ public fun BinaryExpression.metaProperty(block: MetaProperty.() -> Unit): MetaPr
  */
 public fun BinaryExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * BinaryExpression#right: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun BinaryExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * BinaryExpression#right: Expression?
@@ -349,3 +335,17 @@ public fun BinaryExpression.numericLiteral(block: NumericLiteral.() -> Unit): Nu
  */
 public fun BinaryExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * BinaryExpression#right: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun BinaryExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * BinaryExpression#right: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun BinaryExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

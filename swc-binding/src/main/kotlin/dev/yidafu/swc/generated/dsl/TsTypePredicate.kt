@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.147375
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.280289
 
 package dev.yidafu.swc.generated.dsl
 
@@ -11,17 +11,17 @@ import kotlin.Unit
 
 /**
  * TsTypePredicate#paramName: TsThisTypeOrIdent?
- * extension function for create TsThisTypeOrIdent? -> Identifier
- */
-public fun TsTypePredicate.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * TsTypePredicate#paramName: TsThisTypeOrIdent?
  * extension function for create TsThisTypeOrIdent? -> TsThisType
  */
 public fun TsTypePredicate.tsThisType(block: TsThisType.() -> Unit): TsThisType =
     TsThisType().apply(block)
+
+/**
+ * TsTypePredicate#paramName: TsThisTypeOrIdent?
+ * extension function for create TsThisTypeOrIdent? -> Identifier
+ */
+public fun TsTypePredicate.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsTypePredicate#typeAnnotation: TsTypeAnnotation?

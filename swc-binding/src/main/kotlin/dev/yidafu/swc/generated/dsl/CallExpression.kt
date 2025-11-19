@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.06116
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.23
 
 package dev.yidafu.swc.generated.dsl
 
@@ -16,6 +16,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -54,6 +55,7 @@ import dev.yidafu.swc.generated.ImportNamespaceSpecifier
 import dev.yidafu.swc.generated.Invalid
 import dev.yidafu.swc.generated.JSXAttribute
 import dev.yidafu.swc.generated.JSXClosingElement
+import dev.yidafu.swc.generated.JSXClosingElementImpl
 import dev.yidafu.swc.generated.JSXClosingFragment
 import dev.yidafu.swc.generated.JSXElement
 import dev.yidafu.swc.generated.JSXEmptyExpression
@@ -62,6 +64,7 @@ import dev.yidafu.swc.generated.JSXFragment
 import dev.yidafu.swc.generated.JSXMemberExpression
 import dev.yidafu.swc.generated.JSXNamespacedName
 import dev.yidafu.swc.generated.JSXOpeningElement
+import dev.yidafu.swc.generated.JSXOpeningElementImpl
 import dev.yidafu.swc.generated.JSXOpeningFragment
 import dev.yidafu.swc.generated.JSXSpreadChild
 import dev.yidafu.swc.generated.JSXText
@@ -83,6 +86,7 @@ import dev.yidafu.swc.generated.ObjectExpression
 import dev.yidafu.swc.generated.ObjectPattern
 import dev.yidafu.swc.generated.OptionalChainingExpression
 import dev.yidafu.swc.generated.Param
+import dev.yidafu.swc.generated.ParamImpl
 import dev.yidafu.swc.generated.ParenthesisExpression
 import dev.yidafu.swc.generated.PrivateMethod
 import dev.yidafu.swc.generated.PrivateName
@@ -167,16 +171,11 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.VariableDeclarator
+import dev.yidafu.swc.generated.VariableDeclaratorImpl
 import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * CallExpression#callee: Node?
- * extension function for create Node? -> Param
- */
-public fun CallExpression.`param`(block: Param.() -> Unit): Param = Param().apply(block)
 
 /**
  * CallExpression#callee: Node?
@@ -212,13 +211,6 @@ public fun CallExpression.classDeclaration(block: ClassDeclaration.() -> Unit): 
  */
 public fun CallExpression.variableDeclaration(block: VariableDeclaration.() -> Unit):
     VariableDeclaration = VariableDeclaration().apply(block)
-
-/**
- * CallExpression#callee: Node?
- * extension function for create Node? -> VariableDeclarator
- */
-public fun CallExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
-    VariableDeclarator = VariableDeclarator().apply(block)
 
 /**
  * CallExpression#callee: Node?
@@ -280,20 +272,6 @@ public fun CallExpression.jSXExpressionContainer(block: JSXExpressionContainer.(
  */
 public fun CallExpression.jSXSpreadChild(block: JSXSpreadChild.() -> Unit): JSXSpreadChild =
     JSXSpreadChild().apply(block)
-
-/**
- * CallExpression#callee: Node?
- * extension function for create Node? -> JSXOpeningElement
- */
-public fun CallExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit): JSXOpeningElement
-    = JSXOpeningElement().apply(block)
-
-/**
- * CallExpression#callee: Node?
- * extension function for create Node? -> JSXClosingElement
- */
-public fun CallExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit): JSXClosingElement
-    = JSXClosingElement().apply(block)
 
 /**
  * CallExpression#callee: Node?
@@ -501,13 +479,6 @@ public fun CallExpression.assignmentProperty(block: AssignmentProperty.() -> Uni
  */
 public fun CallExpression.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName =
     ComputedPropName().apply(block)
-
-/**
- * CallExpression#callee: Node?
- * extension function for create Node? -> BlockStatement
- */
-public fun CallExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * CallExpression#callee: Node?
@@ -898,13 +869,6 @@ public fun CallExpression.tsLiteralType(block: TsLiteralType.() -> Unit): TsLite
 
 /**
  * CallExpression#callee: Node?
- * extension function for create Node? -> TsTemplateLiteralType
- */
-public fun CallExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
-    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
-
-/**
- * CallExpression#callee: Node?
  * extension function for create Node? -> TsInterfaceDeclaration
  */
 public fun CallExpression.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
@@ -1039,13 +1003,6 @@ public fun CallExpression.privateMethod(block: PrivateMethod.() -> Unit): Privat
 
 /**
  * CallExpression#callee: Node?
- * extension function for create Node? -> Identifier
- */
-public fun CallExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * CallExpression#callee: Node?
  * extension function for create Node? -> OptionalChainingExpression
  */
 public fun CallExpression.optionalChainingExpression(block: OptionalChainingExpression.() -> Unit):
@@ -1172,13 +1129,6 @@ public fun CallExpression.awaitExpression(block: AwaitExpression.() -> Unit): Aw
 
 /**
  * CallExpression#callee: Node?
- * extension function for create Node? -> TemplateLiteral
- */
-public fun CallExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
-
-/**
- * CallExpression#callee: Node?
  * extension function for create Node? -> TaggedTemplateExpression
  */
 public fun CallExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
@@ -1242,13 +1192,6 @@ public fun CallExpression.tsNonNullExpression(block: TsNonNullExpression.() -> U
 
 /**
  * CallExpression#callee: Node?
- * extension function for create Node? -> BindingIdentifier
- */
-public fun CallExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
-    = BindingIdentifierImpl().apply(block)
-
-/**
- * CallExpression#callee: Node?
  * extension function for create Node? -> ArrayPattern
  */
 public fun CallExpression.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -1302,6 +1245,68 @@ public fun CallExpression.setterProperty(block: SetterProperty.() -> Unit): Sett
  */
 public fun CallExpression.methodProperty(block: MethodProperty.() -> Unit): MethodProperty =
     MethodProperty().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> Param
+ */
+public fun CallExpression.`param`(block: Param.() -> Unit): Param = ParamImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> VariableDeclarator
+ */
+public fun CallExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
+    VariableDeclarator = VariableDeclaratorImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> JSXOpeningElement
+ */
+public fun CallExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit): JSXOpeningElement
+    = JSXOpeningElementImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> JSXClosingElement
+ */
+public fun CallExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit): JSXClosingElement
+    = JSXClosingElementImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> BlockStatement
+ */
+public fun CallExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> TsTemplateLiteralType
+ */
+public fun CallExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
+    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> Identifier
+ */
+public fun CallExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> TemplateLiteral
+ */
+public fun CallExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
+
+/**
+ * CallExpression#callee: Node?
+ * extension function for create Node? -> BindingIdentifier
+ */
+public fun CallExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
 
 /**
  * CallExpression#arguments: Array<Argument>?

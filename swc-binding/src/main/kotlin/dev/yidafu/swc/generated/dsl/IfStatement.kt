@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.14324
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.271147
 
 package dev.yidafu.swc.generated.dsl
 
@@ -9,6 +9,7 @@ import dev.yidafu.swc.generated.AwaitExpression
 import dev.yidafu.swc.generated.BigIntLiteral
 import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -74,13 +75,6 @@ import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * IfStatement#test: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun IfStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * IfStatement#test: Expression?
@@ -221,13 +215,6 @@ public fun IfStatement.metaProperty(block: MetaProperty.() -> Unit): MetaPropert
  */
 public fun IfStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * IfStatement#test: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun IfStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * IfStatement#test: Expression?
@@ -382,11 +369,18 @@ public fun IfStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLit
     BigIntLiteral().apply(block)
 
 /**
- * IfStatement#alternate: Statement?
- * extension function for create Statement? -> BlockStatement
+ * IfStatement#test: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun IfStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+public fun IfStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * IfStatement#test: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun IfStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * IfStatement#alternate: Statement?
@@ -548,3 +542,10 @@ public fun IfStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): T
  */
 public fun IfStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * IfStatement#alternate: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun IfStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

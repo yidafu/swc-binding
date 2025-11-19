@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.085095
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.193043
 
 package dev.yidafu.swc.generated.dsl
 
@@ -15,6 +15,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -53,6 +54,7 @@ import dev.yidafu.swc.generated.ImportNamespaceSpecifier
 import dev.yidafu.swc.generated.Invalid
 import dev.yidafu.swc.generated.JSXAttribute
 import dev.yidafu.swc.generated.JSXClosingElement
+import dev.yidafu.swc.generated.JSXClosingElementImpl
 import dev.yidafu.swc.generated.JSXClosingFragment
 import dev.yidafu.swc.generated.JSXElement
 import dev.yidafu.swc.generated.JSXEmptyExpression
@@ -61,6 +63,7 @@ import dev.yidafu.swc.generated.JSXFragment
 import dev.yidafu.swc.generated.JSXMemberExpression
 import dev.yidafu.swc.generated.JSXNamespacedName
 import dev.yidafu.swc.generated.JSXOpeningElement
+import dev.yidafu.swc.generated.JSXOpeningElementImpl
 import dev.yidafu.swc.generated.JSXOpeningFragment
 import dev.yidafu.swc.generated.JSXSpreadChild
 import dev.yidafu.swc.generated.JSXText
@@ -82,6 +85,7 @@ import dev.yidafu.swc.generated.ObjectExpression
 import dev.yidafu.swc.generated.ObjectPattern
 import dev.yidafu.swc.generated.OptionalChainingExpression
 import dev.yidafu.swc.generated.Param
+import dev.yidafu.swc.generated.ParamImpl
 import dev.yidafu.swc.generated.ParenthesisExpression
 import dev.yidafu.swc.generated.PrivateMethod
 import dev.yidafu.swc.generated.PrivateName
@@ -166,16 +170,11 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.VariableDeclarator
+import dev.yidafu.swc.generated.VariableDeclaratorImpl
 import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * AssignmentExpression#left: Node?
- * extension function for create Node? -> Param
- */
-public fun AssignmentExpression.`param`(block: Param.() -> Unit): Param = Param().apply(block)
 
 /**
  * AssignmentExpression#left: Node?
@@ -211,13 +210,6 @@ public fun AssignmentExpression.classDeclaration(block: ClassDeclaration.() -> U
  */
 public fun AssignmentExpression.variableDeclaration(block: VariableDeclaration.() -> Unit):
     VariableDeclaration = VariableDeclaration().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
- * extension function for create Node? -> VariableDeclarator
- */
-public fun AssignmentExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
-    VariableDeclarator = VariableDeclarator().apply(block)
 
 /**
  * AssignmentExpression#left: Node?
@@ -280,20 +272,6 @@ public fun AssignmentExpression.jSXExpressionContainer(block: JSXExpressionConta
  */
 public fun AssignmentExpression.jSXSpreadChild(block: JSXSpreadChild.() -> Unit): JSXSpreadChild =
     JSXSpreadChild().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
- * extension function for create Node? -> JSXOpeningElement
- */
-public fun AssignmentExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit):
-    JSXOpeningElement = JSXOpeningElement().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
- * extension function for create Node? -> JSXClosingElement
- */
-public fun AssignmentExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit):
-    JSXClosingElement = JSXClosingElement().apply(block)
 
 /**
  * AssignmentExpression#left: Node?
@@ -505,13 +483,6 @@ public fun AssignmentExpression.assignmentProperty(block: AssignmentProperty.() 
  */
 public fun AssignmentExpression.computedPropName(block: ComputedPropName.() -> Unit):
     ComputedPropName = ComputedPropName().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
- * extension function for create Node? -> BlockStatement
- */
-public fun AssignmentExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * AssignmentExpression#left: Node?
@@ -904,13 +875,6 @@ public fun AssignmentExpression.tsLiteralType(block: TsLiteralType.() -> Unit): 
 
 /**
  * AssignmentExpression#left: Node?
- * extension function for create Node? -> TsTemplateLiteralType
- */
-public fun AssignmentExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
-    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
  * extension function for create Node? -> TsInterfaceDeclaration
  */
 public fun AssignmentExpression.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
@@ -1047,13 +1011,6 @@ public fun AssignmentExpression.privateMethod(block: PrivateMethod.() -> Unit): 
 
 /**
  * AssignmentExpression#right: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun AssignmentExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * AssignmentExpression#right: Expression?
  * extension function for create Expression? -> OptionalChainingExpression
  */
 public
@@ -1181,13 +1138,6 @@ public fun AssignmentExpression.awaitExpression(block: AwaitExpression.() -> Uni
 
 /**
  * AssignmentExpression#right: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun AssignmentExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
-    = TemplateLiteralImpl().apply(block)
-
-/**
- * AssignmentExpression#right: Expression?
  * extension function for create Expression? -> TaggedTemplateExpression
  */
 public
@@ -1252,13 +1202,6 @@ public fun AssignmentExpression.tsNonNullExpression(block: TsNonNullExpression.(
 
 /**
  * AssignmentExpression#left: Node?
- * extension function for create Node? -> BindingIdentifier
- */
-public fun AssignmentExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
-
-/**
- * AssignmentExpression#left: Node?
  * extension function for create Node? -> ArrayPattern
  */
 public fun AssignmentExpression.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -1312,3 +1255,65 @@ public fun AssignmentExpression.setterProperty(block: SetterProperty.() -> Unit)
  */
 public fun AssignmentExpression.methodProperty(block: MethodProperty.() -> Unit): MethodProperty =
     MethodProperty().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> Param
+ */
+public fun AssignmentExpression.`param`(block: Param.() -> Unit): Param = ParamImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> VariableDeclarator
+ */
+public fun AssignmentExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
+    VariableDeclarator = VariableDeclaratorImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> JSXOpeningElement
+ */
+public fun AssignmentExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit):
+    JSXOpeningElement = JSXOpeningElementImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> JSXClosingElement
+ */
+public fun AssignmentExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit):
+    JSXClosingElement = JSXClosingElementImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> BlockStatement
+ */
+public fun AssignmentExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> TsTemplateLiteralType
+ */
+public fun AssignmentExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
+    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
+
+/**
+ * AssignmentExpression#right: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun AssignmentExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * AssignmentExpression#right: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun AssignmentExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
+    = TemplateLiteralImpl().apply(block)
+
+/**
+ * AssignmentExpression#left: Node?
+ * extension function for create Node? -> BindingIdentifier
+ */
+public fun AssignmentExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)

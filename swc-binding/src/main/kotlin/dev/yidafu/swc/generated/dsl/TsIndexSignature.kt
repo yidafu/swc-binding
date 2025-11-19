@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.145568
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.274813
 
 package dev.yidafu.swc.generated.dsl
 
@@ -10,13 +10,6 @@ import dev.yidafu.swc.generated.RestElement
 import dev.yidafu.swc.generated.TsIndexSignature
 import dev.yidafu.swc.generated.TsTypeAnnotation
 import kotlin.Unit
-
-/**
- * TsIndexSignature#params: Array<TsFnParameter>?
- * extension function for create Array<TsFnParameter>? -> BindingIdentifier
- */
-public fun TsIndexSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
 
 /**
  * TsIndexSignature#params: Array<TsFnParameter>?
@@ -38,6 +31,13 @@ public fun TsIndexSignature.objectPattern(block: ObjectPattern.() -> Unit): Obje
  */
 public fun TsIndexSignature.restElement(block: RestElement.() -> Unit): RestElement =
     RestElement().apply(block)
+
+/**
+ * TsIndexSignature#params: Array<TsFnParameter>?
+ * extension function for create Array<TsFnParameter>? -> BindingIdentifier
+ */
+public fun TsIndexSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
 
 /**
  * TsIndexSignature#typeAnnotation: TsTypeAnnotation?

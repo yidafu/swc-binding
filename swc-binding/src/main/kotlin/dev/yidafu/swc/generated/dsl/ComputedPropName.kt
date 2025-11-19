@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.088068
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.229472
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ComputedPropName#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ComputedPropName.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ComputedPropName#expression: Expression?
@@ -198,13 +191,6 @@ public fun ComputedPropName.metaProperty(block: MetaProperty.() -> Unit): MetaPr
  */
 public fun ComputedPropName.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * ComputedPropName#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ComputedPropName.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * ComputedPropName#expression: Expression?
@@ -357,3 +343,17 @@ public fun ComputedPropName.numericLiteral(block: NumericLiteral.() -> Unit): Nu
  */
 public fun ComputedPropName.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ComputedPropName#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ComputedPropName.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ComputedPropName#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ComputedPropName.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

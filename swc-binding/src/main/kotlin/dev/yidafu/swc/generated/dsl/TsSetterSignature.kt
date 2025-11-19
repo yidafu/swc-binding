@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.195244
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.275849
 
 package dev.yidafu.swc.generated.dsl
 
@@ -55,13 +55,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsSetterSignature#key: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsSetterSignature.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsSetterSignature#key: Expression?
@@ -203,13 +196,6 @@ public fun TsSetterSignature.metaProperty(block: MetaProperty.() -> Unit): MetaP
  */
 public fun TsSetterSignature.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsSetterSignature#key: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsSetterSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsSetterSignature#key: Expression?
@@ -364,11 +350,18 @@ public fun TsSetterSignature.bigIntLiteral(block: BigIntLiteral.() -> Unit): Big
     BigIntLiteral().apply(block)
 
 /**
- * TsSetterSignature#param: TsFnParameter?
- * extension function for create TsFnParameter? -> BindingIdentifier
+ * TsSetterSignature#key: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun TsSetterSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
+public fun TsSetterSignature.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsSetterSignature#key: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsSetterSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsSetterSignature#param: TsFnParameter?
@@ -390,3 +383,10 @@ public fun TsSetterSignature.objectPattern(block: ObjectPattern.() -> Unit): Obj
  */
 public fun TsSetterSignature.restElement(block: RestElement.() -> Unit): RestElement =
     RestElement().apply(block)
+
+/**
+ * TsSetterSignature#param: TsFnParameter?
+ * extension function for create TsFnParameter? -> BindingIdentifier
+ */
+public fun TsSetterSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)

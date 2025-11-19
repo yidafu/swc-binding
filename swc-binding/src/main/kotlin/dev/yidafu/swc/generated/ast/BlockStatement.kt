@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.989425
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.767345
 
 package dev.yidafu.swc.generated
 
@@ -12,6 +12,12 @@ import kotlin.Array
 import kotlin.Int
 import kotlin.Nothing
 import kotlin.OptIn
+@JsonClassDiscriminator("type")
+public interface BlockStatement : Node, HasSpan, Statement {
+    public var stmts: Array<Statement>?
+
+    public var ctxt: Int
+}
 
 /**
  * conflict with @SerialName
@@ -22,11 +28,11 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("BlockStatement")
 @SwcDslMarker
-public class BlockStatement : Node, HasSpan, Statement {
+public class BlockStatementImpl : BlockStatement {
     @EncodeDefault
-    public var stmts: Array<Statement>? = null
-
+    public override var stmts: Array<Statement>? = null
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
-    public var ctxt: Int = 0
+    public override var ctxt: Int = 0
 }

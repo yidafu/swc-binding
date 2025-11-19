@@ -2,20 +2,18 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.Test
 import kotlin.test.assertNotNull
 
 /**
  * Tests for TSX (TypeScript JSX) syntax parsing
  * Covers TypeScript features combined with JSX syntax
  */
-class SwcNativeTSXSyntaxTest : AnnotationSpec() {
-    private val swcNative = SwcNative()
+class SwcNativeTSXSyntaxTest : ShouldSpec({
+    val swcNative = SwcNative()
 
-    @Test
-    fun `parse TSX with typed component`() {
+    should("parse TSX with typed component") {
         val output = swcNative.parseSync(
             """
             interface Props {
@@ -42,8 +40,7 @@ class SwcNativeTSXSyntaxTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse TSX with generic component`() {
+    should("parse TSX with generic component") {
         val output = swcNative.parseSync(
             """
             interface ListProps<T> {
@@ -69,8 +66,7 @@ class SwcNativeTSXSyntaxTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse TSX with typed JSX attributes`() {
+    should("parse TSX with typed JSX attributes") {
         val output = swcNative.parseSync(
             """
             interface ButtonProps {
@@ -95,8 +91,7 @@ class SwcNativeTSXSyntaxTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse TSX with type annotations in JSX`() {
+    should("parse TSX with type annotations in JSX") {
         val output = swcNative.parseSync(
             """
             function App() {
@@ -118,8 +113,7 @@ class SwcNativeTSXSyntaxTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse TSX with React FC type`() {
+    should("parse TSX with React FC type") {
         val output = swcNative.parseSync(
             """
             interface Props {
@@ -137,5 +131,4 @@ class SwcNativeTSXSyntaxTest : AnnotationSpec() {
         )
         output.shouldBeInstanceOf<Module>()
     }
-}
-
+})

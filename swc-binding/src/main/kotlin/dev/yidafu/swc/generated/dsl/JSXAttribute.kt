@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.008916
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.149078
 
 package dev.yidafu.swc.generated.dsl
 
@@ -20,17 +20,17 @@ import kotlin.Unit
 
 /**
  * JSXAttribute#name: JSXAttributeName?
- * extension function for create JSXAttributeName? -> Identifier
- */
-public fun JSXAttribute.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * JSXAttribute#name: JSXAttributeName?
  * extension function for create JSXAttributeName? -> JSXNamespacedName
  */
 public fun JSXAttribute.jSXNamespacedName(block: JSXNamespacedName.() -> Unit): JSXNamespacedName =
     JSXNamespacedName().apply(block)
+
+/**
+ * JSXAttribute#name: JSXAttributeName?
+ * extension function for create JSXAttributeName? -> Identifier
+ */
+public fun JSXAttribute.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * JSXAttribute#value: JSXAttrValue?

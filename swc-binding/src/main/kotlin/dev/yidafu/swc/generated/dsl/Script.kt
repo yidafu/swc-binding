@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.047295
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.192067
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.ClassDeclaration
 import dev.yidafu.swc.generated.ContinueStatement
@@ -29,13 +30,6 @@ import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import kotlin.Unit
-
-/**
- * Script#body: Array<Statement>?
- * extension function for create Array<Statement>? -> BlockStatement
- */
-public fun Script.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * Script#body: Array<Statement>?
@@ -204,3 +198,10 @@ public fun Script.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): TsEnum
  */
 public fun Script.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit): TsModuleDeclaration =
     TsModuleDeclaration().apply(block)
+
+/**
+ * Script#body: Array<Statement>?
+ * extension function for create Array<Statement>? -> BlockStatement
+ */
+public fun Script.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

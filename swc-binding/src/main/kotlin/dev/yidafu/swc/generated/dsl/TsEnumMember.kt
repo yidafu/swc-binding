@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.222285
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.338875
 
 package dev.yidafu.swc.generated.dsl
 
@@ -53,17 +53,17 @@ import kotlin.Unit
 
 /**
  * TsEnumMember#init: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsEnumMember.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * TsEnumMember#init: Expression?
  * extension function for create Expression? -> StringLiteral
  */
 public fun TsEnumMember.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
     StringLiteral().apply(block)
+
+/**
+ * TsEnumMember#init: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsEnumMember.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsEnumMember#init: Expression?
@@ -204,13 +204,6 @@ public fun TsEnumMember.metaProperty(block: MetaProperty.() -> Unit): MetaProper
  */
 public fun TsEnumMember.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsEnumMember#init: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsEnumMember.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsEnumMember#init: Expression?
@@ -356,3 +349,10 @@ public fun TsEnumMember.numericLiteral(block: NumericLiteral.() -> Unit): Numeri
  */
 public fun TsEnumMember.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsEnumMember#init: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsEnumMember.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

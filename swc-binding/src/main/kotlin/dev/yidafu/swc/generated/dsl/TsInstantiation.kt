@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.225872
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.355437
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsInstantiation#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsInstantiation.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsInstantiation#expression: Expression?
@@ -197,13 +190,6 @@ public fun TsInstantiation.metaProperty(block: MetaProperty.() -> Unit): MetaPro
  */
 public fun TsInstantiation.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsInstantiation#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsInstantiation.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsInstantiation#expression: Expression?
@@ -349,6 +335,20 @@ public fun TsInstantiation.numericLiteral(block: NumericLiteral.() -> Unit): Num
  */
 public fun TsInstantiation.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsInstantiation#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsInstantiation.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsInstantiation#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsInstantiation.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsInstantiation#typeArguments: TsTypeParameterInstantiation?

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.224796
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.33642
 
 package dev.yidafu.swc.generated.dsl
 
@@ -71,13 +71,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsSatisfiesExpression#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsSatisfiesExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression?
@@ -219,13 +212,6 @@ public fun TsSatisfiesExpression.metaProperty(block: MetaProperty.() -> Unit): M
  */
 public fun TsSatisfiesExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression
     = AwaitExpression().apply(block)
-
-/**
- * TsSatisfiesExpression#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsSatisfiesExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
-    = TemplateLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#expression: Expression?
@@ -374,6 +360,20 @@ public fun TsSatisfiesExpression.numericLiteral(block: NumericLiteral.() -> Unit
  */
 public fun TsSatisfiesExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsSatisfiesExpression#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsSatisfiesExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsSatisfiesExpression#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsSatisfiesExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
+    = TemplateLiteralImpl().apply(block)
 
 /**
  * TsSatisfiesExpression#typeAnnotation: TsType?

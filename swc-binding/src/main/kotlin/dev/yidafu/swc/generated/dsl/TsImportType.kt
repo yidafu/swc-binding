@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.148825
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.281642
 
 package dev.yidafu.swc.generated.dsl
 
@@ -19,17 +19,17 @@ public fun TsImportType.stringLiteral(block: StringLiteral.() -> Unit): StringLi
 
 /**
  * TsImportType#qualifier: TsEntityName?
- * extension function for create TsEntityName? -> Identifier
- */
-public fun TsImportType.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * TsImportType#qualifier: TsEntityName?
  * extension function for create TsEntityName? -> TsQualifiedName
  */
 public fun TsImportType.tsQualifiedName(block: TsQualifiedName.() -> Unit): TsQualifiedName =
     TsQualifiedName().apply(block)
+
+/**
+ * TsImportType#qualifier: TsEntityName?
+ * extension function for create TsEntityName? -> Identifier
+ */
+public fun TsImportType.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsImportType#typeArguments: TsTypeParameterInstantiation?

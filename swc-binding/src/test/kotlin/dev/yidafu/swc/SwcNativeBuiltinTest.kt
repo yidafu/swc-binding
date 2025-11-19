@@ -2,19 +2,17 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.Test
 import kotlin.test.assertNotNull
 
 /**
  * Tests for JavaScript built-in objects and APIs
  */
-class SwcNativeBuiltinTest : AnnotationSpec() {
-    private val swcNative = SwcNative()
+class SwcNativeBuiltinTest : ShouldSpec({
+    val swcNative = SwcNative()
 
-    @Test
-    fun `parse Symbol type`() {
+    should("parse Symbol type") {
         val output = swcNative.parseSync(
             """
             const sym = Symbol("description");
@@ -35,8 +33,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse Proxy usage`() {
+    should("parse Proxy usage") {
         val output = swcNative.parseSync(
             """
             const target = { message: "hello" };
@@ -54,15 +51,15 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
         val module = output as Module
         module.body?.let { items ->
-            val declaration = items[3].shouldBeInstanceOf<VariableDeclaration>()
+            // items[2] is "const proxy = new Proxy(target, handler);"
+            val declaration = items[2].shouldBeInstanceOf<VariableDeclaration>()
             val declarator = declaration.declarations?.get(0).shouldBeInstanceOf<VariableDeclarator>()
             val newExpr = declarator.init.shouldBeInstanceOf<NewExpression>()
             assertNotNull(newExpr.callee)
         }
     }
 
-    @Test
-    fun `parse Reflect API usage`() {
+    should("parse Reflect API usage") {
         val output = swcNative.parseSync(
             """
             const obj = { name: "test" };
@@ -76,14 +73,15 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
         val module = output as Module
         module.body?.let { items ->
-            val exprStmt = items[1].shouldBeInstanceOf<ExpressionStatement>()
+            // items[1] is "const value = Reflect.get(obj, "name");" (VariableDeclaration)
+            // items[2] is "Reflect.set(obj, "age", 30);" (ExpressionStatement)
+            val exprStmt = items[2].shouldBeInstanceOf<ExpressionStatement>()
             val callExpr = exprStmt.expression.shouldBeInstanceOf<CallExpression>()
             assertNotNull(callExpr.callee)
         }
     }
 
-    @Test
-    fun `parse Set usage`() {
+    should("parse Set usage") {
         val output = swcNative.parseSync(
             """
             const set = new Set([1, 2, 3]);
@@ -105,8 +103,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse Map usage`() {
+    should("parse Map usage") {
         val output = swcNative.parseSync(
             """
             const map = new Map();
@@ -129,8 +126,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse WeakSet and WeakMap`() {
+    should("parse WeakSet and WeakMap") {
         val output = swcNative.parseSync(
             """
             const weakSet = new WeakSet();
@@ -145,8 +141,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse Promise with then and catch`() {
+    should("parse Promise with then and catch") {
         val output = swcNative.parseSync(
             """
             const promise = new Promise((resolve, reject) => {
@@ -170,8 +165,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse Promise all and Promise race`() {
+    should("parse Promise all and Promise race") {
         val output = swcNative.parseSync(
             """
             const p1 = Promise.resolve(1);
@@ -187,8 +181,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse async function with multiple awaits`() {
+    should("parse async function with multiple awaits") {
         val output = swcNative.parseSync(
             """
             async function fetchUserData(userId) {
@@ -219,8 +212,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse top-level await`() {
+    should("parse top-level await") {
         val output = swcNative.parseSync(
             """
             const data = await fetch('/api/data');
@@ -242,8 +234,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse generator function with yield*`() {
+    should("parse generator function with yield*") {
         val output = swcNative.parseSync(
             """
             function* gen1() {
@@ -274,8 +265,7 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse generator with return statement`() {
+    should("parse generator with return statement") {
         val output = swcNative.parseSync(
             """
             function* gen() {
@@ -294,5 +284,4 @@ class SwcNativeBuiltinTest : AnnotationSpec() {
         )
         output.shouldBeInstanceOf<Module>()
     }
-}
-
+})

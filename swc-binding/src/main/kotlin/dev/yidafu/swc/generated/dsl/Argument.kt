@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.933993
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.996334
 
 package dev.yidafu.swc.generated.dsl
 
@@ -57,13 +57,6 @@ import kotlin.Unit
  * extension function for create Span? -> Span
  */
 public fun Argument.span(block: Span.() -> Unit): Span = Span().apply(block)
-
-/**
- * Argument#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun Argument.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * Argument#expression: Expression?
@@ -204,13 +197,6 @@ public fun Argument.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
  */
 public fun Argument.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * Argument#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun Argument.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * Argument#expression: Expression?
@@ -362,3 +348,17 @@ public fun Argument.numericLiteral(block: NumericLiteral.() -> Unit): NumericLit
  */
 public fun Argument.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * Argument#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun Argument.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * Argument#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun Argument.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.22573
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.34724
 
 package dev.yidafu.swc.generated.dsl
 
@@ -71,13 +71,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsAsExpression#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsAsExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsAsExpression#expression: Expression?
@@ -218,13 +211,6 @@ public fun TsAsExpression.metaProperty(block: MetaProperty.() -> Unit): MetaProp
  */
 public fun TsAsExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsAsExpression#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsAsExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsAsExpression#expression: Expression?
@@ -370,6 +356,20 @@ public fun TsAsExpression.numericLiteral(block: NumericLiteral.() -> Unit): Nume
  */
 public fun TsAsExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsAsExpression#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsAsExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsAsExpression#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsAsExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsAsExpression#typeAnnotation: TsType?

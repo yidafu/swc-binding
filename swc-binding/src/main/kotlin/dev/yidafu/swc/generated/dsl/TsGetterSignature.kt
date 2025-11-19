@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.171434
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.27379
 
 package dev.yidafu.swc.generated.dsl
 
@@ -51,13 +51,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsGetterSignature#key: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsGetterSignature.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsGetterSignature#key: Expression?
@@ -199,13 +192,6 @@ public fun TsGetterSignature.metaProperty(block: MetaProperty.() -> Unit): MetaP
  */
 public fun TsGetterSignature.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsGetterSignature#key: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsGetterSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsGetterSignature#key: Expression?
@@ -358,6 +344,20 @@ public fun TsGetterSignature.numericLiteral(block: NumericLiteral.() -> Unit): N
  */
 public fun TsGetterSignature.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsGetterSignature#key: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsGetterSignature.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsGetterSignature#key: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsGetterSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsGetterSignature#typeAnnotation: TsTypeAnnotation?

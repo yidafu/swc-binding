@@ -2,20 +2,18 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 /**
  * Tests for ES module system (import/export)
  */
-class SwcNativeModuleTest : AnnotationSpec() {
-    private val swcNative = SwcNative()
+class SwcNativeModuleTest : ShouldSpec({
+    val swcNative = SwcNative()
 
-    @Test
-    fun `parse import statements`() {
+    should("parse import statements") {
         val module = swcNative.parseSync(
             """
             import { foo, getRoot, bar as baz } from '@jupyter';
@@ -46,8 +44,7 @@ class SwcNativeModuleTest : AnnotationSpec() {
         assertNotNull(output.code)
     }
 
-    @Test
-    fun `parse export statement`() {
+    should("parse export statement") {
         val output = swcNative.parseSync(
             "export const x = 1;",
             esParseOptions { },
@@ -56,8 +53,7 @@ class SwcNativeModuleTest : AnnotationSpec() {
         assertIs<Module>(output)
     }
 
-    @Test
-    fun `parse export all declaration`() {
+    should("parse export all declaration") {
         val output = swcNative.parseSync(
             """
             export * from './module';
@@ -74,8 +70,7 @@ class SwcNativeModuleTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse named export and default export`() {
+    should("parse named export and default export") {
         val output = swcNative.parseSync(
             """
             export const name = "value";
@@ -89,8 +84,7 @@ class SwcNativeModuleTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse dynamic import`() {
+    should("parse dynamic import") {
         val output = swcNative.parseSync(
             """
             const module = await import('./module');
@@ -104,13 +98,13 @@ class SwcNativeModuleTest : AnnotationSpec() {
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse default export with declaration`() {
+    should("parse default export with declaration") {
         val output = swcNative.parseSync(
             """
             export default function myFunction() {}
             export default class MyClass {}
-            export default const value = 42;
+            const value = 42;
+            export default value;
             """.trimIndent(),
             esParseOptions { },
             "test.js"
@@ -123,8 +117,7 @@ class SwcNativeModuleTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse named export with specifiers`() {
+    should("parse named export with specifiers") {
         val output = swcNative.parseSync(
             """
             export { foo, bar };
@@ -143,21 +136,19 @@ class SwcNativeModuleTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parse import with type modifier`() {
+    should("parse import with type modifier") {
         val output = swcNative.parseSync(
             """
             import type { Type } from './types';
             import { type Type, Value } from './module';
             """.trimIndent(),
-            esParseOptions { },
-            "test.js"
+            tsParseOptions { },
+            "test.ts"
         )
         output.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parse import with assert`() {
+    should("parse import with assert") {
         val output = swcNative.parseSync(
             """
             import json from './data.json' assert { type: 'json' };
@@ -168,5 +159,4 @@ class SwcNativeModuleTest : AnnotationSpec() {
         )
         output.shouldBeInstanceOf<Module>()
     }
-}
-
+})

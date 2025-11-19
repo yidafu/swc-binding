@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.087124
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.190903
 
 package dev.yidafu.swc.generated.dsl
 
@@ -15,6 +15,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -53,6 +54,7 @@ import dev.yidafu.swc.generated.ImportNamespaceSpecifier
 import dev.yidafu.swc.generated.Invalid
 import dev.yidafu.swc.generated.JSXAttribute
 import dev.yidafu.swc.generated.JSXClosingElement
+import dev.yidafu.swc.generated.JSXClosingElementImpl
 import dev.yidafu.swc.generated.JSXClosingFragment
 import dev.yidafu.swc.generated.JSXElement
 import dev.yidafu.swc.generated.JSXEmptyExpression
@@ -61,6 +63,7 @@ import dev.yidafu.swc.generated.JSXFragment
 import dev.yidafu.swc.generated.JSXMemberExpression
 import dev.yidafu.swc.generated.JSXNamespacedName
 import dev.yidafu.swc.generated.JSXOpeningElement
+import dev.yidafu.swc.generated.JSXOpeningElementImpl
 import dev.yidafu.swc.generated.JSXOpeningFragment
 import dev.yidafu.swc.generated.JSXSpreadChild
 import dev.yidafu.swc.generated.JSXText
@@ -82,6 +85,7 @@ import dev.yidafu.swc.generated.ObjectExpression
 import dev.yidafu.swc.generated.ObjectPattern
 import dev.yidafu.swc.generated.OptionalChainingExpression
 import dev.yidafu.swc.generated.Param
+import dev.yidafu.swc.generated.ParamImpl
 import dev.yidafu.swc.generated.ParenthesisExpression
 import dev.yidafu.swc.generated.PrivateMethod
 import dev.yidafu.swc.generated.PrivateName
@@ -166,6 +170,7 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.VariableDeclarator
+import dev.yidafu.swc.generated.VariableDeclaratorImpl
 import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
@@ -176,12 +181,6 @@ import kotlin.Unit
  * extension function for create Node? -> JsSuper
  */
 public fun SuperPropExpression.jsSuper(block: JsSuper.() -> Unit): JsSuper = JsSuper().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
- * extension function for create Node? -> Param
- */
-public fun SuperPropExpression.`param`(block: Param.() -> Unit): Param = Param().apply(block)
 
 /**
  * SuperPropExpression#property: Node?
@@ -217,13 +216,6 @@ public fun SuperPropExpression.classDeclaration(block: ClassDeclaration.() -> Un
  */
 public fun SuperPropExpression.variableDeclaration(block: VariableDeclaration.() -> Unit):
     VariableDeclaration = VariableDeclaration().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
- * extension function for create Node? -> VariableDeclarator
- */
-public fun SuperPropExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
-    VariableDeclarator = VariableDeclarator().apply(block)
 
 /**
  * SuperPropExpression#property: Node?
@@ -280,20 +272,6 @@ public fun SuperPropExpression.jSXExpressionContainer(block: JSXExpressionContai
  */
 public fun SuperPropExpression.jSXSpreadChild(block: JSXSpreadChild.() -> Unit): JSXSpreadChild =
     JSXSpreadChild().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
- * extension function for create Node? -> JSXOpeningElement
- */
-public fun SuperPropExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit):
-    JSXOpeningElement = JSXOpeningElement().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
- * extension function for create Node? -> JSXClosingElement
- */
-public fun SuperPropExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit):
-    JSXClosingElement = JSXClosingElement().apply(block)
 
 /**
  * SuperPropExpression#property: Node?
@@ -502,13 +480,6 @@ public fun SuperPropExpression.assignmentProperty(block: AssignmentProperty.() -
  */
 public fun SuperPropExpression.computedPropName(block: ComputedPropName.() -> Unit):
     ComputedPropName = ComputedPropName().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
- * extension function for create Node? -> BlockStatement
- */
-public fun SuperPropExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * SuperPropExpression#property: Node?
@@ -901,13 +872,6 @@ public fun SuperPropExpression.tsLiteralType(block: TsLiteralType.() -> Unit): T
 
 /**
  * SuperPropExpression#property: Node?
- * extension function for create Node? -> TsTemplateLiteralType
- */
-public fun SuperPropExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
-    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
  * extension function for create Node? -> TsInterfaceDeclaration
  */
 public fun SuperPropExpression.tsInterfaceDeclaration(block: TsInterfaceDeclaration.() -> Unit):
@@ -1044,13 +1008,6 @@ public fun SuperPropExpression.privateMethod(block: PrivateMethod.() -> Unit): P
 
 /**
  * SuperPropExpression#property: Node?
- * extension function for create Node? -> Identifier
- */
-public fun SuperPropExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
  * extension function for create Node? -> OptionalChainingExpression
  */
 public
@@ -1178,13 +1135,6 @@ public fun SuperPropExpression.awaitExpression(block: AwaitExpression.() -> Unit
 
 /**
  * SuperPropExpression#property: Node?
- * extension function for create Node? -> TemplateLiteral
- */
-public fun SuperPropExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
  * extension function for create Node? -> TaggedTemplateExpression
  */
 public fun SuperPropExpression.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
@@ -1248,13 +1198,6 @@ public fun SuperPropExpression.tsNonNullExpression(block: TsNonNullExpression.()
 
 /**
  * SuperPropExpression#property: Node?
- * extension function for create Node? -> BindingIdentifier
- */
-public fun SuperPropExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
-
-/**
- * SuperPropExpression#property: Node?
  * extension function for create Node? -> ArrayPattern
  */
 public fun SuperPropExpression.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -1308,3 +1251,65 @@ public fun SuperPropExpression.setterProperty(block: SetterProperty.() -> Unit):
  */
 public fun SuperPropExpression.methodProperty(block: MethodProperty.() -> Unit): MethodProperty =
     MethodProperty().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> Param
+ */
+public fun SuperPropExpression.`param`(block: Param.() -> Unit): Param = ParamImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> VariableDeclarator
+ */
+public fun SuperPropExpression.variableDeclarator(block: VariableDeclarator.() -> Unit):
+    VariableDeclarator = VariableDeclaratorImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> JSXOpeningElement
+ */
+public fun SuperPropExpression.jSXOpeningElement(block: JSXOpeningElement.() -> Unit):
+    JSXOpeningElement = JSXOpeningElementImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> JSXClosingElement
+ */
+public fun SuperPropExpression.jSXClosingElement(block: JSXClosingElement.() -> Unit):
+    JSXClosingElement = JSXClosingElementImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> BlockStatement
+ */
+public fun SuperPropExpression.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> TsTemplateLiteralType
+ */
+public fun SuperPropExpression.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
+    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> Identifier
+ */
+public fun SuperPropExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> TemplateLiteral
+ */
+public fun SuperPropExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
+
+/**
+ * SuperPropExpression#property: Node?
+ * extension function for create Node? -> BindingIdentifier
+ */
+public fun SuperPropExpression.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)

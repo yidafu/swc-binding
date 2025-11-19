@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.921192
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.995746
 
 package dev.yidafu.swc.generated.dsl
 
@@ -117,13 +117,6 @@ public fun JsClass.emptyStatement(block: EmptyStatement.() -> Unit): EmptyStatem
  */
 public fun JsClass.tsIndexSignature(block: TsIndexSignature.() -> Unit): TsIndexSignature =
     TsIndexSignature().apply(block)
-
-/**
- * JsClass#superClass: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun JsClass.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * JsClass#superClass: Expression?
@@ -264,13 +257,6 @@ public fun JsClass.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
  */
 public fun JsClass.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * JsClass#superClass: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun JsClass.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * JsClass#superClass: Expression?
@@ -422,6 +408,20 @@ public fun JsClass.numericLiteral(block: NumericLiteral.() -> Unit): NumericLite
  */
 public fun JsClass.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * JsClass#superClass: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun JsClass.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * JsClass#superClass: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun JsClass.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * JsClass#typeParams: TsTypeParameterDeclaration?

@@ -1,12 +1,15 @@
 package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.Program
+import dev.yidafu.swc.generated.TruePlusMinus
+import dev.yidafu.swc.TruePlusMinusSerializer
 import dev.yidafu.swc.generated.swcConfigSerializersModule
 import dev.yidafu.swc.generated.swcSerializersModule
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import kotlin.jvm.JvmStatic
 
 /**
@@ -14,10 +17,15 @@ import kotlin.jvm.JvmStatic
  * Includes the generated serializers module and handles polymorphic types.
  * 
  * Implementation classes (*Impl) from customType.kt are handled by the generated polymorphic module.
+ * 
+ * Note: 所有使用 @JsonClassDiscriminator("type") 的类都应该有显式的 type 字段（使用 @EncodeDefault），
+ * 以确保即使它们不是多态类型，也能在序列化时输出 type 字段。
  */
 @OptIn(ExperimentalSerializationApi::class)
 private val extendedSwcSerializersModule: SerializersModule = SerializersModule {
     include(swcSerializersModule)
+    // Register custom serializer for TruePlusMinus to handle both boolean and string values
+    contextual(TruePlusMinus::class, TruePlusMinusSerializer)
     // Implementation classes (*Impl) are handled by the generated polymorphic module
     // IdentifierImpl, BindingIdentifierImpl, TemplateLiteralImpl, TsTemplateLiteralTypeImpl
     // are registered in swcSerializersModule via polymorphic subclass registration
@@ -54,6 +62,10 @@ val astJson = Json {
     // 需要 classDiscriminator 配置，与 @JsonClassDiscriminator("type") 配合使用
     // @JsonClassDiscriminator 指定使用 type 属性作为 discriminator
     // classDiscriminator 指定 JSON 中的字段名为 "type"
+    // 
+    // 注意：@JsonClassDiscriminator 只在多态序列化时才会自动添加 discriminator 字段。
+    // 对于非多态类型的序列化（如 Array<VariableDeclarator>），这些类已经有显式的 type 字段
+    // （使用 @EncodeDefault），配合 encodeDefaults = true 配置，确保 type 字段会被序列化。
     classDiscriminator = "type"
     serializersModule = extendedSwcSerializersModule
     // @swc/types may be incomplete, so ignore unknown keys
@@ -61,6 +73,7 @@ val astJson = Json {
     // Don't include null values - fields with @EncodeDefault will use their default values
     explicitNulls = false
     // Include default values (e.g., Boolean? = false, Span.ctxt = 0) in JSON
+    // 这个配置确保所有使用 @EncodeDefault 的字段（包括 type 字段）都会被序列化
     encodeDefaults = true
     // Coerce missing values to defaults during deserialization (e.g., missing ctxt -> 0)
     coerceInputValues = true

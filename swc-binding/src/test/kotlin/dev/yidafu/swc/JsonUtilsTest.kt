@@ -3,18 +3,17 @@ package dev.yidafu.swc
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.encodeToString
-import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
  * Tests for JSON utility functions in json.kt
  */
-class JsonUtilsTest : AnnotationSpec() {
-    private val swc: SwcNative by lazy {
+class JsonUtilsTest : ShouldSpec({
+    val swc: SwcNative by lazy {
         runCatching { SwcNative() }.getOrElse { throwable ->
             throw RuntimeException("Failed to initialize SwcNative", throwable)
         }
@@ -22,8 +21,7 @@ class JsonUtilsTest : AnnotationSpec() {
 
     // ==================== parseAstTree tests ====================
 
-    @Test
-    fun `parseAstTree with valid Module JSON`() {
+    should("parseAstTree with valid Module JSON") {
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(
             "const x = 1;",
@@ -52,8 +50,7 @@ class JsonUtilsTest : AnnotationSpec() {
         program.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parseAstTree with complex Module`() {
+    should("parseAstTree with complex Module") {
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(
             """
@@ -75,8 +72,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(module.body!!.size > 0)
     }
 
-    @Test
-    fun `parseAstTree with TypeScript`() {
+    should("parseAstTree with TypeScript") {
         val optStr = configJson.encodeToString<ParserConfig>(tsParseOptions { })
         val jsonStr = swc.parseSync(
             """
@@ -96,8 +92,7 @@ class JsonUtilsTest : AnnotationSpec() {
         program.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parseAstTree with Script`() {
+    should("parseAstTree with Script") {
         val optStr = configJson.encodeToString<ParserConfig>(
             esParseOptions {
                 script = true
@@ -116,8 +111,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(program is Module || program is Script)
     }
 
-    @Test
-    fun `parseAstTree error handling with invalid JSON`() {
+    should("parseAstTree error handling with invalid JSON") {
         val invalidJson = "{ invalid json }"
 
         shouldThrow<Exception> {
@@ -125,15 +119,13 @@ class JsonUtilsTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parseAstTree error handling with empty string`() {
+    should("parseAstTree error handling with empty string") {
         shouldThrow<Exception> {
             parseAstTree("")
         }
     }
 
-    @Test
-    fun `parseAstTree error handling with malformed JSON`() {
+    should("parseAstTree error handling with malformed JSON") {
         val malformedJson = """{"type":"Module","span":{""" // Incomplete JSON
 
         shouldThrow<Exception> {
@@ -141,8 +133,7 @@ class JsonUtilsTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `parseAstTree error handling with wrong type`() {
+    should("parseAstTree error handling with wrong type") {
         val wrongTypeJson = """{"type":"InvalidType","span":{"start":0,"end":0,"ctxt":0}}"""
 
         // This might throw or return null depending on implementation
@@ -157,8 +148,7 @@ class JsonUtilsTest : AnnotationSpec() {
 
     // ==================== astJson configuration tests ====================
 
-    @Test
-    fun `astJson encodes Module correctly`() {
+    should("astJson encodes Module correctly") {
         val module = swc.parseSync(
             "const x = 1;",
             esParseOptions { },
@@ -172,8 +162,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(json.contains("Module"))
     }
 
-    @Test
-    fun `astJson includes null values`() {
+    should("astJson includes null values") {
         val module = swc.parseSync(
             "const x = 1;",
             esParseOptions { },
@@ -186,8 +175,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertNotNull(json)
     }
 
-    @Test
-    fun `astJson includes default values`() {
+    should("astJson includes default values") {
         val module = swc.parseSync(
             "const x = 1;",
             esParseOptions { },
@@ -200,8 +188,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertNotNull(json)
     }
 
-    @Test
-    fun `astJson uses classDiscriminator`() {
+    should("astJson uses classDiscriminator") {
         val module = swc.parseSync(
             "const x = 1;",
             esParseOptions { },
@@ -216,8 +203,7 @@ class JsonUtilsTest : AnnotationSpec() {
 
     // ==================== configJson configuration tests ====================
 
-    @Test
-    fun `configJson encodes ParserConfig correctly`() {
+    should("configJson encodes ParserConfig correctly") {
         val config = esParseOptions {
             target = JscTarget.ES2020
             comments = true
@@ -229,8 +215,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(json.contains("ecmascript") || json.contains("es2020"))
     }
 
-    @Test
-    fun `configJson encodes Options correctly`() {
+    should("configJson encodes Options correctly") {
         val options = options { }
 
         val json = configJson.encodeToString<Options>(options)
@@ -238,8 +223,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertNotNull(json)
     }
 
-    @Test
-    fun `configJson uses classDiscriminator for syntax`() {
+    should("configJson uses classDiscriminator for syntax") {
         val config = tsParseOptions { }
 
         val json = configJson.encodeToString<ParserConfig>(config)
@@ -248,8 +232,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(json.contains("\"syntax\""))
     }
 
-    @Test
-    fun `configJson includes default values`() {
+    should("configJson includes default values") {
         val config = esParseOptions { }
 
         val json = configJson.encodeToString<ParserConfig>(config)
@@ -260,8 +243,7 @@ class JsonUtilsTest : AnnotationSpec() {
 
     // ==================== Round-trip tests ====================
 
-    @Test
-    fun `parseAstTree round-trip with Module`() {
+    should("parseAstTree round-trip with Module") {
         val originalCode = "const x = 1; const y = 2;"
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(originalCode, optStr, "test.js")
@@ -274,8 +256,7 @@ class JsonUtilsTest : AnnotationSpec() {
         deserialized.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `parseAstTree preserves structure`() {
+    should("parseAstTree preserves structure") {
         val code = """
             function add(a, b) {
                 return a + b;
@@ -293,8 +274,7 @@ class JsonUtilsTest : AnnotationSpec() {
 
     // ==================== Edge cases ====================
 
-    @Test
-    fun `parseAstTree with empty Module`() {
+    should("parseAstTree with empty Module") {
         val emptyModuleJson = """{"type":"Module","span":{"start":0,"end":0,"ctxt":0},"body":[],"interpreter":null}"""
 
         val program = parseAstTree(emptyModuleJson)
@@ -306,8 +286,7 @@ class JsonUtilsTest : AnnotationSpec() {
         assertTrue(module.body!!.isEmpty())
     }
 
-    @Test
-    fun `parseAstTree with large AST`() {
+    should("parseAstTree with large AST") {
         val largeCode = buildString {
             repeat(100) { i ->
                 appendLine("const var$i = $i;")
@@ -322,8 +301,7 @@ class JsonUtilsTest : AnnotationSpec() {
         program.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `astJson handles special characters`() {
+    should("astJson handles special characters") {
         val code = "const str = \"Hello\\nWorld\\t!\";"
         val program = swc.parseSync(code, esParseOptions { }, "test.js")
         val module = program as Module
@@ -333,4 +311,4 @@ class JsonUtilsTest : AnnotationSpec() {
         assertNotNull(json)
         // Should properly escape special characters
     }
-}
+})

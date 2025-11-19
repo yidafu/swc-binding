@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.095288
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.225814
 
 package dev.yidafu.swc.generated.dsl
 
@@ -13,6 +13,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.CallExpression
 import dev.yidafu.swc.generated.ClassExpression
@@ -60,13 +61,6 @@ import kotlin.Unit
 
 /**
  * SetterProperty#param: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun SetterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
-    = BindingIdentifierImpl().apply(block)
-
-/**
- * SetterProperty#param: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun SetterProperty.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -98,13 +92,6 @@ public fun SetterProperty.restElement(block: RestElement.() -> Unit): RestElemen
  * extension function for create Pattern? -> Invalid
  */
 public fun SetterProperty.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * SetterProperty#param: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun SetterProperty.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern?
@@ -245,13 +232,6 @@ public fun SetterProperty.metaProperty(block: MetaProperty.() -> Unit): MetaProp
  */
 public fun SetterProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * SetterProperty#param: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun SetterProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * SetterProperty#param: Pattern?
@@ -400,8 +380,29 @@ public fun SetterProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigInt
     BigIntLiteral().apply(block)
 
 /**
+ * SetterProperty#param: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun SetterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
+
+/**
+ * SetterProperty#param: Pattern?
+ * extension function for create Pattern? -> Identifier
+ */
+public fun SetterProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SetterProperty#param: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun SetterProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
+
+/**
  * SetterProperty#body: BlockStatement?
  * extension function for create BlockStatement? -> BlockStatement
  */
 public fun SetterProperty.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+    BlockStatementImpl().apply(block)

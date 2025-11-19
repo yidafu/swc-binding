@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.125102
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.2808
 
 package dev.yidafu.swc.generated.dsl
 
@@ -9,6 +9,7 @@ import dev.yidafu.swc.generated.AwaitExpression
 import dev.yidafu.swc.generated.BigIntLiteral
 import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -74,13 +75,6 @@ import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * WhileStatement#test: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun WhileStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression?
@@ -221,13 +215,6 @@ public fun WhileStatement.metaProperty(block: MetaProperty.() -> Unit): MetaProp
  */
 public fun WhileStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * WhileStatement#test: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun WhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * WhileStatement#test: Expression?
@@ -382,11 +369,18 @@ public fun WhileStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigInt
     BigIntLiteral().apply(block)
 
 /**
- * WhileStatement#body: Statement?
- * extension function for create Statement? -> BlockStatement
+ * WhileStatement#test: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun WhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+public fun WhileStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * WhileStatement#test: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun WhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * WhileStatement#body: Statement?
@@ -548,3 +542,10 @@ public fun WhileStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit)
  */
 public fun WhileStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * WhileStatement#body: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun WhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.97647
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T21:30:51.063659
 
 package dev.yidafu.swc.generated
 
@@ -11,6 +11,10 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlin.Int
 import kotlin.Nothing
 import kotlin.OptIn
+@JsonClassDiscriminator("type")
+public interface JSXClosingElement : Node, HasSpan {
+    public var name: JSXElementName?
+}
 
 /**
  * conflict with @SerialName
@@ -21,9 +25,9 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("JSXClosingElement")
 @SwcDslMarker
-public class JSXClosingElement : Node, HasSpan {
+public class JSXClosingElementImpl : JSXClosingElement {
     @EncodeDefault
-    public var name: JSXElementName? = null
-
+    public override var name: JSXElementName? = null
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.913287
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.987723
 
 package dev.yidafu.swc.generated.dsl
 
@@ -42,13 +42,6 @@ import kotlin.Unit
  * extension function for create Span? -> Span
  */
 public fun OptionalChainingExpression.span(block: Span.() -> Unit): Span = Span().apply(block)
-
-/**
- * OptionalChainingExpression#base: ExpressionBase?
- * extension function for create ExpressionBase? -> Identifier
- */
-public fun OptionalChainingExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * OptionalChainingExpression#base: ExpressionBase?
@@ -180,13 +173,6 @@ public fun OptionalChainingExpression.awaitExpression(block: AwaitExpression.() 
 
 /**
  * OptionalChainingExpression#base: ExpressionBase?
- * extension function for create ExpressionBase? -> TemplateLiteral
- */
-public fun OptionalChainingExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
-
-/**
- * OptionalChainingExpression#base: ExpressionBase?
  * extension function for create ExpressionBase? -> TaggedTemplateExpression
  */
 public
@@ -250,3 +236,17 @@ public fun OptionalChainingExpression.tsConstAssertion(block: TsConstAssertion.(
  */
 public fun OptionalChainingExpression.tsNonNullExpression(block: TsNonNullExpression.() -> Unit):
     TsNonNullExpression = TsNonNullExpression().apply(block)
+
+/**
+ * OptionalChainingExpression#base: ExpressionBase?
+ * extension function for create ExpressionBase? -> Identifier
+ */
+public fun OptionalChainingExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * OptionalChainingExpression#base: ExpressionBase?
+ * extension function for create ExpressionBase? -> TemplateLiteral
+ */
+public fun OptionalChainingExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)

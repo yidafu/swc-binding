@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.018095
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.167725
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TaggedTemplateExpression#tag: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TaggedTemplateExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TaggedTemplateExpression#tag: Expression?
@@ -199,13 +192,6 @@ public fun TaggedTemplateExpression.metaProperty(block: MetaProperty.() -> Unit)
  */
 public fun TaggedTemplateExpression.awaitExpression(block: AwaitExpression.() -> Unit):
     AwaitExpression = AwaitExpression().apply(block)
-
-/**
- * TaggedTemplateExpression#template: TemplateLiteral?
- * extension function for create TemplateLiteral? -> TemplateLiteral
- */
-public fun TaggedTemplateExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * TaggedTemplateExpression#tag: Expression?
@@ -353,6 +339,20 @@ public fun TaggedTemplateExpression.numericLiteral(block: NumericLiteral.() -> U
  */
 public fun TaggedTemplateExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TaggedTemplateExpression#tag: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TaggedTemplateExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TaggedTemplateExpression#template: TemplateLiteral?
+ * extension function for create TemplateLiteral? -> TemplateLiteral
+ */
+public fun TaggedTemplateExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * TaggedTemplateExpression#typeParameters: TsTypeParameterInstantiation?

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.19283
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.324032
 
 package dev.yidafu.swc.generated.dsl
 
@@ -51,13 +51,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsExpressionWithTypeArguments#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsExpressionWithTypeArguments.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsExpressionWithTypeArguments#expression: Expression?
@@ -202,13 +195,6 @@ public fun TsExpressionWithTypeArguments.metaProperty(block: MetaProperty.() -> 
  */
 public fun TsExpressionWithTypeArguments.awaitExpression(block: AwaitExpression.() -> Unit):
     AwaitExpression = AwaitExpression().apply(block)
-
-/**
- * TsExpressionWithTypeArguments#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsExpressionWithTypeArguments.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * TsExpressionWithTypeArguments#expression: Expression?
@@ -366,6 +352,20 @@ public fun TsExpressionWithTypeArguments.numericLiteral(block: NumericLiteral.()
  */
 public fun TsExpressionWithTypeArguments.bigIntLiteral(block: BigIntLiteral.() -> Unit):
     BigIntLiteral = BigIntLiteral().apply(block)
+
+/**
+ * TsExpressionWithTypeArguments#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsExpressionWithTypeArguments.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsExpressionWithTypeArguments#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsExpressionWithTypeArguments.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * TsExpressionWithTypeArguments#typeArguments: TsTypeParameterInstantiation?

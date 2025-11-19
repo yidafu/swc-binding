@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.140235
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.261902
 
 package dev.yidafu.swc.generated.dsl
 
@@ -13,6 +13,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.CallExpression
 import dev.yidafu.swc.generated.CatchClause
@@ -60,13 +61,6 @@ import kotlin.Unit
 
 /**
  * CatchClause#param: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun CatchClause.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
-    BindingIdentifierImpl().apply(block)
-
-/**
- * CatchClause#param: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun CatchClause.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -98,13 +92,6 @@ public fun CatchClause.restElement(block: RestElement.() -> Unit): RestElement =
  * extension function for create Pattern? -> Invalid
  */
 public fun CatchClause.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * CatchClause#param: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun CatchClause.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * CatchClause#param: Pattern?
@@ -245,13 +232,6 @@ public fun CatchClause.metaProperty(block: MetaProperty.() -> Unit): MetaPropert
  */
 public fun CatchClause.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * CatchClause#param: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun CatchClause.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * CatchClause#param: Pattern?
@@ -400,8 +380,29 @@ public fun CatchClause.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLit
     BigIntLiteral().apply(block)
 
 /**
+ * CatchClause#param: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun CatchClause.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
+    BindingIdentifierImpl().apply(block)
+
+/**
+ * CatchClause#param: Pattern?
+ * extension function for create Pattern? -> Identifier
+ */
+public fun CatchClause.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * CatchClause#param: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun CatchClause.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
+
+/**
  * CatchClause#body: BlockStatement?
  * extension function for create BlockStatement? -> BlockStatement
  */
 public fun CatchClause.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+    BlockStatementImpl().apply(block)

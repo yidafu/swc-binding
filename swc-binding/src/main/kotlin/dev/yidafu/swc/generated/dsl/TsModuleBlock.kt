@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.201846
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.334102
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.ClassDeclaration
 import dev.yidafu.swc.generated.ContinueStatement
@@ -102,13 +103,6 @@ public fun TsModuleBlock.tsExportAssignment(block: TsExportAssignment.() -> Unit
 public
     fun TsModuleBlock.tsNamespaceExportDeclaration(block: TsNamespaceExportDeclaration.() -> Unit):
     TsNamespaceExportDeclaration = TsNamespaceExportDeclaration().apply(block)
-
-/**
- * TsModuleBlock#body: Array<ModuleItem>?
- * extension function for create Array<ModuleItem>? -> BlockStatement
- */
-public fun TsModuleBlock.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * TsModuleBlock#body: Array<ModuleItem>?
@@ -277,3 +271,10 @@ public fun TsModuleBlock.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit):
  */
 public fun TsModuleBlock.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * TsModuleBlock#body: Array<ModuleItem>?
+ * extension function for create Array<ModuleItem>? -> BlockStatement
+ */
+public fun TsModuleBlock.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

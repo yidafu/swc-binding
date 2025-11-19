@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.966405
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T20:48:25.609269
 
 package dev.yidafu.swc.generated
 
@@ -12,6 +12,14 @@ import kotlin.Boolean
 import kotlin.Int
 import kotlin.Nothing
 import kotlin.OptIn
+@JsonClassDiscriminator("type")
+public interface VariableDeclarator : Node, HasSpan {
+    public var id: Pattern?
+
+    public var `init`: Expression?
+
+    public var definite: Boolean?
+}
 
 /**
  * conflict with @SerialName
@@ -22,13 +30,13 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("VariableDeclarator")
 @SwcDslMarker
-public class VariableDeclarator : Node, HasSpan {
+public class VariableDeclaratorImpl : VariableDeclarator {
     @EncodeDefault
-    public var id: Pattern? = null
+    public override var id: Pattern? = null
     @EncodeDefault
-    public var `init`: Expression? = null
+    public override var `init`: Expression? = null
     @EncodeDefault
-    public var definite: Boolean? = null
-
+    public override var definite: Boolean? = null
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

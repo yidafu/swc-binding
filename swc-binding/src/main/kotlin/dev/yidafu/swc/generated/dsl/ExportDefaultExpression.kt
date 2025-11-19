@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.045106
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.201694
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ExportDefaultExpression#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ExportDefaultExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ExportDefaultExpression#expression: Expression?
@@ -199,13 +192,6 @@ public fun ExportDefaultExpression.metaProperty(block: MetaProperty.() -> Unit):
  */
 public fun ExportDefaultExpression.awaitExpression(block: AwaitExpression.() -> Unit):
     AwaitExpression = AwaitExpression().apply(block)
-
-/**
- * ExportDefaultExpression#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ExportDefaultExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * ExportDefaultExpression#expression: Expression?
@@ -361,3 +347,17 @@ public fun ExportDefaultExpression.numericLiteral(block: NumericLiteral.() -> Un
  */
 public fun ExportDefaultExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ExportDefaultExpression#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ExportDefaultExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ExportDefaultExpression#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ExportDefaultExpression.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)

@@ -1,25 +1,22 @@
 package dev.yidafu.swc
 
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class TransformOutputTest : AnnotationSpec() {
+class TransformOutputTest : ShouldSpec({
 
-    @Test
-    fun `create TransformOutput with code only`() {
+    should("create TransformOutput with code only") {
         val output = TransformOutput(code = "const x = 1;")
 
         assertEquals("const x = 1;", output.code)
         assertNull(output.msg)
     }
 
-    @Test
-    fun `create TransformOutput with code and message`() {
+    should("create TransformOutput with code and message") {
         val output = TransformOutput(
             code = "const x = 1;",
             msg = "Successfully transformed"
@@ -29,8 +26,7 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals("Successfully transformed", output.msg)
     }
 
-    @Test
-    fun `serialize TransformOutput`() {
+    should("serialize TransformOutput") {
         val output = TransformOutput(code = "const x = 1;", msg = "test")
         val json = Json.encodeToString(output)
 
@@ -38,8 +34,7 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals("""{"code":"const x = 1;","msg":"test"}""", json)
     }
 
-    @Test
-    fun `deserialize TransformOutput`() {
+    should("deserialize TransformOutput") {
         val json = """{"code":"const x = 1;","msg":"test"}"""
         val output = Json.decodeFromString<TransformOutput>(json)
 
@@ -47,8 +42,7 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals("test", output.msg)
     }
 
-    @Test
-    fun `deserialize TransformOutput without message`() {
+    should("deserialize TransformOutput without message") {
         val json = """{"code":"const x = 1;"}"""
         val output = Json.decodeFromString<TransformOutput>(json)
 
@@ -56,15 +50,13 @@ class TransformOutputTest : AnnotationSpec() {
         assertNull(output.msg)
     }
 
-    @Test
-    fun `empty code in TransformOutput`() {
+    should("empty code in TransformOutput") {
         val output = TransformOutput(code = "")
 
         assertEquals("", output.code)
     }
 
-    @Test
-    fun `TransformOutput with multiline code`() {
+    should("TransformOutput with multiline code") {
         val code = """
             function test() {
                 return 42;
@@ -76,16 +68,14 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals(code, output.code)
     }
 
-    @Test
-    fun `TransformOutput with special characters`() {
+    should("TransformOutput with special characters") {
         val code = "const str = \"Hello\\nWorld\\t!\";"
         val output = TransformOutput(code = code)
 
         assertEquals(code, output.code)
     }
 
-    @Test
-    fun `TransformOutput serialization round trip`() {
+    should("TransformOutput serialization round trip") {
         val original = TransformOutput(
             code = "const x = 1; const y = 2;",
             msg = "Transformed successfully"
@@ -98,16 +88,14 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals(original.msg, decoded.msg)
     }
 
-    @Test
-    fun `TransformOutput with unicode characters`() {
+    should("TransformOutput with unicode characters") {
         val code = "const emoji = '👋 🌍 🎉';"
         val output = TransformOutput(code = code)
 
         assertEquals(code, output.code)
     }
 
-    @Test
-    fun `data class copy functionality`() {
+    should("data class copy functionality") {
         val original = TransformOutput(code = "const x = 1;", msg = "test")
         val copied = original.copy(msg = "modified")
 
@@ -115,8 +103,7 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals("modified", copied.msg)
     }
 
-    @Test
-    fun `data class equals and hashCode`() {
+    should("data class equals and hashCode") {
         val output1 = TransformOutput(code = "const x = 1;", msg = "test")
         val output2 = TransformOutput(code = "const x = 1;", msg = "test")
 
@@ -124,12 +111,11 @@ class TransformOutputTest : AnnotationSpec() {
         assertEquals(output1.hashCode(), output2.hashCode())
     }
 
-    @Test
-    fun `TransformOutput toString`() {
+    should("TransformOutput toString") {
         val output = TransformOutput(code = "const x = 1;", msg = "test")
         val str = output.toString()
 
         assertNotNull(str)
         assert(str.contains("const x = 1;"))
     }
-}
+})

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.071467
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.215439
 
 package dev.yidafu.swc.generated.dsl
 
@@ -58,13 +58,6 @@ import kotlin.Unit
 
 /**
  * AssignmentPattern#left: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun AssignmentPattern.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
-
-/**
- * AssignmentPattern#left: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun AssignmentPattern.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -89,13 +82,6 @@ public fun AssignmentPattern.restElement(block: RestElement.() -> Unit): RestEle
  * extension function for create Expression? -> Invalid
  */
 public fun AssignmentPattern.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * AssignmentPattern#right: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun AssignmentPattern.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * AssignmentPattern#right: Expression?
@@ -237,13 +223,6 @@ public fun AssignmentPattern.metaProperty(block: MetaProperty.() -> Unit): MetaP
  */
 public fun AssignmentPattern.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * AssignmentPattern#right: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun AssignmentPattern.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * AssignmentPattern#right: Expression?
@@ -390,3 +369,24 @@ public fun AssignmentPattern.numericLiteral(block: NumericLiteral.() -> Unit): N
  */
 public fun AssignmentPattern.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * AssignmentPattern#left: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun AssignmentPattern.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
+
+/**
+ * AssignmentPattern#right: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun AssignmentPattern.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * AssignmentPattern#right: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun AssignmentPattern.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

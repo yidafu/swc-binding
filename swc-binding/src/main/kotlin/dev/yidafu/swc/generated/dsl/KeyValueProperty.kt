@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.096717
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.258252
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * KeyValueProperty#value: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun KeyValueProperty.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression?
@@ -198,13 +191,6 @@ public fun KeyValueProperty.metaProperty(block: MetaProperty.() -> Unit): MetaPr
  */
 public fun KeyValueProperty.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * KeyValueProperty#value: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun KeyValueProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * KeyValueProperty#value: Expression?
@@ -357,3 +343,17 @@ public fun KeyValueProperty.numericLiteral(block: NumericLiteral.() -> Unit): Nu
  */
 public fun KeyValueProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * KeyValueProperty#value: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun KeyValueProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * KeyValueProperty#value: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun KeyValueProperty.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

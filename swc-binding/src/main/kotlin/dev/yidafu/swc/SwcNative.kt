@@ -160,6 +160,7 @@ class SwcNative {
     ): Program {
         val optStr = configJson.encodeToString<ParserConfig>(options)
         val output = parseSync(code, optStr, filename)
+        println("parseSync ==> $output")
         return parseAstTree(output)
     }
 
@@ -390,33 +391,26 @@ class SwcNative {
     /**
      * Minify JavaScript/TypeScript code synchronously.
      *
-     * This method takes an AST program, converts it to code, and then minifies it.
+     * This method takes source code as a string and minifies it.
      * Minification reduces code size by removing whitespace, shortening variable names,
      * and applying other optimizations.
      *
-     * @param program Parsed AST program to minify
-     * @param options Minify configuration (compress, mangle, etc.)
+     * According to SWC documentation: https://swc.rs/docs/usage/core#minify
+     * The first parameter should be source code string, not AST.
+     *
+     * @param src Source code to minify
+     * @param options Optional minify configuration (compress, mangle, etc.)
      * @return Transform output containing the minified code
      * @throws RuntimeException if minification fails
      *
      * @example
      * ```kotlin
      * val swc = SwcNative()
-     * val ast = swc.parseSync(
-     *     code = "function hello() { console.log('Hello World'); }",
-     *     options = esParseOptions { },
-     *     filename = "test.js"
-     * )
      * val output = swc.minifySync(
-     *     program = ast,
-     *     options = options {
-     *         minify = true
-     *         jsc {
-     *             minify {
-     *                 compress = JsMinifyCompressOptions()
-     *                 mangle = true
-     *             }
-     *         }
+     *     src = "function hello() { console.log('Hello World'); }",
+     *     options = JsMinifyOptions().apply {
+     *         compress = Union.U2<TerserCompressOptions, Boolean>(b = true)
+     *         mangle = Union.U2<TerserMangleOptions, Boolean>(b = true)
      *     }
      * )
      * println(output.code) // Minified code
@@ -424,16 +418,12 @@ class SwcNative {
      */
     @Throws(RuntimeException::class)
     fun minifySync(
-        program: Program,
-        options: Options
+        src: String,
+        options: JsMinifyOptions = JsMinifyOptions()
     ): TransformOutput {
-        // Rust minify expects code string, not AST JSON
-        // First convert Program to code using printSync
-        val printResult = printSync(program, options)
-        val code = printResult.code
-
         // Minify expects MinifyTarget::Single(String), so wrap in quotes
-        val codeStr = configJson.encodeToString(code)
+        val codeStr = configJson.encodeToString(src)
+        // Serialize JsMinifyOptions to JSON
         val oStr = configJson.encodeToString(options)
         val res = minifySync(codeStr, oStr)
         return outputJson.decodeFromString<TransformOutput>(res)
@@ -784,7 +774,10 @@ class SwcNative {
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
-     * @param program AST program
+     * According to SWC documentation: https://swc.rs/docs/usage/core#minify
+     * The first parameter should be source code string, not AST.
+     *
+     * @param src Source code to minify
      * @param options Minify options
      * @param onSuccess Called with transform output when successful
      * @param onError Called with error message when failed
@@ -792,27 +785,22 @@ class SwcNative {
      * @example Java usage:
      * ```java
      * SwcNative swc = new SwcNative();
-     * swc.minifyAsync(program, options,
+     * swc.minifyAsync("function hello() { console.log('Hello'); }", options,
      *     (TransformOutput output) -> System.out.println(output.getCode()),
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
      */
     fun minifyAsync(
-        program: Program,
-        options: Options,
+        src: String,
+        options: JsMinifyOptions = JsMinifyOptions(),
         onSuccess: (TransformOutput) -> Unit,
         onError: (String) -> Unit
     ) {
         try {
-            // Rust minify expects code string, not AST JSON
-            // First convert Program to code using printSync
-            // printSync internally handles ctxt field fixes
-            val printResult = printSync(program, options)
-            val code = printResult.code
-
             // Minify expects MinifyTarget::Single(String), so wrap in quotes
-            val codeStr = configJson.encodeToString(code)
+            val codeStr = configJson.encodeToString(src)
+            // Serialize JsMinifyOptions to JSON
             val oStr = configJson.encodeToString(options)
 
             minifyAsync(
@@ -834,7 +822,7 @@ class SwcNative {
                 }
             )
         } catch (e: Exception) {
-            onError("Failed to convert AST to code: ${e.message}")
+            onError("Failed to serialize code: ${e.message}")
         }
     }
 
@@ -972,17 +960,20 @@ class SwcNative {
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [minifyAsync] method instead.
      *
+     * According to SWC documentation: https://swc.rs/docs/usage/core#minify
+     * The first parameter should be source code string, not AST.
+     *
      * @throws RuntimeException if minify fails
-     * @param program AST program
+     * @param src Source code to minify
      * @param options Minify options
      * @return Transform output
      */
     suspend fun minifyAsync(
-        program: Program,
-        options: Options
+        src: String,
+        options: JsMinifyOptions = JsMinifyOptions()
     ): TransformOutput = suspendCoroutine { continuation ->
         minifyAsync(
-            program = program,
+            src = src,
             options = options,
             onSuccess = { continuation.resume(it) },
             onError = { error ->

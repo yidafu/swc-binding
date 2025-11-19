@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.064751
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.222794
 
 package dev.yidafu.swc.generated.dsl
 
@@ -58,13 +58,6 @@ import kotlin.Unit
 
 /**
  * ArrayPattern#elements: Array<Pattern?>?
- * extension function for create Array<Pattern?>? -> BindingIdentifier
- */
-public fun ArrayPattern.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
-    BindingIdentifierImpl().apply(block)
-
-/**
- * ArrayPattern#elements: Array<Pattern?>?
  * extension function for create Array<Pattern?>? -> ObjectPattern
  */
 public fun ArrayPattern.objectPattern(block: ObjectPattern.() -> Unit): ObjectPattern =
@@ -89,13 +82,6 @@ public fun ArrayPattern.restElement(block: RestElement.() -> Unit): RestElement 
  * extension function for create Array<Pattern?>? -> Invalid
  */
 public fun ArrayPattern.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * ArrayPattern#elements: Array<Pattern?>?
- * extension function for create Array<Pattern?>? -> Identifier
- */
-public fun ArrayPattern.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ArrayPattern#elements: Array<Pattern?>?
@@ -236,13 +222,6 @@ public fun ArrayPattern.metaProperty(block: MetaProperty.() -> Unit): MetaProper
  */
 public fun ArrayPattern.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * ArrayPattern#elements: Array<Pattern?>?
- * extension function for create Array<Pattern?>? -> TemplateLiteral
- */
-public fun ArrayPattern.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * ArrayPattern#elements: Array<Pattern?>?
@@ -389,3 +368,24 @@ public fun ArrayPattern.numericLiteral(block: NumericLiteral.() -> Unit): Numeri
  */
 public fun ArrayPattern.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ArrayPattern#elements: Array<Pattern?>?
+ * extension function for create Array<Pattern?>? -> BindingIdentifier
+ */
+public fun ArrayPattern.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
+    BindingIdentifierImpl().apply(block)
+
+/**
+ * ArrayPattern#elements: Array<Pattern?>?
+ * extension function for create Array<Pattern?>? -> Identifier
+ */
+public fun ArrayPattern.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ArrayPattern#elements: Array<Pattern?>?
+ * extension function for create Array<Pattern?>? -> TemplateLiteral
+ */
+public fun ArrayPattern.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

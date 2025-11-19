@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.093039
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.243459
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.ClassDeclaration
 import dev.yidafu.swc.generated.ContinueStatement
@@ -37,13 +38,6 @@ import kotlin.Unit
  */
 public fun LabeledStatement.identifier(block: Identifier.() -> Unit): Identifier =
     IdentifierImpl().apply(block)
-
-/**
- * LabeledStatement#body: Statement?
- * extension function for create Statement? -> BlockStatement
- */
-public fun LabeledStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * LabeledStatement#body: Statement?
@@ -205,3 +199,10 @@ public fun LabeledStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Uni
  */
 public fun LabeledStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * LabeledStatement#body: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun LabeledStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

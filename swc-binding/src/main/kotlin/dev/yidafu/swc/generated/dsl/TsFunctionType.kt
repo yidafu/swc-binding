@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.146082
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.277308
 
 package dev.yidafu.swc.generated.dsl
 
@@ -11,13 +11,6 @@ import dev.yidafu.swc.generated.TsFunctionType
 import dev.yidafu.swc.generated.TsTypeAnnotation
 import dev.yidafu.swc.generated.TsTypeParameterDeclaration
 import kotlin.Unit
-
-/**
- * TsFunctionType#params: Array<TsFnParameter>?
- * extension function for create Array<TsFnParameter>? -> BindingIdentifier
- */
-public fun TsFunctionType.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
-    = BindingIdentifierImpl().apply(block)
 
 /**
  * TsFunctionType#params: Array<TsFnParameter>?
@@ -39,6 +32,13 @@ public fun TsFunctionType.objectPattern(block: ObjectPattern.() -> Unit): Object
  */
 public fun TsFunctionType.restElement(block: RestElement.() -> Unit): RestElement =
     RestElement().apply(block)
+
+/**
+ * TsFunctionType#params: Array<TsFnParameter>?
+ * extension function for create Array<TsFnParameter>? -> BindingIdentifier
+ */
+public fun TsFunctionType.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
 
 /**
  * TsFunctionType#typeParams: TsTypeParameterDeclaration?

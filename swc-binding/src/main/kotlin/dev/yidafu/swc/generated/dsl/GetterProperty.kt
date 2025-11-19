@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.056498
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.193087
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.GetterProperty
 import dev.yidafu.swc.generated.TsTypeAnnotation
 import kotlin.Unit
@@ -19,4 +20,4 @@ public fun GetterProperty.tsTypeAnnotation(block: TsTypeAnnotation.() -> Unit): 
  * extension function for create BlockStatement? -> BlockStatement
  */
 public fun GetterProperty.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+    BlockStatementImpl().apply(block)

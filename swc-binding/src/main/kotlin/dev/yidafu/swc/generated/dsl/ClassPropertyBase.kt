@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.916942
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.985541
 
 package dev.yidafu.swc.generated.dsl
 
@@ -51,13 +51,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ClassPropertyBase#value: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ClassPropertyBase.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ClassPropertyBase#value: Expression?
@@ -199,13 +192,6 @@ public fun ClassPropertyBase.metaProperty(block: MetaProperty.() -> Unit): MetaP
  */
 public fun ClassPropertyBase.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * ClassPropertyBase#value: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ClassPropertyBase.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * ClassPropertyBase#value: Expression?
@@ -358,6 +344,20 @@ public fun ClassPropertyBase.numericLiteral(block: NumericLiteral.() -> Unit): N
  */
 public fun ClassPropertyBase.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ClassPropertyBase#value: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ClassPropertyBase.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ClassPropertyBase#value: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ClassPropertyBase.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * ClassPropertyBase#typeAnnotation: TsTypeAnnotation?

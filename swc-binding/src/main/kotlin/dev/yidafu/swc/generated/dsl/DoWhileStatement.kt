@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.13741
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.282704
 
 package dev.yidafu.swc.generated.dsl
 
@@ -9,6 +9,7 @@ import dev.yidafu.swc.generated.AwaitExpression
 import dev.yidafu.swc.generated.BigIntLiteral
 import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -74,13 +75,6 @@ import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * DoWhileStatement#test: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun DoWhileStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * DoWhileStatement#test: Expression?
@@ -222,13 +216,6 @@ public fun DoWhileStatement.metaProperty(block: MetaProperty.() -> Unit): MetaPr
  */
 public fun DoWhileStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * DoWhileStatement#test: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun DoWhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * DoWhileStatement#test: Expression?
@@ -383,11 +370,18 @@ public fun DoWhileStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigI
     BigIntLiteral().apply(block)
 
 /**
- * DoWhileStatement#body: Statement?
- * extension function for create Statement? -> BlockStatement
+ * DoWhileStatement#test: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun DoWhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+public fun DoWhileStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * DoWhileStatement#test: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun DoWhileStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * DoWhileStatement#body: Statement?
@@ -549,3 +543,10 @@ public fun DoWhileStatement.tsEnumDeclaration(block: TsEnumDeclaration.() -> Uni
  */
 public fun DoWhileStatement.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * DoWhileStatement#body: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun DoWhileStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

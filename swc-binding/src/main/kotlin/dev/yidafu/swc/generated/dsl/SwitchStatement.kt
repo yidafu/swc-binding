@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.132551
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.238988
 
 package dev.yidafu.swc.generated.dsl
 
@@ -51,13 +51,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * SwitchStatement#discriminant: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun SwitchStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * SwitchStatement#discriminant: Expression?
@@ -198,13 +191,6 @@ public fun SwitchStatement.metaProperty(block: MetaProperty.() -> Unit): MetaPro
  */
 public fun SwitchStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * SwitchStatement#discriminant: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun SwitchStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * SwitchStatement#discriminant: Expression?
@@ -357,6 +343,20 @@ public fun SwitchStatement.numericLiteral(block: NumericLiteral.() -> Unit): Num
  */
 public fun SwitchStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * SwitchStatement#discriminant: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun SwitchStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SwitchStatement#discriminant: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun SwitchStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * SwitchStatement#cases: Array<SwitchCase>?

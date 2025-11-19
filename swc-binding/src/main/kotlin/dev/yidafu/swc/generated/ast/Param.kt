@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T21:58:43.964009
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T21:30:51.059888
 
 package dev.yidafu.swc.generated
 
@@ -12,6 +12,10 @@ import kotlin.Array
 import kotlin.Int
 import kotlin.Nothing
 import kotlin.OptIn
+@JsonClassDiscriminator("type")
+public interface Param : Node, HasSpan, HasDecorator {
+    public var pat: Pattern?
+}
 
 /**
  * conflict with @SerialName
@@ -22,11 +26,11 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("Parameter")
 @SwcDslMarker
-public class Param : Node, HasSpan, HasDecorator {
+public class ParamImpl : Param {
     @EncodeDefault
-    public var pat: Pattern? = null
-
+    public override var pat: Pattern? = null
+    @EncodeDefault
     public override var span: Span = emptySpan()
-
+    @EncodeDefault
     public override var decorators: Array<Decorator>? = null
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.10624
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.252914
 
 package dev.yidafu.swc.generated.dsl
 
@@ -50,13 +50,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ExpressionStatement#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ExpressionStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ExpressionStatement#expression: Expression?
@@ -198,13 +191,6 @@ public fun ExpressionStatement.metaProperty(block: MetaProperty.() -> Unit): Met
  */
 public fun ExpressionStatement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * ExpressionStatement#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ExpressionStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * ExpressionStatement#expression: Expression?
@@ -357,3 +343,17 @@ public fun ExpressionStatement.numericLiteral(block: NumericLiteral.() -> Unit):
  */
 public fun ExpressionStatement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ExpressionStatement#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ExpressionStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ExpressionStatement#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ExpressionStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

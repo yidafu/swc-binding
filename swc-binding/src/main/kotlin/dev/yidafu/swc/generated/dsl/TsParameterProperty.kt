@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.134347
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.262459
 
 package dev.yidafu.swc.generated.dsl
 
@@ -10,14 +10,14 @@ import kotlin.Unit
 
 /**
  * TsParameterProperty#param: TsParameterPropertyParameter?
- * extension function for create TsParameterPropertyParameter? -> BindingIdentifier
- */
-public fun TsParameterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
-
-/**
- * TsParameterProperty#param: TsParameterPropertyParameter?
  * extension function for create TsParameterPropertyParameter? -> AssignmentPattern
  */
 public fun TsParameterProperty.assignmentPattern(block: AssignmentPattern.() -> Unit):
     AssignmentPattern = AssignmentPattern().apply(block)
+
+/**
+ * TsParameterProperty#param: TsParameterPropertyParameter?
+ * extension function for create TsParameterPropertyParameter? -> BindingIdentifier
+ */
+public fun TsParameterProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)

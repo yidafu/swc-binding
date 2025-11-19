@@ -5,26 +5,24 @@ import dev.yidafu.swc.generated.dsl.*
 import dev.yidafu.swc.generated.dsl.createIdentifier
 import dev.yidafu.swc.generated.dsl.createModule
 import dev.yidafu.swc.generated.dsl.createVariableDeclarator
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.encodeToString
 
-class AstBasicsTest : AnnotationSpec() {
-    private val swc = SwcNative()
+class AstBasicsTest : ShouldSpec({
+    val swc = SwcNative()
 
-    @Test
-    fun `create Span with span DSL`() {
+    should("create Span with span DSL") {
         val s = span()
 
         s.shouldNotBeNull()
         s.shouldBeInstanceOf<Span>()
     }
 
-    @Test
-    fun `create Span with emptySpan DSL`() {
+    should("create Span with emptySpan DSL") {
         val s = emptySpan()
 
         s.shouldNotBeNull()
@@ -33,8 +31,7 @@ class AstBasicsTest : AnnotationSpec() {
         s.ctxt shouldBe 0
     }
 
-    @Test
-    fun `create Span with apply`() {
+    should("create Span with apply") {
         val s = span().apply {
             start = 10
             end = 20
@@ -46,8 +43,7 @@ class AstBasicsTest : AnnotationSpec() {
         s.ctxt shouldBe 0
     }
 
-    @Test
-    fun `serialize Span`() {
+    should("serialize Span") {
         val s = span().apply {
             start = 5
             end = 15
@@ -58,8 +54,7 @@ class AstBasicsTest : AnnotationSpec() {
         json.shouldNotBeNull()
     }
 
-    @Test
-    fun `deserialize Span`() {
+    should("deserialize Span") {
         val json = """{"start":10,"end":20,"ctxt":5}"""
         val s = astJson.decodeFromString<Span>(json)
 
@@ -68,8 +63,7 @@ class AstBasicsTest : AnnotationSpec() {
         s.ctxt shouldBe 5
     }
 
-    @Test
-    fun `serialize Span includes ctxt field`() {
+    should("serialize Span includes ctxt field") {
         val s = span().apply {
             start = 5
             end = 15
@@ -82,8 +76,7 @@ class AstBasicsTest : AnnotationSpec() {
         json shouldBe """{"start":5,"end":15,"ctxt":2}"""
     }
 
-    @Test
-    fun `serialize Span with default ctxt includes ctxt field`() {
+    should("serialize Span with default ctxt includes ctxt field") {
         val s = span().apply {
             start = 1
             end = 10
@@ -98,8 +91,7 @@ class AstBasicsTest : AnnotationSpec() {
         json shouldContain "\"ctxt\":0"
     }
 
-    @Test
-    fun `serialize Span with zero ctxt includes ctxt field`() {
+    should("serialize Span with zero ctxt includes ctxt field") {
         val s = span().apply {
             start = 0
             end = 0
@@ -113,8 +105,7 @@ class AstBasicsTest : AnnotationSpec() {
         json shouldContain "\"ctxt\""
     }
 
-    @Test
-    fun `deserialize Span without ctxt field uses default`() {
+    should("deserialize Span without ctxt field uses default") {
         // 测试从缺少 ctxt 字段的 JSON 反序列化
         val json = """{"start":10,"end":20}"""
         val s = astJson.decodeFromString<Span>(json)
@@ -124,8 +115,7 @@ class AstBasicsTest : AnnotationSpec() {
         s.ctxt shouldBe 0 // 应该使用默认值
     }
 
-    @Test
-    fun `serialize Identifier with nested Span includes ctxt field`() {
+    should("serialize Identifier with nested Span includes ctxt field") {
         // 测试嵌套在 AST 节点中的 Span 是否包含 ctxt 字段
         val id = createIdentifier {
             value = "testVar"
@@ -147,8 +137,7 @@ class AstBasicsTest : AnnotationSpec() {
         spanJson shouldContain "\"ctxt\""
     }
 
-    @Test
-    fun `serialize Module with nested Spans includes ctxt fields`() {
+    should("serialize Module with nested Spans includes ctxt fields") {
         // 测试包含多个嵌套 Span 的复杂 AST 节点
         val module = swc.parseSync(
             "const x = 1;",
@@ -213,8 +202,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `printSync serialized JSON includes ctxt in all Spans`() {
+    should("printSync serialized JSON includes ctxt in all Spans") {
         // 测试 printSync 序列化的 JSON 中所有 Span 都包含 ctxt
         val module = swc.parseSync(
             "const x = 1; const y = 2;",
@@ -277,8 +265,7 @@ class AstBasicsTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `create IdentifierImpl`() {
+    should("create IdentifierImpl") {
         val id = createIdentifier {
             value = "testVar"
             optional = false
@@ -289,8 +276,7 @@ class AstBasicsTest : AnnotationSpec() {
         id.optional shouldBe false
     }
 
-    @Test
-    fun `serialize Identifier`() {
+    should("serialize Identifier") {
         val id = createIdentifier {
             value = "myVar"
             optional = false
@@ -301,8 +287,7 @@ class AstBasicsTest : AnnotationSpec() {
         json.shouldNotBeNull()
     }
 
-    @Test
-    fun `deserialize Identifier`() {
+    should("deserialize Identifier") {
         val json = """{"type":"Identifier","value":"test","optional":false,"span":{"start":0,"end":0,"ctxt":0}}"""
         val id = astJson.decodeFromString<Identifier>(json)
 
@@ -310,8 +295,7 @@ class AstBasicsTest : AnnotationSpec() {
         id.optional shouldBe false
     }
 
-    @Test
-    fun `create StringLiteralImpl`() {
+    should("create StringLiteralImpl") {
         val lit = StringLiteral().apply {
             value = "hello"
             raw = "\"hello\""
@@ -322,8 +306,7 @@ class AstBasicsTest : AnnotationSpec() {
         lit.raw shouldBe "\"hello\""
     }
 
-    @Test
-    fun `create NumericLiteralImpl`() {
+    should("create NumericLiteralImpl") {
         val lit = NumericLiteral().apply {
             value = 42.0
             raw = "42"
@@ -334,8 +317,7 @@ class AstBasicsTest : AnnotationSpec() {
         lit.raw shouldBe "42"
     }
 
-    @Test
-    fun `create BooleanLiteralImpl`() {
+    should("create BooleanLiteralImpl") {
         val lit = BooleanLiteral().apply {
             value = true
             span = emptySpan()
@@ -344,8 +326,7 @@ class AstBasicsTest : AnnotationSpec() {
         lit.value shouldBe true
     }
 
-    @Test
-    fun `create NullLiteralImpl`() {
+    should("create NullLiteralImpl") {
         val lit = NullLiteral().apply {
             span = emptySpan()
         }
@@ -353,8 +334,7 @@ class AstBasicsTest : AnnotationSpec() {
         lit.shouldNotBeNull()
     }
 
-    @Test
-    fun `create ModuleImpl with apply`() {
+    should("create ModuleImpl with apply") {
         val mod = Module().apply {
             span = emptySpan()
             body = arrayOf()
@@ -365,8 +345,7 @@ class AstBasicsTest : AnnotationSpec() {
         mod.body!!.size shouldBe 0
     }
 
-    @Test
-    fun `use module DSL`() {
+    should("use module DSL") {
         val mod = module {
             span = emptySpan()
             body = arrayOf()
@@ -376,8 +355,7 @@ class AstBasicsTest : AnnotationSpec() {
         mod.shouldBeInstanceOf<Module>()
     }
 
-    @Test
-    fun `serialize Module`() {
+    should("serialize Module") {
         val mod = createModule {
             span = emptySpan()
             body = arrayOf()
@@ -387,8 +365,7 @@ class AstBasicsTest : AnnotationSpec() {
         json.shouldNotBeNull()
     }
 
-    @Test
-    fun `create VariableDeclaratorImpl`() {
+    should("create VariableDeclaratorImpl") {
         val decl = createVariableDeclarator {
             span = emptySpan()
             id = createIdentifier {
@@ -406,8 +383,7 @@ class AstBasicsTest : AnnotationSpec() {
         decl.id.shouldBeInstanceOf<Identifier>()
     }
 
-    @Test
-    fun `Span with same values`() {
+    should("Span with same values") {
         val s1 = span().apply { start = 1; end = 2; ctxt = 0 }
         val s2 = span().apply { start = 1; end = 2; ctxt = 0 }
 
@@ -417,4 +393,4 @@ class AstBasicsTest : AnnotationSpec() {
         s1.end shouldBe s2.end
         s1.ctxt shouldBe s2.ctxt
     }
-}
+})

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.000817
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.097969
 
 package dev.yidafu.swc.generated.dsl
 
@@ -14,13 +14,6 @@ import kotlin.Unit
 
 /**
  * JSXOpeningElement#name: JSXElementName?
- * extension function for create JSXElementName? -> Identifier
- */
-public fun JSXOpeningElement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * JSXOpeningElement#name: JSXElementName?
  * extension function for create JSXElementName? -> JSXMemberExpression
  */
 public fun JSXOpeningElement.jSXMemberExpression(block: JSXMemberExpression.() -> Unit):
@@ -32,6 +25,13 @@ public fun JSXOpeningElement.jSXMemberExpression(block: JSXMemberExpression.() -
  */
 public fun JSXOpeningElement.jSXNamespacedName(block: JSXNamespacedName.() -> Unit):
     JSXNamespacedName = JSXNamespacedName().apply(block)
+
+/**
+ * JSXOpeningElement#name: JSXElementName?
+ * extension function for create JSXElementName? -> Identifier
+ */
+public fun JSXOpeningElement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * JSXOpeningElement#attributes: Array<JSXAttributeOrSpread>?

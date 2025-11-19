@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.959447
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.094116
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * SequenceExpression#expressions: Array<Expression>?
- * extension function for create Array<Expression>? -> Identifier
- */
-public fun SequenceExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * SequenceExpression#expressions: Array<Expression>?
@@ -190,13 +183,6 @@ public fun SequenceExpression.metaProperty(block: MetaProperty.() -> Unit): Meta
  */
 public fun SequenceExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * SequenceExpression#expressions: Array<Expression>?
- * extension function for create Array<Expression>? -> TemplateLiteral
- */
-public fun SequenceExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * SequenceExpression#expressions: Array<Expression>?
@@ -349,3 +335,17 @@ public fun SequenceExpression.numericLiteral(block: NumericLiteral.() -> Unit): 
  */
 public fun SequenceExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * SequenceExpression#expressions: Array<Expression>?
+ * extension function for create Array<Expression>? -> Identifier
+ */
+public fun SequenceExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SequenceExpression#expressions: Array<Expression>?
+ * extension function for create Array<Expression>? -> TemplateLiteral
+ */
+public fun SequenceExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

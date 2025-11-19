@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.940916
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.993568
 
 package dev.yidafu.swc.generated.dsl
 
@@ -59,13 +59,6 @@ import kotlin.Unit
 
 /**
  * VariableDeclarator#id: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun VariableDeclarator.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
-
-/**
- * VariableDeclarator#id: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun VariableDeclarator.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -97,13 +90,6 @@ public fun VariableDeclarator.restElement(block: RestElement.() -> Unit): RestEl
  * extension function for create Expression? -> Invalid
  */
 public fun VariableDeclarator.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * VariableDeclarator#init: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun VariableDeclarator.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * VariableDeclarator#init: Expression?
@@ -245,13 +231,6 @@ public fun VariableDeclarator.metaProperty(block: MetaProperty.() -> Unit): Meta
  */
 public fun VariableDeclarator.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * VariableDeclarator#init: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun VariableDeclarator.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * VariableDeclarator#init: Expression?
@@ -398,3 +377,24 @@ public fun VariableDeclarator.numericLiteral(block: NumericLiteral.() -> Unit): 
  */
 public fun VariableDeclarator.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * VariableDeclarator#id: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun VariableDeclarator.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
+
+/**
+ * VariableDeclarator#init: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun VariableDeclarator.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * VariableDeclarator#init: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun VariableDeclarator.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

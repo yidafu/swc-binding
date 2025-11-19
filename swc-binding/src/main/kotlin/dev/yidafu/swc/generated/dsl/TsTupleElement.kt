@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.205209
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.351351
 
 package dev.yidafu.swc.generated.dsl
 
@@ -81,13 +81,6 @@ import kotlin.Unit
 
 /**
  * TsTupleElement#label: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun TsTupleElement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
-    = BindingIdentifierImpl().apply(block)
-
-/**
- * TsTupleElement#label: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun TsTupleElement.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -119,13 +112,6 @@ public fun TsTupleElement.restElement(block: RestElement.() -> Unit): RestElemen
  * extension function for create Pattern? -> Invalid
  */
 public fun TsTupleElement.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * TsTupleElement#label: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun TsTupleElement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsTupleElement#label: Pattern?
@@ -266,13 +252,6 @@ public fun TsTupleElement.metaProperty(block: MetaProperty.() -> Unit): MetaProp
  */
 public fun TsTupleElement.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsTupleElement#label: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun TsTupleElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsTupleElement#label: Pattern?
@@ -419,6 +398,27 @@ public fun TsTupleElement.numericLiteral(block: NumericLiteral.() -> Unit): Nume
  */
 public fun TsTupleElement.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsTupleElement#label: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun TsTupleElement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
+
+/**
+ * TsTupleElement#label: Pattern?
+ * extension function for create Pattern? -> Identifier
+ */
+public fun TsTupleElement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsTupleElement#label: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun TsTupleElement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsTupleElement#ty: TsType?

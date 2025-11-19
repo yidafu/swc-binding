@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.970337
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.087008
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ConditionalExpression#alternate: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ConditionalExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ConditionalExpression#alternate: Expression?
@@ -190,13 +183,6 @@ public fun ConditionalExpression.metaProperty(block: MetaProperty.() -> Unit): M
  */
 public fun ConditionalExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression
     = AwaitExpression().apply(block)
-
-/**
- * ConditionalExpression#alternate: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ConditionalExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
-    = TemplateLiteralImpl().apply(block)
 
 /**
  * ConditionalExpression#alternate: Expression?
@@ -352,3 +338,17 @@ public fun ConditionalExpression.numericLiteral(block: NumericLiteral.() -> Unit
  */
 public fun ConditionalExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ConditionalExpression#alternate: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ConditionalExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ConditionalExpression#alternate: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ConditionalExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
+    = TemplateLiteralImpl().apply(block)

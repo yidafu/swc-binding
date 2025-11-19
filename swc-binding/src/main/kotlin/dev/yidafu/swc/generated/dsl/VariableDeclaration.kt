@@ -1,9 +1,10 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.889231
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.960459
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.VariableDeclarator
+import dev.yidafu.swc.generated.VariableDeclaratorImpl
 import kotlin.Unit
 
 /**
@@ -11,4 +12,4 @@ import kotlin.Unit
  * extension function for create Array<VariableDeclarator>? -> VariableDeclarator
  */
 public fun VariableDeclaration.variableDeclarator(block: VariableDeclarator.() -> Unit):
-    VariableDeclarator = VariableDeclarator().apply(block)
+    VariableDeclarator = VariableDeclaratorImpl().apply(block)

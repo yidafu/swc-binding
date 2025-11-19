@@ -5,16 +5,14 @@ import dev.yidafu.swc.generated.ArrayExpression
 import dev.yidafu.swc.generated.NumericLiteral
 import dev.yidafu.swc.generated.dsl.argument
 import dev.yidafu.swc.generated.dsl.createArrayExpression
-import io.kotest.core.spec.style.AnnotationSpec
-import kotlin.test.Test
+import io.kotest.core.spec.style.ShouldSpec
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class ArrayExpressionTest : AnnotationSpec() {
+class ArrayExpressionTest : ShouldSpec({
 
-    @Test
-    fun `ArrayExpression elements allows holes (null entries)`() {
+    should("ArrayExpression elements allows holes (null entries)") {
         val arr: ArrayExpression = ArrayExpression().apply {
             elements = arrayOf(
                 null, // hole
@@ -35,8 +33,7 @@ class ArrayExpressionTest : AnnotationSpec() {
         assertNull(arr.elements!![2])
     }
 
-    @Test
-    fun `DSL createArrayExpression works with holes`() {
+    should("DSL createArrayExpression works with holes") {
         val arr = createArrayExpression {
             elements = arrayOf(
                 null,
@@ -56,4 +53,4 @@ class ArrayExpressionTest : AnnotationSpec() {
         assertNotNull(arr.elements!![1])
         assertNull(arr.elements!![2])
     }
-}
+})

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.226877
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.341454
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsConstAssertion#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsConstAssertion.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsConstAssertion#expression: Expression?
@@ -197,13 +190,6 @@ public fun TsConstAssertion.metaProperty(block: MetaProperty.() -> Unit): MetaPr
  */
 public fun TsConstAssertion.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsConstAssertion#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsConstAssertion.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsConstAssertion#expression: Expression?
@@ -349,3 +335,17 @@ public fun TsConstAssertion.numericLiteral(block: NumericLiteral.() -> Unit): Nu
  */
 public fun TsConstAssertion.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsConstAssertion#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsConstAssertion.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsConstAssertion#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsConstAssertion.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

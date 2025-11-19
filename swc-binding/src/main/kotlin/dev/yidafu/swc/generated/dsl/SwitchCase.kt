@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.152909
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.256337
 
 package dev.yidafu.swc.generated.dsl
 
@@ -9,6 +9,7 @@ import dev.yidafu.swc.generated.AwaitExpression
 import dev.yidafu.swc.generated.BigIntLiteral
 import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -75,13 +76,6 @@ import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * SwitchCase#test: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun SwitchCase.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * SwitchCase#test: Expression?
@@ -222,13 +216,6 @@ public fun SwitchCase.metaProperty(block: MetaProperty.() -> Unit): MetaProperty
  */
 public fun SwitchCase.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * SwitchCase#test: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun SwitchCase.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * SwitchCase#test: Expression?
@@ -383,11 +370,18 @@ public fun SwitchCase.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLite
     BigIntLiteral().apply(block)
 
 /**
- * SwitchCase#consequent: Array<Statement>?
- * extension function for create Array<Statement>? -> BlockStatement
+ * SwitchCase#test: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun SwitchCase.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+public fun SwitchCase.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * SwitchCase#test: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun SwitchCase.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * SwitchCase#consequent: Array<Statement>?
@@ -556,3 +550,10 @@ public fun SwitchCase.tsEnumDeclaration(block: TsEnumDeclaration.() -> Unit): Ts
  */
 public fun SwitchCase.tsModuleDeclaration(block: TsModuleDeclaration.() -> Unit):
     TsModuleDeclaration = TsModuleDeclaration().apply(block)
+
+/**
+ * SwitchCase#consequent: Array<Statement>?
+ * extension function for create Array<Statement>? -> BlockStatement
+ */
+public fun SwitchCase.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)

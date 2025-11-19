@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.026151
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.168678
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ParenthesisExpression#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ParenthesisExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ParenthesisExpression#expression: Expression?
@@ -197,13 +190,6 @@ public fun ParenthesisExpression.metaProperty(block: MetaProperty.() -> Unit): M
  */
 public fun ParenthesisExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression
     = AwaitExpression().apply(block)
-
-/**
- * ParenthesisExpression#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ParenthesisExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
-    = TemplateLiteralImpl().apply(block)
 
 /**
  * ParenthesisExpression#expression: Expression?
@@ -352,3 +338,17 @@ public fun ParenthesisExpression.numericLiteral(block: NumericLiteral.() -> Unit
  */
 public fun ParenthesisExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * ParenthesisExpression#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ParenthesisExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ParenthesisExpression#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ParenthesisExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral
+    = TemplateLiteralImpl().apply(block)

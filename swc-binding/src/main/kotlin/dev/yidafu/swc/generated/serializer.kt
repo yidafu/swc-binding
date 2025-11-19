@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T00:48:35.79756
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T21:39:20.561688
 
 package dev.yidafu.swc.generated
 
@@ -130,9 +130,9 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(FunctionDeclaration::class)
         subclass(FunctionExpression::class)
         subclass(MethodProperty::class)
+        default { MethodProperty.serializer() }
       }
       polymorphic(HasDecorator::class) {
-        subclass(Param::class)
         subclass(TsParameterProperty::class)
       }
       polymorphic(HasInterpreter::class) {
@@ -142,7 +142,6 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
       polymorphic(HasSpan::class) {
         subclass(AssignmentPatternProperty::class)
         subclass(BigIntLiteral::class)
-        subclass(BlockStatement::class)
         subclass(BooleanLiteral::class)
         subclass(BreakStatement::class)
         subclass(CatchClause::class)
@@ -171,13 +170,11 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(ImportNamespaceSpecifier::class)
         subclass(Invalid::class)
         subclass(JSXAttribute::class)
-        subclass(JSXClosingElement::class)
         subclass(JSXClosingFragment::class)
         subclass(JSXElement::class)
         subclass(JSXEmptyExpression::class)
         subclass(JSXExpressionContainer::class)
         subclass(JSXFragment::class)
-        subclass(JSXOpeningElement::class)
         subclass(JSXOpeningFragment::class)
         subclass(JSXSpreadChild::class)
         subclass(JSXText::class)
@@ -190,7 +187,6 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(NamedImportSpecifier::class)
         subclass(NullLiteral::class)
         subclass(NumericLiteral::class)
-        subclass(Param::class)
         subclass(RegExpLiteral::class)
         subclass(ReturnStatement::class)
         subclass(Script::class)
@@ -236,7 +232,6 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsPropertySignature::class)
         subclass(TsRestType::class)
         subclass(TsSetterSignature::class)
-        subclass(TsTemplateLiteralTypeImpl::class)
         subclass(TsThisType::class)
         subclass(TsTupleElement::class)
         subclass(TsTupleType::class)
@@ -252,7 +247,6 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(TsTypeReference::class)
         subclass(TsUnionType::class)
         subclass(VariableDeclaration::class)
-        subclass(VariableDeclarator::class)
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
       }
@@ -380,7 +374,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(StringLiteral::class)
       }
       polymorphic(ModuleItem::class) {
-        subclass(BlockStatement::class)
+        subclass(BlockStatementImpl::class)
         subclass(BreakStatement::class)
         subclass(ClassDeclaration::class)
         subclass(ContinueStatement::class)
@@ -427,7 +421,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(BigIntLiteral::class)
         subclass(BinaryExpression::class)
         subclass(BindingIdentifierImpl::class)
-        subclass(BlockStatement::class)
+        subclass(BlockStatementImpl::class)
         subclass(BooleanLiteral::class)
         subclass(BreakStatement::class)
         subclass(CallExpression::class)
@@ -464,7 +458,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(ImportNamespaceSpecifier::class)
         subclass(Invalid::class)
         subclass(JSXAttribute::class)
-        subclass(JSXClosingElement::class)
+        subclass(JSXClosingElementImpl::class)
         subclass(JSXClosingFragment::class)
         subclass(JSXElement::class)
         subclass(JSXEmptyExpression::class)
@@ -472,7 +466,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(JSXFragment::class)
         subclass(JSXMemberExpression::class)
         subclass(JSXNamespacedName::class)
-        subclass(JSXOpeningElement::class)
+        subclass(JSXOpeningElementImpl::class)
         subclass(JSXOpeningFragment::class)
         subclass(JSXSpreadChild::class)
         subclass(JSXText::class)
@@ -493,7 +487,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(ObjectExpression::class)
         subclass(ObjectPattern::class)
         subclass(OptionalChainingExpression::class)
-        subclass(Param::class)
+        subclass(ParamImpl::class)
         subclass(ParenthesisExpression::class)
         subclass(PrivateMethod::class)
         subclass(PrivateName::class)
@@ -575,7 +569,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(UnaryExpression::class)
         subclass(UpdateExpression::class)
         subclass(VariableDeclaration::class)
-        subclass(VariableDeclarator::class)
+        subclass(VariableDeclaratorImpl::class)
         subclass(WhileStatement::class)
         subclass(WithStatement::class)
         subclass(YieldExpression::class)
@@ -663,7 +657,7 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
         subclass(StringLiteral::class)
       }
       polymorphic(Statement::class) {
-        subclass(BlockStatement::class)
+        subclass(BlockStatementImpl::class)
         subclass(BreakStatement::class)
         subclass(ClassDeclaration::class)
         subclass(ContinueStatement::class)
@@ -788,6 +782,21 @@ public val swcSerializersModule: SerializersModule = SerializersModule {
       }
       polymorphic(TsTemplateLiteralType::class) {
         subclass(TsTemplateLiteralTypeImpl::class)
+      }
+      polymorphic(VariableDeclarator::class) {
+        subclass(VariableDeclaratorImpl::class)
+      }
+      polymorphic(Param::class) {
+        subclass(ParamImpl::class)
+      }
+      polymorphic(BlockStatement::class) {
+        subclass(BlockStatementImpl::class)
+      }
+      polymorphic(JSXOpeningElement::class) {
+        subclass(JSXOpeningElementImpl::class)
+      }
+      polymorphic(JSXClosingElement::class) {
+        subclass(JSXClosingElementImpl::class)
       }
     }
 

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.931014
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.986845
 
 package dev.yidafu.swc.generated.dsl
 
@@ -59,13 +59,6 @@ import kotlin.Unit
 
 /**
  * Param#pat: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
- */
-public fun Param.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
-    BindingIdentifierImpl().apply(block)
-
-/**
- * Param#pat: Pattern?
  * extension function for create Pattern? -> ArrayPattern
  */
 public fun Param.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -97,13 +90,6 @@ public fun Param.restElement(block: RestElement.() -> Unit): RestElement =
  * extension function for create Pattern? -> Invalid
  */
 public fun Param.invalid(block: Invalid.() -> Unit): Invalid = Invalid().apply(block)
-
-/**
- * Param#pat: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun Param.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * Param#pat: Pattern?
@@ -244,13 +230,6 @@ public fun Param.metaProperty(block: MetaProperty.() -> Unit): MetaProperty =
  */
 public fun Param.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * Param#pat: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun Param.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * Param#pat: Pattern?
@@ -396,3 +375,24 @@ public fun Param.numericLiteral(block: NumericLiteral.() -> Unit): NumericLitera
  */
 public fun Param.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * Param#pat: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun Param.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier =
+    BindingIdentifierImpl().apply(block)
+
+/**
+ * Param#pat: Pattern?
+ * extension function for create Pattern? -> Identifier
+ */
+public fun Param.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * Param#pat: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun Param.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

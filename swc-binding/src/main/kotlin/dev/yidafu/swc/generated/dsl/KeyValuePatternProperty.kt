@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.073505
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.229824
 
 package dev.yidafu.swc.generated.dsl
 
@@ -60,13 +60,6 @@ import kotlin.Unit
 
 /**
  * KeyValuePatternProperty#value: Pattern?
- * extension function for create Pattern? -> Identifier
- */
-public fun KeyValuePatternProperty.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * KeyValuePatternProperty#value: Pattern?
  * extension function for create Pattern? -> StringLiteral
  */
 public fun KeyValuePatternProperty.stringLiteral(block: StringLiteral.() -> Unit): StringLiteral =
@@ -95,10 +88,10 @@ public fun KeyValuePatternProperty.computedPropName(block: ComputedPropName.() -
 
 /**
  * KeyValuePatternProperty#value: Pattern?
- * extension function for create Pattern? -> BindingIdentifier
+ * extension function for create Pattern? -> Identifier
  */
-public fun KeyValuePatternProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
+public fun KeyValuePatternProperty.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * KeyValuePatternProperty#value: Pattern?
@@ -279,13 +272,6 @@ public fun KeyValuePatternProperty.awaitExpression(block: AwaitExpression.() -> 
 
 /**
  * KeyValuePatternProperty#value: Pattern?
- * extension function for create Pattern? -> TemplateLiteral
- */
-public fun KeyValuePatternProperty.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
-
-/**
- * KeyValuePatternProperty#value: Pattern?
  * extension function for create Pattern? -> TaggedTemplateExpression
  */
 public
@@ -410,3 +396,17 @@ public fun KeyValuePatternProperty.nullLiteral(block: NullLiteral.() -> Unit): N
  */
 public fun KeyValuePatternProperty.regExpLiteral(block: RegExpLiteral.() -> Unit): RegExpLiteral =
     RegExpLiteral().apply(block)
+
+/**
+ * KeyValuePatternProperty#value: Pattern?
+ * extension function for create Pattern? -> BindingIdentifier
+ */
+public fun KeyValuePatternProperty.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
+
+/**
+ * KeyValuePatternProperty#value: Pattern?
+ * extension function for create Pattern? -> TemplateLiteral
+ */
+public fun KeyValuePatternProperty.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)

@@ -2,59 +2,33 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.createIdentifier
+import dev.yidafu.swc.generated.dsl.createVariableDeclarator
 import dev.yidafu.swc.generated.dsl.esParseOptions
-import dev.yidafu.swc.generated.dsl.module
 import dev.yidafu.swc.generated.dsl.options
 import dev.yidafu.swc.generated.dsl.tsParseOptions
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.encodeToString
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Tests for DSL functions in dsl.kt
+ * Tests for DSL configuration functions (options, parser configs, emptySpan)
+ * Note: Module DSL tests have been moved to DSLBuildBasicTest.kt
  */
-class DslTest : AnnotationSpec() {
-
-    // ==================== module DSL tests ====================
-
-    @Test
-    fun `module DSL creates Module`() {
-        val mod = Module().apply {
-            span = Span()
-            body = arrayOf()
-        }
-
-        assertNotNull(mod)
-        mod.shouldBeInstanceOf<Module>()
-    }
-
-    @Test
-    fun `module DSL with body`() {
-        val mod = Module().apply {
-            span = Span()
-            body = arrayOf() // Empty body for simplicity
-        }
-
-        assertNotNull(mod.body)
-        assertTrue(mod.body!!.size == 0)
-    }
+class DslTest : ShouldSpec({
 
     // ==================== options DSL tests ====================
 
-    @Test
-    fun `options DSL creates Options`() {
+    should("options DSL creates Options") {
         val opts = options { }
 
         assertNotNull(opts)
         opts.shouldBeInstanceOf<Options>()
     }
 
-    @Test
-    fun `options DSL with jsc config`() {
+    should("options DSL with jsc config") {
         val opts = options {
             jsc = JscConfig().apply { parser = esParseOptions { } }
         }
@@ -65,16 +39,14 @@ class DslTest : AnnotationSpec() {
 
     // ==================== tsParserConfig DSL tests ====================
 
-    @Test
-    fun `tsParseOptions DSL creates TsParserConfig`() {
+    should("tsParseOptions DSL creates TsParserConfig") {
         val config = tsParseOptions { }
 
         assertNotNull(config)
         config.shouldBeInstanceOf<TsParserConfig>()
     }
 
-    @Test
-    fun `tsParseOptions DSL with target`() {
+    should("tsParseOptions DSL with target") {
         val config = tsParseOptions {
             target = JscTarget.ES2020
         }
@@ -83,8 +55,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(JscTarget.ES2020, config.target)
     }
 
-    @Test
-    fun `tsParseOptions DSL with comments`() {
+    should("tsParseOptions DSL with comments") {
         val config = tsParseOptions {
             comments = true
         }
@@ -95,16 +66,14 @@ class DslTest : AnnotationSpec() {
 
     // ==================== esParserConfig DSL tests ====================
 
-    @Test
-    fun `esParseOptions DSL creates EsParserConfig`() {
+    should("esParseOptions DSL creates EsParserConfig") {
         val config = esParseOptions { }
 
         assertNotNull(config)
         config.shouldBeInstanceOf<EsParserConfig>()
     }
 
-    @Test
-    fun `esParseOptions DSL with target`() {
+    should("esParseOptions DSL with target") {
         val config = esParseOptions {
             target = JscTarget.ES2015
         }
@@ -113,8 +82,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(JscTarget.ES2015, config.target)
     }
 
-    @Test
-    fun `esParseOptions DSL with jsx`() {
+    should("esParseOptions DSL with jsx") {
         val config = esParseOptions {
             jsx = true
         }
@@ -123,8 +91,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(true, config.jsx)
     }
 
-    @Test
-    fun `esParseOptions DSL with multiple options`() {
+    should("esParseOptions DSL with multiple options") {
         val config = esParseOptions {
             target = JscTarget.ES2020
             comments = true
@@ -142,16 +109,14 @@ class DslTest : AnnotationSpec() {
 
     // ==================== esParseOptions DSL tests (more) ====================
 
-    @Test
-    fun `esParseOptions DSL with empty block`() {
+    should("esParseOptions DSL with empty block") {
         val config = esParseOptions()
 
         assertNotNull(config)
         config.shouldBeInstanceOf<EsParserConfig>()
     }
 
-    @Test
-    fun `esParseOptions DSL with options`() {
+    should("esParseOptions DSL with options") {
         val config = esParseOptions {
             target = JscTarget.ES2018
             jsx = false
@@ -168,8 +133,7 @@ class DslTest : AnnotationSpec() {
 
     // ==================== emptySpan DSL tests ====================
 
-    @Test
-    fun `emptySpan creates Span with zeros`() {
+    should("emptySpan creates Span with zeros") {
         val s = emptySpan()
 
         assertNotNull(s)
@@ -178,8 +142,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(0, s.ctxt)
     }
 
-    @Test
-    fun `emptySpan is consistent`() {
+    should("emptySpan is consistent") {
         val s1 = emptySpan()
         val s2 = emptySpan()
 
@@ -190,8 +153,7 @@ class DslTest : AnnotationSpec() {
 
     // ==================== DSL composition tests ====================
 
-    @Test
-    fun `compose options with parser config`() {
+    should("compose options with parser config") {
         val opts = options {
             jsc = JscConfig().apply {
                 parser = esParseOptions {
@@ -209,41 +171,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(true, parser.jsx)
     }
 
-    // (compose module with span removed)
-
-    @Test
-    fun `compose module with emptySpan`() {
-        val mod = module {
-            span = emptySpan()
-            body = arrayOf()
-        }
-
-        assertNotNull(mod)
-        assertNotNull(mod.span)
-        assertEquals(0, mod.span!!.start)
-        assertEquals(0, mod.span!!.end)
-        assertEquals(0, mod.span!!.ctxt)
-    }
-
-    // ==================== Edge cases ====================
-
-    @Test
-    fun `span DSL with null parameters`() {
-        val s = Span().apply {
-            start = 0
-            end = 0
-            ctxt = 0
-        }
-
-        assertNotNull(s)
-        // Should use default values when null
-        assertEquals(0, s.start)
-        assertEquals(0, s.end)
-        assertEquals(0, s.ctxt)
-    }
-
-    @Test
-    fun `options DSL with nested configurations`() {
+    should("options DSL with nested configurations") {
         val opts = options {
             jsc = JscConfig().apply {
                 parser = tsParseOptions {
@@ -258,10 +186,25 @@ class DslTest : AnnotationSpec() {
         assertEquals(JscTarget.ES2020, opts.jsc!!.target)
     }
 
+    // ==================== Edge cases ====================
+
+    should("span DSL with null parameters") {
+        val s = Span().apply {
+            start = 0
+            end = 0
+            ctxt = 0
+        }
+
+        assertNotNull(s)
+        // Should use default values when null
+        assertEquals(0, s.start)
+        assertEquals(0, s.end)
+        assertEquals(0, s.ctxt)
+    }
+
     // ==================== Span default value tests ====================
 
-    @Test
-    fun `Identifier has default span as emptySpan`() {
+    should("Identifier has default span as emptySpan") {
         val identifier = createIdentifier { }
 
         assertNotNull(identifier.span)
@@ -270,8 +213,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(0, identifier.span.ctxt)
     }
 
-    @Test
-    fun `Module has default span as emptySpan`() {
+    should("Module has default span as emptySpan") {
         val module = Module()
 
         assertNotNull(module.span)
@@ -280,8 +222,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(0, module.span.ctxt)
     }
 
-    @Test
-    fun `ArrayExpression has default span as emptySpan`() {
+    should("ArrayExpression has default span as emptySpan") {
         val arrayExpr = ArrayExpression()
 
         assertNotNull(arrayExpr.span)
@@ -290,8 +231,7 @@ class DslTest : AnnotationSpec() {
         assertEquals(0, arrayExpr.span.ctxt)
     }
 
-    @Test
-    fun `serialize Identifier with default span includes ctxt field`() {
+    should("serialize Identifier with default span includes ctxt field") {
         val identifier = createIdentifier {
             value = "test"
             optional = false
@@ -305,8 +245,7 @@ class DslTest : AnnotationSpec() {
         assertTrue(json.contains("\"ctxt\":0"), "JSON should contain ctxt:0: $json")
     }
 
-    @Test
-    fun `serialize Module with default span includes ctxt field`() {
+    should("serialize Module with default span includes ctxt field") {
         val module = Module().apply {
             body = arrayOf()
             // span 使用默认值 emptySpan()
@@ -329,8 +268,7 @@ class DslTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `serialize ArrayExpression with default span includes ctxt field`() {
+    should("serialize ArrayExpression with default span includes ctxt field") {
         val arrayExpr = ArrayExpression().apply {
             elements = arrayOf()
             // span 使用默认值 emptySpan()
@@ -342,15 +280,14 @@ class DslTest : AnnotationSpec() {
         assertTrue(json.contains("\"ctxt\""), "JSON should contain ctxt field: $json")
     }
 
-    @Test
-    fun `serialize complex AST with multiple default spans includes ctxt fields`() {
+    should("serialize complex AST with multiple default spans includes ctxt fields") {
         val module = Module().apply {
             body = arrayOf(
                 VariableDeclaration().apply {
                     kind = VariableDeclarationKind.CONST
                     declare = false
                     declarations = arrayOf(
-                        VariableDeclarator().apply {
+                        createVariableDeclarator {
                             id = createIdentifier {
                                 value = "x"
                                 optional = false
@@ -413,4 +350,4 @@ class DslTest : AnnotationSpec() {
         assertTrue(spanCount > 0, "Should find at least one span object")
         assertEquals(spanCount, spansWithCtxt, "All span objects should contain ctxt field")
     }
-}
+})

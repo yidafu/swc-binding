@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.19881
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.316107
 
 package dev.yidafu.swc.generated.dsl
 
@@ -57,13 +57,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsMethodSignature#key: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsMethodSignature.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsMethodSignature#key: Expression?
@@ -205,13 +198,6 @@ public fun TsMethodSignature.metaProperty(block: MetaProperty.() -> Unit): MetaP
  */
 public fun TsMethodSignature.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsMethodSignature#key: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsMethodSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsMethodSignature#key: Expression?
@@ -366,11 +352,18 @@ public fun TsMethodSignature.bigIntLiteral(block: BigIntLiteral.() -> Unit): Big
     BigIntLiteral().apply(block)
 
 /**
- * TsMethodSignature#params: Array<TsFnParameter>?
- * extension function for create Array<TsFnParameter>? -> BindingIdentifier
+ * TsMethodSignature#key: Expression?
+ * extension function for create Expression? -> Identifier
  */
-public fun TsMethodSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
-    BindingIdentifier = BindingIdentifierImpl().apply(block)
+public fun TsMethodSignature.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsMethodSignature#key: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsMethodSignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsMethodSignature#params: Array<TsFnParameter>?
@@ -392,6 +385,13 @@ public fun TsMethodSignature.objectPattern(block: ObjectPattern.() -> Unit): Obj
  */
 public fun TsMethodSignature.restElement(block: RestElement.() -> Unit): RestElement =
     RestElement().apply(block)
+
+/**
+ * TsMethodSignature#params: Array<TsFnParameter>?
+ * extension function for create Array<TsFnParameter>? -> BindingIdentifier
+ */
+public fun TsMethodSignature.bindingIdentifier(block: BindingIdentifier.() -> Unit):
+    BindingIdentifier = BindingIdentifierImpl().apply(block)
 
 /**
  * TsMethodSignature#typeAnn: TsTypeAnnotation?

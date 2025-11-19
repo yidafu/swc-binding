@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.073939
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.190682
 
 package dev.yidafu.swc.generated.dsl
 
@@ -202,13 +202,6 @@ public fun AssignmentPatternProperty.awaitExpression(block: AwaitExpression.() -
 
 /**
  * AssignmentPatternProperty#value: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun AssignmentPatternProperty.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
-
-/**
- * AssignmentPatternProperty#value: Expression?
  * extension function for create Expression? -> TaggedTemplateExpression
  */
 public
@@ -361,3 +354,10 @@ public fun AssignmentPatternProperty.numericLiteral(block: NumericLiteral.() -> 
  */
 public fun AssignmentPatternProperty.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * AssignmentPatternProperty#value: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun AssignmentPatternProperty.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)

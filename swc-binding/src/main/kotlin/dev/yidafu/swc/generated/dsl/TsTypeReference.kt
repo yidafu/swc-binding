@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.149039
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.278123
 
 package dev.yidafu.swc.generated.dsl
 
@@ -11,17 +11,17 @@ import kotlin.Unit
 
 /**
  * TsTypeReference#typeName: TsEntityName?
- * extension function for create TsEntityName? -> Identifier
- */
-public fun TsTypeReference.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
-
-/**
- * TsTypeReference#typeName: TsEntityName?
  * extension function for create TsEntityName? -> TsQualifiedName
  */
 public fun TsTypeReference.tsQualifiedName(block: TsQualifiedName.() -> Unit): TsQualifiedName =
     TsQualifiedName().apply(block)
+
+/**
+ * TsTypeReference#typeName: TsEntityName?
+ * extension function for create TsEntityName? -> Identifier
+ */
+public fun TsTypeReference.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
 
 /**
  * TsTypeReference#typeParams: TsTypeParameterInstantiation?

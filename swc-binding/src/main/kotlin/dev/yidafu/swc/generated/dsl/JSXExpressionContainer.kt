@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.002616
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.202057
 
 package dev.yidafu.swc.generated.dsl
 
@@ -57,13 +57,6 @@ import kotlin.Unit
  */
 public fun JSXExpressionContainer.jSXEmptyExpression(block: JSXEmptyExpression.() -> Unit):
     JSXEmptyExpression = JSXEmptyExpression().apply(block)
-
-/**
- * JSXExpressionContainer#expression: JSXExpression?
- * extension function for create JSXExpression? -> Identifier
- */
-public fun JSXExpressionContainer.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * JSXExpressionContainer#expression: JSXExpression?
@@ -206,13 +199,6 @@ public fun JSXExpressionContainer.metaProperty(block: MetaProperty.() -> Unit): 
  */
 public fun JSXExpressionContainer.awaitExpression(block: AwaitExpression.() -> Unit):
     AwaitExpression = AwaitExpression().apply(block)
-
-/**
- * JSXExpressionContainer#expression: JSXExpression?
- * extension function for create JSXExpression? -> TemplateLiteral
- */
-public fun JSXExpressionContainer.templateLiteral(block: TemplateLiteral.() -> Unit):
-    TemplateLiteral = TemplateLiteralImpl().apply(block)
 
 /**
  * JSXExpressionContainer#expression: JSXExpression?
@@ -361,3 +347,17 @@ public fun JSXExpressionContainer.numericLiteral(block: NumericLiteral.() -> Uni
  */
 public fun JSXExpressionContainer.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * JSXExpressionContainer#expression: JSXExpression?
+ * extension function for create JSXExpression? -> Identifier
+ */
+public fun JSXExpressionContainer.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * JSXExpressionContainer#expression: JSXExpression?
+ * extension function for create JSXExpression? -> TemplateLiteral
+ */
+public fun JSXExpressionContainer.templateLiteral(block: TemplateLiteral.() -> Unit):
+    TemplateLiteral = TemplateLiteralImpl().apply(block)

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.162716
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.297397
 
 package dev.yidafu.swc.generated.dsl
 
@@ -51,13 +51,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsPropertySignature#key: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsPropertySignature.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsPropertySignature#key: Expression?
@@ -199,13 +192,6 @@ public fun TsPropertySignature.metaProperty(block: MetaProperty.() -> Unit): Met
  */
 public fun TsPropertySignature.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsPropertySignature#key: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsPropertySignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsPropertySignature#key: Expression?
@@ -358,6 +344,20 @@ public fun TsPropertySignature.numericLiteral(block: NumericLiteral.() -> Unit):
  */
 public fun TsPropertySignature.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsPropertySignature#key: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsPropertySignature.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsPropertySignature#key: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsPropertySignature.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
 
 /**
  * TsPropertySignature#typeAnnotation: TsTypeAnnotation?

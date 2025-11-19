@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:16.887528
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:22.959701
 
 package dev.yidafu.swc.generated.dsl
 
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.StaticBlock
 import kotlin.Unit
 
@@ -11,4 +12,4 @@ import kotlin.Unit
  * extension function for create BlockStatement? -> BlockStatement
  */
 public fun StaticBlock.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
+    BlockStatementImpl().apply(block)

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.225949
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.356449
 
 package dev.yidafu.swc.generated.dsl
 
@@ -49,13 +49,6 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * TsNonNullExpression#expression: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun TsNonNullExpression.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * TsNonNullExpression#expression: Expression?
@@ -197,13 +190,6 @@ public fun TsNonNullExpression.metaProperty(block: MetaProperty.() -> Unit): Met
  */
 public fun TsNonNullExpression.awaitExpression(block: AwaitExpression.() -> Unit): AwaitExpression =
     AwaitExpression().apply(block)
-
-/**
- * TsNonNullExpression#expression: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun TsNonNullExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
 
 /**
  * TsNonNullExpression#expression: Expression?
@@ -349,3 +335,17 @@ public fun TsNonNullExpression.numericLiteral(block: NumericLiteral.() -> Unit):
  */
 public fun TsNonNullExpression.bigIntLiteral(block: BigIntLiteral.() -> Unit): BigIntLiteral =
     BigIntLiteral().apply(block)
+
+/**
+ * TsNonNullExpression#expression: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun TsNonNullExpression.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * TsNonNullExpression#expression: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun TsNonNullExpression.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)

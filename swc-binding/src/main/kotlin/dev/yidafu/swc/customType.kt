@@ -91,4 +91,3 @@ class TemplateLiteralImpl : TemplateLiteral, TsTemplateLiteralType {
 }
 
 typealias TsTemplateLiteralTypeImpl = TemplateLiteralImpl
-

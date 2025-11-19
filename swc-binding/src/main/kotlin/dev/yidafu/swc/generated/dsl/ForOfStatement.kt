@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T01:00:17.200195
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:42:23.322267
 
 package dev.yidafu.swc.generated.dsl
 
@@ -15,6 +15,7 @@ import dev.yidafu.swc.generated.BinaryExpression
 import dev.yidafu.swc.generated.BindingIdentifier
 import dev.yidafu.swc.generated.BindingIdentifierImpl
 import dev.yidafu.swc.generated.BlockStatement
+import dev.yidafu.swc.generated.BlockStatementImpl
 import dev.yidafu.swc.generated.BooleanLiteral
 import dev.yidafu.swc.generated.BreakStatement
 import dev.yidafu.swc.generated.CallExpression
@@ -54,6 +55,7 @@ import dev.yidafu.swc.generated.ImportNamespaceSpecifier
 import dev.yidafu.swc.generated.Invalid
 import dev.yidafu.swc.generated.JSXAttribute
 import dev.yidafu.swc.generated.JSXClosingElement
+import dev.yidafu.swc.generated.JSXClosingElementImpl
 import dev.yidafu.swc.generated.JSXClosingFragment
 import dev.yidafu.swc.generated.JSXElement
 import dev.yidafu.swc.generated.JSXEmptyExpression
@@ -62,6 +64,7 @@ import dev.yidafu.swc.generated.JSXFragment
 import dev.yidafu.swc.generated.JSXMemberExpression
 import dev.yidafu.swc.generated.JSXNamespacedName
 import dev.yidafu.swc.generated.JSXOpeningElement
+import dev.yidafu.swc.generated.JSXOpeningElementImpl
 import dev.yidafu.swc.generated.JSXOpeningFragment
 import dev.yidafu.swc.generated.JSXSpreadChild
 import dev.yidafu.swc.generated.JSXText
@@ -83,6 +86,7 @@ import dev.yidafu.swc.generated.ObjectExpression
 import dev.yidafu.swc.generated.ObjectPattern
 import dev.yidafu.swc.generated.OptionalChainingExpression
 import dev.yidafu.swc.generated.Param
+import dev.yidafu.swc.generated.ParamImpl
 import dev.yidafu.swc.generated.ParenthesisExpression
 import dev.yidafu.swc.generated.PrivateMethod
 import dev.yidafu.swc.generated.PrivateName
@@ -167,16 +171,11 @@ import dev.yidafu.swc.generated.UnaryExpression
 import dev.yidafu.swc.generated.UpdateExpression
 import dev.yidafu.swc.generated.VariableDeclaration
 import dev.yidafu.swc.generated.VariableDeclarator
+import dev.yidafu.swc.generated.VariableDeclaratorImpl
 import dev.yidafu.swc.generated.WhileStatement
 import dev.yidafu.swc.generated.WithStatement
 import dev.yidafu.swc.generated.YieldExpression
 import kotlin.Unit
-
-/**
- * ForOfStatement#left: Node?
- * extension function for create Node? -> Param
- */
-public fun ForOfStatement.`param`(block: Param.() -> Unit): Param = Param().apply(block)
 
 /**
  * ForOfStatement#left: Node?
@@ -212,13 +211,6 @@ public fun ForOfStatement.classDeclaration(block: ClassDeclaration.() -> Unit): 
  */
 public fun ForOfStatement.variableDeclaration(block: VariableDeclaration.() -> Unit):
     VariableDeclaration = VariableDeclaration().apply(block)
-
-/**
- * ForOfStatement#left: Node?
- * extension function for create Node? -> VariableDeclarator
- */
-public fun ForOfStatement.variableDeclarator(block: VariableDeclarator.() -> Unit):
-    VariableDeclarator = VariableDeclarator().apply(block)
 
 /**
  * ForOfStatement#left: Node?
@@ -280,20 +272,6 @@ public fun ForOfStatement.jSXExpressionContainer(block: JSXExpressionContainer.(
  */
 public fun ForOfStatement.jSXSpreadChild(block: JSXSpreadChild.() -> Unit): JSXSpreadChild =
     JSXSpreadChild().apply(block)
-
-/**
- * ForOfStatement#left: Node?
- * extension function for create Node? -> JSXOpeningElement
- */
-public fun ForOfStatement.jSXOpeningElement(block: JSXOpeningElement.() -> Unit): JSXOpeningElement
-    = JSXOpeningElement().apply(block)
-
-/**
- * ForOfStatement#left: Node?
- * extension function for create Node? -> JSXClosingElement
- */
-public fun ForOfStatement.jSXClosingElement(block: JSXClosingElement.() -> Unit): JSXClosingElement
-    = JSXClosingElement().apply(block)
 
 /**
  * ForOfStatement#left: Node?
@@ -501,13 +479,6 @@ public fun ForOfStatement.assignmentProperty(block: AssignmentProperty.() -> Uni
  */
 public fun ForOfStatement.computedPropName(block: ComputedPropName.() -> Unit): ComputedPropName =
     ComputedPropName().apply(block)
-
-/**
- * ForOfStatement#body: Statement?
- * extension function for create Statement? -> BlockStatement
- */
-public fun ForOfStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
-    BlockStatement().apply(block)
 
 /**
  * ForOfStatement#body: Statement?
@@ -890,13 +861,6 @@ public fun ForOfStatement.tsLiteralType(block: TsLiteralType.() -> Unit): TsLite
     TsLiteralType().apply(block)
 
 /**
- * ForOfStatement#left: Node?
- * extension function for create Node? -> TsTemplateLiteralType
- */
-public fun ForOfStatement.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
-    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
-
-/**
  * ForOfStatement#body: Statement?
  * extension function for create Statement? -> TsInterfaceDeclaration
  */
@@ -1029,13 +993,6 @@ public fun ForOfStatement.classMethod(block: ClassMethod.() -> Unit): ClassMetho
  */
 public fun ForOfStatement.privateMethod(block: PrivateMethod.() -> Unit): PrivateMethod =
     PrivateMethod().apply(block)
-
-/**
- * ForOfStatement#right: Expression?
- * extension function for create Expression? -> Identifier
- */
-public fun ForOfStatement.identifier(block: Identifier.() -> Unit): Identifier =
-    IdentifierImpl().apply(block)
 
 /**
  * ForOfStatement#right: Expression?
@@ -1172,13 +1129,6 @@ public fun ForOfStatement.awaitExpression(block: AwaitExpression.() -> Unit): Aw
 
 /**
  * ForOfStatement#right: Expression?
- * extension function for create Expression? -> TemplateLiteral
- */
-public fun ForOfStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
-    TemplateLiteralImpl().apply(block)
-
-/**
- * ForOfStatement#right: Expression?
  * extension function for create Expression? -> TaggedTemplateExpression
  */
 public fun ForOfStatement.taggedTemplateExpression(block: TaggedTemplateExpression.() -> Unit):
@@ -1242,13 +1192,6 @@ public fun ForOfStatement.tsNonNullExpression(block: TsNonNullExpression.() -> U
 
 /**
  * ForOfStatement#left: Node?
- * extension function for create Node? -> BindingIdentifier
- */
-public fun ForOfStatement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
-    = BindingIdentifierImpl().apply(block)
-
-/**
- * ForOfStatement#left: Node?
  * extension function for create Node? -> ArrayPattern
  */
 public fun ForOfStatement.arrayPattern(block: ArrayPattern.() -> Unit): ArrayPattern =
@@ -1302,6 +1245,68 @@ public fun ForOfStatement.setterProperty(block: SetterProperty.() -> Unit): Sett
  */
 public fun ForOfStatement.methodProperty(block: MethodProperty.() -> Unit): MethodProperty =
     MethodProperty().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> Param
+ */
+public fun ForOfStatement.`param`(block: Param.() -> Unit): Param = ParamImpl().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> VariableDeclarator
+ */
+public fun ForOfStatement.variableDeclarator(block: VariableDeclarator.() -> Unit):
+    VariableDeclarator = VariableDeclaratorImpl().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> JSXOpeningElement
+ */
+public fun ForOfStatement.jSXOpeningElement(block: JSXOpeningElement.() -> Unit): JSXOpeningElement
+    = JSXOpeningElementImpl().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> JSXClosingElement
+ */
+public fun ForOfStatement.jSXClosingElement(block: JSXClosingElement.() -> Unit): JSXClosingElement
+    = JSXClosingElementImpl().apply(block)
+
+/**
+ * ForOfStatement#body: Statement?
+ * extension function for create Statement? -> BlockStatement
+ */
+public fun ForOfStatement.blockStatement(block: BlockStatement.() -> Unit): BlockStatement =
+    BlockStatementImpl().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> TsTemplateLiteralType
+ */
+public fun ForOfStatement.tsTemplateLiteralType(block: TsTemplateLiteralType.() -> Unit):
+    TsTemplateLiteralType = TsTemplateLiteralTypeImpl().apply(block)
+
+/**
+ * ForOfStatement#right: Expression?
+ * extension function for create Expression? -> Identifier
+ */
+public fun ForOfStatement.identifier(block: Identifier.() -> Unit): Identifier =
+    IdentifierImpl().apply(block)
+
+/**
+ * ForOfStatement#right: Expression?
+ * extension function for create Expression? -> TemplateLiteral
+ */
+public fun ForOfStatement.templateLiteral(block: TemplateLiteral.() -> Unit): TemplateLiteral =
+    TemplateLiteralImpl().apply(block)
+
+/**
+ * ForOfStatement#left: Node?
+ * extension function for create Node? -> BindingIdentifier
+ */
+public fun ForOfStatement.bindingIdentifier(block: BindingIdentifier.() -> Unit): BindingIdentifier
+    = BindingIdentifierImpl().apply(block)
 
 /**
  * ForOfStatement#body: Statement?

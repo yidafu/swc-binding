@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-18T19:24:47.02771
+// Auto-generated file. Do not edit. Generated at: 2025-11-19T22:40:40.006747
 
 package dev.yidafu.swc.generated
 
@@ -23,4 +23,6 @@ public interface JsClass : HasSpan, HasDecorator {
     public var superTypeParams: TsTypeParameterInstantiation?
 
     public var implements: Array<TsExpressionWithTypeArguments>?
+
+    public var ctxt: Int
 }
