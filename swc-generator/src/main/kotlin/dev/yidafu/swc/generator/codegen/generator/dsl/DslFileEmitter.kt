@@ -65,12 +65,49 @@ class DslFileEmitter(
             PoetConstants.PKG_TYPES to "*"
         )
 
+        // 为 nodeCreatableClasses 中的类生成 create 函数
         nodeCreatableClasses.forEach { klass ->
             val funSpec = createCreateFunction(klass)
             fileBuilder.addFunction(funSpec)
         }
+
+        // 为 interfaceToImplMap 中的接口生成 create 函数（即使实现类不在 nodeCreatableClasses 中）
+        val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
+        val processedInterfaces = mutableSetOf<String>()
+
+        interfaceToImplMap.forEach { (interfaceName, implClassName) ->
+            // 检查是否已经为这个接口生成了 create 函数
+            val alreadyProcessed = nodeCreatableClasses.any { klass ->
+                val className = klass.name.removeSurrounding("`")
+                className == implClassName || className == interfaceName
+            }
+
+            if (!alreadyProcessed && !processedInterfaces.contains(interfaceName)) {
+                // 检查接口是否存在且继承自 Node
+                val interfaceDecl = modelContext.classInfoByName[interfaceName]
+                if (interfaceDecl != null && modelContext.inheritsNode(interfaceName)) {
+                    // 创建一个临时的类声明用于生成 create 函数
+                    val tempImplClass = KotlinDeclaration.ClassDecl(
+                        name = implClassName,
+                        modifier = dev.yidafu.swc.generator.model.kotlin.ClassModifier.FinalClass,
+                        properties = emptyList(),
+                        parents = listOf(dev.yidafu.swc.generator.model.kotlin.KotlinType.Simple(interfaceName)),
+                        typeParameters = emptyList(),
+                        nestedClasses = emptyList(),
+                        annotations = emptyList(),
+                        kdoc = null
+                    )
+                    val funSpec = createCreateFunction(tempImplClass)
+                    fileBuilder.addFunction(funSpec)
+                    processedInterfaces.add(interfaceName)
+                    Logger.debug("  为 interfaceToImplMap 中的接口生成 create 函数: $interfaceName -> $implClassName", 6)
+                }
+            }
+        }
+
         val fileSpec = poet.buildFile(fileBuilder)
-        Logger.verbose("  生成了 ${nodeCreatableClasses.size} 个 create 函数", 6)
+        val totalFunctions = nodeCreatableClasses.size + processedInterfaces.size
+        Logger.verbose("  生成了 $totalFunctions 个 create 函数 (${nodeCreatableClasses.size} 个来自 nodeCreatableClasses, ${processedInterfaces.size} 个来自 interfaceToImplMap)", 6)
         return GeneratedFile(outputDir.resolve("create.kt"), fileSpec = fileSpec)
     }
 
@@ -96,12 +133,12 @@ class DslFileEmitter(
 
     private fun resolveImplClassName(typeName: String): String? {
         val normalized = DslNamingRules.sanitizeTypeName(DslNamingRules.removeGenerics(typeName)).removeSurrounding("`")
-        
+
         // 首先检查 customType.kt 中定义的接口到实现类的映射
         SerializerConfig.interfaceToImplMap[normalized]?.let { implName ->
             return implName
         }
-        
+
         val decl = modelContext.classInfoByName[normalized]
         return when {
             // 若本身是具体类，直接返回
@@ -121,19 +158,34 @@ class DslFileEmitter(
 
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
         val className = klass.name.removeSurrounding("`")
-        val classType = ClassName(PoetConstants.PKG_TYPES, className)
-        
-        // 对于接口类型，使用对应的 Impl 类（如 Identifier -> IdentifierImpl）
-        val implTypeName = resolveImplClassName(className)
-        val implType = if (implTypeName != null) {
-            ClassName(PoetConstants.PKG_TYPES, implTypeName)
+
+        // 如果类名以 Impl 结尾，使用接口名作为函数名和返回类型
+        val (functionName, returnTypeName, implTypeName) = if (className.endsWith("Impl")) {
+            val interfaceName = className.removeSuffix("Impl")
+            // 检查接口是否存在
+            val interfaceDecl = modelContext.classInfoByName[interfaceName]
+            if (interfaceDecl != null && interfaceDecl.modifier.isInterface()) {
+                Triple(interfaceName, interfaceName, className)
+            } else {
+                Triple(className, className, className)
+            }
         } else {
-            classType
+            // 对于非 Impl 类，检查是否有对应的接口
+            val implType = resolveImplClassName(className)
+            if (implType != null && implType != className) {
+                // 有对应的实现类，使用接口名
+                Triple(className, className, implType)
+            } else {
+                Triple(className, className, className)
+            }
         }
 
-        return FunSpec.builder("create$className")
-            .addParameter("block", createDslLambdaType(classType as TypeName))
-            .returns(classType)
+        val returnType = ClassName(PoetConstants.PKG_TYPES, returnTypeName)
+        val implType = ClassName(PoetConstants.PKG_TYPES, implTypeName)
+
+        return FunSpec.builder("create$functionName")
+            .addParameter("block", createDslLambdaType(returnType as TypeName))
+            .returns(returnType)
             .addStatement("return %T().apply(block)", implType)
             .build()
     }

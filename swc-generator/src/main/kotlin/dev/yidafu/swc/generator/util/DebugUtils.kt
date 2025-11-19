@@ -6,7 +6,7 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
  * 调试工具类，统一管理调试代码
  */
 object DebugUtils {
-    private const val DEBUG_ENABLED = false  // 设置为 true 启用调试输出
+    private const val DEBUG_ENABLED = false // 设置为 true 启用调试输出
 
     private val debugTypes = setOf("ForOfStatement", "ComputedPropName")
 
@@ -52,4 +52,3 @@ object DebugUtils {
         }
     }
 }
-

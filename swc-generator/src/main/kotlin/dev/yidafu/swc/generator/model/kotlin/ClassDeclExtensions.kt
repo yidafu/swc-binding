@@ -213,7 +213,7 @@ fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
  */
 fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String {
     val cleanName = name.removeSurrounding("`")
-    
+
     // 首先尝试从 type 属性的默认值中提取字面量值
     val typeProperty = properties.find { it.name.removeSurrounding("`") == "type" }
     val typeFieldLiteralValue = typeProperty?.defaultValue?.let { defaultValue ->

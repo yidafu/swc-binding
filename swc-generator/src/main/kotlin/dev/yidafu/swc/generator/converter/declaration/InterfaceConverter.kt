@@ -489,6 +489,10 @@ class InterfaceConverter(
         val declaration = analyzer?.getDeclaration(parentTypeName) as? TypeScriptDeclaration.InterfaceDeclaration
         if (declaration != null) {
             declaration.members.forEach { member ->
+                // Node 接口的 type 属性在生成 Kotlin 代码时被跳过了，所以不应该收集它
+                if (parentTypeName == "Node" && member.name == "type") {
+                    return@forEach
+                }
                 val wrapped = wrapReservedWord(member.name)
                 result.add(wrapped)
                 result.add(wrapped.removeSurrounding("`"))
@@ -510,7 +514,8 @@ class InterfaceConverter(
      */
     private fun determineClassModifier(tsInterface: TypeScriptDeclaration.InterfaceDeclaration): ClassModifier {
         val name = tsInterface.name
-        // 配置优先级：toKotlinClass > keepInterface > sealedInterface
+        val mappedName = CodeGenerationRules.mapTypeName(name)
+        // 配置优先级：toKotlinClass > keepInterface > sealedInterface > interfaceToImplMap
         if (config.rules.classModifiers.toKotlinClass.contains(name)) {
             Logger.debug("  接口 $name 配置为 FinalClass (toKotlinClass)", 6)
             return ClassModifier.FinalClass
@@ -522,6 +527,12 @@ class InterfaceConverter(
         if (config.rules.classModifiers.sealedInterface.contains(name)) {
             Logger.debug("  接口 $name 配置为 SealedInterface (sealedInterface)", 6)
             return ClassModifier.SealedInterface
+        }
+        // 对于 interfaceToImplMap 中的接口，强制生成为 Interface，以便生成对应的 Impl 类
+        // 注意：interfaceToImplMap 中的键是 Kotlin 名称，需要先映射
+        if (SerializerConfig.interfaceToImplMap.containsKey(mappedName)) {
+            Logger.debug("  接口 $name (映射为 $mappedName) 配置为 Interface (interfaceToImplMap)", 6)
+            return ClassModifier.Interface
         }
 
         // 默认策略：当提供继承分析器时，将"无子类型"的叶子接口作为类生成
@@ -568,7 +579,7 @@ class InterfaceConverter(
         // 因为 Kotlinx Serialization 要求：非 sealed 接口默认支持多态序列化，不能使用不带参数的 @Serializable
         val interfaceName = CodeGenerationRules.mapTypeName(tsInterface.name)
         val isInAdditionalOpenBases = SerializerConfig.additionalOpenBases.contains(interfaceName)
-        
+
         when (modifier) {
             is ClassModifier.FinalClass,
             is ClassModifier.SealedInterface -> annotations.add(KotlinDeclaration.Annotation("Serializable"))

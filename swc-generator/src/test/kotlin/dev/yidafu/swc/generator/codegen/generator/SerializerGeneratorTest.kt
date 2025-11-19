@@ -23,7 +23,6 @@ class SerializerGeneratorTest : ShouldSpec({
         )
     }
 
-    
     should("writeToFile creates serializer module") {
         val tempFile = File.createTempFile("serializer", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -57,7 +56,6 @@ class SerializerGeneratorTest : ShouldSpec({
         )
     }
 
-    
     should("span impl uses custom serializer") {
         val tempFile = File.createTempFile("serializer-span", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -72,7 +70,6 @@ class SerializerGeneratorTest : ShouldSpec({
         // 新策略下不强制包含 Span 的多态注册
     }
 
-    
     should("stable ordering for parents and children") {
         val tempFile = File.createTempFile("serializer-order", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -121,7 +118,6 @@ class SerializerGeneratorTest : ShouldSpec({
         )
     }
 
-    
     should("should fail when polymorphic parent lacks Serializable annotation") {
         val tempFile = File.createTempFile("serializer-validate", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -140,7 +136,6 @@ class SerializerGeneratorTest : ShouldSpec({
         assert(failed)
     }
 
-    
     should("missing serializable on open base should warn under WARN_OPEN_BASES") {
         val tempFile = File.createTempFile("serializer-warn-open-bases", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -161,7 +156,6 @@ class SerializerGeneratorTest : ShouldSpec({
         }
     }
 
-    
     should("missing serializable should error under ERROR policy") {
         val tempFile = File.createTempFile("serializer-error-policy", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -184,7 +178,6 @@ class SerializerGeneratorTest : ShouldSpec({
         }
     }
 
-    
     should("missing serializable should warn under WARN_ALL policy") {
         val tempFile = File.createTempFile("serializer-warn-all", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -212,7 +205,6 @@ class SerializerGeneratorTest : ShouldSpec({
         )
     }
 
-    
     should("generated serializer should use Impl types in subclass calls") {
         val tempFile = File.createTempFile("serializer-impl-subclass", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -236,7 +228,6 @@ class SerializerGeneratorTest : ShouldSpec({
         content.shouldContain("subclass(TsTemplateLiteralTypeImpl::class)")
     }
 
-    
     should("should generate polymorphic registrations for customType interfaces") {
         val tempFile = File.createTempFile("serializer-custom-type", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -251,22 +242,21 @@ class SerializerGeneratorTest : ShouldSpec({
         generator.writeToFile(tempFile.absolutePath, declarations)
 
         val content = tempFile.readText()
-        
+
         // 验证为 customType.kt 中的接口生成了多态注册
         content.shouldContain("polymorphic(Identifier::class)")
         content.shouldContain("subclass(IdentifierImpl::class)")
-        
+
         content.shouldContain("polymorphic(BindingIdentifier::class)")
         content.shouldContain("subclass(BindingIdentifierImpl::class)")
-        
+
         content.shouldContain("polymorphic(TemplateLiteral::class)")
         content.shouldContain("subclass(TemplateLiteralImpl::class)")
-        
+
         content.shouldContain("polymorphic(TsTemplateLiteralType::class)")
         content.shouldContain("subclass(TsTemplateLiteralTypeImpl::class)")
     }
 
-    
     should("customType polymorphic registrations should appear in correct order") {
         val tempFile = File.createTempFile("serializer-custom-type-order", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
@@ -277,19 +267,19 @@ class SerializerGeneratorTest : ShouldSpec({
         generator.writeToFile(tempFile.absolutePath, declarations)
 
         val content = tempFile.readText()
-        
+
         // 验证 customType.kt 接口的多态注册出现在文件末尾（在主要多态注册之后）
         val identifierIdx = content.indexOf("polymorphic(Identifier::class)")
         val bindingIdentifierIdx = content.indexOf("polymorphic(BindingIdentifier::class)")
         val templateLiteralIdx = content.indexOf("polymorphic(TemplateLiteral::class)")
         val tsTemplateLiteralTypeIdx = content.indexOf("polymorphic(TsTemplateLiteralType::class)")
-        
+
         // 所有 customType 接口的注册都应该存在
         identifierIdx.shouldBeGreaterThanOrEqual(0)
         bindingIdentifierIdx.shouldBeGreaterThanOrEqual(0)
         templateLiteralIdx.shouldBeGreaterThanOrEqual(0)
         tsTemplateLiteralTypeIdx.shouldBeGreaterThanOrEqual(0)
-        
+
         // 验证顺序：Identifier, BindingIdentifier, TemplateLiteral, TsTemplateLiteralType
         bindingIdentifierIdx.shouldBeGreaterThan(identifierIdx)
         templateLiteralIdx.shouldBeGreaterThan(bindingIdentifierIdx)

@@ -37,8 +37,53 @@ class DslExtensionCollector(
 
         // 仅对可实例化的 Node 实现类生成 create 函数（避免对接口实例化）
         val nodeCreatableClasses = run {
+            fun extractSimpleName(type: dev.yidafu.swc.generator.model.kotlin.KotlinType): String? {
+                return when (type) {
+                    is dev.yidafu.swc.generator.model.kotlin.KotlinType.Simple -> dev.yidafu.swc.generator.util.NameUtils.clean(type.name)
+                    is dev.yidafu.swc.generator.model.kotlin.KotlinType.Nullable -> extractSimpleName(type.innerType)
+                    else -> null
+                }
+            }
+
+            // 获取 interfaceToImplMap 中定义的所有实现类名
+            val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
+            val knownImplClasses = interfaceToImplMap.values.toSet()
+
+            // 调试：检查所有实现类
+            val allImplClasses = modelContext.classDecls.filter { !it.modifier.isInterface() && it.name.removeSurrounding("`").endsWith("Impl") }
+            Logger.debug("  所有 Impl 类: ${allImplClasses.map { it.name.removeSurrounding("`") }.joinToString(", ")}", 6)
+            Logger.debug("  interfaceToImplMap 中的实现类: ${knownImplClasses.joinToString(", ")}", 6)
+
             val nodeImpls = modelContext.classDecls.filter { klass ->
-                !klass.modifier.isInterface() && modelContext.inheritsNode(klass.name.removeSurrounding("`"))
+                val className = klass.name.removeSurrounding("`")
+                if (klass.modifier.isInterface()) return@filter false
+
+                // 如果是在 interfaceToImplMap 中定义的实现类，直接包含（这些实现类都是为 Node 系谱的接口生成的）
+                if (knownImplClasses.contains(className)) {
+                    Logger.debug("  包含实现类（interfaceToImplMap）: $className", 6)
+                    return@filter true
+                }
+
+                // 检查类本身是否继承自 Node
+                if (modelContext.inheritsNode(className)) {
+                    Logger.debug("  包含实现类（直接继承Node）: $className", 6)
+                    return@filter true
+                }
+
+                // 对于实现类，检查其实现的接口是否继承自 Node
+                val hasNodeParent = klass.parents.any { parent ->
+                    val parentName = extractSimpleName(parent)
+                    if (parentName != null) {
+                        val inherits = modelContext.inheritsNode(parentName)
+                        if (inherits) {
+                            Logger.debug("  包含实现类（通过接口继承Node）: $className -> $parentName", 6)
+                        }
+                        inherits
+                    } else {
+                        false
+                    }
+                }
+                hasNodeParent
             }
             val parserConfigImpls = modelContext.classDecls.filter { klass ->
                 !klass.modifier.isInterface() && modelContext.inheritsTarget(klass.name.removeSurrounding("`"), "ParserConfig")
@@ -171,13 +216,53 @@ class DslExtensionCollector(
     private fun resolveInstantiableTypes(typeName: String): List<String> {
         val normalized = normalizeTypeName(typeName)
         if (normalized.isEmpty()) return emptyList()
+        val baseDecl = modelContext.classInfoByName[normalized]
+
+        // 如果是 sealed interface，返回所有可实例化的子类型（包括具体类和接口）
+        val isSealedInterface = baseDecl?.modifier is ClassModifier.SealedInterface
+        if (isSealedInterface) {
+            val descendants = modelContext.hierarchy.findDescendants(normalized).distinct()
+            val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
+
+            // 返回所有可实例化的具体类后代
+            val classDescendants = descendants.filter { name ->
+                modelContext.classInfoByName[name]?.modifier?.isInterface() == false
+            }
+
+            // 对于接口子类型，如果它们在 interfaceToImplMap 中有对应的实现类，也返回它们
+            val interfaceDescendants = descendants.filter { name ->
+                val decl = modelContext.classInfoByName[name]
+                decl?.modifier?.isInterface() == true && interfaceToImplMap.containsKey(name)
+            }
+
+            // 合并具体类和接口，返回所有可实例化的类型
+            val allInstantiable = (classDescendants + interfaceDescendants).distinct()
+            return allInstantiable
+        }
+
         val descendants = modelContext.hierarchy.findDescendants(normalized).distinct()
-        // 优先返回可实例化的具体类后代
+        val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
+
+        // 返回可实例化的具体类后代
         val classDescendants = descendants.filter { name ->
             modelContext.classInfoByName[name]?.modifier?.isInterface() == false
         }
-        if (classDescendants.isNotEmpty()) return classDescendants
-        val baseDecl = modelContext.classInfoByName[normalized]
+
+        // 对于接口类型，如果它们在 interfaceToImplMap 中有对应的实现类，也返回它们
+        val interfaceDescendants = descendants.filter { name ->
+            val decl = modelContext.classInfoByName[name]
+            decl?.modifier?.isInterface() == true && interfaceToImplMap.containsKey(name)
+        }
+
+        // 合并具体类和接口，返回所有可实例化的类型
+        val allInstantiable = (classDescendants + interfaceDescendants).distinct()
+        if (allInstantiable.isNotEmpty()) return allInstantiable
+
+        // 如果自身是接口且在 interfaceToImplMap 中，返回自身
+        if (baseDecl != null && baseDecl.modifier.isInterface() && interfaceToImplMap.containsKey(normalized)) {
+            return listOf(normalized)
+        }
+
         // 若自身就是具体类，则返回自身；否则不返回接口，避免生成对接口的构造
         return if (baseDecl != null && !baseDecl.modifier.isInterface()) {
             listOf(baseDecl.name.removeSurrounding("`"))

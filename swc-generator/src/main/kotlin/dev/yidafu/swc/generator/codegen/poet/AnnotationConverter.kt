@@ -58,6 +58,7 @@ object AnnotationConverter {
             is Expression.ClassReference -> {
                 val className = when (arg.className) {
                     "ExperimentalSerializationApi" -> ClassName("kotlinx.serialization", "ExperimentalSerializationApi")
+                    "TruePlusMinusSerializer" -> ClassName("dev.yidafu.swc", "TruePlusMinusSerializer")
                     else -> ClassName("", arg.className)
                 }
                 builder.addMember("%T::class", className)

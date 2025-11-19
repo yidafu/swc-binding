@@ -13,7 +13,6 @@ import io.kotest.matchers.string.shouldContain
  */
 class KotlinPoetConverterComprehensiveTest : ShouldSpec({
 
-    
     should("convertType should handle all basic types") {
         val types = listOf(
             KotlinType.StringType,
@@ -36,7 +35,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         }
     }
 
-    
     should("convertType should handle nullable types") {
         val nullableString = KotlinType.Nullable(KotlinType.StringType)
         val typeName = KotlinPoetConverter.convertType(nullableString)
@@ -44,21 +42,18 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeName.isNullable shouldBe true
     }
 
-    
     should("convertType should handle generic types") {
         val listType = KotlinType.Generic("List", listOf(KotlinType.StringType))
         val typeName = KotlinPoetConverter.convertType(listType)
         typeName.shouldNotBeNull()
     }
 
-    
     should("convertType should handle nested types") {
         val nestedType = KotlinType.Nested("Parent", "Child")
         val typeName = KotlinPoetConverter.convertType(nestedType)
         typeName.shouldNotBeNull()
     }
 
-    
     should("convertProperty should handle all property modifiers") {
         val modifiers = listOf(
             PropertyModifier.Val,
@@ -81,7 +76,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         }
     }
 
-    
     should("convertProperty should handle default values") {
         val prop = KotlinDeclaration.PropertyDecl(
             name = "value",
@@ -94,7 +88,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         propertySpec.shouldNotBeNull()
     }
 
-    
     should("convertProperty should handle annotations") {
         val prop = KotlinDeclaration.PropertyDecl(
             name = "value",
@@ -109,7 +102,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         propertySpec.annotations.size shouldBe 1
     }
 
-    
     should("convertClassDeclaration should handle data class") {
         val klass = KotlinDeclaration.ClassDecl(
             name = "TestData",
@@ -130,7 +122,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeSpec.modifiers.contains(com.squareup.kotlinpoet.KModifier.DATA) shouldBe true
     }
 
-    
     should("convertClassDeclaration should handle interface") {
         val klass = KotlinDeclaration.ClassDecl(
             name = "TestInterface",
@@ -151,7 +142,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeSpec.kind shouldBe com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
     }
 
-    
     should("convertClassDeclaration should handle sealed interface") {
         val klass = KotlinDeclaration.ClassDecl(
             name = "TestSealed",
@@ -166,7 +156,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeSpec.modifiers.contains(com.squareup.kotlinpoet.KModifier.SEALED) shouldBe true
     }
 
-    
     should("convertClassDeclaration should handle enum class") {
         val klass = KotlinDeclaration.ClassDecl(
             name = "TestEnum",
@@ -185,7 +174,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeSpec.enumConstants.size shouldBe 2
     }
 
-    
     should("convertClassDeclaration should handle inheritance") {
         val klass = KotlinDeclaration.ClassDecl(
             name = "Child",
@@ -198,7 +186,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeSpec.shouldNotBeNull()
     }
 
-    
     should("convertClassDeclaration should add SerialName for Node-derived classes") {
         val nodeClass = KotlinDeclaration.ClassDecl(
             name = "Expression",
@@ -227,7 +214,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         content.shouldContain("Expression")
     }
 
-    
     should("convertClassDeclaration should add Transient for Node type property") {
         val nodeInterface = KotlinDeclaration.ClassDecl(
             name = "Node",
@@ -255,7 +241,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         content.shouldContain("interface Node")
     }
 
-    
     should("convertAnnotation should handle SerialName annotation") {
         val annotation = KotlinDeclaration.Annotation(
             name = "SerialName",
@@ -265,7 +250,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         annotationSpec.shouldNotBeNull()
     }
 
-    
     should("convertAnnotation should handle Serializable annotation") {
         val annotation = KotlinDeclaration.Annotation(
             name = "Serializable",
@@ -275,7 +259,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         annotationSpec.shouldNotBeNull()
     }
 
-    
     should("convertTypeAliasDeclaration should handle simple type alias") {
         val alias = KotlinDeclaration.TypeAliasDecl(
             name = "StringAlias",
@@ -287,7 +270,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeAliasSpec.shouldNotBeNull()
     }
 
-    
     should("convertTypeAliasDeclaration should handle generic type alias") {
         val alias = KotlinDeclaration.TypeAliasDecl(
             name = "ListAlias",
@@ -301,7 +283,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         typeAliasSpec.shouldNotBeNull()
     }
 
-    
     should("convertFunctionDeclaration should handle simple function") {
         val func = KotlinDeclaration.FunctionDecl(
             name = "test",
@@ -314,7 +295,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         funSpec.shouldNotBeNull()
     }
 
-    
     should("convertFunctionDeclaration should handle function with parameters") {
         val func = KotlinDeclaration.FunctionDecl(
             name = "test",
@@ -334,7 +314,6 @@ class KotlinPoetConverterComprehensiveTest : ShouldSpec({
         funSpec.parameters.size shouldBe 1
     }
 
-    
     should("convertFunctionDeclaration should handle override function") {
         val func = KotlinDeclaration.FunctionDecl(
             name = "test",

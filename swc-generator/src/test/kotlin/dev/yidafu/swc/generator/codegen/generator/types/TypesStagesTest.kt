@@ -13,7 +13,6 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import java.nio.file.Paths
@@ -97,7 +96,6 @@ class TypesStagesTest : ShouldSpec({
         return context to recordingPoet
     }
 
-    
     should("interface stage emits sorted interfaces") {
         val base = classDecl("Base", ClassModifier.Interface)
         val child = classDecl("Child", ClassModifier.Interface, parents = listOf(KotlinType.Simple("Base")))
@@ -112,7 +110,6 @@ class TypesStagesTest : ShouldSpec({
         (recorder as RecordingPoetGenerator).emitted.shouldContain("Base")
     }
 
-    
     should("concrete class stage ignores interfaces and impl classes") {
         val concrete = classDecl("NodeImpl", ClassModifier.FinalClass)
         val iface = classDecl("Node", ClassModifier.Interface)
@@ -126,7 +123,6 @@ class TypesStagesTest : ShouldSpec({
         (recorder as RecordingPoetGenerator).emitted.shouldContainExactlyInAnyOrder(listOf("ValueNode"))
     }
 
-    
     should("implementation stage emits only leaf interfaces") {
         val node = classDecl("Node", ClassModifier.Interface, properties = listOf(prop("type")))
         val expr = classDecl(
@@ -135,24 +131,26 @@ class TypesStagesTest : ShouldSpec({
             parents = listOf(KotlinType.Simple("Node")),
             properties = listOf(prop("span", KotlinType.Simple("Span")))
         )
-        val literal = classDecl(
-            "Literal",
+        // 使用在 interfaceToImplMap 中的接口进行测试
+        val identifier = classDecl(
+            "Identifier",
             ClassModifier.Interface,
             parents = listOf(KotlinType.Simple("Expression")),
             properties = listOf(prop("value"))
         )
 
-        val (context, recorder) = newContext(mutableListOf(node, expr, literal))
+        val (context, recorder) = newContext(mutableListOf(node, expr, identifier))
         val stage = ImplementationStage(ImplementationEmitter(context.interfaceRegistry))
 
         stage.run(context)
 
-        // 新策略下不再强制生成 *Impl，断言 leaf 接口已被处理、缓存包含层次信息
-        (recorder as RecordingPoetGenerator).emitted.shouldContain("Literal")
-        context.propertyCache.keys.shouldContainAll(listOf("Literal", "Expression", "Node"))
+        // 新策略：只为 interfaceToImplMap 中的接口生成实现类
+        // Identifier 在 interfaceToImplMap 中，所以会生成实现类
+        (recorder as RecordingPoetGenerator).emitted.shouldContain("IdentifierImpl")
+        // propertyCache 应该包含处理过的接口信息
+        context.propertyCache.keys.shouldContain("Identifier")
     }
 
-    
     should("type alias stage emits aliases via poet") {
         val alias = KotlinDeclaration.TypeAliasDecl("AliasA", KotlinType.Simple("String"))
         val (context, recorder) = newContext(mutableListOf(), mutableListOf(alias))

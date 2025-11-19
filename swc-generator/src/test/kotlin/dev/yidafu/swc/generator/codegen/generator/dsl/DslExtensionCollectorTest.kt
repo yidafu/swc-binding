@@ -85,7 +85,6 @@ class DslExtensionCollectorTest : ShouldSpec({
         )
     )
 
-    
     should("collector groups instantiable property extensions") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
@@ -100,7 +99,6 @@ class DslExtensionCollectorTest : ShouldSpec({
         exprFunNames.shouldContainExactly("Literal")
     }
 
-    
     should("node leaf interfaces include only node descendants without children") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
@@ -112,7 +110,6 @@ class DslExtensionCollectorTest : ShouldSpec({
         creatableNames.shouldNotContain("Outside")
     }
 
-    
     should("enum only properties do not produce extension functions") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()

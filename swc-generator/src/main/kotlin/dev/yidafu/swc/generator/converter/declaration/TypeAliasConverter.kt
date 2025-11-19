@@ -5,8 +5,8 @@ import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.config.PropertyRulesConfig
 import dev.yidafu.swc.generator.config.SerializerConfig
-import dev.yidafu.swc.generator.config.TypeAliasRulesConfig
 import dev.yidafu.swc.generator.config.SwcGeneratorConfig
+import dev.yidafu.swc.generator.config.TypeAliasRulesConfig
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.model.kotlin.*
 import dev.yidafu.swc.generator.model.typescript.*
@@ -235,6 +235,15 @@ class TypeAliasConverter(
         }
 
         val enumEntries = createEnumEntries(enumValues)
+        // 为 TruePlusMinus 枚举添加自定义序列化器
+        val serializableAnnotation = if (tsTypeAlias.name == "TruePlusMinus") {
+            KotlinDeclaration.Annotation(
+                "Serializable",
+                listOf(Expression.ClassReference("TruePlusMinusSerializer"))
+            )
+        } else {
+            KotlinDeclaration.Annotation("Serializable")
+        }
         val enumClass = KotlinDeclaration.ClassDecl(
             name = wrapReservedWord(tsTypeAlias.name),
             modifier = ClassModifier.EnumClass,
@@ -243,7 +252,7 @@ class TypeAliasConverter(
             typeParameters = emptyList(),
             nestedClasses = emptyList(),
             enumEntries = enumEntries,
-            annotations = listOf(KotlinDeclaration.Annotation("Serializable")),
+            annotations = listOf(serializableAnnotation),
             kdoc = tsTypeAlias.kdoc
         )
 

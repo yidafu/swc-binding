@@ -29,7 +29,7 @@ class ParserStageTest : ShouldSpec({
     should("test parse valid TypeScript file") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val testFile = File(tempDir, "test.d.ts")
         testFile.writeText(
             """
@@ -56,7 +56,7 @@ class ParserStageTest : ShouldSpec({
     should("test parse result is stored in context") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val testFile = File(tempDir, "test.d.ts")
         testFile.writeText("export interface Test {}")
 

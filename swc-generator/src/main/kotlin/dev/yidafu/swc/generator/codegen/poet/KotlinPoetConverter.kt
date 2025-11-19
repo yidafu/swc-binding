@@ -84,9 +84,17 @@ object KotlinPoetConverter {
         // 添加修饰符
         addClassModifiers(builder, decl.modifier)
 
-        // 添加注解
+        // 添加注解（去重 @Serializable 注解）
+        var hasSerializable = false
         decl.annotations.forEach { annotation ->
-            convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
+            if (annotation.name == "Serializable") {
+                if (!hasSerializable) {
+                    convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
+                    hasSerializable = true
+                }
+            } else {
+                convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
+            }
         }
 
         // 不再自动添加 @SerialName 注解

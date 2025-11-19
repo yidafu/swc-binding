@@ -83,7 +83,6 @@ class DslCollectorEmitterTest : ShouldSpec({
         return DslModelContext(classes, props)
     }
 
-    
     should("collector skips configured receivers") {
         val collector = DslExtensionCollector(modelContext())
         val result = collector.collect()
@@ -92,7 +91,6 @@ class DslCollectorEmitterTest : ShouldSpec({
         result.groups.keys.shouldNotContain("HasSpan")
     }
 
-    
     should("collector falls back to interface when impl missing") {
         val context = modelContext()
         val classesWithoutImpl = context.classDecls.filterNot { it.name == "LiteralImpl" }
@@ -105,7 +103,6 @@ class DslCollectorEmitterTest : ShouldSpec({
         nodeFns.shouldHaveSize(0)
     }
 
-    
     should("file emitter generates receiver and create files") {
         val context = modelContext()
         val collector = DslExtensionCollector(context)
@@ -119,11 +116,10 @@ class DslCollectorEmitterTest : ShouldSpec({
         val createFile = files.first { it.outputPath.fileName.toString() == "create.kt" }
 
         nodeFile.fileSpec!!.toString().shouldContain("fun Node.literal")
-        // 新逻辑：仅为具体类生成 create 函数
-        createFile.fileSpec!!.toString().shouldContain("fun createLiteralImpl")
+        // 新逻辑：如果类名以 Impl 结尾，使用接口名作为函数名（去掉 Impl 后缀）
+        createFile.fileSpec!!.toString().shouldContain("fun createLiteral")
     }
 
-    
     should("collector skips enum typed property") {
         val collector = DslExtensionCollector(modelContext())
         val result = collector.collect()

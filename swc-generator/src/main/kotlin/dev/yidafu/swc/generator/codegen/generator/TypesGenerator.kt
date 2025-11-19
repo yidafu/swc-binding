@@ -12,6 +12,7 @@ import dev.yidafu.swc.generator.codegen.generator.types.TypesGenerationInput
 import dev.yidafu.swc.generator.codegen.generator.types.TypesPostProcessor
 import dev.yidafu.swc.generator.codegen.generator.types.stages.CollectTypesFileStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.ConcreteClassStage
+import dev.yidafu.swc.generator.codegen.generator.types.stages.ImplementationStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.InterfaceStage
 import dev.yidafu.swc.generator.codegen.generator.types.stages.TypeAliasStage
 import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFileWriter
@@ -50,8 +51,8 @@ class TypesGenerator(
         customStages ?: listOf(
             TypeAliasStage(typeAliasEmitter),
             InterfaceStage(interfaceEmitter),
+            ImplementationStage(implementationEmitter),
             ConcreteClassStage(concreteClassEmitter),
-            // 去掉实现类（Impl）生成阶段
             CollectTypesFileStage(postProcessor)
         )
     private val pipeline = GenerationPipeline(generationStages + WriteFilesStage(writer))
@@ -87,7 +88,7 @@ class TypesGenerator(
 
             // 过滤掉需要手动定义的类型（在 customType.kt 中定义）
             val skippedTypes = setOf("Identifier", "BindingIdentifier", "TemplateLiteral", "TsTemplateLiteralType")
-            val filteredClassDecls = classDecls.filter { 
+            val filteredClassDecls = classDecls.filter {
                 val cleanName = clean(it.name)
                 !skippedTypes.contains(cleanName)
             }.toMutableList()

@@ -10,7 +10,6 @@ import dev.yidafu.swc.generator.result.*
 import dev.yidafu.swc.generator.transformer.TransformResult
 import dev.yidafu.swc.generator.util.DebugUtils.findDebugTypes
 import dev.yidafu.swc.generator.util.Logger
-import dev.yidafu.swc.generator.util.NameUtils.clean
 import java.io.File
 
 /**
@@ -131,9 +130,7 @@ class CodeEmitter(
             operationName = "DSL 扩展函数",
             outputPath = config.outputDslDir,
             dryRunInfo = {
-                val functionCount = transformResult.classDecls.count { 
-                    it.modifier in listOf(ClassModifier.Interface, ClassModifier.SealedInterface) 
-                }
+                val functionCount = transformResult.classDecls.count { it.modifier in listOf(ClassModifier.Interface, ClassModifier.SealedInterface) }
                 "DSL 函数数（估计）: ~$functionCount"
             },
             generateAction = { dir ->

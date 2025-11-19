@@ -32,7 +32,7 @@ class ConfigurationLoaderTest : ShouldSpec({
     should("test load configuration from valid YAML file") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val configFile = File(tempDir, "test-config.yaml")
         val yamlContent = """
             input:
@@ -68,7 +68,7 @@ class ConfigurationLoaderTest : ShouldSpec({
     should("test load configuration with partial fields") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val configFile = File(tempDir, "partial-config.yaml")
         val yamlContent = """
             input:
@@ -91,7 +91,7 @@ class ConfigurationLoaderTest : ShouldSpec({
     should("test generate sample configuration") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val outputPath = File(tempDir, "sample-config.yaml").absolutePath
         val result = loader.generateSampleConfig(outputPath)
 
@@ -143,7 +143,7 @@ class ConfigurationLoaderTest : ShouldSpec({
     should("test configuration validation") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         val validConfig = Configuration.default().copy(
             input = InputConfig.default().copy(inputPath = "test-simple.d.ts")
         )

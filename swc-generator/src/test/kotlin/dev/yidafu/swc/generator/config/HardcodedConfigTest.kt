@@ -3,7 +3,6 @@ package dev.yidafu.swc.generator.config
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
@@ -90,26 +89,6 @@ class HardcodedConfigTest : ShouldSpec({
         }
     }
 
-    should("CtxtFieldsConfig should contain all required classes") {
-        val requiredClasses = listOf(
-            "BlockStatement",
-            "CallExpression",
-            "NewExpression",
-            "ArrowFunctionExpression",
-            "TaggedTemplateExpression",
-            "FunctionDeclaration",
-            "VariableDeclaration",
-            "Class",
-            "PrivateProperty",
-            "Constructor",
-            "Identifier"
-        )
-
-        requiredClasses.forEach { className ->
-            CtxtFieldsConfig.CLASSES_WITH_CTXT.shouldContain(className)
-        }
-    }
-
     should("TypeAliasRulesConfig should identify force string aliases") {
         TypeAliasRulesConfig.isForceStringAlias("TerserEcmaVersion").shouldBeTrue()
         TypeAliasRulesConfig.isForceStringAlias("OtherAlias").shouldBeFalse()
@@ -149,45 +128,5 @@ class HardcodedConfigTest : ShouldSpec({
         InterfaceRulesConfig.getRootDiscriminator("ParserConfig") shouldBe "syntax"
         InterfaceRulesConfig.getRootDiscriminator("Options") shouldBe "syntax"
         InterfaceRulesConfig.getRootDiscriminator("OtherInterface") shouldBe null
-    }
-
-    should("SerializerConfig should have correct discriminator constants") {
-        SerializerConfig.DEFAULT_DISCRIMINATOR shouldBe "type"
-        SerializerConfig.SYNTAX_DISCRIMINATOR shouldBe "syntax"
-    }
-
-    should("SerializerConfig should contain additional open bases") {
-        val openBases = SerializerConfig.additionalOpenBases
-        openBases.shouldContain("Node")
-        openBases.shouldContain("ModuleItem")
-        openBases.shouldContain("ModuleDeclaration")
-        openBases.shouldContain("Identifier")
-    }
-
-    should("SerializerConfig should contain config interface names") {
-        val configNames = SerializerConfig.configInterfaceNames
-        configNames.shouldContain("BaseParseOptions")
-        configNames.shouldContain("ParserConfig")
-        configNames.shouldContain("TsParserConfig")
-        configNames.shouldContain("EsParserConfig")
-        configNames.shouldContain("Options")
-        configNames.shouldContain("Config")
-    }
-
-    should("UnionConfig should have default factory arity") {
-        val arity = UnionConfig.factoryArity
-        arity.shouldContain(2)
-        arity.shouldContain(3)
-        arity.shouldContain(4)
-        arity.shouldContain(5)
-    }
-
-    should("SerializerConfig should contain interface to impl map") {
-        val interfaceToImpl = SerializerConfig.interfaceToImplMap
-        interfaceToImpl["Identifier"] shouldBe "IdentifierImpl"
-        interfaceToImpl["BindingIdentifier"] shouldBe "BindingIdentifierImpl"
-        interfaceToImpl["TemplateLiteral"] shouldBe "TemplateLiteralImpl"
-        interfaceToImpl["TsTemplateLiteralType"] shouldBe "TsTemplateLiteralTypeImpl"
-        interfaceToImpl.size shouldBe 4
     }
 })

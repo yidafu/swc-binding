@@ -27,6 +27,21 @@ object CodeGenerationRules {
         typeFieldLiteralValueMap[interfaceName] = literalValue
     }
 
+    /**
+     * 需要显式添加 type 字段的类列表
+     * 这些类虽然有 @JsonClassDiscriminator 和 @SerialName，但作为具体类型序列化时
+     * （如 Array<VariableDeclarator>），@JsonClassDiscriminator 不会自动添加 type 字段
+     * 因此需要显式添加 type 字段以确保序列化时包含该字段
+     * * 注意：这里使用的是 Kotlin 类名（如 "Param"），而不是序列化名称（如 "Parameter"）
+     */
+    val classesRequiringExplicitTypeField: Set<String> = setOf(
+        "VariableDeclarator",
+        "Param", // Kotlin 类名，序列化名称为 "Parameter"
+        "BlockStatement",
+        "JSXOpeningElement",
+        "JSXClosingElement"
+    )
+
     // ==================== 特殊属性类型覆盖规则 ====================
 
     /**
@@ -111,6 +126,14 @@ object CodeGenerationRules {
      */
     fun mapTypeName(name: String): String {
         return typeNameOverrides[name] ?: name
+    }
+
+    /**
+     * 反向映射类型名称，从映射后的名称获取原始名称
+     * 例如：JsClass -> Class
+     */
+    fun getReverseMappedName(mappedName: String): String? {
+        return typeNameOverrides.entries.find { it.value == mappedName }?.key
     }
 
     /**
@@ -229,8 +252,7 @@ object CodeGenerationRules {
 
     /**
      * 获取序列化注解
-     * 
-     * 对于多态序列化，即使名称相同，也需要 @SerialName 注解来确保序列化器能正确识别类型。
+     * * 对于多态序列化，即使名称相同，也需要 @SerialName 注解来确保序列化器能正确识别类型。
      * 因此，我们始终添加 @SerialName 注解。
      */
     fun getSerializationAnnotations(originalName: String, kotlinName: String): List<KotlinDeclaration.Annotation> {
@@ -455,28 +477,10 @@ object TypesImplementationRules {
             else -> rule.interfaceCleanName
         }
 
-        val annotations = mutableListOf(
-            KotlinDeclaration.Annotation("SwcDslMarker"),
-            KotlinDeclaration.Annotation("Serializable"),
-            KotlinDeclaration.Annotation(
-                "SerialName",
-                listOf(Expression.StringLiteral(serialNameValue))
-            ),
-            KotlinDeclaration.Annotation(
-                "OptIn",
-                listOf(Expression.ClassReference("ExperimentalSerializationApi"))
-            )
-        )
-        // 若使用 syntax 作为判别字段，则加上 JsonClassDiscriminator("syntax")
-        if (rule.discriminator == "syntax") {
-            annotations.add(
-                KotlinDeclaration.Annotation(
-                    "JsonClassDiscriminator",
-                    listOf(Expression.StringLiteral(SerializerConfig.SYNTAX_DISCRIMINATOR))
-                )
-            )
-        }
-        return annotations
+        // Impl 类是 FinalClass，注解应该由 RegularClassConverter.addPolymorphicAnnotations 添加
+        // 这里不添加任何注解，避免与 RegularClassConverter 重复
+        // 注意：如果需要特殊处理，可以在 RegularClassConverter 中处理
+        return emptyList()
     }
 
     fun reorderImplementationProperties(
@@ -550,9 +554,17 @@ object TypesImplementationRules {
         val annotations = buildList {
             addAll(prop.annotations)
             // 不再为 type/syntax 判别字段添加 @Transient 注解
-            // Span 坐标属性（包括 ctxt）都有默认值和 @EncodeDefault 注解
-            if (isSpanProperty || isSpanCoordinateProperty) {
+            // Span 坐标属性：start 和 end 需要 @EncodeDefault，但 ctxt 不需要
+            // 因为 @swc/core 不输出默认值为 0 的 ctxt 字段
+            if (isSpanProperty) {
                 add(KotlinDeclaration.Annotation("EncodeDefault"))
+            } else if (isSpanCoordinateProperty) {
+                // 只有 start 和 end 需要 @EncodeDefault，ctxt 不需要
+                val normalizedName = prop.name.removeSurrounding("`")
+                if (normalizedName in setOf("start", "end")) {
+                    add(KotlinDeclaration.Annotation("EncodeDefault"))
+                }
+                // ctxt 字段不使用 @EncodeDefault，这样默认值 0 不会被序列化
             }
         }
 

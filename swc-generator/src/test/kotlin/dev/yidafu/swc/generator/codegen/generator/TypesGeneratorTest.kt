@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 class TypesGeneratorTest : ShouldSpec({
-    
+
     should("type property in implementation is non nullable with default value") {
         val generator = TypesGenerator(mutableListOf())
         val propertyDecl = KotlinDeclaration.PropertyDecl(
@@ -32,7 +32,6 @@ class TypesGeneratorTest : ShouldSpec({
         defaultValue.value shouldBe "BinaryExpression"
     }
 
-    
     should("implementation class includes inherited properties") {
         val nodeInterface = KotlinDeclaration.ClassDecl(
             name = "Node",
@@ -102,7 +101,6 @@ class TypesGeneratorTest : ShouldSpec({
         propertyNames.shouldContainAll(listOf("type", "span", "kind"))
     }
 
-    
     should("implementation class deduplicates overridden properties") {
         val nodeInterface = KotlinDeclaration.ClassDecl(
             name = "Node",
@@ -163,7 +161,6 @@ class TypesGeneratorTest : ShouldSpec({
         typeCount shouldBe 1
     }
 
-    
     should("parser config implementation uses syntax discriminator and defaults") {
         val tsParserInterface = KotlinDeclaration.ClassDecl(
             name = "TsParserConfig",
@@ -199,12 +196,7 @@ class TypesGeneratorTest : ShouldSpec({
         val defaultValue = syntaxProp.defaultValue as Expression.StringLiteral
         defaultValue.value shouldBe "typescript"
 
-        val discriminator = implClass.annotations.first { it.name == "JsonClassDiscriminator" }
-        val discriminatorValue = discriminator.arguments.first() as Expression.StringLiteral
-        discriminatorValue.value shouldBe "syntax"
-
-        val serialName = implClass.annotations.first { it.name == "SerialName" }
-        val serialValue = serialName.arguments.first() as Expression.StringLiteral
-        serialValue.value shouldBe "typescript"
+        // 注意：注解现在由 RegularClassConverter.addPolymorphicAnnotations 添加，
+        // 而不是在 implementationAnnotations 中，所以这里不检查注解
     }
 })

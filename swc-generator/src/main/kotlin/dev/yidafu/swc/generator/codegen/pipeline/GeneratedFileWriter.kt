@@ -1,10 +1,10 @@
 package dev.yidafu.swc.generator.codegen.pipeline
 
+import dev.yidafu.swc.generator.util.DebugUtils
+import dev.yidafu.swc.generator.util.DebugUtils.isDebugType
 import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.Path
-import dev.yidafu.swc.generator.util.DebugUtils
-import dev.yidafu.swc.generator.util.DebugUtils.isDebugType
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletableFuture
@@ -112,7 +112,7 @@ class GeneratedFileWriter(
         } else {
             content
         }
-        
+
         // 移除所有注释（单行注释、多行注释和 KDoc）
         return removeAllComments(contentWithoutHeader)
     }
@@ -128,7 +128,7 @@ class GeneratedFileWriter(
         val result = StringBuilder()
         var i = 0
         val length = content.length
-        
+
         while (i < length) {
             when {
                 // 检查是否是原始字符串（三重引号）- 优先检查，因为可能包含普通引号
@@ -202,7 +202,7 @@ class GeneratedFileWriter(
                 }
             }
         }
-        
+
         return result.toString()
     }
 

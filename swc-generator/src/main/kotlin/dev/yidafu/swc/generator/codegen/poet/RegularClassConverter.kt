@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import dev.yidafu.swc.generator.config.AnnotationConfig
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.config.CtxtFieldsConfig
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.Expression
@@ -87,9 +88,10 @@ object RegularClassConverter {
         addSpanPropertyIfNeeded(builder, decl, hasSpanDerived, existingPropNames)
 
         // 补充 ctxt 属性（如果需要）
-        addCtxtPropertyIfNeeded(builder, decl, existingPropNames)
+        // 注意：这会在配置的类中添加 ctxt，但不会处理通过父接口继承的 ctxt
+        addCtxtPropertyIfNeeded(builder, decl, existingPropNames, declLookup)
 
-        // 补齐父接口链上的抽象属性
+        // 补齐父接口链上的抽象属性（包括通过父接口继承的 ctxt）
         addMissingParentProperties(
             builder,
             decl,
@@ -99,6 +101,10 @@ object RegularClassConverter {
             existingPropNames,
             convertType
         )
+
+        // 为需要显式 type 字段的类添加 type 属性
+        // 这些类虽然有 @JsonClassDiscriminator，但作为具体类型序列化时不会自动添加 type 字段
+        addExplicitTypeFieldIfNeeded(builder, decl, nodeDerived, existingPropNames)
     }
 
     /**
@@ -117,9 +123,22 @@ object RegularClassConverter {
         val implementsSealedInterface = decl?.let { d ->
             ClassDeclarationConverter.implementsSealedInterface(d.parents, declLookup)
         } ?: false
-        
+
+        // 检查类是否在需要显式 type 字段的列表中
+        val className = decl?.name?.removeSurrounding("`") ?: ""
+        val requiresExplicitTypeField = CodeGenerationRules.classesRequiringExplicitTypeField.contains(className)
+
+        // 检查类声明中是否已经有 @Serializable 注解（buildAnnotations 可能已经添加了）
+        val hasSerializable = decl?.annotations?.any { it.name == "Serializable" } == true
+
         // Config 派生类优先使用 syntax discriminator
         if (configDerived) {
+            // 只有在没有 @Serializable 注解时才添加
+            if (!hasSerializable) {
+                builder.addAnnotation(
+                    AnnotationSpec.builder(PoetConstants.Serialization.SERIALIZABLE).build()
+                )
+            }
             builder.addAnnotation(
                 AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
                     .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
@@ -140,16 +159,26 @@ object RegularClassConverter {
                 )
             }
         } else if (nodeDerived || implementsSealedInterface) {
+            // 只有在没有 @Serializable 注解时才添加
+            if (!hasSerializable) {
+                builder.addAnnotation(
+                    AnnotationSpec.builder(PoetConstants.Serialization.SERIALIZABLE).build()
+                )
+            }
             builder.addAnnotation(
                 AnnotationSpec.builder(PoetConstants.Kotlin.OPT_IN)
                     .addMember("%T::class", PoetConstants.Serialization.EXPERIMENTAL)
                     .build()
             )
-            builder.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
-                    .addMember("%S", "type")
-                    .build()
-            )
+            // 对于需要显式 type 字段的类，不添加 @JsonClassDiscriminator，因为它们有显式的 type 属性
+            // 这样可以避免与多态判别器冲突，同时确保非多态序列化时也有 type 字段
+            if (!requiresExplicitTypeField) {
+                builder.addAnnotation(
+                    AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
+                        .addMember("%S", "type")
+                        .build()
+                )
+            }
             // 为 Node 派生类或实现 sealed interface 的类（叶子节点）添加 @SerialName 和 @SwcDslMarker 注解
             if (decl != null) {
                 val serialName = decl.computeSerialName("type")
@@ -210,23 +239,104 @@ object RegularClassConverter {
     private fun addCtxtPropertyIfNeeded(
         builder: TypeSpec.Builder,
         decl: KotlinDeclaration.ClassDecl,
-        existingPropNames: MutableSet<String>
+        existingPropNames: MutableSet<String>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ) {
         val className = decl.name.removeSurrounding("`")
-        val needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(className)
+
+        // 检查类名本身是否需要 ctxt（包括反向映射检查）
+        // 因为 "Class" 会被映射为 "JsClass"，但配置中使用的是 "Class"
+        var needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(className) ||
+            CodeGenerationRules.getReverseMappedName(className)?.let { originalName ->
+                CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+            } ?: false
+        var interfaceName: String? = null
+
+        // 如果是实现类（以 Impl 结尾），检查对应的接口名
+        if (!needsCtxt && className.endsWith("Impl")) {
+            interfaceName = className.removeSuffix("Impl")
+            needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(interfaceName) ||
+                CodeGenerationRules.getReverseMappedName(interfaceName)?.let { originalName ->
+                    CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+                } ?: false
+        }
+
+        // 如果接口在 interfaceToImplMap 中，也检查接口名
+        if (!needsCtxt) {
+            val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
+            interfaceName = interfaceToImplMap.entries.find { it.value == className }?.key
+            if (interfaceName != null) {
+                needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(interfaceName) ||
+                    CodeGenerationRules.getReverseMappedName(interfaceName)?.let { originalName ->
+                        CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+                    } ?: false
+            }
+        }
+
         if (needsCtxt && decl.properties.none { it.name == "ctxt" }) {
+            // 检查父接口是否有 ctxt 属性，如果有则需要添加 override
+            // 使用 collectParentProperties 来递归收集所有父接口的属性
+            val parentProps = collectParentProperties(decl.parents, declLookup)
+            val hasCtxtInParent = parentProps.any { it.name == "ctxt" } ||
+                (interfaceName != null && declLookup[interfaceName]?.properties?.any { it.name == "ctxt" } == true)
+
             val ctxtType = ClassName("kotlin", "Int")
-            val ctxtProp = PropertySpec.builder("ctxt", ctxtType)
+            val ctxtPropBuilder = PropertySpec.builder("ctxt", ctxtType)
                 .addModifiers(KModifier.PUBLIC)
                 .mutable(true)
                 .initializer("0")
                 .addAnnotation(
                     AnnotationSpec.builder(AnnotationConfig.toClassName(AnnotationConfig.ENCODE_DEFAULT)).build()
                 )
-                .build()
-            builder.addProperty(ctxtProp)
+
+            // 如果父接口有 ctxt 属性，添加 override 修饰符
+            if (hasCtxtInParent) {
+                ctxtPropBuilder.addModifiers(KModifier.OVERRIDE)
+            }
+
+            builder.addProperty(ctxtPropBuilder.build())
             existingPropNames.add("ctxt")
         }
+    }
+
+    /**
+     * 为需要显式 type 字段的类添加 type 属性
+     * 这些类虽然有 @JsonClassDiscriminator，但作为具体类型序列化时不会自动添加 type 字段
+     */
+    private fun addExplicitTypeFieldIfNeeded(
+        builder: TypeSpec.Builder,
+        decl: KotlinDeclaration.ClassDecl,
+        nodeDerived: Boolean,
+        existingPropNames: MutableSet<String>
+    ) {
+        val className = decl.name.removeSurrounding("`")
+        // 只处理 Node 派生类，且该类在需要显式 type 字段的列表中
+        if (!nodeDerived || !CodeGenerationRules.classesRequiringExplicitTypeField.contains(className)) {
+            return
+        }
+
+        // 对于需要显式 type 字段的类，即使 existingPropNames 中包含 "type"（因为之前跳过了生成），
+        // 我们也应该强制添加 type 属性，因为之前的逻辑跳过了生成，所以 existingPropNames 中的 "type" 是误报
+        // 注意：这里不检查 existingPropNames，因为对于这些特殊类，type 属性之前被跳过了生成
+
+        // 优先使用从 TypeScript 定义中提取的字面量值
+        // 如果没有找到字面量值，再使用 computeSerialName 作为后备
+        val typeFieldValue = CodeGenerationRules.getTypeFieldLiteralValue(className)
+            ?: decl.computeSerialName("type")
+        // 注意：这些类在 addPolymorphicAnnotations 中不会添加 @JsonClassDiscriminator，
+        // 因为它们需要显式的 type 属性。当它们作为多态类型序列化时，Kotlinx Serialization
+        // 会使用 @SerialName 和显式的 type 属性来进行多态识别。当它们不作为多态类型序列化时
+        // （如直接序列化 VariableDeclarator），显式的 type 字段会被序列化。
+        val typeProp = PropertySpec.builder("type", ClassName("kotlin", "String"))
+            .addModifiers(KModifier.PUBLIC)
+            .mutable(true)
+            .initializer("%S", typeFieldValue)
+            .addAnnotation(
+                AnnotationSpec.builder(AnnotationConfig.toClassName(AnnotationConfig.ENCODE_DEFAULT)).build()
+            )
+            .build()
+        builder.addProperty(typeProp)
+        existingPropNames.add("type")
     }
 
     /**
@@ -274,6 +384,28 @@ object RegularClassConverter {
             val propName = p.name
             if (existingPropNames.contains(propName)) return@forEach
             if (propName == "span" && decl.properties.none { it.name == "span" }) {
+                return@forEach
+            }
+            // ctxt 字段的特殊处理：
+            // 1. 如果已经在 addCtxtPropertyIfNeeded 中添加了（配置的类），跳过
+            // 2. 如果是通过父接口继承的（如 JsClass），需要添加但使用 Int 类型和初始值 0
+            if (propName == "ctxt") {
+                // 检查是否已经在 addCtxtPropertyIfNeeded 中添加了
+                if (existingPropNames.contains("ctxt")) {
+                    return@forEach
+                }
+                // 通过父接口继承的 ctxt，添加为 Int 类型，初始值为 0
+                val ctxtType = ClassName("kotlin", "Int")
+                val ctxtProp = PropertySpec.builder("ctxt", ctxtType)
+                    .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                    .mutable(true)
+                    .initializer("0")
+                    .addAnnotation(
+                        AnnotationSpec.builder(AnnotationConfig.toClassName(AnnotationConfig.ENCODE_DEFAULT)).build()
+                    )
+                    .build()
+                builder.addProperty(ctxtProp)
+                existingPropNames.add("ctxt")
                 return@forEach
             }
 

@@ -17,4 +17,3 @@ abstract class BaseGenerator(
         writer.close()
     }
 }
-

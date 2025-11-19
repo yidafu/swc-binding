@@ -1,8 +1,11 @@
 package dev.yidafu.swc.generator.codegen.poet
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.yidafu.swc.generator.config.CtxtFieldsConfig
+import dev.yidafu.swc.generator.config.CodeGenerationRules
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 
 /**
@@ -22,27 +25,22 @@ object InterfaceClassConverter {
         addUnionAnnotation: (String, String, dev.yidafu.swc.generator.model.kotlin.KotlinType, PropertySpec.Builder) -> Unit
     ) {
         // 接口：属性不得包含初始化器，生成抽象属性；为 Union.Ux 属性添加 @Serializable(with=...)
-        // Node 接口不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
+        // 所有接口都不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
         if (decl.name == "Node") {
             // 为 Node 接口添加注释说明 type 字段与 @SerialName 冲突
             builder.addKdoc("conflict with @SerialName\nremove class property `var type: String?`")
         }
+        val existingPropNames = mutableSetOf<String>()
         decl.properties.forEach { prop ->
-            // Node 接口不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
-            if (prop.name == "type" && decl.name == "Node") {
-                return@forEach
-            }
-            // 仅 Node 系谱接口保留 `type` 抽象属性；其余接口不生成该字段
-            if (prop.name == "type" && !nodeDerived) {
+            // 所有接口都不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
+            // @JsonClassDiscriminator("type") 会自动处理 type 字段，不需要在接口中声明
+            if (prop.name == "type") {
                 return@forEach
             }
             val typeName = convertType(prop.type)
             val propBuilder = PropertySpec.builder(prop.name, typeName)
-            // 接口属性修饰符（保持 val/var），针对 Node 系谱上的 `type` 强制添加 override（除 Node 本身）
+            // 接口属性修饰符（保持 val/var）
             PropertyConverter.addPropertyModifiers(propBuilder, prop.modifier)
-            if (prop.name == "type" && nodeDerived && decl.name != "Node") {
-                propBuilder.addModifiers(KModifier.OVERRIDE)
-            }
             // 透传原始注解
             prop.annotations.forEach { annotation ->
                 AnnotationConverter.convertAnnotation(annotation)?.let { propBuilder.addAnnotation(it) }
@@ -60,6 +58,37 @@ object InterfaceClassConverter {
             // 文档
             prop.kdoc?.let { propBuilder.addKdoc(it.cleanKdoc()) }
             builder.addProperty(propBuilder.build())
+            existingPropNames.add(prop.name)
+        }
+
+        // 补充 ctxt 属性（如果需要）
+        addCtxtPropertyIfNeeded(builder, decl, existingPropNames)
+    }
+
+    /**
+     * 补充 ctxt 属性（如果需要）
+     */
+    private fun addCtxtPropertyIfNeeded(
+        builder: TypeSpec.Builder,
+        decl: KotlinDeclaration.ClassDecl,
+        existingPropNames: MutableSet<String>
+    ) {
+        val interfaceName = decl.name.removeSurrounding("`")
+        // 检查映射后的名称和原始名称（通过反向映射）
+        // 因为 "Class" 会被映射为 "JsClass"，但配置中使用的是 "Class"
+        val needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(interfaceName) ||
+            // 反向映射：检查是否有原始名称在配置中
+            CodeGenerationRules.getReverseMappedName(interfaceName)?.let { originalName ->
+                CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+            } ?: false
+
+        if (needsCtxt && !existingPropNames.contains("ctxt")) {
+            val ctxtType = ClassName("kotlin", "Int")
+            val ctxtProp = PropertySpec.builder("ctxt", ctxtType)
+                .addModifiers(KModifier.PUBLIC, KModifier.ABSTRACT)
+                .mutable(true)
+                .build()
+            builder.addProperty(ctxtProp)
         }
     }
 }

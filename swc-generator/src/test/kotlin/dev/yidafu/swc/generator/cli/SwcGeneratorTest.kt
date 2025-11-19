@@ -24,7 +24,7 @@ class SwcGeneratorTest : ShouldSpec({
     should("test run with valid input file") {
         // 确保临时目录存在
         tempDir.mkdirs()
-        
+
         // 创建测试 TypeScript 定义文件
         val testFile = File(tempDir, "test-simple.d.ts")
         testFile.writeText(

@@ -32,8 +32,15 @@ object SerializerConfig {
         IDENTIFIER("Identifier"),
         BINDING_IDENTIFIER("BindingIdentifier"),
         VARIABLE_DECLARATOR("VariableDeclarator"),
+        PARAM("Param"),
+        BLOCK_STATEMENT("BlockStatement"),
+        JSX_OPENING_ELEMENT("JSXOpeningElement"),
+        JSX_CLOSING_ELEMENT("JSXClosingElement"),
+        TEMPLATE_LITERAL("TemplateLiteral"),
+        TS_TEMPLATE_LITERAL_TYPE("TsTemplateLiteralType"),
         MODULE("Module"),
         SCRIPT("Script"),
+
         // 中间接口（非 sealed），需要显式添加到 additionalOpenBases
         // Declaration、Expression、Statement、Pattern 是 sealed interface，会自动包含
         EXPRESSION_BASE("ExpressionBase"),
@@ -86,7 +93,12 @@ object SerializerConfig {
         "Identifier" to "IdentifierImpl",
         "BindingIdentifier" to "BindingIdentifierImpl",
         "TemplateLiteral" to "TemplateLiteralImpl",
-        "TsTemplateLiteralType" to "TsTemplateLiteralTypeImpl"
+        "TsTemplateLiteralType" to "TsTemplateLiteralTypeImpl",
+        "VariableDeclarator" to "VariableDeclaratorImpl",
+        "Param" to "ParamImpl",
+        "BlockStatement" to "BlockStatementImpl",
+        "JSXOpeningElement" to "JSXOpeningElementImpl",
+        "JSXClosingElement" to "JSXClosingElementImpl"
     )
 
     /**

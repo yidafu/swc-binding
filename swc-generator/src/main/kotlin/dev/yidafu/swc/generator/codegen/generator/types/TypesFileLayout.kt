@@ -6,7 +6,6 @@ import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFile
 import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
 import dev.yidafu.swc.generator.util.DebugUtils
 import dev.yidafu.swc.generator.util.DebugUtils.isDebugType
-import dev.yidafu.swc.generator.util.NameUtils.clean
 import java.nio.file.Path
 import java.util.LinkedHashMap
 

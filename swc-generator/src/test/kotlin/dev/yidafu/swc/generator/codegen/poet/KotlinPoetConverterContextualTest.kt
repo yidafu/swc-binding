@@ -9,7 +9,6 @@ import io.kotest.matchers.string.shouldContain
 
 class KotlinPoetConverterContextualTest : ShouldSpec({
 
-    
     should("union property should be annotated with Serializable with custom serializer") {
         val prop = KotlinDeclaration.PropertyDecl(
             name = "value",
