@@ -58,7 +58,7 @@
   <div class="breadcrumbs"><a href="../../../index.html">swc-binding</a><span class="delimiter">/</span><a href="../index.html">dev.yidafu.swc.generated</a><span class="delimiter">/</span><span class="current">BindingIdentifier</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Binding</span><wbr></wbr><span><span>Identifier</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">BindingIdentifier</a> : <a href="../-pattern-base/index.html">PatternBase</a>, <a href="../-pattern/index.html">Pattern</a>, <a href="../-ts-parameter-property-parameter/index.html">TsParameterPropertyParameter</a>, <a href="../-ts-fn-parameter/index.html">TsFnParameter</a></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-identifier-impl/index.html">IdentifierImpl</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">BindingIdentifier</a> : <a href="../-pattern-base/index.html">PatternBase</a>, <a href="../-pattern/index.html">Pattern</a>, <a href="../-ts-parameter-property-parameter/index.html">TsParameterPropertyParameter</a>, <a href="../-ts-fn-parameter/index.html">TsFnParameter</a></div><p class="paragraph">Binding identifier AST node interface.</p><p class="paragraph">A binding identifier is used in patterns (e.g., variable declarations, function parameters) where a value is being bound to a name. This is similar to <a href="../-identifier/index.html">Identifier</a> but used specifically in binding contexts like destructuring patterns and function parameters.</p><p class="paragraph"><strong>Note</strong>: The <code class="lang-kotlin">type</code> field is omitted here due to conflicts with <code class="lang-kotlin">@SerialName</code>. The actual type is determined by the serialization discriminator.</p><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":swc-binding:dokkaHtml/main" data-filterable-set=":swc-binding:dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-identifier-impl/index.html">IdentifierImpl</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
@@ -75,7 +75,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">var </span><a href="optional.html">optional</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">var </span><a href="optional.html">optional</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Whether this identifier is optional (used in TypeScript)</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -90,7 +90,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="span.html">span</a><span class="token operator">: </span><a href="../-span/index.html">Span</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="span.html">span</a><span class="token operator">: </span><a href="../-span/index.html">Span</a></div><div class="brief "><p class="paragraph">Source code location information</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="type-annotation.html">typeAnnotation</a><span class="token operator">: </span><a href="../-ts-type-annotation/index.html">TsTypeAnnotation</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="type-annotation.html">typeAnnotation</a><span class="token operator">: </span><a href="../-ts-type-annotation/index.html">TsTypeAnnotation</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Optional TypeScript type annotation</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -120,7 +120,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">var </span><a href="value.html">value</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":swc-binding:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">var </span><a href="value.html">value</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The identifier name (e.g., &quot;x&quot;, &quot;param&quot;, &quot;destructuredVar&quot;)</p></div></div></div>
                 </div>
               </div>
             </div>

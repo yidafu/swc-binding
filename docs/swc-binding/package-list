@@ -6753,8 +6753,6 @@ $dokka.location:dev.yidafu.swc.sample//parseSyncEsSample/#/PointingToDeclaration
 $dokka.location:dev.yidafu.swc.sample//parseSyncJsxSample/#/PointingToDeclaration/swc-binding/dev.yidafu.swc.sample/parse-sync-jsx-sample.html
 $dokka.location:dev.yidafu.swc.sample//parseSyncTsSample/#/PointingToDeclaration/swc-binding/dev.yidafu.swc.sample/parse-sync-ts-sample.html
 $dokka.location:dev.yidafu.swc////PointingToDeclaration/swc-binding/dev.yidafu.swc/index.html
-$dokka.location:dev.yidafu.swc//astJson/#/PointingToDeclaration/swc-binding/dev.yidafu.swc/ast-json.html
-$dokka.location:dev.yidafu.swc//configJson/#/PointingToDeclaration/swc-binding/dev.yidafu.swc/config-json.html
 $dokka.location:dev.yidafu.swc//emptySpan/#/PointingToDeclaration/swc-binding/dev.yidafu.swc/empty-span.html
 $dokka.location:dev.yidafu.swc//outputJson/#/PointingToDeclaration/swc-binding/dev.yidafu.swc/output-json.html
 $dokka.location:dev.yidafu.swc//parseAstTree/#kotlin.String/PointingToDeclaration/swc-binding/dev.yidafu.swc/parse-ast-tree.html
