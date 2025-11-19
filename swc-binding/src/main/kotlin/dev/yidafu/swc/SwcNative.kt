@@ -432,13 +432,23 @@ class SwcNative {
     // ==================== Async Methods ====================
 
     /**
-     * Native async parse method (callback-based)
-     * * This method returns immediately and executes parsing in a background thread.
+     * Native async parse method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [parseAsync] method with [ParserConfig] parameter instead.
+     *
+     * This method returns immediately and executes parsing in a background thread.
      * The callback will be invoked when parsing completes or fails.
-     * * @param code Source code to parse
-     * @param options Parser options JSON string
-     * @param filename Source file name
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [ParserConfig] or suspend functions for better type safety.
+     *
+     * @param code Source code to parse
+     * @param options Parser options as JSON string (see [ParserConfig])
+     * @param filename Source file name (can be null)
      * @param callback Callback interface to receive results
+     * @see parseAsync for Kotlin-friendly version with [ParserConfig]
+     * @see parseAsync for coroutine-based suspend function version
      */
     external fun parseAsync(
         code: String,
@@ -448,10 +458,22 @@ class SwcNative {
     )
 
     /**
-     * Native async parse file method (callback-based)
-     * * @param filepath Path to source file
-     * @param options Parser options JSON string
+     * Native async parse file method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [parseFileAsync] method with [ParserConfig] parameter instead.
+     *
+     * This method returns immediately and executes file parsing in a background thread.
+     * The callback will be invoked when parsing completes or fails.
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [ParserConfig] or suspend functions for better type safety.
+     *
+     * @param filepath Path to source file
+     * @param options Parser options as JSON string (see [ParserConfig])
      * @param callback Callback interface to receive results
+     * @see parseFileAsync for Kotlin-friendly version with [ParserConfig]
+     * @see parseFileAsync for coroutine-based suspend function version
      */
     external fun parseFileAsync(
         filepath: String,
@@ -460,11 +482,23 @@ class SwcNative {
     )
 
     /**
-     * Native async transform method (callback-based)
-     * * @param code Source code or AST JSON
-     * @param isModule Whether to treat as module
-     * @param options Transform options JSON string
+     * Native async transform method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [transformAsync] method with [Options] parameter instead.
+     *
+     * This method returns immediately and executes transformation in a background thread.
+     * The callback will be invoked when transformation completes or fails.
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [Options] or suspend functions for better type safety.
+     *
+     * @param code Source code to transform (as string, not AST JSON)
+     * @param isModule Whether the code should be treated as a module
+     * @param options Transform options as JSON string (see [Options])
      * @param callback Callback interface to receive results
+     * @see transformAsync for Kotlin-friendly version with [Options]
+     * @see transformAsync for coroutine-based suspend function version
      */
     external fun transformAsync(
         code: String,
@@ -474,11 +508,23 @@ class SwcNative {
     )
 
     /**
-     * Native async transform file method (callback-based)
-     * * @param filepath Path to source file
-     * @param isModule Whether to treat as module
-     * @param options Transform options JSON string
+     * Native async transform file method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [transformFileAsync] method with [Options] parameter instead.
+     *
+     * This method returns immediately and executes file transformation in a background thread.
+     * The callback will be invoked when transformation completes or fails.
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [Options] or suspend functions for better type safety.
+     *
+     * @param filepath Path to source file
+     * @param isModule Whether the file should be treated as a module
+     * @param options Transform options as JSON string (see [Options])
      * @param callback Callback interface to receive results
+     * @see transformFileAsync for Kotlin-friendly version with [Options]
+     * @see transformFileAsync for coroutine-based suspend function version
      */
     external fun transformFileAsync(
         filepath: String,
@@ -488,10 +534,22 @@ class SwcNative {
     )
 
     /**
-     * Native async print method (callback-based)
-     * * @param program AST program JSON string
-     * @param options Print options JSON string
+     * Native async print method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [printAsync] method with [Program] and [Options] parameters instead.
+     *
+     * This method returns immediately and executes AST printing in a background thread.
+     * The callback will be invoked when printing completes or fails.
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [Program] and [Options] or suspend functions for better type safety.
+     *
+     * @param program AST program as JSON string
+     * @param options Print options as JSON string (see [Options])
      * @param callback Callback interface to receive results
+     * @see printAsync for Kotlin-friendly version with [Program] and [Options]
+     * @see printAsync for coroutine-based suspend function version
      */
     external fun printAsync(
         program: String,
@@ -500,10 +558,25 @@ class SwcNative {
     )
 
     /**
-     * Native async minify method (callback-based)
-     * * @param program Code or program JSON string
-     * @param options Minify options JSON string
+     * Native async minify method (callback-based).
+     *
+     * This is a low-level native method that accepts JSON strings. Prefer using
+     * the higher-level [minifyAsync] method with [JsMinifyOptions] parameter instead.
+     *
+     * This method returns immediately and executes minification in a background thread.
+     * The callback will be invoked when minification completes or fails.
+     *
+     * According to SWC documentation: https://swc.rs/docs/usage/core#minify
+     * The first parameter should be source code string (wrapped as JSON string), not AST.
+     *
+     * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
+     * overloads with [JsMinifyOptions] or suspend functions for better type safety.
+     *
+     * @param program Source code as JSON string (wrapped string, not AST)
+     * @param options Minify options as JSON string (see [JsMinifyOptions])
      * @param callback Callback interface to receive results
+     * @see minifyAsync for Kotlin-friendly version with [JsMinifyOptions]
+     * @see minifyAsync for coroutine-based suspend function version
      */
     external fun minifyAsync(
         program: String,
@@ -516,14 +589,33 @@ class SwcNative {
     /**
      * Kotlin-friendly async parse with lambda callbacks.
      *
+     * This method executes parsing asynchronously in a background thread and invokes
+     * the provided callbacks when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
+     * **For Kotlin code, prefer using the suspend function [parseAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
      * @param code Source code to parse
-     * @param options Parser configuration
-     * @param filename Source file name (can be null)
-     * @param onSuccess Called with parsed AST when successful
-     * @param onError Called with error message when failed
+     * @param options Parser configuration (use [esParseOptions] or [tsParseOptions] DSL)
+     * @param filename Source file name (can be null, used for error reporting)
+     * @param onSuccess Lambda called with parsed [Program] AST when parsing succeeds
+     * @param onError Lambda called with error message string when parsing fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.parseAsync(
+     *     code = "const x = 42;",
+     *     options = esParseOptions { },
+     *     filename = "test.js",
+     *     onSuccess = { ast -> println("Parsed: ${ast.type}") },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -533,6 +625,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see parseAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     @JvmOverloads
     fun parseAsync(
@@ -568,13 +662,31 @@ class SwcNative {
     /**
      * Kotlin-friendly async parse file with lambda callbacks.
      *
+     * This method reads a file from disk and parses it asynchronously in a background thread.
+     * The callbacks are invoked when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
-     * @param filepath Path to source file
-     * @param options Parser configuration
-     * @param onSuccess Called with parsed AST when successful
-     * @param onError Called with error message when failed
+     * **For Kotlin code, prefer using the suspend function [parseFileAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
+     * @param filepath Absolute or relative path to the source file
+     * @param options Parser configuration (use [esParseOptions] or [tsParseOptions] DSL)
+     * @param onSuccess Lambda called with parsed [Program] AST when parsing succeeds
+     * @param onError Lambda called with error message string when parsing fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.parseFileAsync(
+     *     filepath = "src/index.ts",
+     *     options = tsParseOptions { tsx = true },
+     *     onSuccess = { ast -> println("Parsed: ${ast.type}") },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -584,6 +696,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see parseFileAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     fun parseFileAsync(
         filepath: String,
@@ -616,14 +730,40 @@ class SwcNative {
     /**
      * Kotlin-friendly async transform with lambda callbacks.
      *
+     * This method executes code transformation asynchronously in a background thread and invokes
+     * the provided callbacks when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
+     * Transformation can include transpiling (e.g., ES6+ to ES5), applying plugins,
+     * minification, and other code modifications based on the provided options.
+     *
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
-     * @param code Source code
-     * @param isModule Whether to treat as module
-     * @param options Transform configuration
-     * @param onSuccess Called with transform output when successful
-     * @param onError Called with error message when failed
+     * **For Kotlin code, prefer using the suspend function [transformAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
+     * @param code Source code to transform
+     * @param isModule Whether the code should be treated as a module (affects parsing behavior)
+     * @param options Transform configuration (use [options] DSL to create)
+     * @param onSuccess Lambda called with [TransformOutput] containing transformed code when successful
+     * @param onError Lambda called with error message string when transformation fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.transformAsync(
+     *     code = "const arrow = () => 42;",
+     *     isModule = false,
+     *     options = options {
+     *         jsc {
+     *             target = JscTarget.ES5
+     *         }
+     *     },
+     *     onSuccess = { output -> println(output.code) },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -633,6 +773,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see transformAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     fun transformAsync(
         code: String,
@@ -667,14 +809,43 @@ class SwcNative {
     /**
      * Kotlin-friendly async transform file with lambda callbacks.
      *
+     * This method reads a file from disk and transforms it asynchronously in a background thread.
+     * The callbacks are invoked when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
+     * Transformation can include transpiling (e.g., TypeScript to JavaScript), applying plugins,
+     * minification, and other code modifications based on the provided options.
+     *
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
-     * @param filepath Path to source file
-     * @param isModule Whether to treat as module
-     * @param options Transform configuration
-     * @param onSuccess Called with transform output when successful
-     * @param onError Called with error message when failed
+     * **For Kotlin code, prefer using the suspend function [transformFileAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
+     * @param filepath Absolute or relative path to the source file
+     * @param isModule Whether the file should be treated as a module (affects parsing behavior)
+     * @param options Transform configuration (use [options] DSL to create)
+     * @param onSuccess Lambda called with [TransformOutput] containing transformed code when successful
+     * @param onError Lambda called with error message string when transformation fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.transformFileAsync(
+     *     filepath = "src/index.ts",
+     *     isModule = true,
+     *     options = options {
+     *         jsc {
+     *             target = JscTarget.ES2020
+     *             parser {
+     *                 syntax = Syntax.TYPESCRIPT
+     *             }
+     *         }
+     *     },
+     *     onSuccess = { output -> println(output.code) },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -684,6 +855,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see transformFileAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     fun transformFileAsync(
         filepath: String,
@@ -718,13 +891,36 @@ class SwcNative {
     /**
      * Kotlin-friendly async print with lambda callbacks.
      *
+     * This method converts an AST program to source code asynchronously in a background thread.
+     * The callbacks are invoked when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
+     * This is useful for code generation, AST manipulation, and round-trip transformations
+     * where you parse code, modify the AST, and then print it back to code.
+     *
      * This method is also Java-friendly. Java code can use anonymous inner classes
      * or lambda expressions (Java 8+) for the callbacks.
      *
-     * @param program AST program
-     * @param options Print options
-     * @param onSuccess Called with transform output when successful
-     * @param onError Called with error message when failed
+     * **For Kotlin code, prefer using the suspend function [printAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
+     * @param program Parsed AST [Program] to convert to source code
+     * @param options Print configuration (use [options] DSL to create)
+     * @param onSuccess Lambda called with [TransformOutput] containing generated code when successful
+     * @param onError Lambda called with error message string when printing fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * val ast = swc.parseSync("const x = 42;", esParseOptions { }, "test.js")
+     * // Modify AST if needed...
+     * swc.printAsync(
+     *     program = ast,
+     *     options = options { },
+     *     onSuccess = { output -> println(output.code) },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -734,6 +930,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see printAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     fun printAsync(
         program: Program,
@@ -771,16 +969,37 @@ class SwcNative {
     /**
      * Kotlin-friendly async minify with lambda callbacks.
      *
-     * This method is also Java-friendly. Java code can use anonymous inner classes
-     * or lambda expressions (Java 8+) for the callbacks.
+     * This method minifies JavaScript/TypeScript code asynchronously in a background thread.
+     * The callbacks are invoked when the operation completes or fails. The calling thread
+     * is not blocked.
+     *
+     * Minification reduces code size by removing whitespace, shortening variable names,
+     * and applying other optimizations while preserving functionality.
      *
      * According to SWC documentation: https://swc.rs/docs/usage/core#minify
      * The first parameter should be source code string, not AST.
      *
-     * @param src Source code to minify
-     * @param options Minify options
-     * @param onSuccess Called with transform output when successful
-     * @param onError Called with error message when failed
+     * This method is also Java-friendly. Java code can use anonymous inner classes
+     * or lambda expressions (Java 8+) for the callbacks.
+     *
+     * **For Kotlin code, prefer using the suspend function [minifyAsync] instead**,
+     * which provides better integration with coroutines and structured concurrency.
+     *
+     * @param src Source code to minify (as string, not AST)
+     * @param options Minify configuration (compress, mangle, etc.)
+     * @param onSuccess Lambda called with [TransformOutput] containing minified code when successful
+     * @param onError Lambda called with error message string when minification fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.minifyAsync(
+     *     src = "function hello() { console.log('Hello World'); }",
+     *     options = JsMinifyOptions(),
+     *     onSuccess = { output -> println(output.code) },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
      *
      * @example Java usage:
      * ```java
@@ -790,6 +1009,8 @@ class SwcNative {
      *     (String error) -> System.err.println("Error: " + error)
      * );
      * ```
+     *
+     * @see minifyAsync for coroutine-based suspend function version (recommended for Kotlin)
      */
     fun minifyAsync(
         src: String,
@@ -831,15 +1052,40 @@ class SwcNative {
     /**
      * Coroutine-based async parse (suspend function).
      *
-     * This is the most Kotlin-idiomatic way to use async parsing.
+     * This is the most Kotlin-idiomatic way to use async parsing. It integrates seamlessly
+     * with Kotlin coroutines and structured concurrency, allowing you to use `await` syntax
+     * and cancellation support.
+     *
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [parseAsync] method instead.
      *
-     * @throws RuntimeException if parsing fails
      * @param code Source code to parse
-     * @param options Parser configuration
-     * @param filename Source file name (can be null)
-     * @return Parsed AST
+     * @param options Parser configuration (use [esParseOptions] or [tsParseOptions] DSL)
+     * @param filename Source file name (can be null, used for error reporting)
+     * @return Parsed [Program] AST
+     * @throws RuntimeException if parsing fails
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun parseCode() {
+     *     val swc = SwcNative()
+     *     val ast = swc.parseAsync(
+     *         code = "const x = 42;",
+     *         options = esParseOptions { },
+     *         filename = "test.js"
+     *     )
+     *     println("Parsed: ${ast.type}")
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     parseCode()
+     * }
+     * ```
+     *
+     * @see parseAsync for callback-based version (for Java compatibility)
      */
     suspend fun parseAsync(
         code: String,
@@ -858,13 +1104,37 @@ class SwcNative {
     /**
      * Coroutine-based async parse file (suspend function).
      *
+     * This method reads a file from disk and parses it asynchronously using coroutines.
+     * It integrates seamlessly with Kotlin coroutines and structured concurrency.
+     *
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [parseFileAsync] method instead.
      *
-     * @throws RuntimeException if parsing fails
-     * @param filepath Path to source file
-     * @param options Parser configuration
-     * @return Parsed AST
+     * @param filepath Absolute or relative path to the source file
+     * @param options Parser configuration (use [esParseOptions] or [tsParseOptions] DSL)
+     * @return Parsed [Program] AST
+     * @throws RuntimeException if parsing fails or file cannot be read
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun parseFile() {
+     *     val swc = SwcNative()
+     *     val ast = swc.parseFileAsync(
+     *         filepath = "src/index.ts",
+     *         options = tsParseOptions { tsx = true }
+     *     )
+     *     println("Parsed: ${ast.type}")
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     parseFile()
+     * }
+     * ```
+     *
+     * @see parseFileAsync for callback-based version (for Java compatibility)
      */
     suspend fun parseFileAsync(
         filepath: String,
@@ -881,14 +1151,44 @@ class SwcNative {
     /**
      * Coroutine-based async transform (suspend function).
      *
+     * This method transforms code asynchronously using coroutines. Transformation can include
+     * transpiling (e.g., ES6+ to ES5), applying plugins, minification, and other code modifications.
+     * It integrates seamlessly with Kotlin coroutines and structured concurrency.
+     *
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [transformAsync] method instead.
      *
-     * @throws RuntimeException if transform fails
-     * @param code Source code
-     * @param isModule Whether to treat as module
-     * @param options Transform options
-     * @return Transform output
+     * @param code Source code to transform
+     * @param isModule Whether the code should be treated as a module (affects parsing behavior)
+     * @param options Transform configuration (use [options] DSL to create)
+     * @return [TransformOutput] containing the transformed code
+     * @throws RuntimeException if transformation fails
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun transformCode() {
+     *     val swc = SwcNative()
+     *     val output = swc.transformAsync(
+     *         code = "const arrow = () => 42;",
+     *         isModule = false,
+     *         options = options {
+     *             jsc {
+     *                 target = JscTarget.ES5
+     *             }
+     *         }
+     *     )
+     *     println(output.code) // Transformed code
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     transformCode()
+     * }
+     * ```
+     *
+     * @see transformAsync for callback-based version (for Java compatibility)
      */
     suspend fun transformAsync(
         code: String,
@@ -907,14 +1207,48 @@ class SwcNative {
     /**
      * Coroutine-based async transform file (suspend function).
      *
+     * This method reads a file from disk and transforms it asynchronously using coroutines.
+     * Transformation can include transpiling (e.g., TypeScript to JavaScript), applying plugins,
+     * minification, and other code modifications. It integrates seamlessly with Kotlin coroutines
+     * and structured concurrency.
+     *
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [transformFileAsync] method instead.
      *
-     * @throws RuntimeException if transform fails
-     * @param filepath Path to source file
-     * @param isModule Whether to treat as module
-     * @param options Transform options
-     * @return Transform output
+     * @param filepath Absolute or relative path to the source file
+     * @param isModule Whether the file should be treated as a module (affects parsing behavior)
+     * @param options Transform configuration (use [options] DSL to create)
+     * @return [TransformOutput] containing the transformed code
+     * @throws RuntimeException if transformation fails or file cannot be read
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun transformFile() {
+     *     val swc = SwcNative()
+     *     val output = swc.transformFileAsync(
+     *         filepath = "src/index.ts",
+     *         isModule = true,
+     *         options = options {
+     *             jsc {
+     *                 target = JscTarget.ES2020
+     *                 parser {
+     *                     syntax = Syntax.TYPESCRIPT
+     *                 }
+     *             }
+     *         }
+     *     )
+     *     println(output.code) // Transformed code
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     transformFile()
+     * }
+     * ```
+     *
+     * @see transformFileAsync for callback-based version (for Java compatibility)
      */
     suspend fun transformFileAsync(
         filepath: String,
@@ -933,13 +1267,39 @@ class SwcNative {
     /**
      * Coroutine-based async print (suspend function).
      *
+     * This method converts an AST program to source code asynchronously using coroutines.
+     * It integrates seamlessly with Kotlin coroutines and structured concurrency.
+     *
+     * This is useful for code generation, AST manipulation, and round-trip transformations
+     * where you parse code, modify the AST, and then print it back to code.
+     *
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [printAsync] method instead.
      *
-     * @throws RuntimeException if print fails
-     * @param program AST program
-     * @param options Print options
-     * @return Transform output
+     * @param program Parsed AST [Program] to convert to source code
+     * @param options Print configuration (use [options] DSL to create)
+     * @return [TransformOutput] containing the generated code
+     * @throws RuntimeException if printing fails
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun printAst() {
+     *     val swc = SwcNative()
+     *     val ast = swc.parseSync("const x = 42;", esParseOptions { }, "test.js")
+     *     // Modify AST if needed...
+     *     val output = swc.printAsync(ast, options { })
+     *     println(output.code) // Generated code
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     printAst()
+     * }
+     * ```
+     *
+     * @see printAsync for callback-based version (for Java compatibility)
      */
     suspend fun printAsync(
         program: Program,
@@ -956,17 +1316,44 @@ class SwcNative {
     /**
      * Coroutine-based async minify (suspend function).
      *
-     * This is the most Kotlin-idiomatic way to use async minify.
-     * **Note**: This method cannot be called directly from Java.
-     * Java code should use the callback-based [minifyAsync] method instead.
+     * This is the most Kotlin-idiomatic way to use async minification. It integrates seamlessly
+     * with Kotlin coroutines and structured concurrency, allowing you to use `await` syntax
+     * and cancellation support.
+     *
+     * Minification reduces code size by removing whitespace, shortening variable names,
+     * and applying other optimizations while preserving functionality.
      *
      * According to SWC documentation: https://swc.rs/docs/usage/core#minify
      * The first parameter should be source code string, not AST.
      *
-     * @throws RuntimeException if minify fails
-     * @param src Source code to minify
-     * @param options Minify options
-     * @return Transform output
+     * **Note**: This method cannot be called directly from Java.
+     * Java code should use the callback-based [minifyAsync] method instead.
+     *
+     * @param src Source code to minify (as string, not AST)
+     * @param options Minify configuration (compress, mangle, etc.)
+     * @return [TransformOutput] containing the minified code
+     * @throws RuntimeException if minification fails
+     *
+     * @example
+     * ```kotlin
+     * import kotlinx.coroutines.*
+     *
+     * suspend fun minifyCode() {
+     *     val swc = SwcNative()
+     *     val output = swc.minifyAsync(
+     *         src = "function hello() { console.log('Hello World'); }",
+     *         options = JsMinifyOptions()
+     *     )
+     *     println(output.code) // Minified code
+     * }
+     *
+     * // Usage
+     * runBlocking {
+     *     minifyCode()
+     * }
+     * ```
+     *
+     * @see minifyAsync for callback-based version (for Java compatibility)
      */
     suspend fun minifyAsync(
         src: String,
