@@ -4,9 +4,9 @@ Translated with DeepL.com (free version)
 
 ## Background
 
-In the process of using Kotlin Jupiter Kennel, I found that there is no 3D drawing library, and I can only use JS to draw data. We can only use JS to draw the data by using the `HTML(...) ` function to write JS, which is very inconvenient. So I wrote the [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) plugin to support `%js` line magics. The core problem with the `kotlin-jupyter-js` plugin is: compiling JS code into ASTs is supported in the JVM. The core problem with the `kotlin-jupyter-js` plugin is that the JVM supports compiling JS code into ASTs.
+In the process of using Kotlin Jupyter Kernel, I found that there is no 3D drawing library, and I can only use JS to draw data. We can only use JS to draw the data by using the `HTML(...)` function to write JS, which is very inconvenient. So I wrote the [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) plugin to support `%js` line magics. The core problem with the `kotlin-jupyter-js` plugin is that the JVM needs to support compiling JS code into ASTs.
 
-My idea is to implement SWC's JVM binding to solve this problem, SWC itself provides Node binding, so JVM binding is not that difficult to implement. Moreover, SWC supports TS/JSX compilation, which allows `kotlin-jupyter-js` to support `typescript` and `React`.
+My idea is to implement SWC's JVM binding to solve this problem. SWC itself provides Node binding, so JVM binding is not that difficult to implement. Moreover, SWC supports TS/JSX compilation, which allows `kotlin-jupyter-js` to support `typescript` and `React`.
 
 ## Implementation Ideas
 
@@ -86,15 +86,15 @@ SWC Node binding offers the following methods.
   + print
   + printSync
 
-SWC Node binding provides synchronous and asynchronous methods via [napi](https://crates.io/crates/napi). However, the JVM's FFI `jni` doesn't only support asynchrony, so we only implement the synchronous APIs: `transformSync`,`transformFileSync`,`parseSync`,`parseFileSync`,`minifySync`,`printSync`.
+SWC Node binding provides synchronous and asynchronous methods via [napi](https://crates.io/crates/napi). However, the JVM's FFI `jni` doesn't support asynchrony, so we only implement the synchronous APIs: `transformSync`, `transformFileSync`, `parseSync`, `parseFileSync`, `minifySync`, `printSync`.
 
-### pase_sync
+### parse_sync
 
-Below is an example of `pase_sync` to explain how to implement it.
+Below is an example of `parse_sync` to explain how to implement it.
 
 #### Dependencies
 
-SWC itself only considers Node binding.[swc_core](https://crates.io/crates/swc_core) implements the logic of binding to Node, aggregating other SWC sub-package dependencies. NMP package `@swc/core` also wraps `swc_core`. We can't use the `swc_core` library directly, we need to replace other SWC subpackage calls.
+SWC itself only considers Node binding. [swc_core](https://crates.io/crates/swc_core) implements the logic of binding to Node, aggregating other SWC sub-package dependencies. NPM package `@swc/core` also wraps `swc_core`. We can't use the `swc_core` library directly, we need to replace other SWC subpackage calls.
 
 For example, `Compiler` from `swc_core`:
 
@@ -127,13 +127,13 @@ swc_ecma_codegen = "0.146.39"
 # ...
 ```
 
-#### entry/exit parameter
+#### Entry/Exit Parameters
 
 Theoretically, what needs to be done is simple: replace all `napi` related logic with `jni`. We don't need to change how SWC implements the specific functionality.
 
-See [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) for the `pase_sync` implementation [binding_core_node /src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/ src/parse.rs#L168), `parseSync` copies most of the logic directly, but requires changes to the handling of incoming and outgoing parameters.
+See [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) for the `parse_sync` implementation [binding_core_node/src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168). `parseSync` copies most of the logic directly, but requires changes to the handling of incoming and outgoing parameters.
 
-The `pase_sync` implementation of `binding_core_node`:
+The `parse_sync` implementation of `binding_core_node`:
 
 ```rust
 #[napi]
@@ -187,7 +187,7 @@ The code thrown by Rust is first caught and then converted into an exception thr
 
 The `binding_core_node` handler implements the `MapErr<T>` trait for `Result`, which converts the Rust exception to a `napi` exception via the `convert_err` method, and finally throws it in the Node.
 
-Exception handling in SWC [swc/bindings/binding_core_node/src/parse.rs#L179](https://github.com/swc-project/swc/blob/ 828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L179)
+Exception handling in SWC [swc/bindings/binding_core_node/src/parse.rs#L179](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L179)
 
 
 ```rust
@@ -277,17 +277,16 @@ Solution, refer to this answer [Load Native Library from Class path](https://sta
 
 ### Summary
 
-Like the other methods just implement them like `parse_sync`.
+Other methods can be implemented similarly to `parse_sync`.
 
-At this point we can compile JS in the JVM.
+At this point, we can compile JS in the JVM.
 
 ```kotlin
 SwcNative().parseSync(
     "var foo = 'bar'", 
-    """{"syntax": "ecmascript";}""",
+    """{"syntax": "ecmascript"}""",
     "test.js",
 )
-
 ```
 
 <details>
@@ -349,8 +348,6 @@ SwcNative().parseSync(
 }
 
 ```
-
-</code>
 </details>
 
 ## Kotlin AST DSL
@@ -382,7 +379,7 @@ It can be divided into the following cases.
 
 The case of Type alias is relatively complex, mainly because of the flexibility of JS.
 
-### type alias
+### Type Alias
 
 For some special cases we need to reduce the dynamics of types to make it easier for us to work with them.
 
@@ -417,7 +414,7 @@ interface BaseT {
 class T : S, BaseT {}
 ```
 
-### interface
+### Interface
 
 For `interface` processing, it is divided into 3 parts: 1. TS interface to Kotlin class; 2. inheritance; 3. serialization.
 
@@ -802,7 +799,7 @@ class TemplateLiteralImpl : TemplateLiteral, TsTemplateLiteralType {
 typealias TsTemplateLiteralTypeImpl = TemplateLiteralImpl
 ```
 
-### 新的 `parseSync`
+### Upgraded `parseSync`
 
 Now we can upgrade the `parseSync` signature.
 
@@ -814,7 +811,7 @@ fun parseSync(code: String, options: ParserConfig, filename: String?): Program
 Type safety and type hints are now guaranteed when used.
 
 ```kotlin
-const program = SwcNative().parseSync(
+val program = SwcNative().parseSync(
     """
     function App() {
        return <div>App</div>
@@ -835,12 +832,16 @@ if (program is Module) {
 
 ## Conclusion
 
-Here, we have explained the idea and core implementation points of SWC JVM binding: 1. SWC supports JNI; 2. AST JSON is serialized into Kotlin classes; 3. ASTs and configurations are described through DSL.
+Here, we have explained the idea and core implementation points of SWC JVM binding:
 
-Some details are not covered, such as the handling of boundary cases in Kotlin generated scripts, Rust cross-compilation, etc. For more details, you can read the source code. If you are interested in the details, you can read the source code [yidafu/swc-binding](https://github.com/yidafu/swc-binding).
+1. SWC supports JNI
+2. AST JSON is serialized into Kotlin classes
+3. ASTs and configurations are described through DSL
 
-If you need to compile JS in the JVM, SWC JVM binding has been released to the Maven central repository, use [dev.yidafu.swc:swc-binding:0.5.0](https://mvnrepository.com/artifact/dev.yidafu.swc/). swc-binding)
+Some details are not covered, such as the handling of boundary cases in Kotlin generated scripts, Rust cross-compilation, etc. For more details, you can read the source code [yidafu/swc-binding](https://github.com/yidafu/swc-binding).
 
-For other questions, feel free to [mention Issue](https://github.com/yidafu/swc-binding/issues/new).
+If you need to compile JS in the JVM, SWC JVM binding has been released to the Maven central repository, use [dev.yidafu.swc:swc-binding:0.5.0](https://mvnrepository.com/artifact/dev.yidafu.swc/swc-binding).
+
+For other questions, feel free to [create an Issue](https://github.com/yidafu/swc-binding/issues/new).
 
 > Thinking never ends.

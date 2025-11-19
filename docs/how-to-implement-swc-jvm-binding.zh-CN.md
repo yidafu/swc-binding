@@ -2,13 +2,13 @@
 
 ## 背景
 
-在使用 Kotlin Jupiter Kennel 的过程中发现没有3D绘制库，只能使用 JS 来绘制数据。只能通过`HTML(...)`函数来写 JS，非常不方便。所以，我写了 [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) 插件来支持`%js` line magics。`kotlin-jupyter-js`插件的核心问题是：在 JVM 支持编译 JS 代码成 AST。为此需要一个工具将 JS 代码转换成 AST，最好还能支持 TS 和 JSX。
+在使用 Kotlin Jupyter Kernel 的过程中发现没有3D绘制库，只能使用 JS 来绘制数据。只能通过`HTML(...)`函数来写 JS，非常不方便。所以，我写了 [kotlin-jupyter-js](https://github.com/yidafu/kotlin-jupyter-js) 插件来支持`%js` line magics。`kotlin-jupyter-js`插件的核心问题是：在 JVM 需要支持编译 JS 代码成 AST。为此需要一个工具将 JS 代码转换成 AST，最好还能支持 TS 和 JSX。
 
 我的想法是实现 SWC 的 JVM binding 来解决这个问题。SWC 本身提供 Node 的 binding，所以 JVM binding 实现难度没有那么大。而且，SWC 支持 TS/JSX 编译，可以让`kotlin-jupyter-js`支持`typescript`和`React`。
 
 ## 实现思路
 
-SWC JVM binding 实现了分成两部分。1. 将 SWC 的 Rust 代码编译成 JNI 动态库；2. JVM 侧，实现配置类和 AST 类。
+SWC JVM binding 实现分成两部分：1. 将 SWC 的 Rust 代码编译成 JNI 动态库；2. JVM 侧，实现配置类和 AST 类。
 
 SWC 是给 JS 使用的，只提供了支持 Node binding。我们需要参考 Node binding，来实现 JVM 的 binding。
 
@@ -22,9 +22,9 @@ SWC Node binding 暴露的 API 出参、入参都是 JSON 字符串，在 Node �
 
 将 Rust 编译成 JNI 动态库，需要 Rust 的 JNI FFI。直接使用 [jni](https://crates.io/crates/jni) 即可支持。
 
-这个库提供可以很方便地桥接 Rust 和 Java。可以看一下 `jni` 的官方例子。
+这个库可以很方便地桥接 Rust 和 Java。可以看一下 `jni` 的官方例子。
 
-在 JVM 侧代码。
+在 JVM 侧代码：
 
 ```kotlin
 class HelloWorld {
@@ -52,9 +52,9 @@ pub extern "system" fn Java_HelloWorld_hello<'local>(mut env: JNIEnv<'local>, cl
 }
 ```
 
-调用`HelloWorld().hello("JNI")`，通过 JNI 会调用Rust 代码返回`Hello, JNI!`.
+调用`HelloWorld().hello("JNI")`，通过 JNI 会调用 Rust 代码返回`Hello, JNI!`。
 
-上面 Rust 代码里桥接函数的申明比较长，可以使用 [jni_fn](https://crates.io/crates/jni_fn) 通过宏自动生成桥接函数声明，简化声明。
+上面 Rust 代码里桥接函数的声明比较长，可以使用 [jni_fn](https://crates.io/crates/jni_fn) 通过宏自动生成桥接函数声明，简化声明。
 
 ```rust
 #[jni_fn("HelloWorld")]
@@ -84,15 +84,15 @@ SWC Node binding 提供了以下方法
   + print
   + printSync
 
-SWC Node binding 通过 [napi](https://crates.io/crates/napi) 提供同步和异步方法。但是 JVM 的 FFI `jni` 并不只支持异步，所以我们只实现同步 API：`transformSync`,`transformFileSync`,`parseSync`,`parseFileSync`,`minifySync`,`printSync`。
+SWC Node binding 通过 [napi](https://crates.io/crates/napi) 提供同步和异步方法。但是 JVM 的 FFI `jni` 不支持异步，所以我们只实现同步 API：`transformSync`、`transformFileSync`、`parseSync`、`parseFileSync`、`minifySync`、`printSync`。
 
-### pase_sync
+### parse_sync
 
-下面以`pase_sync`为例，解释如何实现。
+下面以`parse_sync`为例，解释如何实现。
 
 #### 依赖
 
-SWC 本身只考虑了 Node binding。[swc_core](https://crates.io/crates/swc_core) 实现了与 Node 绑定的逻辑、聚合其他 SWC 子包依赖。NMP 包`@swc/core`也是封装`swc_core`。我们不能直接使用`swc_core`库，需要替换其他 SWC 子包调用。
+SWC 本身只考虑了 Node binding。[swc_core](https://crates.io/crates/swc_core) 实现了与 Node 绑定的逻辑、聚合其他 SWC 子包依赖。NPM 包`@swc/core`也是封装`swc_core`。我们不能直接使用`swc_core`库，需要替换其他 SWC 子包调用。
 
 比如，从`swc_core`引入`Compiler`：
 
@@ -127,11 +127,11 @@ swc_ecma_codegen = "0.146.39"
 
 #### 出入参
 
-理论上，需要做的工作很简单：将所有 `napi` 相关逻辑替换成`jni`即可。如何 SWC 如何实现具体功能，我们都不需要改动。
+理论上，需要做的工作很简单：将所有 `napi` 相关逻辑替换成`jni`即可。SWC 如何实现具体功能，我们都不需要改动。
 
-参考 [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) 的 `pase_sync` 实现 [binding_core_node/src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168), `parseSync` 大部分逻辑都直接复制，但需要修改入参、出参的处理。
+参考 [SWC - binding_core_node](https://github.com/swc-project/swc/tree/main/bindings/binding_core_node) 的 `parse_sync` 实现 [binding_core_node/src/parse.rs#L168](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L168)，`parseSync` 大部分逻辑都直接复制，但需要修改入参、出参的处理。
 
-`binding_core_node` 的 `pase_sync` 实现：
+`binding_core_node` 的 `parse_sync` 实现：
 
 ```rust
 #[napi]
@@ -181,9 +181,9 @@ pub fn parseSync(mut env: JNIEnv, _: JClass, code: JString, options: JString, fi
 
 如果 SWC 处理 JS 代码失败了（比如JS代码有语法错误），需要抛出异常到 JVM，由 JVM 侧进行处理。
 
-首先捕获 Rust 抛出的代码，再转换成 JVM 的异常抛出。
+首先捕获 Rust 抛出的异常，再转换成 JVM 的异常抛出。
 
-`binding_core_node` 处理时对于`Result`实现了`MapErr<T>` trait,通过`convert_err` 方法将 Rust 异常转为了`napi`的异常，最后在 Node 里抛出。
+`binding_core_node` 处理时对于`Result`实现了`MapErr<T>` trait，通过`convert_err` 方法将 Rust 异常转为了`napi`的异常，最后在 Node 里抛出。
 
 SWC 的异常处理 [swc/bindings/binding_core_node/src/parse.rs#L179](https://github.com/swc-project/swc/blob/828190c035d61e6521280e2260c511bc02b81327/bindings/binding_core_node/src/parse.rs#L179)
 
@@ -273,17 +273,16 @@ JVM 加载`swc_jni`时，会按照规则从文件系统寻找动态库，但是�
 
 ### 小结
 
-像其他方法就像`parse_sync`依葫芦画瓢实现就可以了。
+其他方法可以像`parse_sync`一样依葫芦画瓢实现就可以了。
 
-到这一步我们已经可以在 JVM 里的编译 JS 了。
+到这一步我们已经可以在 JVM 里编译 JS 了。
 
 ```kotlin
 SwcNative().parseSync(
     "var foo = 'bar'", 
-    """{"syntax": "ecmascript";}""",
+    """{"syntax": "ecmascript"}""",
     "test.js",
 )
-
 ```
 
 <details>
@@ -345,8 +344,6 @@ SwcNative().parseSync(
 }
 
 ```
-
-</code>
 </details>
 
 ## Kotlin AST DSL
@@ -367,7 +364,7 @@ SwcNative().parseSync(
 
 打开 `@swc/types` 的声明文件，里面都是 `type` 和 `interface` 声明，结构非常简单。
 
-可以分为一下情况:
+可以分为以下情况：
 
 1. type alias
    1. literal union type: `type T = 'foo' | 'bar'`
@@ -378,7 +375,7 @@ SwcNative().parseSync(
 
 Type alias 的情况相对复杂，主要还是因为 JS 的灵活性。
 
-### type alias
+### Type Alias
 
 对于一些特殊情况我们需要减少类型的动态性，方便我们进行处理。
 
@@ -413,13 +410,13 @@ interface BaseT {
 class T : S, BaseT {}
 ```
 
-### interface
+### Interface
 
 对于 `interface` 处理，分为3部分：1. TS interface 转为 Kotlin 类；2. 继承关系；3. 序列化。
 
 #### TS interface 转为 Kotlin 类
 
-定义个 `KotlinClass` 来表示要装换成的 Kotlin 类。这样实现`toString()`即可方便地将其转为 kotlin 类。
+定义个 `KotlinClass` 来表示要转换成的 Kotlin 类。这样实现`toString()`即可方便地将其转为 Kotlin 类。
 
 ```ts
 export class KotlinClass {
@@ -434,7 +431,7 @@ export class KotlinClass {
 
 通过遍历 TS interface 的 AST，就可以生成 `KotlinClass`。
 
-在遍历 interface 属性时，需要递归遍历父类的属性，继承自父类型的属性需要将`KotlinClassProperty.isOverride`设为 true，方便生成 kotlin 类是加上`override`修饰符。
+在遍历 interface 属性时，需要递归遍历父类的属性，继承自父类型的属性需要将`KotlinClassProperty.isOverride`设为 true，方便生成 Kotlin 类时加上`override`修饰符。
 
 ```ts
 class KotlinClassProperty {
@@ -452,9 +449,9 @@ class KotlinClassProperty {
 
 TS interface 直接继承的父 interface 直接加入 `KotlinClass.parents` 数组即可。
 
-但是，对于 `type T = S | E` 需要进行单独处理
+但是，对于 `type T = S | E` 需要进行单独处理。
 
-举个例子
+举个例子：
 
 ```ts
 export interface VariableDeclarator extends Node, HasSpan {
@@ -475,7 +472,7 @@ export interface ArrayExpression extends ExpressionBase  {
 
 这里 Expression 是所有 `XxxExpression` 的父类型。这样`variableDeclarator.init = thisExpression` 或者 `variableDeclarator.init = arrayExpression` 赋值才合法。
 
-因为 TS 里 `Expression` 是 type alias 转换 kotlin 要变成一个空接口。 转换成 Kotlin 结果像这样
+因为 TS 里 `Expression` 是 type alias，转换到 Kotlin 要变成一个空接口。转换成 Kotlin 结果像这样：
 
 ```kotlin
 interface Expression {}
@@ -519,7 +516,7 @@ var expression: Expression = parseJson(thisExpression)
 var expression: Expression = parseJson(arrayExpression)
 ```
 
-使用 kotlinx serialization 来序列化，它支持[多态序列化](https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md)，需要将改造kotlin代码。
+使用 kotlinx serialization 来序列化，它支持[多态序列化](https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md)，需要改造 Kotlin 代码。
 
 在类上注解`JsonClassDiscriminator`标明通过哪个字段来区分类型，`SerialName`注解标明序列后类型的名称。反序列化时可以根据这个类型名称找到具体类型。
 
@@ -653,7 +650,7 @@ VariableDeclarationImpl().apply {
         VariableDeclaratorImpl().apply {
             span = Span(6, 17, 0)
             id = IdentifierImpl().apply {
-                span = span(5, 9, 0)
+                span = Span(5, 9, 0)
                 value = "foo"
             }
             init = StringLiteralImpl().apply {
@@ -798,7 +795,7 @@ class TemplateLiteralImpl : TemplateLiteral, TsTemplateLiteralType {
 typealias TsTemplateLiteralTypeImpl = TemplateLiteralImpl
 ```
 
-### 新的 `parseSync`
+### 升级后的 `parseSync`
 
 现在我们可以升级`parseSync`签名了。
 
@@ -810,7 +807,7 @@ fun parseSync(code: String, options: ParserConfig, filename: String?): Program
 现在使用时可以保证类型安全和类型提示了。
 
 ```kotlin
-const program = SwcNative().parseSync(
+val program = SwcNative().parseSync(
     """
     function App() {
        return <div>App</div>
@@ -831,12 +828,16 @@ if (program is Module) {
 
 ## 总结
 
-到这里，解释了 SWC JVM binding 的实现思路和核心实现要点。1. SWC 支持 JNI；2. AST JSON 序列化成 Kotlin 类；3. 通过 DSL 描述 AST和配置项。
+到这里，解释了 SWC JVM binding 的实现思路和核心实现要点：
 
-一些细碎的内容没有涉及到，比如，Kotlin 生成脚本一些边界情况的处理、Rust交叉编译等。对细节感兴趣可以阅读源码[yidafu/swc-binding](https://github.com/yidafu/swc-binding)。
+1. SWC 支持 JNI
+2. AST JSON 序列化成 Kotlin 类
+3. 通过 DSL 描述 AST 和配置项
 
-如果你有需求在 JVM 编译 JS，SWC JVM binding 已发布到 Maven 中央仓库，请使用 [dev.yidafu.swc:swc-binding:0.5.0](https://mvnrepository.com/artifact/dev.yidafu.swc/swc-binding)
+一些细碎的内容没有涉及到，比如，Kotlin 生成脚本一些边界情况的处理、Rust 交叉编译等。对细节感兴趣可以阅读源码 [yidafu/swc-binding](https://github.com/yidafu/swc-binding)。
 
-其他问题，欢迎[提Issue](https://github.com/yidafu/swc-binding/issues/new)。
+如果你有需求在 JVM 编译 JS，SWC JVM binding 已发布到 Maven 中央仓库，请使用 [dev.yidafu.swc:swc-binding:0.5.0](https://mvnrepository.com/artifact/dev.yidafu.swc/swc-binding)。
+
+其他问题，欢迎[提 Issue](https://github.com/yidafu/swc-binding/issues/new)。
 
 > 思考永无止境
