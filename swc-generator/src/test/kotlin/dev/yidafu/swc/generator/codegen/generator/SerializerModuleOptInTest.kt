@@ -1,15 +1,13 @@
 package dev.yidafu.swc.generator.codegen.generator
 
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class SerializerModuleOptInTest : AnnotationSpec() {
+class SerializerModuleOptInTest : ShouldSpec({
 
-    @Test
-    fun `serializers modules annotated with OptIn ExperimentalSerializationApi`() {
+    should("serializers modules annotated with OptIn ExperimentalSerializationApi") {
         val tempDir = createTempDir(prefix = "serializer-module-optin").apply { deleteOnExit() }
         val serializerPath = File(tempDir, "serializer.kt").absolutePath
 
@@ -30,4 +28,4 @@ class SerializerModuleOptInTest : AnnotationSpec() {
         content.shouldContain("@OptIn(ExperimentalSerializationApi::class)")
         content.shouldContain("public val swcConfigSerializersModule: SerializersModule")
     }
-}
+})

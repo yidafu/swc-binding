@@ -2,15 +2,14 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import dev.yidafu.swc.generator.analyzer.InheritanceAnalyzer
 import dev.yidafu.swc.generator.model.kotlin.*
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-class TypesGeneratorTest : AnnotationSpec() {
-    @Test
-    fun `type property in implementation is non nullable with default value`() {
+class TypesGeneratorTest : ShouldSpec({
+    
+    should("type property in implementation is non nullable with default value") {
         val generator = TypesGenerator(mutableListOf())
         val propertyDecl = KotlinDeclaration.PropertyDecl(
             name = "type",
@@ -33,8 +32,8 @@ class TypesGeneratorTest : AnnotationSpec() {
         defaultValue.value shouldBe "BinaryExpression"
     }
 
-    @Test
-    fun `implementation class includes inherited properties`() {
+    
+    should("implementation class includes inherited properties") {
         val nodeInterface = KotlinDeclaration.ClassDecl(
             name = "Node",
             modifier = ClassModifier.Interface,
@@ -103,8 +102,8 @@ class TypesGeneratorTest : AnnotationSpec() {
         propertyNames.shouldContainAll(listOf("type", "span", "kind"))
     }
 
-    @Test
-    fun `implementation class deduplicates overridden properties`() {
+    
+    should("implementation class deduplicates overridden properties") {
         val nodeInterface = KotlinDeclaration.ClassDecl(
             name = "Node",
             modifier = ClassModifier.Interface,
@@ -164,8 +163,8 @@ class TypesGeneratorTest : AnnotationSpec() {
         typeCount shouldBe 1
     }
 
-    @Test
-    fun `parser config implementation uses syntax discriminator and defaults`() {
+    
+    should("parser config implementation uses syntax discriminator and defaults") {
         val tsParserInterface = KotlinDeclaration.ClassDecl(
             name = "TsParserConfig",
             modifier = ClassModifier.Interface,
@@ -208,4 +207,4 @@ class TypesGeneratorTest : AnnotationSpec() {
         val serialValue = serialName.arguments.first() as Expression.StringLiteral
         serialValue.value shouldBe "typescript"
     }
-}
+})

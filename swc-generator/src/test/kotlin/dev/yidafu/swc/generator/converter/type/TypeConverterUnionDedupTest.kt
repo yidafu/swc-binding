@@ -5,15 +5,13 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.KeywordKind
 import dev.yidafu.swc.generator.model.typescript.LiteralValue
 import dev.yidafu.swc.generator.model.typescript.TypeScriptType
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-class TypeConverterUnionDedupTest : AnnotationSpec() {
+class TypeConverterUnionDedupTest : ShouldSpec({
 
-    @Test
-    fun `boolean or string-literals should become Union_U2_Boolean_String`() {
+    should("boolean or string-literals should become Union_U2_Boolean_String") {
         val cfg = Configuration.default()
         val converter = TypeConverter(cfg)
         // boolean | "unknown" | "commonjs"
@@ -34,8 +32,7 @@ class TypeConverterUnionDedupTest : AnnotationSpec() {
         g.params[1] shouldBe KotlinType.StringType
     }
 
-    @Test
-    fun `only string literals union should collapse to String`() {
+    should("only string literals union should collapse to String") {
         val cfg = Configuration.default()
         val converter = TypeConverter(cfg)
         // "inline" | "both" | "external"
@@ -51,8 +48,7 @@ class TypeConverterUnionDedupTest : AnnotationSpec() {
         kt shouldBe KotlinType.StringType
     }
 
-    @Test
-    fun `boolean literal plus string literals should become Union_U2_Boolean_String`() {
+    should("boolean literal plus string literals should become Union_U2_Boolean_String") {
         val cfg = Configuration.default()
         val converter = TypeConverter(cfg)
         // false | "inline" | "external"
@@ -72,4 +68,4 @@ class TypeConverterUnionDedupTest : AnnotationSpec() {
         g.params[0] shouldBe KotlinType.Boolean
         g.params[1] shouldBe KotlinType.StringType
     }
-}
+})

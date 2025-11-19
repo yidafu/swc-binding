@@ -88,4 +88,14 @@ object SerializerConfig {
         "TemplateLiteral" to "TemplateLiteralImpl",
         "TsTemplateLiteralType" to "TsTemplateLiteralTypeImpl"
     )
+
+    /**
+     * 多态接口的默认序列化器配置
+     * 键：接口名（如 "Fn"）
+     * 值：默认序列化器类名（如 "MethodProperty"）
+     * 当 JSON 中缺少 type 字段时，使用默认序列化器进行反序列化
+     */
+    val defaultSerializerMap: Map<String, String> = mapOf(
+        "Fn" to "MethodProperty"
+    )
 }

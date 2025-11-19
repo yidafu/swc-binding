@@ -4,14 +4,13 @@ import com.squareup.kotlinpoet.FileSpec
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.string.shouldContain
 
-class KotlinPoetConverterContextualTest : AnnotationSpec() {
+class KotlinPoetConverterContextualTest : ShouldSpec({
 
-    @Test
-    fun `union property should be annotated with Serializable with custom serializer`() {
+    
+    should("union property should be annotated with Serializable with custom serializer") {
         val prop = KotlinDeclaration.PropertyDecl(
             name = "value",
             type = KotlinType.Generic("Union.U2", listOf(KotlinType.Simple("String"), KotlinType.Simple("Int"))),
@@ -33,4 +32,4 @@ class KotlinPoetConverterContextualTest : AnnotationSpec() {
         // 新策略下不再为 Union.Ux 属性生成 @Serializable(with=...) 注解
         content.shouldContain("Union.U2")
     }
-}
+})

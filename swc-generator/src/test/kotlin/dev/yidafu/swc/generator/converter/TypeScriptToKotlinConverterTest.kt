@@ -11,23 +11,37 @@ import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertNotNull
 import dev.yidafu.swc.generator.test.assertTrue
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 
-class TypeScriptToKotlinConverterTest : AnnotationSpec() {
+class TypeScriptToKotlinConverterTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val converter = TypeScriptToKotlinConverter(config)
+    fun assertEnumSerialNames(enumDecl: KotlinDeclaration.ClassDecl, expected: List<String>) {
+        val serialNames = enumDecl.enumEntries.map { entry ->
+            val annotation = entry.annotations.find { it.name == "SerialName" }
+                ?: error("Enum entry ${entry.name} missing SerialName")
+            val firstArg = annotation.arguments.firstOrNull()
+                ?: error("Enum entry ${entry.name} SerialName missing argument")
+            (firstArg as? Expression.StringLiteral)?.value
+                ?: error("Enum entry ${entry.name} SerialName argument is not StringLiteral")
+        }
+        assertEquals(expected, serialNames)
+    }
 
-    @Test
-    fun `test converter creation`() {
+    fun assertEnumNames(enumDecl: KotlinDeclaration.ClassDecl, expected: List<String>) {
+        val names = enumDecl.enumEntries.map { it.name }
+        assertEquals(expected, names)
+    }
+
+    val config = Configuration.default()
+    val converter = TypeScriptToKotlinConverter(config)
+
+    should("test converter creation") {
         assertNotNull(converter)
     }
 
-    @Test
-    fun `test convert empty declaration list`() {
+    should("test convert empty declaration list") {
         val result = converter.convertDeclarations(emptyList())
 
         assertTrue(result.isSuccess())
@@ -35,8 +49,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(declarations.isEmpty())
     }
 
-    @Test
-    fun `test convert interface declaration`() {
+    should("test convert interface declaration") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "TestInterface",
             members = emptyList(),
@@ -50,8 +63,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertNotNull(result)
     }
 
-    @Test
-    fun `test convert type alias declaration`() {
+    should("test convert type alias declaration") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "TestAlias",
             type = TypeScriptType.Keyword(KeywordKind.STRING),
@@ -63,8 +75,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertNotNull(result)
     }
 
-    @Test
-    fun `test convert multiple declarations`() {
+    should("test convert multiple declarations") {
         val declarations = listOf(
             TypeScriptDeclaration.InterfaceDeclaration(
                 name = "Interface1",
@@ -88,8 +99,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `interface named Class should be renamed to JsClass`() {
+    should("interface named Class should be renamed to JsClass") {
         val classInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Class",
             members = emptyList(),
@@ -131,8 +141,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `interface named Import should be renamed to JsImport`() {
+    should("interface named Import should be renamed to JsImport") {
         val importInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Import",
             members = listOf(
@@ -162,8 +171,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `type property remains non nullable`() {
+    should("type property remains non nullable") {
         val interfaceDecl = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Foo",
             members = listOf(
@@ -182,8 +190,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(typeProperty.type is KotlinType.StringType, "type property must stay non-null")
     }
 
-    @Test
-    fun `union alias adds parent interface`() {
+    should("union alias adds parent interface") {
         val unionAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "ImportSpecifier",
             type = TypeScriptType.Union(
@@ -227,8 +234,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `primitive union maxLineLen`() {
+    should("primitive union maxLineLen") {
         val interfaceDecl = TypeScriptDeclaration.InterfaceDeclaration(
             name = "JsFormatOptions",
             members = listOf(
@@ -256,8 +262,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals(listOf(KotlinType.Double, KotlinType.Boolean), unionGeneric.params)
     }
 
-    @Test
-    fun `nested interface references use nested type`() {
+    should("nested interface references use nested type") {
         val interfaceDecl = TypeScriptDeclaration.InterfaceDeclaration(
             name = "JsFormatOptions",
             members = listOf(
@@ -293,8 +298,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals("JsFormatOptionsComments", nestedType.name)
     }
 
-    @Test
-    fun `type literal property becomes nested interface`() {
+    should("type literal property becomes nested interface") {
         val interfaceDecl = TypeScriptDeclaration.InterfaceDeclaration(
             name = "OptimizerConfig",
             members = listOf(
@@ -323,8 +327,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals("OptimizerConfigJsonify", nestedType.name)
     }
 
-    @Test
-    fun `numeric literal union collapses to int`() {
+    should("numeric literal union collapses to int") {
         val interfaceDecl = TypeScriptDeclaration.InterfaceDeclaration(
             name = "JsMinifyOptions",
             members = listOf(
@@ -352,8 +355,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals(KotlinType.Int, nullableType.innerType)
     }
 
-    @Test
-    fun `ts parser config syntax is non nullable string`() {
+    should("ts parser config syntax is non nullable string") {
         val tsParserConfig = TypeScriptDeclaration.InterfaceDeclaration(
             name = "TsParserConfig",
             members = listOf(
@@ -382,8 +384,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals(KotlinType.StringType, syntaxProperty.type)
     }
 
-    @Test
-    fun `type property overrides parent`() {
+    should("type property overrides parent") {
         val expressionBase = TypeScriptDeclaration.InterfaceDeclaration(
             name = "ExpressionBase",
             members = listOf(
@@ -418,8 +419,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(typeProperty.modifier is PropertyModifier.OverrideVar)
     }
 
-    @Test
-    fun `parent interfaces use mapped names`() {
+    should("parent interfaces use mapped names") {
         val classIface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Class",
             members = emptyList(),
@@ -444,8 +444,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(parentNames.contains("JsClass"), "ClassDeclaration should extend JsClass instead of Class")
     }
 
-    @Test
-    fun `skip complex snake case type aliases`() {
+    should("skip complex snake case type aliases") {
         val toSnakeCaseAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "ToSnakeCase",
             type = TypeScriptType.Keyword(KeywordKind.STRING),
@@ -474,8 +473,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals("RegularAlias", aliasDecl.name)
     }
 
-    @Test
-    fun `terser ecma version alias becomes string`() {
+    should("terser ecma version alias becomes string") {
         val alias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "TerserEcmaVersion",
             type = TypeScriptType.Union(
@@ -494,8 +492,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEquals(KotlinType.StringType, kotlinAlias.type)
     }
 
-    @Test
-    fun `string literal union becomes enum`() {
+    should("string literal union becomes enum") {
         val alias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "JscTarget",
             type = TypeScriptType.Union(
@@ -516,8 +513,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEnumSerialNames(enumDecl, listOf("es3", "es5", "esnext"))
     }
 
-    @Test
-    fun `import interop literal union becomes enum`() {
+    should("import interop literal union becomes enum") {
         val alias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "ImportInterop",
             type = TypeScriptType.Union(
@@ -538,8 +534,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertEnumSerialNames(enumDecl, listOf("swc", "babel", "node", "none"))
     }
 
-    @Test
-    fun `binary operator literal union becomes enum`() {
+    should("binary operator literal union becomes enum") {
         val alias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "BinaryOperator",
             type = TypeScriptType.Union(
@@ -578,8 +573,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `wasm analysis options properties are nullable`() {
+    should("wasm analysis options properties are nullable") {
         val typeLiteral = TypeScriptType.TypeLiteral(
             listOf(
                 TypeMember("parser", TypeScriptType.Keyword(KeywordKind.STRING)),
@@ -601,8 +595,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(pluginsProp.type is KotlinType.Nullable)
     }
 
-    @Test
-    fun `class member adds override when parent present`() {
+    should("class member adds override when parent present") {
         val classMember = TypeScriptDeclaration.InterfaceDeclaration(
             name = "ClassMember",
             members = listOf(
@@ -637,8 +630,7 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         assertTrue(typeProperty.modifier is PropertyModifier.OverrideVar)
     }
 
-    @Test
-    fun `parse options alias injects base interface and parser config parent`() {
+    should("parse options alias injects base interface and parser config parent") {
         val parseOptions = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "ParseOptions",
             type = TypeScriptType.Intersection(
@@ -673,21 +665,4 @@ class TypeScriptToKotlinConverterTest : AnnotationSpec() {
         val tsParserInterface = result.filterIsInstance<KotlinDeclaration.ClassDecl>().first { it.name == "TsParserConfig" }
         tsParserInterface.parents.map { it.toTypeString() } shouldContain "ParserConfig"
     }
-
-    private fun assertEnumSerialNames(enumDecl: KotlinDeclaration.ClassDecl, expected: List<String>) {
-        val serialNames = enumDecl.enumEntries.map { entry ->
-            val annotation = entry.annotations.find { it.name == "SerialName" }
-                ?: error("Enum entry ${entry.name} missing SerialName")
-            val firstArg = annotation.arguments.firstOrNull()
-                ?: error("Enum entry ${entry.name} SerialName missing argument")
-            (firstArg as? Expression.StringLiteral)?.value
-                ?: error("Enum entry ${entry.name} SerialName argument is not StringLiteral")
-        }
-        assertEquals(expected, serialNames)
-    }
-
-    private fun assertEnumNames(enumDecl: KotlinDeclaration.ClassDecl, expected: List<String>) {
-        val names = enumDecl.enumEntries.map { it.name }
-        assertEquals(expected, names)
-    }
-}
+})

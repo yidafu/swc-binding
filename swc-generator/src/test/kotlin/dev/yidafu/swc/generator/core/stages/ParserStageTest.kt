@@ -7,31 +7,29 @@ import dev.yidafu.swc.generator.parser.ParseResult
 import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertNotNull
 import dev.yidafu.swc.generator.test.assertTrue
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.AfterTest
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import java.io.File
 import java.nio.file.Files
 
-class ParserStageTest : AnnotationSpec() {
+class ParserStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val container = DependencyContainer(config)
-    private val stage = ParserStage(config, container)
-    private val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
+    val config = Configuration.default()
+    val container = DependencyContainer(config)
+    val stage = ParserStage(config, container)
+    val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
 
-    @AfterTest
-    fun cleanup() {
+    afterTest {
         tempDir.deleteRecursively()
     }
 
-    @Test
-    fun `test stage name`() {
+    should("test stage name") {
         assertEquals("Parser", stage.name)
     }
 
-    @Test
-    fun `test parse valid TypeScript file`() {
+    should("test parse valid TypeScript file") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val testFile = File(tempDir, "test.d.ts")
         testFile.writeText(
             """
@@ -48,16 +46,17 @@ class ParserStageTest : AnnotationSpec() {
         assertNotNull(result)
     }
 
-    @Test
-    fun `test parse non-existent file`() {
+    should("test parse non-existent file") {
         val context = PipelineContext(config)
         val result = stage.execute("non-existent.d.ts", context)
 
         assertTrue(result.isFailure())
     }
 
-    @Test
-    fun `test parse result is stored in context`() {
+    should("test parse result is stored in context") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val testFile = File(tempDir, "test.d.ts")
         testFile.writeText("export interface Test {}")
 
@@ -69,4 +68,4 @@ class ParserStageTest : AnnotationSpec() {
             assertNotNull(parseResult)
         }
     }
-}
+})

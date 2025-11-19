@@ -1,25 +1,22 @@
 package dev.yidafu.swc.generator.core
 
 import dev.yidafu.swc.generator.config.Configuration
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class ContextTest : AnnotationSpec() {
+class ContextTest : ShouldSpec({
 
-    private val config = Configuration.default()
+    val config = Configuration.default()
 
-    @Test
-    fun `test context creation`() {
+    should("test context creation") {
         val context = PipelineContext(config)
         context.shouldNotBeNull()
         context.configuration shouldBe config
     }
 
-    @Test
-    fun `test set and get metadata`() {
+    should("test set and get metadata") {
         val context = PipelineContext(config)
         val key = "testKey"
         val value = "testValue"
@@ -30,16 +27,14 @@ class ContextTest : AnnotationSpec() {
         retrieved shouldBe value
     }
 
-    @Test
-    fun `test get non-existent metadata returns null`() {
+    should("test get non-existent metadata returns null") {
         val context = PipelineContext(config)
         val retrieved = context.getMetadata<String>("nonExistent")
 
         retrieved.shouldBeNull()
     }
 
-    @Test
-    fun `test metadata with different types`() {
+    should("test metadata with different types") {
         val context = PipelineContext(config)
 
         context.setMetadata("string", "value")
@@ -51,8 +46,7 @@ class ContextTest : AnnotationSpec() {
         context.getMetadata<Boolean>("boolean") shouldBe true
     }
 
-    @Test
-    fun `test overwrite metadata`() {
+    should("test overwrite metadata") {
         val context = PipelineContext(config)
         val key = "key"
 
@@ -62,8 +56,7 @@ class ContextTest : AnnotationSpec() {
         context.getMetadata<String>(key) shouldBe "new"
     }
 
-    @Test
-    fun `test get metadata with wrong type returns null`() {
+    should("test get metadata with wrong type returns null") {
         val context = PipelineContext(config)
 
         context.setMetadata("key", "string")
@@ -71,4 +64,4 @@ class ContextTest : AnnotationSpec() {
 
         intValue.shouldBeNull()
     }
-}
+})

@@ -12,8 +12,7 @@ import dev.yidafu.swc.generator.model.kotlin.computeSerialName
 import dev.yidafu.swc.generator.model.kotlin.toImplClass
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.model.typescript.TypeMember
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -21,18 +20,16 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.string.shouldContain as shouldContainString
 
-class InterfaceConverterTest : AnnotationSpec() {
+class InterfaceConverterTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val converter = InterfaceConverter(config)
+    val config = Configuration.default()
+    val converter = InterfaceConverter(config)
 
-    @Test
-    fun `test converter creation`() {
+    should("test converter creation") {
         converter.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert simple interface`() {
+    should("test convert simple interface") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "SimpleInterface",
             members = emptyList(),
@@ -49,8 +46,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `test convert interface with properties`() {
+    should("test convert interface with properties") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "InterfaceWithProps",
             members = listOf(
@@ -70,8 +66,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert interface with inheritance`() {
+    should("test convert interface with inheritance") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "DerivedInterface",
             members = emptyList(),
@@ -86,8 +81,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `type property is forced to string`() {
+    should("type property is forced to string") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "HasType",
             members = listOf(
@@ -103,8 +97,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         typeProperty.type shouldBe KotlinType.StringType
     }
 
-    @Test
-    fun `non type properties are nullable`() {
+    should("non type properties are nullable") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "HasValue",
             members = listOf(
@@ -121,8 +114,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         valueProperty.type.shouldBeInstanceOf<KotlinType.Nullable>()
     }
 
-    @Test
-    fun `type literal members generate nested interfaces`() {
+    should("type literal members generate nested interfaces") {
         val childLiteral = TypeScriptType.TypeLiteral(
             members = listOf(
                 TypeMember(
@@ -151,8 +143,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         nestedType.name shouldBe "ParentConfig"
     }
 
-    @Test
-    fun `span coordinates are mapped to Int`() {
+    should("span coordinates are mapped to Int") {
         val spanInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Span",
             members = listOf(
@@ -168,8 +159,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `type literal within union generates nested reference`() {
+    should("type literal within union generates nested reference") {
         val literalMember = TypeMember(
             name = "flag",
             type = TypeScriptType.Keyword(KeywordKind.BOOLEAN)
@@ -208,8 +198,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         secondParam.name shouldBe "OtherNode"
     }
 
-    @Test
-    fun `child type property overrides parent and duplicates filtered`() {
+    should("child type property overrides parent and duplicates filtered") {
         val parentInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "BaseInterface",
             members = listOf(
@@ -248,8 +237,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         typeProperty.modifier.shouldBeInstanceOf<PropertyModifier.OverrideVar>()
     }
 
-    @Test
-    fun `syntax property is nullable without literal (no hardcoded map)`() {
+    should("syntax property is nullable without literal (no hardcoded map)") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "TsParserConfig",
             members = listOf(
@@ -275,8 +263,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         tsxProperty.type.shouldBeInstanceOf<KotlinType.Nullable>()
     }
 
-    @Test
-    fun `syntax literal enforces non null String without hardcoded map`() {
+    should("syntax literal enforces non null String without hardcoded map") {
         // 名称不在任何硬编码白名单中，纯靠 TS ADT 的字面量信息驱动
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "CustomConfig",
@@ -303,8 +290,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         flagProperty.type.shouldBeInstanceOf<KotlinType.Nullable>()
     }
 
-    @Test
-    fun `type property with literal value extracts and stores literal`() {
+    should("type property with literal value extracts and stores literal") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Param",
             members = listOf(
@@ -333,8 +319,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         literalValue shouldBe "Parameter"
     }
 
-    @Test
-    fun `computeSerialName uses type field literal value from TypeScript`() {
+    should("computeSerialName uses type field literal value from TypeScript") {
         // 创建一个带有 type 字段字面量值的接口
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Param",
@@ -358,8 +343,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         serialName shouldBe "Parameter"
     }
 
-    @Test
-    fun `computeSerialName falls back to interface name when no literal value`() {
+    should("computeSerialName falls back to interface name when no literal value") {
         // 创建一个没有 type 字段字面量值的接口
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "SimpleNode",
@@ -380,8 +364,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         serialName shouldBe "SimpleNode"
     }
 
-    @Test
-    fun `does not filter child properties when parent declaration missing (no hardcoded fallback)`() {
+    should("does not filter child properties when parent declaration missing (no hardcoded fallback)") {
         // 子接口声明，声明继承一个未声明的父接口 HasDecorator
         // 目标：确保在父接口缺失的情况下，不会根据硬编码字典过滤 'decorators' 属性
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
@@ -404,8 +387,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         kotlinClass.properties.map { it.name.removeSurrounding("`") } shouldContain "other"
     }
 
-    @Test
-    fun `toImplClass preserves type field literal value from TypeScript`() {
+    should("toImplClass preserves type field literal value from TypeScript") {
         val tsInterface = TypeScriptDeclaration.InterfaceDeclaration(
             name = "Param",
             members = listOf(
@@ -430,8 +412,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         literalValue shouldBe "Parameter"
     }
 
-    @Test
-    fun `processFinalClassProperty preserves type field literal value`() {
+    should("processFinalClassProperty preserves type field literal value") {
         // 创建一个带有 type 字段字面量值的属性
         val typeProperty = KotlinDeclaration.PropertyDecl(
             name = "type",
@@ -472,8 +453,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         literalValue shouldBe "Parameter"
     }
 
-    @Test
-    fun `span property has default value as emptySpan function call in FinalClass`() {
+    should("span property has default value as emptySpan function call in FinalClass") {
         // 创建一个会被转换为 FinalClass 的接口（通过配置）
         // 使用 toKotlinClass 配置使其成为 FinalClass
         val customConfig = Configuration.default().copy(
@@ -518,8 +498,7 @@ class InterfaceConverterTest : AnnotationSpec() {
         spanProperty.annotations.map { it.name }.shouldContain("EncodeDefault")
     }
 
-    @Test
-    fun `span property in FinalClass with HasSpan inheritance has emptySpan default value`() {
+    should("span property in FinalClass with HasSpan inheritance has emptySpan default value") {
         // 创建一个会被转换为 FinalClass 的接口（通过配置）
         val customConfig = Configuration.default().copy(
             rules = config.rules.copy(
@@ -561,4 +540,4 @@ class InterfaceConverterTest : AnnotationSpec() {
         // 验证添加了 @EncodeDefault 注解
         spanProperty.annotations.map { it.name }.shouldContain("EncodeDefault")
     }
-}
+})

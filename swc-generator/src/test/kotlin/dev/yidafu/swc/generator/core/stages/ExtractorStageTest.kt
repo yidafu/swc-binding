@@ -11,22 +11,20 @@ import dev.yidafu.swc.generator.parser.ParseResult
 import dev.yidafu.swc.generator.parser.TsAstVisitor
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.test.assertNotNull
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 
-class ExtractorStageTest : AnnotationSpec() {
+class ExtractorStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val container = mockk<DependencyContainer>()
-    private val visitor = mockk<TsAstVisitor>()
-    private val stage = ExtractorStage(config, container) { visitor }
+    val config = Configuration.default()
+    val container = mockk<DependencyContainer>()
+    val visitor = mockk<TsAstVisitor>()
+    val stage = ExtractorStage(config, container) { visitor }
 
-    @Test
-    fun `extractor stage collects declarations and stores metadata`() {
+    should("extractor stage collects declarations and stores metadata") {
         val parseResult = ParseResult(
             astJsonString = """{"type":"Module","body":[]}""",
             program = AstNode.fromJson("""{"type":"Module","body":[]}"""),
@@ -65,4 +63,4 @@ class ExtractorStageTest : AnnotationSpec() {
             }
         } shouldBe listOf("Foo", "Bar")
     }
-}
+})

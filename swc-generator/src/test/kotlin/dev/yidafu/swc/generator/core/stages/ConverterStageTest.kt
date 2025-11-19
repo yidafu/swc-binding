@@ -8,22 +8,19 @@ import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertNotNull
 import dev.yidafu.swc.generator.test.assertTrue
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 
-class ConverterStageTest : AnnotationSpec() {
+class ConverterStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val container = DependencyContainer(config)
-    private val stage = ConverterStage(config, container)
+    val config = Configuration.default()
+    val container = DependencyContainer(config)
+    val stage = ConverterStage(config, container)
 
-    @Test
-    fun `test stage name`() {
+    should("test stage name") {
         assertEquals("Converter", stage.name)
     }
 
-    @Test
-    fun `test convert empty declaration list`() {
+    should("test convert empty declaration list") {
         val context = PipelineContext(config)
         val result = stage.execute(emptyList(), context)
 
@@ -32,8 +29,7 @@ class ConverterStageTest : AnnotationSpec() {
         assertTrue(declarations.isEmpty())
     }
 
-    @Test
-    fun `test convert interface declarations`() {
+    should("test convert interface declarations") {
         val tsDeclarations = listOf(
             TypeScriptDeclaration.InterfaceDeclaration(
                 name = "TestInterface",
@@ -53,8 +49,7 @@ class ConverterStageTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `test conversion result stored in context`() {
+    should("test conversion result stored in context") {
         val tsDeclarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "TestAlias",
@@ -71,4 +66,4 @@ class ConverterStageTest : AnnotationSpec() {
             assertNotNull(kotlinDeclarations)
         }
     }
-}
+})

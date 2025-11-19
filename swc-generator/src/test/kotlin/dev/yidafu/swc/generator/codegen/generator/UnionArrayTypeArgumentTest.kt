@@ -3,16 +3,14 @@ package dev.yidafu.swc.generator.codegen.generator
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class UnionArrayTypeArgumentTest : AnnotationSpec() {
+class UnionArrayTypeArgumentTest : ShouldSpec({
 
-    @Test
-    fun `generate UnionSerializer with Array generic argument`() {
+    should("generate UnionSerializer with Array generic argument") {
         // 预置一个使用：Config.test : Union.U2<String, Array<String>>
         val stringT = ClassName("kotlin", "String")
         val arrayOfString = ClassName("kotlin", "Array").parameterizedBy(stringT)
@@ -43,4 +41,4 @@ class UnionArrayTypeArgumentTest : AnnotationSpec() {
         // 组件序列化器应使用 ArraySerializer(serializer<String>())
         content.shouldContain("ArraySerializer(serializer<String>())")
     }
-}
+})

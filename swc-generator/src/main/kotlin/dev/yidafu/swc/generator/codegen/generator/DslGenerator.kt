@@ -6,7 +6,6 @@ import dev.yidafu.swc.generator.codegen.generator.dsl.DslModelContext
 import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFileWriter
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.util.Logger
-import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -16,9 +15,9 @@ import java.nio.file.Paths
 class DslGenerator(
     private val classDecls: List<KotlinDeclaration.ClassDecl>,
     private val classAllPropertiesMap: Map<String, List<KotlinDeclaration.PropertyDecl>>,
-    private val writer: GeneratedFileWriter = GeneratedFileWriter(),
+    writer: GeneratedFileWriter = GeneratedFileWriter(),
     private val poetGenerator: PoetGenerator = DefaultPoetGenerator()
-) : Closeable {
+) : BaseGenerator(writer) {
     private val modelContext = DslModelContext(classDecls, classAllPropertiesMap)
     private val collector = DslExtensionCollector(modelContext)
     private val emitter = DslFileEmitter(modelContext, poetGenerator)
@@ -40,10 +39,4 @@ class DslGenerator(
         dir.mkdirs()
     }
 
-    /**
-     * 关闭资源，释放线程池
-     */
-    override fun close() {
-        writer.close()
-    }
 }

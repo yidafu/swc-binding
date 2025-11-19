@@ -2,16 +2,14 @@ package dev.yidafu.swc.generator.codegen.generator
 
 import com.squareup.kotlinpoet.ClassName
 import dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class UnionAnnotationWithTest : AnnotationSpec() {
+class UnionAnnotationWithTest : ShouldSpec({
 
-    @Test
-    fun `fields and params annotated with Serializable-with`() {
+    should("fields and params annotated with Serializable-with") {
         // 准备一个 usage，确保会生成一个命名序列化器
         val stringT = ClassName("kotlin", "String")
         val boolT = ClassName("kotlin", "Boolean")
@@ -42,4 +40,4 @@ class UnionAnnotationWithTest : AnnotationSpec() {
         // object 继承 KSerializer
         content.shouldContain(": KSerializer<Union.U2<String, Boolean>>")
     }
-}
+})

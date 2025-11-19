@@ -5,8 +5,7 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -14,21 +13,50 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Paths
 
-class DslCollectorEmitterTest : AnnotationSpec() {
+class DslCollectorEmitterTest : ShouldSpec({
 
-    private val nodeInterface = classDecl("Node", ClassModifier.Interface)
-    private val literalInterface = classDecl(
+    fun classDecl(
+        name: String,
+        modifier: ClassModifier,
+        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
+        parents: List<KotlinType> = emptyList(),
+        enumEntries: List<KotlinDeclaration.EnumEntry> = emptyList()
+    ): KotlinDeclaration.ClassDecl {
+        return KotlinDeclaration.ClassDecl(
+            name = name,
+            modifier = modifier,
+            properties = properties,
+            parents = parents,
+            enumEntries = enumEntries,
+            annotations = emptyList()
+        )
+    }
+
+    fun prop(
+        name: String,
+        type: KotlinType = KotlinType.StringType
+    ): KotlinDeclaration.PropertyDecl {
+        return KotlinDeclaration.PropertyDecl(
+            name = name,
+            type = type,
+            modifier = PropertyModifier.Var,
+            annotations = emptyList()
+        )
+    }
+
+    val nodeInterface = classDecl("Node", ClassModifier.Interface)
+    val literalInterface = classDecl(
         "Literal",
         ClassModifier.Interface,
         parents = listOf(KotlinType.Simple("Node")),
         properties = listOf(prop("value"))
     )
-    private val literalImpl = classDecl(
+    val literalImpl = classDecl(
         "LiteralImpl",
         ClassModifier.FinalClass,
         parents = listOf(KotlinType.Simple("Literal"))
     )
-    private val nodeKindEnum = classDecl(
+    val nodeKindEnum = classDecl(
         "NodeKind",
         ClassModifier.EnumClass,
         enumEntries = listOf(
@@ -37,7 +65,7 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         )
     )
 
-    private fun modelContext(): DslModelContext {
+    fun modelContext(): DslModelContext {
         val classes = listOf(
             nodeInterface,
             literalInterface,
@@ -55,8 +83,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         return DslModelContext(classes, props)
     }
 
-    @Test
-    fun `collector skips configured receivers`() {
+    
+    should("collector skips configured receivers") {
         val collector = DslExtensionCollector(modelContext())
         val result = collector.collect()
 
@@ -64,8 +92,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         result.groups.keys.shouldNotContain("HasSpan")
     }
 
-    @Test
-    fun `collector falls back to interface when impl missing`() {
+    
+    should("collector falls back to interface when impl missing") {
         val context = modelContext()
         val classesWithoutImpl = context.classDecls.filterNot { it.name == "LiteralImpl" }
         val collector = DslExtensionCollector(DslModelContext(classesWithoutImpl, context.classAllPropertiesMap))
@@ -77,8 +105,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         nodeFns.shouldHaveSize(0)
     }
 
-    @Test
-    fun `file emitter generates receiver and create files`() {
+    
+    should("file emitter generates receiver and create files") {
         val context = modelContext()
         val collector = DslExtensionCollector(context)
         val collection = collector.collect()
@@ -95,8 +123,8 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         createFile.fileSpec!!.toString().shouldContain("fun createLiteralImpl")
     }
 
-    @Test
-    fun `collector skips enum typed property`() {
+    
+    should("collector skips enum typed property") {
         val collector = DslExtensionCollector(modelContext())
         val result = collector.collect()
 
@@ -104,33 +132,4 @@ class DslCollectorEmitterTest : AnnotationSpec() {
         nodeFunNames.shouldContain("Literal")
         nodeFunNames.shouldNotContain("NodeKind")
     }
-
-    private fun classDecl(
-        name: String,
-        modifier: ClassModifier,
-        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
-        parents: List<KotlinType> = emptyList(),
-        enumEntries: List<KotlinDeclaration.EnumEntry> = emptyList()
-    ): KotlinDeclaration.ClassDecl {
-        return KotlinDeclaration.ClassDecl(
-            name = name,
-            modifier = modifier,
-            properties = properties,
-            parents = parents,
-            enumEntries = enumEntries,
-            annotations = emptyList()
-        )
-    }
-
-    private fun prop(
-        name: String,
-        type: KotlinType = KotlinType.StringType
-    ): KotlinDeclaration.PropertyDecl {
-        return KotlinDeclaration.PropertyDecl(
-            name = name,
-            type = type,
-            modifier = PropertyModifier.Var,
-            annotations = emptyList()
-        )
-    }
-}
+})

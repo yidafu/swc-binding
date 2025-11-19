@@ -4,16 +4,15 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.io.File
 
-class DslGeneratorTest : AnnotationSpec() {
+class DslGeneratorTest : ShouldSpec({
 
-    private fun property(name: String, type: KotlinType): KotlinDeclaration.PropertyDecl {
+    fun property(name: String, type: KotlinType): KotlinDeclaration.PropertyDecl {
         return KotlinDeclaration.PropertyDecl(
             name = name,
             type = type,
@@ -22,7 +21,7 @@ class DslGeneratorTest : AnnotationSpec() {
         )
     }
 
-    private fun classDecl(
+    fun classDecl(
         name: String,
         modifier: ClassModifier,
         properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
@@ -37,8 +36,7 @@ class DslGeneratorTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `generate DSL files for property references`() {
+    should("generate DSL files for property references") {
         val argument = classDecl(
             name = "Argument",
             modifier = ClassModifier.Interface,
@@ -106,4 +104,4 @@ class DslGeneratorTest : AnnotationSpec() {
             outputDir.deleteRecursively()
         }
     }
-}
+})

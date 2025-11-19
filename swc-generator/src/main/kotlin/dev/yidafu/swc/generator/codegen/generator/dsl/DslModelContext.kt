@@ -102,9 +102,9 @@ class DslHierarchy(
 
 private fun KotlinType.extractSimpleName(): String? {
     return when (this) {
-        is KotlinType.Simple -> this.name.removeSurrounding("`")
+        is KotlinType.Simple -> dev.yidafu.swc.generator.util.NameUtils.clean(this.name)
         is KotlinType.Nullable -> this.innerType.extractSimpleName()
-        is KotlinType.Nested -> "${this.parent.removeSurrounding("`")}.${this.name.removeSurrounding("`")}"
+        is KotlinType.Nested -> "${dev.yidafu.swc.generator.util.NameUtils.clean(this.parent)}.${dev.yidafu.swc.generator.util.NameUtils.clean(this.name)}"
         else -> null
     }
 }

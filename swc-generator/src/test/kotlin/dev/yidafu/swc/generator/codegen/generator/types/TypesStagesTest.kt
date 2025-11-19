@@ -11,16 +11,68 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import java.nio.file.Paths
 
-class TypesStagesTest : AnnotationSpec() {
-    private fun newContext(
+class TypesStagesTest : ShouldSpec({
+
+    fun classDecl(
+        name: String,
+        modifier: ClassModifier,
+        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
+        parents: List<KotlinType> = emptyList()
+    ): KotlinDeclaration.ClassDecl {
+        return KotlinDeclaration.ClassDecl(
+            name = name,
+            modifier = modifier,
+            properties = properties,
+            parents = parents,
+            annotations = emptyList()
+        )
+    }
+
+    fun prop(
+        name: String,
+        type: KotlinType = KotlinType.StringType
+    ): KotlinDeclaration.PropertyDecl {
+        return KotlinDeclaration.PropertyDecl(
+            name = name,
+            type = type,
+            modifier = PropertyModifier.Var,
+            annotations = emptyList()
+        )
+    }
+
+    class RecordingPoetGenerator : PoetGenerator {
+        val emitted = mutableListOf<String>()
+        val aliases = mutableListOf<String>()
+
+        override fun emitType(
+            fileBuilder: FileSpec.Builder,
+            declaration: KotlinDeclaration.ClassDecl,
+            interfaceNames: Set<String>,
+            declLookup: Map<String, KotlinDeclaration.ClassDecl>
+        ): Boolean {
+            emitted += declaration.name
+            return true
+        }
+
+        override fun emitTypeAlias(
+            fileBuilder: FileSpec.Builder,
+            typeAlias: KotlinDeclaration.TypeAliasDecl
+        ): Boolean {
+            aliases += typeAlias.name
+            return true
+        }
+
+        override fun buildFile(fileBuilder: FileSpec.Builder): FileSpec = fileBuilder.build()
+    }
+
+    fun newContext(
         classDecls: MutableList<KotlinDeclaration.ClassDecl>,
         typeAliases: MutableList<KotlinDeclaration.TypeAliasDecl> = mutableListOf(),
         poetGenerator: PoetGenerator = RecordingPoetGenerator()
@@ -45,8 +97,8 @@ class TypesStagesTest : AnnotationSpec() {
         return context to recordingPoet
     }
 
-    @Test
-    fun `interface stage emits sorted interfaces`() {
+    
+    should("interface stage emits sorted interfaces") {
         val base = classDecl("Base", ClassModifier.Interface)
         val child = classDecl("Child", ClassModifier.Interface, parents = listOf(KotlinType.Simple("Base")))
         val another = classDecl("Another", ClassModifier.Interface)
@@ -57,11 +109,11 @@ class TypesStagesTest : AnnotationSpec() {
         stage.run(context)
 
         // 新策略下接口阶段可能只输出去重后的必要接口，这里放宽断言
-        recorder.emitted.shouldContain("Base")
+        (recorder as RecordingPoetGenerator).emitted.shouldContain("Base")
     }
 
-    @Test
-    fun `concrete class stage ignores interfaces and impl classes`() {
+    
+    should("concrete class stage ignores interfaces and impl classes") {
         val concrete = classDecl("NodeImpl", ClassModifier.FinalClass)
         val iface = classDecl("Node", ClassModifier.Interface)
         val dataClass = classDecl("ValueNode", ClassModifier.DataClass)
@@ -71,11 +123,11 @@ class TypesStagesTest : AnnotationSpec() {
 
         stage.run(context)
 
-        recorder.emitted.shouldContainExactlyInAnyOrder(listOf("ValueNode"))
+        (recorder as RecordingPoetGenerator).emitted.shouldContainExactlyInAnyOrder(listOf("ValueNode"))
     }
 
-    @Test
-    fun `implementation stage emits only leaf interfaces`() {
+    
+    should("implementation stage emits only leaf interfaces") {
         val node = classDecl("Node", ClassModifier.Interface, properties = listOf(prop("type")))
         val expr = classDecl(
             "Expression",
@@ -96,70 +148,18 @@ class TypesStagesTest : AnnotationSpec() {
         stage.run(context)
 
         // 新策略下不再强制生成 *Impl，断言 leaf 接口已被处理、缓存包含层次信息
-        recorder.emitted.shouldContain("Literal")
+        (recorder as RecordingPoetGenerator).emitted.shouldContain("Literal")
         context.propertyCache.keys.shouldContainAll(listOf("Literal", "Expression", "Node"))
     }
 
-    @Test
-    fun `type alias stage emits aliases via poet`() {
+    
+    should("type alias stage emits aliases via poet") {
         val alias = KotlinDeclaration.TypeAliasDecl("AliasA", KotlinType.Simple("String"))
         val (context, recorder) = newContext(mutableListOf(), mutableListOf(alias))
         val stage = TypeAliasStage(TypeAliasEmitter())
 
         stage.run(context)
 
-        recorder.aliases.shouldContainExactly(listOf("AliasA"))
+        (recorder as RecordingPoetGenerator).aliases.shouldContainExactly(listOf("AliasA"))
     }
-
-    private fun classDecl(
-        name: String,
-        modifier: ClassModifier,
-        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
-        parents: List<KotlinType> = emptyList()
-    ): KotlinDeclaration.ClassDecl {
-        return KotlinDeclaration.ClassDecl(
-            name = name,
-            modifier = modifier,
-            properties = properties,
-            parents = parents,
-            annotations = emptyList()
-        )
-    }
-
-    private fun prop(
-        name: String,
-        type: KotlinType = KotlinType.StringType
-    ): KotlinDeclaration.PropertyDecl {
-        return KotlinDeclaration.PropertyDecl(
-            name = name,
-            type = type,
-            modifier = PropertyModifier.Var,
-            annotations = emptyList()
-        )
-    }
-
-    private class RecordingPoetGenerator : PoetGenerator {
-        val emitted = mutableListOf<String>()
-        val aliases = mutableListOf<String>()
-
-        override fun emitType(
-            fileBuilder: FileSpec.Builder,
-            declaration: KotlinDeclaration.ClassDecl,
-            interfaceNames: Set<String>,
-            declLookup: Map<String, KotlinDeclaration.ClassDecl>
-        ): Boolean {
-            emitted += declaration.name
-            return true
-        }
-
-        override fun emitTypeAlias(
-            fileBuilder: FileSpec.Builder,
-            typeAlias: KotlinDeclaration.TypeAliasDecl
-        ): Boolean {
-            aliases += typeAlias.name
-            return true
-        }
-
-        override fun buildFile(fileBuilder: FileSpec.Builder): FileSpec = fileBuilder.build()
-    }
-}
+})

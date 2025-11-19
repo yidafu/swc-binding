@@ -4,13 +4,11 @@ import dev.yidafu.swc.generator.test.assertEquals
 import dev.yidafu.swc.generator.test.assertFalse
 import dev.yidafu.swc.generator.test.assertNull
 import dev.yidafu.swc.generator.test.assertTrue
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 
-class GeneratorResultTest : AnnotationSpec() {
+class GeneratorResultTest : ShouldSpec({
 
-    @Test
-    fun `test success result`() {
+    should("test success result") {
         val result = GeneratorResultFactory.success("test")
 
         assertTrue(result.isSuccess())
@@ -18,8 +16,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertEquals("test", result.getOrThrow())
     }
 
-    @Test
-    fun `test failure result`() {
+    should("test failure result") {
         val result = GeneratorResultFactory.failure<String>(
             ErrorCode.UNKNOWN,
             "Test error"
@@ -34,8 +31,7 @@ class GeneratorResultTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `test onSuccess callback`() {
+    should("test onSuccess callback") {
         var callbackExecuted = false
         val result = GeneratorResultFactory.success("test")
 
@@ -47,8 +43,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertTrue(callbackExecuted)
     }
 
-    @Test
-    fun `test onFailure callback`() {
+    should("test onFailure callback") {
         var callbackExecuted = false
         val result = GeneratorResultFactory.failure<String>(
             ErrorCode.UNKNOWN,
@@ -63,14 +58,12 @@ class GeneratorResultTest : AnnotationSpec() {
         assertTrue(callbackExecuted)
     }
 
-    @Test
-    fun `test getOrNull with success`() {
+    should("test getOrNull with success") {
         val result = GeneratorResultFactory.success("test")
         assertEquals("test", result.getOrNull())
     }
 
-    @Test
-    fun `test getOrNull with failure`() {
+    should("test getOrNull with failure") {
         val result = GeneratorResultFactory.failure<String>(
             ErrorCode.UNKNOWN,
             "Test error"
@@ -78,14 +71,12 @@ class GeneratorResultTest : AnnotationSpec() {
         assertNull(result.getOrNull())
     }
 
-    @Test
-    fun `test getOrDefault with success`() {
+    should("test getOrDefault with success") {
         val result = GeneratorResultFactory.success("test")
         assertEquals("test", result.getOrDefault("default"))
     }
 
-    @Test
-    fun `test getOrDefault with failure`() {
+    should("test getOrDefault with failure") {
         val result = GeneratorResultFactory.failure<String>(
             ErrorCode.UNKNOWN,
             "Test error"
@@ -93,8 +84,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertEquals("default", result.getOrDefault("default"))
     }
 
-    @Test
-    fun `test map success`() {
+    should("test map success") {
         val result = GeneratorResultFactory.success(5)
         val mapped = result.map { it * 2 }
 
@@ -102,8 +92,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertEquals(10, mapped.getOrThrow())
     }
 
-    @Test
-    fun `test map failure`() {
+    should("test map failure") {
         val result = GeneratorResultFactory.failure<Int>(
             ErrorCode.UNKNOWN,
             "Test error"
@@ -113,8 +102,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertTrue(mapped.isFailure())
     }
 
-    @Test
-    fun `test flatMap success`() {
+    should("test flatMap success") {
         val result = GeneratorResultFactory.success(5)
         val flatMapped = result.flatMap { GeneratorResultFactory.success(it * 2) }
 
@@ -122,8 +110,7 @@ class GeneratorResultTest : AnnotationSpec() {
         assertEquals(10, flatMapped.getOrThrow())
     }
 
-    @Test
-    fun `test flatMap failure`() {
+    should("test flatMap failure") {
         val result = GeneratorResultFactory.failure<Int>(
             ErrorCode.UNKNOWN,
             "Test error"
@@ -132,4 +119,4 @@ class GeneratorResultTest : AnnotationSpec() {
 
         assertTrue(flatMapped.isFailure())
     }
-}
+})

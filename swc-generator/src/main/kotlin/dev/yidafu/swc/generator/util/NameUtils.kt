@@ -3,6 +3,14 @@ package dev.yidafu.swc.generator.util
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 
 object NameUtils {
+    // 简单的名称清洗缓存，减少重复 removeSurrounding("`") 带来的分配
+    private val cleanNameCache = mutableMapOf<String, String>()
+
+    /**
+     * 清洗名称：移除反引号，带缓存
+     */
+    fun clean(name: String): String = cleanNameCache.getOrPut(name) { name.removeSurrounding("`") }
+
     fun removeBackticks(name: String): String = name.removeSurrounding("`")
 
     fun addBackticks(name: String): String = if (name.startsWith("`") && name.endsWith("`")) {

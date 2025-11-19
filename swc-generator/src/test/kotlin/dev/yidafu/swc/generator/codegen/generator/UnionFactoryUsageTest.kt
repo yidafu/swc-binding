@@ -3,16 +3,14 @@ package dev.yidafu.swc.generator.codegen.generator
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class UnionFactoryUsageTest : AnnotationSpec() {
+class UnionFactoryUsageTest : ShouldSpec({
 
-    @Test
-    fun `UnionSerializer objects do not use UnionFactory and delegate via serializerFor`() {
+    should("UnionSerializer objects do not use UnionFactory and delegate via serializerFor") {
         val stringT = ClassName("kotlin", "String")
         val intT = ClassName("kotlin", "Int")
         val arrString = ClassName("kotlin", "Array").parameterizedBy(stringT)
@@ -59,4 +57,4 @@ class UnionFactoryUsageTest : AnnotationSpec() {
         // 数组形态应包一层 ArraySerializer(...)
         content.shouldContain("ArraySerializer(")
     }
-}
+})

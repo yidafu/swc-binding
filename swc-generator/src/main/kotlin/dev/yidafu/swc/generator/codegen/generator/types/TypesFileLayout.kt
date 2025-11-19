@@ -4,6 +4,9 @@ import com.squareup.kotlinpoet.FileSpec
 import dev.yidafu.swc.generator.codegen.generator.PoetGenerator
 import dev.yidafu.swc.generator.codegen.pipeline.GeneratedFile
 import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
+import dev.yidafu.swc.generator.util.DebugUtils
+import dev.yidafu.swc.generator.util.DebugUtils.isDebugType
+import dev.yidafu.swc.generator.util.NameUtils.clean
 import java.nio.file.Path
 import java.util.LinkedHashMap
 
@@ -69,9 +72,9 @@ class TypesFileLayout(
             generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
         }
         classBuilders.forEach { (name, builder) ->
-            // 调试：检查 ForOfStatement 和 ComputedPropName
-            if (name.removeSurrounding("`") == "ForOfStatement" || name.removeSurrounding("`") == "ComputedPropName") {
-                println("  [DEBUG] collectGeneratedFiles: 找到类 $name，将生成文件")
+            // 调试：检查调试类型
+            if (isDebugType(name)) {
+                DebugUtils.debug("collectGeneratedFiles: 找到类 $name，将生成文件")
             }
             generatedFiles += createGeneratedFile(interfaceOutputPath(name), builder, poet, postProcessor)
         }

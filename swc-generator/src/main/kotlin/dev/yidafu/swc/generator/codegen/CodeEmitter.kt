@@ -8,7 +8,9 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.result.*
 import dev.yidafu.swc.generator.transformer.TransformResult
+import dev.yidafu.swc.generator.util.DebugUtils.findDebugTypes
 import dev.yidafu.swc.generator.util.Logger
+import dev.yidafu.swc.generator.util.NameUtils.clean
 import java.io.File
 
 /**
@@ -54,79 +56,93 @@ class CodeEmitter(
     }
 
     /**
+     * 通用的生成函数，消除重复的 dry-run 检查和资源管理代码
+     */
+    private fun <T : AutoCloseable> generateWithDryRun(
+        operationName: String,
+        outputPath: String?,
+        dryRunInfo: () -> String? = { null },
+        generateAction: (String) -> T,
+        executeAction: (T) -> Unit
+    ) {
+        Logger.debug("生成 $operationName...")
+
+        if (config.dryRun) {
+            Logger.info("  [DRY-RUN] 将生成到: $outputPath", 2)
+            dryRunInfo()?.let { Logger.info("  [DRY-RUN] $it", 2) }
+        } else {
+            outputPath?.let { path ->
+                generateAction(path).use { generator ->
+                    executeAction(generator)
+                }
+                Logger.success("  ✓ 生成 $operationName")
+            }
+        }
+    }
+
+    /**
      * 生成 types.kt
      */
     private fun emitTypes(transformResult: TransformResult) {
-        Logger.debug("生成 types.kt...")
-
-        if (config.dryRun) {
-            Logger.info("  [DRY-RUN] 将生成到: ${config.outputTypesPath}", 2)
-            Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
-        } else {
-            config.outputTypesPath?.let { path ->
-                // 调试：检查 ForOfStatement 和 ComputedPropName
-                val forOfStatement = transformResult.classDecls.find { it.name.removeSurrounding("`") == "ForOfStatement" }
-                val computedPropName = transformResult.classDecls.find { it.name.removeSurrounding("`") == "ComputedPropName" }
-                if (forOfStatement != null) {
-                    Logger.debug("  CodeEmitter 找到 ForOfStatement: modifier=${forOfStatement.modifier}", 4)
-                } else {
-                    Logger.warn("  CodeEmitter 未找到 ForOfStatement，总类数: ${transformResult.classDecls.size}")
+        generateWithDryRun<TypesGenerator>(
+            operationName = "types.kt",
+            outputPath = config.outputTypesPath,
+            dryRunInfo = { "类数量: ${transformResult.classDecls.size}" },
+            generateAction = { path ->
+                // 调试：检查调试类型
+                val debugTypes = findDebugTypes(transformResult.classDecls)
+                debugTypes.forEach { (typeName, decl) ->
+                    Logger.debug("  CodeEmitter 找到 $typeName: modifier=${decl.modifier}", 4)
                 }
-                if (computedPropName != null) {
-                    Logger.debug("  CodeEmitter 找到 ComputedPropName: modifier=${computedPropName.modifier}", 4)
-                } else {
-                    Logger.warn("  CodeEmitter 未找到 ComputedPropName，总类数: ${transformResult.classDecls.size}")
+                TypesGenerator(transformResult.classDecls.toMutableList())
+            },
+            executeAction = { generator ->
+                // 添加类型别名
+                transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->
+                    generator.addTypeAlias(typeAlias)
                 }
-
-                TypesGenerator(transformResult.classDecls.toMutableList()).use { generator ->
-                    // 添加类型别名
-                    transformResult.typeAliases.forEach { typeAlias: KotlinDeclaration.TypeAliasDecl ->
-                        generator.addTypeAlias(typeAlias)
-                    }
-                    generator.writeToFile(path)
-                }
-                Logger.success("  ✓ 生成 types.kt")
+                generator.writeToFile(config.outputTypesPath!!)
             }
-        }
+        )
     }
 
     /**
      * 生成 serializer.kt
      */
     private fun emitSerializer(transformResult: TransformResult) {
-        Logger.debug("生成 serializer.kt...")
-
-        if (config.dryRun) {
-            Logger.info("  [DRY-RUN] 将生成到: ${config.outputSerializerPath}", 2)
-            Logger.info("  [DRY-RUN] 类数量: ${transformResult.classDecls.size}", 2)
-        } else {
-            config.outputSerializerPath?.let { path ->
-                SerializerGenerator().use { generator ->
-                    generator.writeToFile(path, transformResult.classDecls)
-                }
-                Logger.success("  ✓ 生成 serializer.kt")
+        generateWithDryRun<SerializerGenerator>(
+            operationName = "serializer.kt",
+            outputPath = config.outputSerializerPath,
+            dryRunInfo = { "类数量: ${transformResult.classDecls.size}" },
+            generateAction = { path ->
+                SerializerGenerator()
+            },
+            executeAction = { generator ->
+                generator.writeToFile(config.outputSerializerPath!!, transformResult.classDecls)
             }
-        }
+        )
     }
 
     /**
      * 生成 DSL
      */
     private fun emitDsl(transformResult: TransformResult) {
-        Logger.debug("生成 DSL 扩展函数...")
-
-        if (config.dryRun) {
-            Logger.info("  [DRY-RUN] 将生成到: ${config.outputDslDir}", 2)
-            val functionCount = transformResult.classDecls.count { it.modifier in listOf(ClassModifier.Interface, ClassModifier.SealedInterface) }
-            Logger.info("  [DRY-RUN] DSL 函数数（估计）: ~$functionCount", 2)
-        } else {
-            config.outputDslDir?.let { dir ->
-                DslGenerator(transformResult.classDecls, transformResult.classAllPropertiesMap).use { generator ->
-                    generator.writeToDirectory(dir)
+        generateWithDryRun<DslGenerator>(
+            operationName = "DSL 扩展函数",
+            outputPath = config.outputDslDir,
+            dryRunInfo = {
+                val functionCount = transformResult.classDecls.count { 
+                    it.modifier in listOf(ClassModifier.Interface, ClassModifier.SealedInterface) 
                 }
-                Logger.success("  ✓ 生成 DSL 文件")
+                "DSL 函数数（估计）: ~$functionCount"
+            },
+            generateAction = { dir ->
+                DslGenerator(transformResult.classDecls, transformResult.classAllPropertiesMap)
+            },
+            executeAction = { generator ->
+                generator.writeToDirectory(config.outputDslDir!!)
             }
-        }
+        )
     }
 
     /**

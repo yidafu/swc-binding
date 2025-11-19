@@ -4,36 +4,64 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldBeNull
 
-class DslExtensionCollectorTest : AnnotationSpec() {
+class DslExtensionCollectorTest : ShouldSpec({
 
-    private val nodeInterface = classDecl("Node", ClassModifier.Interface)
-    private val exprInterface = classDecl(
+    fun classDecl(
+        name: String,
+        modifier: ClassModifier,
+        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
+        parents: List<KotlinType> = emptyList(),
+        enumEntries: List<KotlinDeclaration.EnumEntry> = emptyList()
+    ): KotlinDeclaration.ClassDecl {
+        return KotlinDeclaration.ClassDecl(
+            name = name,
+            modifier = modifier,
+            properties = properties,
+            parents = parents,
+            enumEntries = enumEntries,
+            annotations = emptyList()
+        )
+    }
+
+    fun prop(
+        name: String,
+        type: KotlinType = KotlinType.StringType
+    ): KotlinDeclaration.PropertyDecl {
+        return KotlinDeclaration.PropertyDecl(
+            name = name,
+            type = type,
+            modifier = PropertyModifier.Var,
+            annotations = emptyList()
+        )
+    }
+
+    val nodeInterface = classDecl("Node", ClassModifier.Interface)
+    val exprInterface = classDecl(
         "Expr",
         ClassModifier.Interface,
         parents = listOf(KotlinType.Simple("Node"))
     )
-    private val literalInterface = classDecl(
+    val literalInterface = classDecl(
         "Literal",
         ClassModifier.Interface,
         parents = listOf(KotlinType.Simple("Expr"))
     )
-    private val literalImplWithBackticks = classDecl(
+    val literalImplWithBackticks = classDecl(
         "`LiteralImpl`",
         ClassModifier.FinalClass,
         parents = listOf(KotlinType.Simple("Literal"))
     )
-    private val nodeKindEnum = classDecl("NodeKind", ClassModifier.EnumClass)
-    private val outsideInterface = classDecl("Outside", ClassModifier.Interface)
-    private val enumHostInterface = classDecl("EnumHost", ClassModifier.Interface)
+    val nodeKindEnum = classDecl("NodeKind", ClassModifier.EnumClass)
+    val outsideInterface = classDecl("Outside", ClassModifier.Interface)
+    val enumHostInterface = classDecl("EnumHost", ClassModifier.Interface)
 
-    private val modelContext = DslModelContext(
+    val modelContext = DslModelContext(
         classDecls = listOf(
             nodeInterface,
             exprInterface,
@@ -57,8 +85,8 @@ class DslExtensionCollectorTest : AnnotationSpec() {
         )
     )
 
-    @Test
-    fun `collector groups instantiable property extensions`() {
+    
+    should("collector groups instantiable property extensions") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
 
@@ -72,8 +100,8 @@ class DslExtensionCollectorTest : AnnotationSpec() {
         exprFunNames.shouldContainExactly("Literal")
     }
 
-    @Test
-    fun `node leaf interfaces include only node descendants without children`() {
+    
+    should("node leaf interfaces include only node descendants without children") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
 
@@ -84,8 +112,8 @@ class DslExtensionCollectorTest : AnnotationSpec() {
         creatableNames.shouldNotContain("Outside")
     }
 
-    @Test
-    fun `enum only properties do not produce extension functions`() {
+    
+    should("enum only properties do not produce extension functions") {
         val collector = DslExtensionCollector(modelContext)
         val result = collector.collect()
 
@@ -94,33 +122,4 @@ class DslExtensionCollectorTest : AnnotationSpec() {
         val nodeFunNames = result.groups["Node"].orEmpty().map { it.funName }
         nodeFunNames.shouldNotContain("NodeKind")
     }
-
-    private fun classDecl(
-        name: String,
-        modifier: ClassModifier,
-        properties: List<KotlinDeclaration.PropertyDecl> = emptyList(),
-        parents: List<KotlinType> = emptyList(),
-        enumEntries: List<KotlinDeclaration.EnumEntry> = emptyList()
-    ): KotlinDeclaration.ClassDecl {
-        return KotlinDeclaration.ClassDecl(
-            name = name,
-            modifier = modifier,
-            properties = properties,
-            parents = parents,
-            enumEntries = enumEntries,
-            annotations = emptyList()
-        )
-    }
-
-    private fun prop(
-        name: String,
-        type: KotlinType = KotlinType.StringType
-    ): KotlinDeclaration.PropertyDecl {
-        return KotlinDeclaration.PropertyDecl(
-            name = name,
-            type = type,
-            modifier = PropertyModifier.Var,
-            annotations = emptyList()
-        )
-    }
-}
+})

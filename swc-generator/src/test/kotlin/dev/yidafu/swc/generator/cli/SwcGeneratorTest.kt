@@ -1,32 +1,30 @@
 package dev.yidafu.swc.generator.cli
 
 import dev.yidafu.swc.generator.config.Configuration
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.AfterTest
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import java.io.File
 import java.nio.file.Files
 
-class SwcGeneratorTest : AnnotationSpec() {
+class SwcGeneratorTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
+    val config = Configuration.default()
+    val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
 
-    @AfterTest
-    fun cleanup() {
+    afterTest {
         tempDir.deleteRecursively()
     }
 
-    @Test
-    fun `test SwcGenerator creation`() {
+    should("test SwcGenerator creation") {
         val generator = SwcGenerator(config)
         generator.shouldNotBeNull()
     }
 
-    @Test
-    fun `test run with valid input file`() {
+    should("test run with valid input file") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         // 创建测试 TypeScript 定义文件
         val testFile = File(tempDir, "test-simple.d.ts")
         testFile.writeText(
@@ -47,12 +45,11 @@ class SwcGeneratorTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test run with non-existent file`() {
+    should("test run with non-existent file") {
         val generator = SwcGenerator(config)
         val result = generator.run("non-existent-file.d.ts")
 
         // 应该失败
         result.isFailure().shouldBeTrue()
     }
-}
+})

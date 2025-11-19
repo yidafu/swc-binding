@@ -3,24 +3,21 @@ package dev.yidafu.swc.generator.converter.type
 import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.*
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-class TypeConverterTest : AnnotationSpec() {
+class TypeConverterTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val converter = TypeConverter(config)
+    val config = Configuration.default()
+    val converter = TypeConverter(config)
 
-    @Test
-    fun `test converter creation`() {
+    should("test converter creation") {
         converter.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert string type`() {
+    should("test convert string type") {
         val result = converter.convert(TypeScriptType.Keyword(KeywordKind.STRING))
 
         result.shouldNotBeNull()
@@ -30,50 +27,43 @@ class TypeConverterTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `test convert number type`() {
+    should("test convert number type") {
         val result = converter.convert(TypeScriptType.Keyword(KeywordKind.NUMBER))
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert boolean type`() {
+    should("test convert boolean type") {
         val result = converter.convert(TypeScriptType.Keyword(KeywordKind.BOOLEAN))
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert any type`() {
+    should("test convert any type") {
         val result = converter.convert(TypeScriptType.Any)
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert void type`() {
+    should("test convert void type") {
         val result = converter.convert(TypeScriptType.Void)
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert null type`() {
+    should("test convert null type") {
         val result = converter.convert(TypeScriptType.Null)
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert undefined type`() {
+    should("test convert undefined type") {
         val result = converter.convert(TypeScriptType.Undefined)
 
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert generic type`() {
+    should("test convert generic type") {
         val genericType = TypeScriptType.Reference(
             name = "Array",
             typeParams = listOf(TypeScriptType.Keyword(KeywordKind.STRING))
@@ -84,8 +74,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert union type`() {
+    should("test convert union type") {
         val unionType = TypeScriptType.Union(
             types = listOf(
                 TypeScriptType.Keyword(KeywordKind.STRING),
@@ -98,8 +87,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert intersection type`() {
+    should("test convert intersection type") {
         val intersectionType = TypeScriptType.Intersection(
             types = listOf(
                 TypeScriptType.Keyword(KeywordKind.STRING),
@@ -112,8 +100,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert simple type`() {
+    should("test convert simple type") {
         val simpleType = TypeScriptType.Reference("CustomType", emptyList())
 
         val result = converter.convert(simpleType)
@@ -121,8 +108,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert array type`() {
+    should("test convert array type") {
         val arrayType = TypeScriptType.Array(TypeScriptType.Keyword(KeywordKind.STRING))
 
         val result = converter.convert(arrayType)
@@ -130,8 +116,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert optional type`() {
+    should("test convert optional type") {
         // Optional 类型在 TypeScript 中通常用 Union 表示
         val optionalType = TypeScriptType.Union(
             types = listOf(
@@ -145,8 +130,7 @@ class TypeConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `literal unions produce fixed Union types`() {
+    should("literal unions produce fixed Union types") {
         val literalUnion = TypeScriptType.Union(
             listOf(
                 TypeScriptType.Literal(LiteralValue.StringLiteral("a")),
@@ -160,8 +144,7 @@ class TypeConverterTest : AnnotationSpec() {
         kotlinType.toTypeString() shouldBe "String"
     }
 
-    @Test
-    fun `nested type registry produces nested Kotlin types`() {
+    should("nested type registry produces nested Kotlin types") {
         val registry = mapOf("Inner" to "Parent")
         val nestedConverter = TypeConverter(config, registry)
         val result = nestedConverter.convert(TypeScriptType.Reference("Inner"))
@@ -169,4 +152,4 @@ class TypeConverterTest : AnnotationSpec() {
         nested.parent shouldBe "Parent"
         nested.name shouldBe "Inner"
     }
-}
+})

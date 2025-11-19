@@ -2,8 +2,7 @@ package dev.yidafu.swc.generator.codegen.pipeline
 
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -12,10 +11,9 @@ import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import java.nio.file.Files
 
-class GeneratedFileWriterTest : AnnotationSpec() {
+class GeneratedFileWriterTest : ShouldSpec({
 
-    @Test
-    fun `generated files contain auto header`() {
+    should("generated files contain auto header") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("Sample.kt")
 
@@ -32,8 +30,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         content.shouldStartWith(timestampPrefix)
     }
 
-    @Test
-    fun `does not write file if content unchanged ignoring header timestamp`() {
+    should("does not write file if content unchanged ignoring header timestamp") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("Unchanged.kt")
 
@@ -68,8 +65,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         secondWriteTime shouldBe firstWriteTime
     }
 
-    @Test
-    fun `writes file if content changed`() {
+    should("writes file if content changed") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("Changed.kt")
 
@@ -109,8 +105,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         finalContent shouldContain "class Test2"
     }
 
-    @Test
-    fun `writes file if file does not exist`() {
+    should("writes file if file does not exist") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("NewFile.kt")
 
@@ -134,8 +129,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         content.shouldStartWith("// Auto-generated file. Do not edit. Generated at: ")
     }
 
-    @Test
-    fun `handles file without header comment`() {
+    should("handles file without header comment") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("NoHeader.kt")
 
@@ -171,8 +165,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         finalContent shouldContain "class OldClass"
     }
 
-    @Test
-    fun `writes file when content differs even without header`() {
+    should("writes file when content differs even without header") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("DifferentContent.kt")
 
@@ -204,8 +197,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         finalContent shouldNotContain "class OldClass"
     }
 
-    @Test
-    fun `works with FileSpec instead of contentProducer`() {
+    should("works with FileSpec instead of contentProducer") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("FileSpec.kt")
 
@@ -243,8 +235,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         secondWriteTime shouldBe firstWriteTime
     }
 
-    @Test
-    fun `handles empty content`() {
+    should("handles empty content") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("Empty.kt")
 
@@ -281,8 +272,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         content.shouldStartWith("// Auto-generated file. Do not edit. Generated at: ")
     }
 
-    @Test
-    fun `handles whitespace differences`() {
+    should("handles whitespace differences") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("Whitespace.kt")
 
@@ -316,8 +306,7 @@ class GeneratedFileWriterTest : AnnotationSpec() {
         secondWriteTime shouldBe firstWriteTime
     }
 
-    @Test
-    fun `handles multiple files concurrently`() {
+    should("handles multiple files concurrently") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val files = (1..10).map { i ->
             val path = tempDir.resolve("Concurrent$i.kt")
@@ -355,4 +344,121 @@ class GeneratedFileWriterTest : AnnotationSpec() {
             newWriteTime shouldBe writeTimes[index]
         }
     }
-}
+
+    should("ignores comments when comparing content") {
+        val tempDir = Files.createTempDirectory("generated-writer-test")
+        val targetPath = tempDir.resolve("WithComments.kt")
+
+        // 第一次写入带注释的内容
+        val contentWithComments = """
+            package dev.yidafu.sample
+            
+            /**
+             * This is a KDoc comment
+             */
+            class Test {
+                // This is a single line comment
+                fun method() {
+                    /* This is a multi-line comment */
+                }
+            }
+        """.trimIndent()
+
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { contentWithComments }
+            )
+            writer.write(listOf(file))
+        }
+
+        val firstWriteTime = Files.getLastModifiedTime(targetPath)
+        Thread.sleep(10)
+
+        // 第二次写入相同内容但注释不同
+        val contentWithDifferentComments = """
+            package dev.yidafu.sample
+            
+            /**
+             * Different KDoc comment text
+             */
+            class Test {
+                // Different single line comment
+                fun method() {
+                    /* Different multi-line comment */
+                }
+            }
+        """.trimIndent()
+
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { contentWithDifferentComments }
+            )
+            writer.write(listOf(file))
+        }
+
+        val secondWriteTime = Files.getLastModifiedTime(targetPath)
+
+        // 由于代码内容相同（忽略注释），应该跳过写入
+        secondWriteTime shouldBe firstWriteTime
+    }
+
+    should("writes file when code content differs even with same comments") {
+        val tempDir = Files.createTempDirectory("generated-writer-test")
+        val targetPath = tempDir.resolve("DifferentCode.kt")
+
+        val content1 = """
+            package dev.yidafu.sample
+            
+            /**
+             * KDoc comment
+             */
+            class Test1 {
+                // comment
+                fun method() {}
+            }
+        """.trimIndent()
+
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { content1 }
+            )
+            writer.write(listOf(file))
+        }
+
+        val firstWriteTime = Files.getLastModifiedTime(targetPath)
+        Thread.sleep(10)
+
+        // 代码内容不同（类名从 Test1 改为 Test2），即使注释相同也应该写入
+        val content2 = """
+            package dev.yidafu.sample
+            
+            /**
+             * KDoc comment
+             */
+            class Test2 {
+                // comment
+                fun method() {}
+            }
+        """.trimIndent()
+
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { content2 }
+            )
+            writer.write(listOf(file))
+        }
+
+        val secondWriteTime = Files.getLastModifiedTime(targetPath)
+
+        // 代码内容不同，应该写入
+        secondWriteTime.toInstant().isAfter(firstWriteTime.toInstant()) shouldBe true
+
+        val finalContent = Files.readString(targetPath)
+        finalContent shouldContain "class Test2"
+        finalContent shouldNotContain "class Test1"
+    }
+})

@@ -4,17 +4,16 @@ import dev.yidafu.swc.generator.config.SerializerConfig
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class SerializerGeneratorTest : AnnotationSpec() {
+class SerializerGeneratorTest : ShouldSpec({
 
-    private fun interfaceDecl(name: String, parents: List<KotlinType> = emptyList()): KotlinDeclaration.ClassDecl {
+    fun interfaceDecl(name: String, parents: List<KotlinType> = emptyList()): KotlinDeclaration.ClassDecl {
         return KotlinDeclaration.ClassDecl(
             name = name,
             modifier = ClassModifier.Interface,
@@ -24,8 +23,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `writeToFile creates serializer module`() {
+    
+    should("writeToFile creates serializer module") {
         val tempFile = File.createTempFile("serializer", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -48,7 +47,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         unionFile.exists().shouldBeTrue()
     }
 
-    private fun implDecl(name: String, parent: String): KotlinDeclaration.ClassDecl {
+    fun implDecl(name: String, parent: String): KotlinDeclaration.ClassDecl {
         return KotlinDeclaration.ClassDecl(
             name = name,
             modifier = ClassModifier.FinalClass,
@@ -58,8 +57,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `span impl uses custom serializer`() {
+    
+    should("span impl uses custom serializer") {
         val tempFile = File.createTempFile("serializer-span", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -73,8 +72,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         // 新策略下不强制包含 Span 的多态注册
     }
 
-    @Test
-    fun `stable ordering for parents and children`() {
+    
+    should("stable ordering for parents and children") {
         val tempFile = File.createTempFile("serializer-order", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -112,7 +111,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         assert(cChildIdx in bBlockStart..bBlockEnd && dChildIdx in bBlockStart..bBlockEnd && cChildIdx < dChildIdx)
     }
 
-    private fun sealedInterfaceDecl(name: String, parents: List<KotlinType> = emptyList(), annotated: Boolean = false): KotlinDeclaration.ClassDecl {
+    fun sealedInterfaceDecl(name: String, parents: List<KotlinType> = emptyList(), annotated: Boolean = false): KotlinDeclaration.ClassDecl {
         return KotlinDeclaration.ClassDecl(
             name = name,
             modifier = ClassModifier.SealedInterface,
@@ -122,8 +121,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `should fail when polymorphic parent lacks Serializable annotation`() {
+    
+    should("should fail when polymorphic parent lacks Serializable annotation") {
         val tempFile = File.createTempFile("serializer-validate", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -141,8 +140,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         assert(failed)
     }
 
-    @Test
-    fun `missing serializable on open base should warn under WARN_OPEN_BASES`() {
+    
+    should("missing serializable on open base should warn under WARN_OPEN_BASES") {
         val tempFile = File.createTempFile("serializer-warn-open-bases", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val prevPolicy = SerializerConfig.missingSerializablePolicy
@@ -162,8 +161,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `missing serializable should error under ERROR policy`() {
+    
+    should("missing serializable should error under ERROR policy") {
         val tempFile = File.createTempFile("serializer-error-policy", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val prevPolicy = SerializerConfig.missingSerializablePolicy
@@ -185,8 +184,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `missing serializable should warn under WARN_ALL policy`() {
+    
+    should("missing serializable should warn under WARN_ALL policy") {
         val tempFile = File.createTempFile("serializer-warn-all", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val prevPolicy = SerializerConfig.missingSerializablePolicy
@@ -203,7 +202,7 @@ class SerializerGeneratorTest : AnnotationSpec() {
         }
     }
 
-    private fun classDecl(name: String, parent: String, annotated: Boolean = true): KotlinDeclaration.ClassDecl {
+    fun classDecl(name: String, parent: String, annotated: Boolean = true): KotlinDeclaration.ClassDecl {
         return KotlinDeclaration.ClassDecl(
             name = name,
             modifier = ClassModifier.FinalClass,
@@ -213,8 +212,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `generated serializer should use Impl types in subclass calls`() {
+    
+    should("generated serializer should use Impl types in subclass calls") {
         val tempFile = File.createTempFile("serializer-impl-subclass", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -237,8 +236,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         content.shouldContain("subclass(TsTemplateLiteralTypeImpl::class)")
     }
 
-    @Test
-    fun `should generate polymorphic registrations for customType interfaces`() {
+    
+    should("should generate polymorphic registrations for customType interfaces") {
         val tempFile = File.createTempFile("serializer-custom-type", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         // 不包含 Identifier、BindingIdentifier、TemplateLiteral、TsTemplateLiteralType 的声明
@@ -267,8 +266,8 @@ class SerializerGeneratorTest : AnnotationSpec() {
         content.shouldContain("subclass(TsTemplateLiteralTypeImpl::class)")
     }
 
-    @Test
-    fun `customType polymorphic registrations should appear in correct order`() {
+    
+    should("customType polymorphic registrations should appear in correct order") {
         val tempFile = File.createTempFile("serializer-custom-type-order", ".kt").apply { deleteOnExit() }
         val generator = SerializerGenerator()
         val declarations = listOf(
@@ -296,4 +295,4 @@ class SerializerGeneratorTest : AnnotationSpec() {
         templateLiteralIdx.shouldBeGreaterThan(bindingIdentifierIdx)
         tsTemplateLiteralTypeIdx.shouldBeGreaterThan(templateLiteralIdx)
     }
-}
+})

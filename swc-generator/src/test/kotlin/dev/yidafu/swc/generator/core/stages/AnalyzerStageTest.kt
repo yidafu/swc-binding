@@ -4,17 +4,15 @@ import dev.yidafu.swc.generator.config.Configuration
 import dev.yidafu.swc.generator.core.PipelineContext
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.test.assertNotNull
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
-class AnalyzerStageTest : AnnotationSpec() {
+class AnalyzerStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val stage = AnalyzerStage(config)
+    val config = Configuration.default()
+    val stage = AnalyzerStage(config)
 
-    @Test
-    fun `analyzer stage stores analysis result`() {
+    should("analyzer stage stores analysis result") {
         val context = PipelineContext(config)
         val declarations = listOf<TypeScriptDeclaration>()
 
@@ -26,4 +24,4 @@ class AnalyzerStageTest : AnnotationSpec() {
         analysis.typeDependencies.isEmpty() shouldBe true
         analysis.circularDependencies.isEmpty() shouldBe true
     }
-}
+})

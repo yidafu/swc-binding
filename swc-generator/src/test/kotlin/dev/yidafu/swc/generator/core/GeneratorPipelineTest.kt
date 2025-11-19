@@ -6,25 +6,22 @@ import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import io.kotest.assertions.fail
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class GeneratorPipelineTest : AnnotationSpec() {
+class GeneratorPipelineTest : ShouldSpec({
 
-    private val config = Configuration.default()
+    val config = Configuration.default()
 
-    @Test
-    fun `test create default pipeline`() {
+    should("test create default pipeline") {
         val pipeline = GeneratorPipeline.createDefault(config)
 
         pipeline.shouldNotBeNull()
     }
 
-    @Test
-    fun `test add custom stage`() {
+    should("test add custom stage") {
         val pipeline = GeneratorPipeline(config, DependencyContainer(config))
         val customStage = object : AbstractStage<String, String>() {
             override val name: String = "CustomStage"
@@ -39,8 +36,7 @@ class GeneratorPipelineTest : AnnotationSpec() {
         result.isSuccess().shouldBeTrue()
     }
 
-    @Test
-    fun `test pipeline execution with multiple stages`() {
+    should("test pipeline execution with multiple stages") {
         val pipeline = GeneratorPipeline(config, DependencyContainer(config))
 
         val stage1 = object : AbstractStage<String, Int>() {
@@ -64,8 +60,7 @@ class GeneratorPipelineTest : AnnotationSpec() {
         result.isSuccess().shouldBeTrue()
     }
 
-    @Test
-    fun `test pipeline execution failure stops processing`() {
+    should("test pipeline execution failure stops processing") {
         val pipeline = GeneratorPipeline(config, DependencyContainer(config))
 
         val failingStage = object : AbstractStage<String, String>() {
@@ -93,8 +88,7 @@ class GeneratorPipelineTest : AnnotationSpec() {
         result.isFailure().shouldBeTrue()
     }
 
-    @Test
-    fun `test pipeline context is passed between stages`() {
+    should("test pipeline context is passed between stages") {
         val pipeline = GeneratorPipeline(config, DependencyContainer(config))
         val contextKey = "testKey"
         val contextValue = "testValue"
@@ -123,8 +117,7 @@ class GeneratorPipelineTest : AnnotationSpec() {
         result.isSuccess().shouldBeTrue()
     }
 
-    @Test
-    fun `test pipeline handles exceptions`() {
+    should("test pipeline handles exceptions") {
         val pipeline = GeneratorPipeline(config, DependencyContainer(config))
 
         val throwingStage = object : AbstractStage<String, String>() {
@@ -139,4 +132,4 @@ class GeneratorPipelineTest : AnnotationSpec() {
         val result = pipeline.execute("test")
         result.isFailure().shouldBeTrue()
     }
-}
+})

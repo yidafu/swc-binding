@@ -1,8 +1,6 @@
 package dev.yidafu.swc.generator.config
 
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.AfterTest
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -10,18 +8,16 @@ import io.kotest.matchers.shouldBe
 import java.io.File
 import java.nio.file.Files
 
-class ConfigurationLoaderTest : AnnotationSpec() {
+class ConfigurationLoaderTest : ShouldSpec({
 
-    private val loader = ConfigurationLoader()
-    private val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
+    val loader = ConfigurationLoader()
+    val tempDir = Files.createTempDirectory("swc-generator-test").toFile()
 
-    @AfterTest
-    fun cleanup() {
+    afterTest {
         tempDir.deleteRecursively()
     }
 
-    @Test
-    fun `test load default configuration when file does not exist`() {
+    should("test load default configuration when file does not exist") {
         val result = loader.loadFromFile("non-existent-config.yaml")
 
         result.isSuccess().shouldBeTrue()
@@ -33,8 +29,10 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         config.behavior.shouldNotBeNull()
     }
 
-    @Test
-    fun `test load configuration from valid YAML file`() {
+    should("test load configuration from valid YAML file") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val configFile = File(tempDir, "test-config.yaml")
         val yamlContent = """
             input:
@@ -67,8 +65,10 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         config.behavior.enableParallelProcessing.shouldBeFalse()
     }
 
-    @Test
-    fun `test load configuration with partial fields`() {
+    should("test load configuration with partial fields") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val configFile = File(tempDir, "partial-config.yaml")
         val yamlContent = """
             input:
@@ -88,8 +88,10 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         config.behavior.shouldNotBeNull()
     }
 
-    @Test
-    fun `test generate sample configuration`() {
+    should("test generate sample configuration") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val outputPath = File(tempDir, "sample-config.yaml").absolutePath
         val result = loader.generateSampleConfig(outputPath)
 
@@ -103,8 +105,7 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         loadResult.isSuccess().shouldBeTrue()
     }
 
-    @Test
-    fun `test load from args`() {
+    should("test load from args") {
         val config = loader.loadFromArgs(
             inputPath = "custom-input.d.ts",
             outputTypesPath = "custom-types.kt",
@@ -124,8 +125,7 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         config.output.dryRun.shouldBeTrue()
     }
 
-    @Test
-    fun `test merge configurations`() {
+    should("test merge configurations") {
         val fileConfig = Configuration.default().copy(
             input = InputConfig.default().copy(inputPath = "file-input.d.ts")
         )
@@ -140,8 +140,10 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         merged.input.verbose.shouldBeTrue()
     }
 
-    @Test
-    fun `test configuration validation`() {
+    should("test configuration validation") {
+        // 确保临时目录存在
+        tempDir.mkdirs()
+        
         val validConfig = Configuration.default().copy(
             input = InputConfig.default().copy(inputPath = "test-simple.d.ts")
         )
@@ -159,8 +161,7 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         validationResult.isSuccess().shouldBeTrue()
     }
 
-    @Test
-    fun `test configuration validation with invalid path`() {
+    should("test configuration validation with invalid path") {
         val invalidConfig = Configuration.default().copy(
             input = InputConfig.default().copy(inputPath = "")
         )
@@ -168,4 +169,4 @@ class ConfigurationLoaderTest : AnnotationSpec() {
         val validationResult = invalidConfig.validate()
         validationResult.isFailure().shouldBeTrue()
     }
-}
+})

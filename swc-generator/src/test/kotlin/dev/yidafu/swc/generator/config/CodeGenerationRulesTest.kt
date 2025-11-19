@@ -5,8 +5,7 @@ import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -14,37 +13,32 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
-class CodeGenerationRulesTest : AnnotationSpec() {
+class CodeGenerationRulesTest : ShouldSpec({
 
-    @Test
-    fun `reserved words are wrapped`() {
+    should("reserved words are wrapped") {
         CodeGenerationRules.wrapReservedWord("class") shouldBe "`class`"
         CodeGenerationRules.wrapReservedWord("Custom") shouldBe "Custom"
     }
 
-    @Test
-    fun `snake case converts to camel case`() {
+    should("snake case converts to camel case") {
         CodeGenerationRules.snakeToCamelCase("foo_bar_baz") shouldBe "fooBarBaz"
         CodeGenerationRules.snakeToCamelCase("single") shouldBe "single"
     }
 
-    @Test
-    fun `kotlin type name validation rejects invalid inputs`() {
+    should("kotlin type name validation rejects invalid inputs") {
         CodeGenerationRules.isValidKotlinTypeName("ValidName").shouldBeTrue()
         CodeGenerationRules.isValidKotlinTypeName("invalidName").shouldBeFalse()
         CodeGenerationRules.isValidKotlinTypeName("List<String>").shouldBeFalse()
         CodeGenerationRules.isValidKotlinTypeName("").shouldBeFalse()
     }
 
-    @Test
-    fun `property type overrides return configured nullable strings`() {
+    should("property type overrides return configured nullable strings") {
         val override = CodeGenerationRules.getPropertyTypeOverride("global_defs")
         override.shouldBeInstanceOf<KotlinType.Nullable>()
         override.innerType shouldBe KotlinType.StringType
     }
 
-    @Test
-    fun `createPropertyDecl adds serialization annotations when renaming`() {
+    should("createPropertyDecl adds serialization annotations when renaming") {
         val property = CodeGenerationRules.createPropertyDecl(
             name = "class",
             type = KotlinType.StringType,
@@ -57,8 +51,7 @@ class CodeGenerationRulesTest : AnnotationSpec() {
         property.annotations.map { it.name }.shouldContainExactly(listOf("Serializable", "SerialName"))
     }
 
-    @Test
-    fun `createClassDecl wraps parents and names`() {
+    should("createClassDecl wraps parents and names") {
         val klass = CodeGenerationRules.createClassDecl(
             name = "object",
             modifier = ClassModifier.Interface,
@@ -72,14 +65,12 @@ class CodeGenerationRulesTest : AnnotationSpec() {
         klass.annotations.single().name shouldBe "Serializable"
     }
 
-    @Test
-    fun `skip dsl receiver respects configuration`() {
+    should("skip dsl receiver respects configuration") {
         CodeGenerationRules.shouldSkipDslReceiver("HasSpan").shouldBeTrue()
         CodeGenerationRules.shouldSkipDslReceiver("Expression").shouldBeFalse()
     }
 
-    @Test
-    fun `processImplementationProperty sets span default value to emptySpan function call`() {
+    should("processImplementationProperty sets span default value to emptySpan function call") {
         // 创建一个带有 span 属性的属性声明
         val spanProperty = KotlinDeclaration.PropertyDecl(
             name = "span",
@@ -112,8 +103,7 @@ class CodeGenerationRulesTest : AnnotationSpec() {
         processedProperty.annotations.map { it.name }.shouldContainExactly(listOf("EncodeDefault"))
     }
 
-    @Test
-    fun `processImplementationProperty preserves existing span default value if set`() {
+    should("processImplementationProperty preserves existing span default value if set") {
         // 创建一个已经设置了默认值的 span 属性
         val spanProperty = KotlinDeclaration.PropertyDecl(
             name = "span",
@@ -137,4 +127,4 @@ class CodeGenerationRulesTest : AnnotationSpec() {
         val functionCall = processedProperty.defaultValue as Expression.FunctionCall
         functionCall.name shouldBe "emptySpan"
     }
-}
+})

@@ -3,16 +3,14 @@ package dev.yidafu.swc.generator.codegen.generator
 import com.squareup.kotlinpoet.ClassName
 import dev.yidafu.swc.generator.codegen.generator.UnionSerializerRegistry.UnionUsage
 import dev.yidafu.swc.generator.config.UnionConfig
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import java.io.File
 
-class UnionNullabilityTokenTest : AnnotationSpec() {
+class UnionNullabilityTokenTest : ShouldSpec({
 
-    @Test
-    fun `distinct names when includeNullabilityInToken enabled`() {
+    should("distinct names when includeNullabilityInToken enabled") {
         val prev = UnionConfig.includeNullabilityInToken
         try {
             UnionConfig.includeNullabilityInToken = true
@@ -57,4 +55,4 @@ class UnionNullabilityTokenTest : AnnotationSpec() {
             UnionConfig.includeNullabilityInToken = prev
         }
     }
-}
+})

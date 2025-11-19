@@ -3,6 +3,8 @@ package dev.yidafu.swc.generator.codegen.pipeline
 import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.Path
+import dev.yidafu.swc.generator.util.DebugUtils
+import dev.yidafu.swc.generator.util.DebugUtils.isDebugType
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletableFuture
@@ -43,12 +45,13 @@ class GeneratedFileWriter(
         targetPath.parent?.let { Files.createDirectories(it) }
         val content = file.buildContent()
 
-        // 调试：检查 ForOfStatement 和 ComputedPropName
+        // 调试：检查调试类型
         val fileName = targetPath.fileName.toString()
-        if (fileName == "ForOfStatement.kt" || fileName == "ComputedPropName.kt") {
-            println("  [DEBUG] 写入文件: $fileName, 内容长度: ${content.length}")
+        val baseFileName = fileName.removeSuffix(".kt")
+        if (isDebugType(baseFileName)) {
+            DebugUtils.debug("写入文件: $fileName, 内容长度: ${content.length}")
             if (content.isEmpty()) {
-                println("  [WARN] 文件内容为空: $fileName")
+                DebugUtils.debug("文件内容为空: $fileName", "WARN")
             }
         }
 
@@ -61,24 +64,24 @@ class GeneratedFileWriter(
             // 比较内容时忽略头部注释中的时间戳
             if (contentEqualsIgnoringHeaderTimestamp(existingContent, finalContent)) {
                 // 内容相同，跳过写入
-                if (fileName == "ForOfStatement.kt" || fileName == "ComputedPropName.kt") {
-                    println("  [DEBUG] 文件内容相同，跳过写入: $fileName")
+                if (isDebugType(baseFileName)) {
+                    DebugUtils.debug("文件内容相同，跳过写入: $fileName")
                 }
                 return
             } else {
-                if (fileName == "ForOfStatement.kt" || fileName == "ComputedPropName.kt") {
-                    println("  [DEBUG] 文件内容不同，将写入: $fileName")
+                if (isDebugType(baseFileName)) {
+                    DebugUtils.debug("文件内容不同，将写入: $fileName")
                 }
             }
         } else {
-            if (fileName == "ForOfStatement.kt" || fileName == "ComputedPropName.kt") {
-                println("  [DEBUG] 文件不存在，将创建: $fileName")
+            if (isDebugType(baseFileName)) {
+                DebugUtils.debug("文件不存在，将创建: $fileName")
             }
         }
 
         Files.writeString(targetPath, finalContent)
-        if (fileName == "ForOfStatement.kt" || fileName == "ComputedPropName.kt") {
-            println("  [DEBUG] 文件写入完成: $fileName")
+        if (isDebugType(baseFileName)) {
+            DebugUtils.debug("文件写入完成: $fileName")
         }
     }
 

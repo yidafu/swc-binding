@@ -11,21 +11,19 @@ import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import dev.yidafu.swc.generator.processor.KotlinADTProcessor
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.test.assertNotNull
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 
-class ProcessorStageTest : AnnotationSpec() {
+class ProcessorStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val container = mockk<DependencyContainer>()
-    private val processor = mockk<KotlinADTProcessor>()
-    private val stage = ProcessorStage(config, container)
+    val config = Configuration.default()
+    val container = mockk<DependencyContainer>()
+    val processor = mockk<KotlinADTProcessor>()
+    val stage = ProcessorStage(config, container)
 
-    @Test
-    fun `processor stage stores processed declarations`() {
+    should("processor stage stores processed declarations") {
         val declaration = KotlinDeclaration.ClassDecl(
             name = "Sample",
             modifier = ClassModifier.Interface,
@@ -51,4 +49,4 @@ class ProcessorStageTest : AnnotationSpec() {
         val processed = stored.single() as KotlinDeclaration.ClassDecl
         processed.name shouldBe "Sample"
     }
-}
+})

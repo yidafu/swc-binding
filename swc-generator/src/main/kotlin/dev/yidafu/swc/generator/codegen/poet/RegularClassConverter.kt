@@ -13,6 +13,7 @@ import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.computeSerialName
+import dev.yidafu.swc.generator.util.NameUtils.clean
 
 /**
  * 普通类转换器
@@ -42,12 +43,12 @@ object RegularClassConverter {
         // 为所有 Node 派生类添加 type 字段注释
         if (nodeDerived) {
             // 获取实际的 type 字段值（用于注释），而不是 SerialName（可能不同）
-            val typeFieldValue = decl.properties.find { it.name.removeSurrounding("`") == "type" }?.defaultValue?.let { defaultValue ->
+            val typeFieldValue = decl.properties.find { clean(it.name) == "type" }?.defaultValue?.let { defaultValue ->
                 when (defaultValue) {
                     is Expression.StringLiteral -> defaultValue.value
                     else -> null
                 }
-            } ?: dev.yidafu.swc.generator.config.CodeGenerationRules.getTypeFieldLiteralValue(decl.name.removeSurrounding("`")) ?: decl.name.removeSurrounding("`")
+            } ?: dev.yidafu.swc.generator.config.CodeGenerationRules.getTypeFieldLiteralValue(clean(decl.name)) ?: clean(decl.name)
             builder.addKdoc("conflict with @SerialName\nremove class property `override var type : String? = %S`", typeFieldValue)
         }
         // 为所有 Config 派生类添加 syntax 字段注释

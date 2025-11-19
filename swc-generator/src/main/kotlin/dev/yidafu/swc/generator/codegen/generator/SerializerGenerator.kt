@@ -16,9 +16,9 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.computeSerialName
 import dev.yidafu.swc.generator.model.kotlin.getClassName
 import dev.yidafu.swc.generator.util.Logger
+import dev.yidafu.swc.generator.util.NameUtils.clean
 import dev.yidafu.swc.generator.util.NameUtils.normalized
 import dev.yidafu.swc.generator.util.NameUtils.simpleNameOf
-import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -27,8 +27,8 @@ import java.nio.file.Paths
  */
 
 class SerializerGenerator(
-    private val writer: GeneratedFileWriter = GeneratedFileWriter()
-) : Closeable {
+    writer: GeneratedFileWriter = GeneratedFileWriter()
+) : BaseGenerator(writer) {
     private val skipPolymorphicInterfaces = setOf<String>()
     private val interfaceToImplMap: Map<String, String> = SerializerConfig.interfaceToImplMap
 
@@ -439,9 +439,6 @@ class SerializerGenerator(
     private fun ancestorsWithSelfOf(name: String, rel: Map<String, List<String>>): List<String> =
         ancestorsWithSelfCache.getOrPut(clean(name)) { collectAncestorsIncludingSelf(clean(name), rel) }
 
-    // 简单的名称清洗缓存，减少重复 removeSurrounding("`") 带来的分配
-    private val cleanNameCache = mutableMapOf<String, String>()
-    private fun clean(name: String): String = cleanNameCache.getOrPut(name) { name.removeSurrounding("`") }
 
     private fun seedDirectConcrete(
         concreteClasses: List<KotlinDeclaration.ClassDecl>,
@@ -482,8 +479,8 @@ class SerializerGenerator(
             if (children.isNullOrEmpty()) {
                 return@forEach
             }
-            val normalizedParent = rawToNormalized[rawParent] ?: rawParent.removeSurrounding("`", "`")
-            val cleanName = normalizedParent.removeSurrounding("`", "`")
+            val normalizedParent = rawToNormalized[rawParent] ?: rawParent
+            val cleanName = clean(normalizedParent)
             if (cleanName in skipPolymorphicInterfaces) {
                 Logger.verbose("  跳过接口 $rawParent（在 skipPolymorphicInterfaces 中）", 8)
                 return@forEach
@@ -500,7 +497,7 @@ class SerializerGenerator(
     ): Map<String, LinkedHashMap<String, List<String>>> {
         val groupedResult = LinkedHashMap<String, LinkedHashMap<String, List<String>>>()
         orderedResult.forEach { (rawParent, children) ->
-            val normalizedParent = rawToNormalized[rawParent] ?: rawParent.removeSurrounding("`", "`")
+            val normalizedParent = rawToNormalized[rawParent] ?: rawParent
             val discriminator = if (clean(normalizedParent) in SerializerConfig.configInterfaceNames) {
                 SerializerConfig.SYNTAX_DISCRIMINATOR
             } else {
@@ -542,7 +539,7 @@ class SerializerGenerator(
         interfaceChildrenMap: Map<String, LinkedHashSet<String>>,
         parentsWithDirectConcrete: Set<String>
     ): Boolean {
-        val cleanName = normalizedParent.removeSurrounding("`", "`")
+        val cleanName = clean(normalizedParent)
         if (cleanName in skipPolymorphicInterfaces) {
             return false
         }
@@ -699,6 +696,12 @@ class SerializerGenerator(
                         val className = ClassName(PoetConstants.PKG_TYPES, implClassName)
                         add("subclass(%T::class)\n", className)
                     }
+                    // 检查是否需要添加默认序列化器（应该在所有 subclass 之后）
+                    val defaultSerializer = SerializerConfig.defaultSerializerMap[parentClean]
+                    if (defaultSerializer != null) {
+                        val defaultClassName = ClassName(PoetConstants.PKG_TYPES, defaultSerializer)
+                        add("default { %T.serializer() }\n", defaultClassName)
+                    }
                     unindent()
                     add("}\n")
                 }
@@ -812,12 +815,6 @@ class SerializerGenerator(
         }
     }
 
-    /**
-     * 关闭资源，释放线程池
-     */
-    override fun close() {
-        writer.close()
-    }
 }
 
 private data class SerializerGenerationContext(

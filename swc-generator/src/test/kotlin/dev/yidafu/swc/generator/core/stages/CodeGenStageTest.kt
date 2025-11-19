@@ -10,21 +10,20 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
 import dev.yidafu.swc.generator.transformer.TransformResult
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 
-class CodeGenStageTest : AnnotationSpec() {
+class CodeGenStageTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val container = mockk<DependencyContainer>()
-    private val emitter = mockk<CodeEmitter>()
-    private val stage = CodeGenStage(config, container)
+    val config = Configuration.default()
+    val container = mockk<DependencyContainer>()
+    val emitter = mockk<CodeEmitter>()
+    val stage = CodeGenStage(config, container)
 
-    private fun sampleDeclarations(): List<KotlinDeclaration> {
+    fun sampleDeclarations(): List<KotlinDeclaration> {
         val klass = KotlinDeclaration.ClassDecl(
             name = "Sample",
             modifier = ClassModifier.Interface,
@@ -42,8 +41,7 @@ class CodeGenStageTest : AnnotationSpec() {
         return listOf(klass, alias)
     }
 
-    @Test
-    fun `codegen stage builds transform result from context metadata`() {
+    should("codegen stage builds transform result from context metadata") {
         val declarations = sampleDeclarations()
         val context = PipelineContext(config).apply {
             setMetadata("processedDeclarations", declarations)
@@ -60,4 +58,4 @@ class CodeGenStageTest : AnnotationSpec() {
         transformSlot.captured.typeAliases.single().name shouldBe "Alias"
         transformSlot.captured.classAllPropertiesMap.keys shouldBe setOf("Sample")
     }
-}
+})

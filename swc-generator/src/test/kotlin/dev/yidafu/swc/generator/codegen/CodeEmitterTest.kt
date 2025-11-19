@@ -6,16 +6,15 @@ import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
 import dev.yidafu.swc.generator.transformer.TransformResult
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
-class CodeEmitterTest : AnnotationSpec() {
+class CodeEmitterTest : ShouldSpec({
 
-    private fun sampleClass(): KotlinDeclaration.ClassDecl = KotlinDeclaration.ClassDecl(
+    fun sampleClass(): KotlinDeclaration.ClassDecl = KotlinDeclaration.ClassDecl(
         name = "Sample",
         modifier = ClassModifier.Interface,
         properties = listOf(
@@ -29,7 +28,7 @@ class CodeEmitterTest : AnnotationSpec() {
         annotations = emptyList()
     )
 
-    private fun transformResult(): TransformResult {
+    fun transformResult(): TransformResult {
         val klass = sampleClass()
         return TransformResult(
             classDecls = listOf(klass),
@@ -40,8 +39,7 @@ class CodeEmitterTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `dry run emit succeeds without touching filesystem`() {
+    should("dry run emit succeeds without touching filesystem") {
         val tempDir = createTempDirectory().toFile()
         val config = GeneratorConfig(
             outputTypesPath = File(tempDir, "types.kt").absolutePath,
@@ -57,8 +55,7 @@ class CodeEmitterTest : AnnotationSpec() {
         File(config.outputTypesPath!!).exists().shouldBeFalse()
     }
 
-    @Test
-    fun `emit writes Kotlin files when not dry run`() {
+    should("emit writes Kotlin files when not dry run") {
         val tempDir = createTempDirectory().toFile()
         val config = GeneratorConfig(
             outputTypesPath = File(tempDir, "types.kt").absolutePath,
@@ -75,4 +72,4 @@ class CodeEmitterTest : AnnotationSpec() {
         File(config.outputSerializerPath!!).exists().shouldBeTrue()
         File(config.outputDslDir!!, "create.kt").exists().shouldBeTrue()
     }
-}
+})

@@ -5,24 +5,21 @@ import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.typescript.*
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class TypeAliasConverterTest : AnnotationSpec() {
+class TypeAliasConverterTest : ShouldSpec({
 
-    private val config = Configuration.default()
-    private val converter = TypeAliasConverter(config)
+    val config = Configuration.default()
+    val converter = TypeAliasConverter(config)
 
-    @Test
-    fun `test converter creation`() {
+    should("test converter creation") {
         converter.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert simple type alias`() {
+    should("test convert simple type alias") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "SimpleAlias",
             type = TypeScriptType.Keyword(KeywordKind.STRING),
@@ -38,8 +35,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `test convert type alias with generic`() {
+    should("test convert type alias with generic") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "GenericAlias",
             type = TypeScriptType.Reference(
@@ -54,8 +50,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `test convert union type alias`() {
+    should("test convert union type alias") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "UnionAlias",
             type = TypeScriptType.Union(
@@ -72,8 +67,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         result.shouldNotBeNull()
     }
 
-    @Test
-    fun `literal unions generate enum classes`() {
+    should("literal unions generate enum classes") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "JsMode",
             type = TypeScriptType.Union(
@@ -91,8 +85,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         enumDecl.enumEntries.map { it.name }.shouldContainAll(listOf("ESM", "CJS"))
     }
 
-    @Test
-    fun `interface unions become sealed interfaces and register parents`() {
+    should("interface unions become sealed interfaces and register parents") {
         val registry = mutableMapOf<String, MutableSet<String>>()
         val customConverter = TypeAliasConverter(
             config = config,
@@ -116,8 +109,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         registry["Bar"]?.shouldContainAll(listOf("NodeLike"))
     }
 
-    @Test
-    fun `type literal aliases become interfaces`() {
+    should("type literal aliases become interfaces") {
         val tsTypeAlias = TypeScriptDeclaration.TypeAliasDeclaration(
             name = "InlineOptions",
             type = TypeScriptType.TypeLiteral(
@@ -139,8 +131,7 @@ class TypeAliasConverterTest : AnnotationSpec() {
         property.type shouldBe KotlinType.Nullable(KotlinType.Boolean)
     }
 
-    @Test
-    fun `parse options intersection produces base interface and alias`() {
+    should("parse options intersection produces base interface and alias") {
         val registry = mutableMapOf<String, MutableSet<String>>()
         val customConverter = TypeAliasConverter(
             config = config,
@@ -173,4 +164,4 @@ class TypeAliasConverterTest : AnnotationSpec() {
         baseInterface.properties.map { it.name }.shouldContainAll(listOf("comments", "script", "target"))
         registry["ParserConfig"]?.shouldContainAll(listOf("BaseParseOptions"))
     }
-}
+})

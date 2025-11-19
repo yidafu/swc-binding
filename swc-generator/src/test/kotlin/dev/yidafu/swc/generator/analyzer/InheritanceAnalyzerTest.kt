@@ -3,22 +3,20 @@ package dev.yidafu.swc.generator.analyzer
 import dev.yidafu.swc.generator.model.typescript.TypeReference
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.model.typescript.TypeScriptType
-import io.kotest.core.spec.style.AnnotationSpec
-import io.kotest.core.spec.style.annotation.Test
+import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
-class InheritanceAnalyzerTest : AnnotationSpec() {
+class InheritanceAnalyzerTest : ShouldSpec({
 
-    private fun declaration(name: String, vararg parents: String) =
+    fun declaration(name: String, vararg parents: String) =
         TypeScriptDeclaration.InterfaceDeclaration(
             name = name,
             extends = parents.map { TypeReference(it) }
         )
 
-    @Test
-    fun `analyzer resolves descendants and roots`() {
+    should("analyzer resolves descendants and roots") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -36,8 +34,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         analyzer.isDescendantOf("Standalone", "Node") shouldBe false
     }
 
-    @Test
-    fun `analyzer detects cycles`() {
+    should("analyzer detects cycles") {
         val declarations = listOf(
             declaration("A", "B"),
             declaration("B", "A")
@@ -47,8 +44,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         analyzer.detectCycles().isNotEmpty() shouldBe true
     }
 
-    @Test
-    fun `expandTypeAlias expands simple union type alias`() {
+    should("expandTypeAlias expands simple union type alias") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "SimpleUnion",
@@ -67,8 +63,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("TypeA", "TypeB", "TypeC"))
     }
 
-    @Test
-    fun `expandTypeAlias returns null for non-type-alias`() {
+    should("expandTypeAlias returns null for non-type-alias") {
         val declarations = listOf(
             declaration("SomeInterface")
         )
@@ -78,8 +73,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         analyzer.expandTypeAlias("NonExistent").shouldBeNull()
     }
 
-    @Test
-    fun `expandTypeAlias returns null for non-union type alias`() {
+    should("expandTypeAlias returns null for non-union type alias") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "SimpleAlias",
@@ -91,8 +85,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         analyzer.expandTypeAlias("SimpleAlias").shouldBeNull()
     }
 
-    @Test
-    fun `expandTypeAlias expands nested type aliases recursively`() {
+    should("expandTypeAlias expands nested type aliases recursively") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "InnerUnion",
@@ -119,8 +112,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("TypeX", "TypeY", "TypeZ"))
     }
 
-    @Test
-    fun `expandTypeAlias prevents circular references`() {
+    should("expandTypeAlias prevents circular references") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "CircularA",
@@ -158,8 +150,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("CircularA", "TypeB", "TypeA"))
     }
 
-    @Test
-    fun `expandTypeAlias deduplicates expanded types`() {
+    should("expandTypeAlias deduplicates expanded types") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "DuplicatedUnion",
@@ -178,8 +169,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("TypeA", "TypeB"))
     }
 
-    @Test
-    fun `expandTypeAlias handles mixed type alias and interface references`() {
+    should("expandTypeAlias handles mixed type alias and interface references") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "MixedUnion",
@@ -207,8 +197,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("TypeA", "TypeB", "TypeC", "TypeD"))
     }
 
-    @Test
-    fun `expandTypeAlias handles non-reference types in union`() {
+    should("expandTypeAlias handles non-reference types in union") {
         val declarations = listOf(
             TypeScriptDeclaration.TypeAliasDeclaration(
                 name = "UnionWithLiteral",
@@ -228,8 +217,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         expanded.shouldContainExactly(listOf("TypeA", "TypeB"))
     }
 
-    @Test
-    fun `findLowestCommonAncestor finds direct common parent`() {
+    should("findLowestCommonAncestor finds direct common parent") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -243,8 +231,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Expression"
     }
 
-    @Test
-    fun `findLowestCommonAncestor finds indirect common parent`() {
+    should("findLowestCommonAncestor finds indirect common parent") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -260,8 +247,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Node"
     }
 
-    @Test
-    fun `findLowestCommonAncestor returns Node when Node is the common ancestor`() {
+    should("findLowestCommonAncestor returns Node when Node is the common ancestor") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -276,8 +262,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Node"
     }
 
-    @Test
-    fun `findLowestCommonAncestor finds common ancestor for three types`() {
+    should("findLowestCommonAncestor finds common ancestor for three types") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -292,8 +277,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Expression"
     }
 
-    @Test
-    fun `findLowestCommonAncestor returns null for unrelated types`() {
+    should("findLowestCommonAncestor returns null for unrelated types") {
         val declarations = listOf(
             declaration("TypeA"),
             declaration("TypeB")
@@ -305,8 +289,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca.shouldBeNull()
     }
 
-    @Test
-    fun `findLowestCommonAncestor returns self for single type`() {
+    should("findLowestCommonAncestor returns self for single type") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node")
@@ -318,8 +301,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Expression"
     }
 
-    @Test
-    fun `findLowestCommonAncestor finds deepest common ancestor`() {
+    should("findLowestCommonAncestor finds deepest common ancestor") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -338,8 +320,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca shouldBe "Node"
     }
 
-    @Test
-    fun `findLowestCommonAncestor handles type and its ancestor`() {
+    should("findLowestCommonAncestor handles type and its ancestor") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node"),
@@ -356,8 +337,7 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         lca2 shouldBe "Node"
     }
 
-    @Test
-    fun `findLowestCommonAncestor handles same type`() {
+    should("findLowestCommonAncestor handles same type") {
         val declarations = listOf(
             declaration("Node"),
             declaration("Expression", "Node")
@@ -368,4 +348,4 @@ class InheritanceAnalyzerTest : AnnotationSpec() {
         val lca = analyzer.findLowestCommonAncestor(listOf("Expression", "Expression"))
         lca shouldBe "Expression"
     }
-}
+})
