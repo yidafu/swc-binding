@@ -50,7 +50,6 @@ Some Rust structs contain independent `ctxt: SyntaxContext` fields (not within `
 - `BlockStatement`: corresponds to Rust `BlockStmt` struct
 
 **Expression-related:**
-
 - `CallExpression`: corresponds to Rust `CallExpr` struct
 - `NewExpression`: corresponds to Rust `NewExpr` struct
 - `ArrowFunctionExpression`: corresponds to Rust `ArrowExpr` struct

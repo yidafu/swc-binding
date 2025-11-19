@@ -427,6 +427,36 @@ val mod = module {
 }
 ```
 
+### Important Notes
+
+#### Manual AST Construction
+
+When manually constructing AST nodes using the DSL, it's **recommended** to explicitly set boolean fields for clarity and compatibility. While many fields have default values and `@EncodeDefault` annotations that handle serialization, explicitly setting boolean fields makes your code more maintainable and avoids potential edge cases.
+
+**Example - Correct:**
+```kotlin
+variableDeclaration {
+    span = emptySpan()
+    kind = VariableDeclarationKind.CONST
+    declare = false  // ✅ Explicitly set
+    declarations = arrayOf(
+        variableDeclarator {
+            span = emptySpan()
+            id = identifier {
+                span = emptySpan()
+                value = "x"
+                optional = false  // ✅ Explicitly set
+            }
+            init = numericLiteral {
+                span = emptySpan()
+                value = 42.0
+                raw = "42"
+            }
+        }
+    )
+}
+```
+
 #### Variable Declaration
 
 ```kotlin
@@ -699,6 +729,19 @@ callExpression {
 }
 ```
 
+**Example - Incorrect:**
+```kotlin
+val mod = module {
+    body = arrayOf(
+        variableDeclaration {
+            kind = VariableDeclarationKind.CONST
+            // ❌ Missing 'declare = false' - will cause serialization error
+            declarations = arrayOf(...)
+        }
+    )
+}
+```
+
 **Member Expression:**
 
 ```kotlin
@@ -730,21 +773,23 @@ span = emptySpan() // Creates a span with start=0, end=0, ctxt=0
 
 #### Boolean Fields
 
-When manually constructing AST nodes, you **must** explicitly set all boolean fields to avoid serialization errors. The Rust backend expects non-null boolean values.
+When manually constructing AST nodes, it's **recommended** to explicitly set boolean fields for clarity and to ensure compatibility. While many boolean fields have `@EncodeDefault` annotations and may work without explicit values, setting them explicitly makes your code more maintainable and avoids potential serialization issues.
 
-**Common boolean fields that must be set:**
+**Common boolean fields you should set:**
 
-- `Identifier.optional: Boolean?` → set to `false`
-- `VariableDeclaration.declare: Boolean?` → set to `false`
-- `FunctionDeclaration.async: Boolean?` → set to `false`
-- `FunctionDeclaration.generator: Boolean?` → set to `false`
-- `ArrowFunctionExpression.async: Boolean?` → set to `false`
-- `ArrowFunctionExpression.generator: Boolean?` → set to `false`
-- `TemplateElement.tail: Boolean?` → set to `false` or `true` (depending on position)
+- `Identifier.optional: Boolean?` → typically set to `false`
+- `VariableDeclaration.declare: Boolean?` → typically set to `false`
+- `FunctionDeclaration.async: Boolean?` → set to `false` for non-async functions
+- `FunctionDeclaration.generator: Boolean?` → set to `false` for non-generator functions
+- `ArrowFunctionExpression.async: Boolean?` → set to `false` for non-async arrow functions
+- `ArrowFunctionExpression.generator: Boolean?` → set to `false` for non-generator arrow functions
+- `TemplateElement.tail: Boolean?` → set to `false` or `true` (depending on position in template)
 
 #### Best Practices
 
 - **Prefer parsing over manual construction**: Use `parseSync` to parse code into AST instead of manually constructing it, as parsed ASTs have all fields properly initialized.
+
+**Recommended approach:** Use `parseSync` to parse code into AST instead of manually constructing it, as parsed ASTs have all fields properly initialized.
 
 ```kotlin
 // ✅ Recommended: Parse code instead of manual construction
@@ -756,7 +801,7 @@ val output = swcNative.printSync(mod, options { })
 
 - **Always set span fields**: Every AST node requires a `span` field. Use `emptySpan()` for default values.
 
-- **Set boolean fields explicitly**: Always set boolean fields to avoid serialization errors.
+- **Set boolean fields explicitly**: While not always required, explicitly setting boolean fields improves code clarity and ensures compatibility.
 
 For more examples, see the test files in `swc-binding/src/test`.
 
