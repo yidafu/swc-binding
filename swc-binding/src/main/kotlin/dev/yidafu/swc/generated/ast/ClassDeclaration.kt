@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T20:51:47.070879
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:08:41.2158
 
 package dev.yidafu.swc.generated
 
@@ -23,7 +23,7 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("ClassDeclaration")
 @SwcDslMarker
-public class ClassDeclaration() : JsClass, Node, Declaration {
+public class ClassDeclaration : JsClass, Node, Declaration {
     @EncodeDefault
     public var identifier: Identifier? = null
     @EncodeDefault
@@ -42,9 +42,8 @@ public class ClassDeclaration() : JsClass, Node, Declaration {
     public override var superTypeParams: TsTypeParameterInstantiation? = null
 
     public override var implements: Array<TsExpressionWithTypeArguments>? = null
+    @EncodeDefault
+    public override var ctxt: Int = 0
 
     public override var decorators: Array<Decorator>? = null
-
-    @EncodeDefault
-    override var ctxt: Int = 0
 }

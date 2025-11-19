@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-19T20:51:47.07512
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:08:41.225457
 
 package dev.yidafu.swc.generated
 
@@ -23,7 +23,7 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("ClassExpression")
 @SwcDslMarker
-public class ClassExpression() : JsClass, ExpressionBase, Expression, DefaultDecl {
+public class ClassExpression : JsClass, ExpressionBase, Expression, DefaultDecl {
     @EncodeDefault
     public var identifier: Identifier? = null
 
@@ -40,8 +40,8 @@ public class ClassExpression() : JsClass, ExpressionBase, Expression, DefaultDec
     public override var superTypeParams: TsTypeParameterInstantiation? = null
 
     public override var implements: Array<TsExpressionWithTypeArguments>? = null
+    @EncodeDefault
+    public override var ctxt: Int = 0
 
     public override var decorators: Array<Decorator>? = null
-    @EncodeDefault
-    override var ctxt: Int = 0
 }
