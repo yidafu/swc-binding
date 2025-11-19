@@ -13,10 +13,21 @@ import kotlin.jvm.JvmStatic
 
 /**
  * Extended serializers module for SWC AST nodes.
- * Includes the generated serializers module and handles polymorphic types.
- * * Implementation classes (*Impl) from customType.kt are handled by the generated polymorphic module.
- * * Note: 所有使用 @JsonClassDiscriminator("type") 的类都应该有显式的 type 字段（使用 @EncodeDefault），
- * 以确保即使它们不是多态类型，也能在序列化时输出 type 字段。
+ *
+ * This module includes the generated serializers module and handles polymorphic types
+ * and custom serialization logic. It is used by [astJson] for serializing/deserializing
+ * AST nodes.
+ *
+ * **Key Features:**
+ * - Includes all generated serializers from [swcSerializersModule]
+ * - Registers custom serializer for [TruePlusMinus] to handle both boolean and string values
+ * - Implementation classes (*Impl) from customType.kt are handled by the generated polymorphic module
+ *
+ * **Important Note**: All classes using `@JsonClassDiscriminator("type")` should have
+ * an explicit `type` field with `@EncodeDefault` to ensure the type field is serialized
+ * even when they are not polymorphic types.
+ *
+ * @see astJson for the JSON instance using this module
  */
 @OptIn(ExperimentalSerializationApi::class)
 private val extendedSwcSerializersModule: SerializersModule = SerializersModule {
@@ -30,7 +41,15 @@ private val extendedSwcSerializersModule: SerializersModule = SerializersModule 
 
 /**
  * Extended serializers module for SWC configuration objects.
- * Includes the generated config serializers module.
+ *
+ * This module includes the generated config serializers module and is used by [configJson]
+ * for serializing/deserializing parser and transform configuration objects.
+ *
+ * **Key Features:**
+ * - Includes all generated config serializers from [swcConfigSerializersModule]
+ * - OptionsImpl is handled by the generated polymorphic module
+ *
+ * @see configJson for the JSON instance using this module
  */
 @OptIn(ExperimentalSerializationApi::class)
 private val extendedSwcConfigSerializersModule: SerializersModule = SerializersModule {
@@ -41,21 +60,33 @@ private val extendedSwcConfigSerializersModule: SerializersModule = SerializersM
 /**
  * JSON serializer/deserializer for AST (Abstract Syntax Tree) nodes.
  *
- * This JSON instance is configured specifically for SWC AST serialization:
- * - Uses "type" as the class discriminator for polymorphic types
- * - Ignores unknown keys (for forward compatibility)
- * - Includes default values in serialization (e.g., Span.ctxt = 0)
- * - Coerces missing values to defaults during deserialization
+ * This JSON instance is configured specifically for SWC AST serialization and deserialization.
+ * It is used internally by [SwcNative] methods to convert between AST objects and JSON strings
+ * when communicating with the native SWC library.
  *
- * @example
+ * **Configuration Details:**
+ * - Uses "type" as the class discriminator for polymorphic types (required for AST node types)
+ * - Ignores unknown keys (for forward compatibility with SWC version updates)
+ * - Includes default values in serialization (e.g., `Span.ctxt = 0`, `Boolean? = false`)
+ * - Coerces missing values to defaults during deserialization (handles incomplete JSON)
+ * - Uses [extendedSwcSerializersModule] for custom serialization logic
+ *
+ * **Usage:**
+ * This instance is primarily used internally. For parsing JSON strings manually, use
+ * [parseAstTree] or [SwcJson.parseAstTree] instead.
+ *
+ * @example Internal usage:
  * ```kotlin
  * val ast: Program = // ... some AST
- * val json = astJson.encodeToString(ast)
- * val deserialized = astJson.decodeFromString<Program>(json)
+ * val json = astJson.encodeToString(ast) // Convert AST to JSON for native library
+ * val deserialized = astJson.decodeFromString<Program>(json) // Convert JSON back to AST
  * ```
+ *
+ * @see parseAstTree for public API to parse JSON strings
+ * @see SwcJson.parseAstTree for Java-friendly static method
  */
 @OptIn(ExperimentalSerializationApi::class)
-val astJson = Json {
+internal val astJson = Json {
     // 需要 classDiscriminator 配置，与 @JsonClassDiscriminator("type") 配合使用
     // @JsonClassDiscriminator 指定使用 type 属性作为 discriminator
     // classDiscriminator 指定 JSON 中的字段名为 "type"
@@ -79,19 +110,31 @@ val astJson = Json {
 /**
  * JSON serializer/deserializer for SWC configuration objects.
  *
- * This JSON instance is configured for parser and transform options:
- * - Uses "syntax" as the class discriminator
- * - Includes default values (Rust expects missing fields to use defaults)
+ * This JSON instance is configured for parser and transform options serialization.
+ * It is used internally by [SwcNative] methods to convert between configuration objects
+ * and JSON strings when communicating with the native SWC library.
  *
- * @example
+ * **Configuration Details:**
+ * - Uses "syntax" as the class discriminator (distinguishes between ES and TS parser configs)
+ * - Includes default values in serialization (Rust expects missing fields to use defaults)
+ * - Uses [extendedSwcConfigSerializersModule] for custom serialization logic
+ *
+ * **Usage:**
+ * This instance is primarily used internally. Configuration objects are typically created
+ * using DSL functions like [esParseOptions] and [tsParseOptions].
+ *
+ * @example Internal usage:
  * ```kotlin
  * val options = esParseOptions { }
- * val json = configJson.encodeToString(options)
- * val deserialized = configJson.decodeFromString<ParserConfig>(json)
+ * val json = configJson.encodeToString(options) // Convert config to JSON for native library
+ * val deserialized = configJson.decodeFromString<ParserConfig>(json) // Convert JSON back to config
  * ```
+ *
+ * @see esParseOptions for creating ECMAScript parser options
+ * @see tsParseOptions for creating TypeScript parser options
  */
 @OptIn(ExperimentalSerializationApi::class)
-val configJson = Json {
+internal val configJson = Json {
     // 需要 classDiscriminator 配置，与 @JsonClassDiscriminator("syntax") 配合使用
     // @JsonClassDiscriminator 指定使用 syntax 属性作为 discriminator
     // classDiscriminator 指定 JSON 中的字段名为 "syntax"
@@ -104,18 +147,30 @@ val configJson = Json {
 }
 
 /**
- * Simple JSON decoder for TransformOutput.
+ * Simple JSON decoder for [TransformOutput].
  *
- * TransformOutput is a simple data class that doesn't require complex
- * serialization configuration. The `msg` field is optional.
+ * This JSON instance is configured specifically for deserializing [TransformOutput] objects
+ * returned from SWC native operations (transform, print, minify). It is used internally
+ * by [SwcNative] methods to parse the JSON response from the native library.
  *
- * @example
+ * **Configuration Details:**
+ * - Ignores unknown keys (for forward compatibility)
+ * - Allows null values (the `msg` field is optional)
+ * - Does not encode defaults (TransformOutput is a simple data class)
+ *
+ * **Usage:**
+ * This instance is primarily used internally. The [TransformOutput] class is returned
+ * directly from [SwcNative] methods, so manual deserialization is rarely needed.
+ *
+ * @example Internal usage:
  * ```kotlin
  * val outputJson = """{"code": "const x = 42;", "msg": null}"""
  * val output = outputJson.decodeFromString<TransformOutput>(outputJson)
  * ```
+ *
+ * @see TransformOutput for the data class structure
  */
-val outputJson = Json {
+internal val outputJson = Json {
     ignoreUnknownKeys = true
     // TransformOutput's msg field is optional
     explicitNulls = false
