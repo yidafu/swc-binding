@@ -1,5 +1,6 @@
 package dev.yidafu.swc.generator.parser
 
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 import java.io.File
 import java.nio.file.Paths
@@ -10,7 +11,7 @@ import java.nio.file.Paths
  */
 class ImportResolver {
 
-    private val visitedFiles = mutableSetOf<String>()
+    private val visitedFiles = CollectionUtils.newStringSet()
 
     /**
      * Resolve import paths from AST nodes

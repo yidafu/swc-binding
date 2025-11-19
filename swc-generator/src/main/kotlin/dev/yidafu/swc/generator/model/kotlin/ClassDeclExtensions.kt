@@ -328,34 +328,28 @@ fun KotlinDeclaration.ClassDecl.getClassName(): String {
 
 /**
  * 检查是否应该是 sealed 类型（有子类型）
- * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
- * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
+ * * @deprecated 此方法已废弃，始终返回 false。请使用 [InheritanceAnalyzer] 来获取准确的继承关系信息。
+ * 在 ADT 架构中，sealed 类型信息应从 TypeScript ADT 结构获取。
  */
 fun KotlinDeclaration.ClassDecl.shouldBeSealed(allClasses: List<KotlinDeclaration.ClassDecl>): Boolean {
     if (modifier != ClassModifier.Interface) return false
-    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
-    // 暂时返回 false，建议使用 InheritanceAnalyzer 替代
     return false
 }
 
 /**
  * 获取继承深度（距离根节点的距离）
- * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
- * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
+ * * @deprecated 此方法已废弃，始终返回 0。请使用 [InheritanceAnalyzer.getInheritanceDepth] 来获取准确的继承深度。
+ * 在 ADT 架构中，继承深度信息应从 TypeScript ADT 结构分析获取。
  */
 fun KotlinDeclaration.ClassDecl.getInheritanceDepth(): Int {
-    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
-    // 暂时返回 0，建议使用 InheritanceAnalyzer 替代
     return 0
 }
 
 /**
  * 获取继承树根节点
- * 注意：在 ADT 架构中，这个信息应该从 TypeScript ADT 结构获取
- * 这里保留向后兼容，但建议使用 InheritanceAnalyzer
+ * * @deprecated 此方法已废弃，始终返回类名本身。请使用 [InheritanceAnalyzer] 来获取准确的继承树根节点信息。
+ * 在 ADT 架构中，继承树根节点信息应从 TypeScript ADT 结构分析获取。
  */
 fun KotlinDeclaration.ClassDecl.getInheritanceRoot(): String {
-    // 在 ADT 架构中，这个信息应该从 TypeScript ADT 结构分析
-    // 暂时返回自身名称，建议使用 InheritanceAnalyzer 替代
     return name
 }

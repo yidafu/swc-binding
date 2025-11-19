@@ -2,6 +2,7 @@ package dev.yidafu.swc.generator.extractor
 
 import dev.yidafu.swc.generator.model.typescript.*
 import dev.yidafu.swc.generator.parser.*
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -19,7 +20,7 @@ class DeclarationExtractor(private val visitor: TsAstVisitor) {
 
         Logger.debug("提取接口所有成员: $interfaceName", 6)
 
-        val visited = mutableSetOf<String>()
+        val visited = CollectionUtils.newStringSet()
         return extractInterfaceAllMembersImpl(interfaceDecl, visited)
     }
 

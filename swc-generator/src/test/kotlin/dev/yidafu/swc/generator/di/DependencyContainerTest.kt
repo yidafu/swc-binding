@@ -45,11 +45,6 @@ class DependencyContainerTest : ShouldSpec({
         assertNotNull(container.codeEmitter)
     }
 
-    should("test container provides PerformanceOptimizer") {
-        val container = DependencyContainer(config)
-        assertNotNull(container.performanceOptimizer)
-    }
-
     should("test container provides SwcGeneratorConfig") {
         val container = DependencyContainer(config)
         assertNotNull(container.swcGeneratorConfig)

@@ -15,11 +15,22 @@ import dev.yidafu.swc.generator.model.typescript.Variance
 import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 
 /**
  * 接口转换器
- * 负责将 TypeScript 接口声明转换为 Kotlin 类声明
+ * * 负责将 TypeScript 接口声明转换为 Kotlin 类声明。
+ * 处理各种接口转换场景，包括：
+ * - 普通接口（转换为接口或类）
+ * - 密封接口（联合类型转换）
+ * - 最终类（根据配置转换）
+ * - 属性转换和继承处理
+ * - 类型参数转换
+ * * @param config 生成器配置
+ * @param inheritanceAnalyzer 继承关系分析器，用于分析接口继承关系
+ * @param unionParentRegistry 联合类型父类注册表，用于记录联合类型的父类关系
+ * @param nestedTypeRegistry 嵌套类型注册表，用于记录嵌套类型关系
  */
 class InterfaceConverter(
     private val config: Configuration,
@@ -400,7 +411,7 @@ class InterfaceConverter(
     ): Set<String> {
         if (parents.isEmpty()) return emptySet()
 
-        val parentPropertyNames = mutableSetOf<String>()
+        val parentPropertyNames = CollectionUtils.newStringSet()
 
         for (parent in parents) {
             val parentTypeName = parent.toTypeString()
@@ -480,11 +491,11 @@ class InterfaceConverter(
 
     private fun collectParentPropertyNamesFromType(
         parentTypeName: String,
-        visited: MutableSet<String> = mutableSetOf()
+        visited: MutableSet<String> = CollectionUtils.newStringSet()
     ): Set<String> {
         if (!visited.add(parentTypeName)) return emptySet()
         val analyzer = inheritanceAnalyzer
-        val result = mutableSetOf<String>()
+        val result = CollectionUtils.newStringSet()
 
         val declaration = analyzer?.getDeclaration(parentTypeName) as? TypeScriptDeclaration.InterfaceDeclaration
         if (declaration != null) {

@@ -10,13 +10,29 @@ import dev.yidafu.swc.generator.util.Logger
 
 /**
  * ADT 到 KotlinPoet 的核心转换器
- * * 负责将 KotlinDeclaration ADT 转换为 KotlinPoet 的 TypeSpec、PropertySpec 等
+ *
+ * 负责将 KotlinDeclaration ADT 转换为 KotlinPoet 的代码生成对象（TypeSpec、PropertySpec 等）。
+ *
+ * 此转换器是代码生成的核心组件，提供了以下转换功能：
+ * - 类型转换（KotlinType -> TypeName）
+ * - 声明转换（KotlinDeclaration -> TypeSpec）
+ * - 属性转换（PropertyDecl -> PropertySpec）
+ * - 函数转换（FunctionDecl -> FunSpec）
+ * - 类型别名转换（TypeAliasDecl -> TypeAliasSpec）
+ * - 注解转换（Annotation -> AnnotationSpec）
+ *
+ * 所有转换都使用统一的缓存管理器以提高性能。
  */
 object KotlinPoetConverter {
 
     /**
-     * 转换 KotlinType 为 TypeName
-     * 使用统一的缓存管理器
+     * 转换 KotlinType 为 KotlinPoet 的 TypeName
+     *
+     * 使用统一的缓存管理器避免重复转换相同的类型。
+     *
+     * @param kotlinType 要转换的 Kotlin 类型
+     * @return 对应的 KotlinPoet TypeName
+     * @throws Exception 如果类型转换失败
      */
     fun convertType(kotlinType: KotlinType): TypeName {
         val typeString = kotlinType.toTypeString()
@@ -37,13 +53,29 @@ object KotlinPoetConverter {
 
     /**
      * 转换 KotlinDeclaration 为 TypeSpec
+     *
+     * 简化版本，不包含接口名称和声明查找表。
+     *
+     * @param decl 要转换的 Kotlin 声明
+     * @return 对应的 TypeSpec
      */
     fun convertDeclaration(decl: KotlinDeclaration): TypeSpec {
         return convertDeclaration(decl, emptySet(), emptyMap())
     }
 
     /**
-     * 转换 KotlinDeclaration 为 TypeSpec（带接口名称参数）
+     * 转换 KotlinDeclaration 为 TypeSpec
+     *
+     * 完整版本，包含接口名称集合和声明查找表，用于：
+     * - 判断父类型是否为接口
+     * - 查找嵌套类型
+     * - 处理继承关系
+     *
+     * @param decl 要转换的 Kotlin 声明
+     * @param interfaceNames 接口名称集合，用于判断类型是否为接口
+     * @param declLookup 声明查找表，用于查找嵌套类型和父类型
+     * @return 对应的 TypeSpec
+     * @throws IllegalArgumentException 如果声明类型不支持转换为 TypeSpec
      */
     fun convertDeclaration(
         decl: KotlinDeclaration,
@@ -73,6 +105,17 @@ object KotlinPoetConverter {
 
     /**
      * 转换类声明为 TypeSpec
+     *
+     * 根据类修饰符类型，委托给相应的转换器：
+     * - [DataClassConverter] - 数据类
+     * - [EnumClassConverter] - 枚举类
+     * - [InterfaceClassConverter] - 接口和密封接口
+     * - [RegularClassConverter] - 普通类
+     *
+     * @param decl 要转换的类声明
+     * @param interfaceNames 接口名称集合，用于判断父类型是否为接口
+     * @param declLookup 声明查找表，用于查找嵌套类型和父类型
+     * @return 对应的 TypeSpec
      */
     fun convertClassDeclaration(
         decl: KotlinDeclaration.ClassDecl,
@@ -96,41 +139,6 @@ object KotlinPoetConverter {
                 convertAnnotation(annotation)?.let { builder.addAnnotation(it) }
             }
         }
-
-        // 不再自动添加 @SerialName 注解
-        // 如果需要 @SerialName，应该在类声明中显式添加
-        // val className = decl.name.removeSurrounding("`")
-        // val hasSerialName = decl.annotations.any { it.name == "SerialName" }
-        // val nodeDerived = decl.name == "Node" || ClassDeclarationConverter.isDerivedFromNode(decl.parents, declLookup)
-        // val implementsSealedInterface = ClassDeclarationConverter.implementsSealedInterface(decl.parents, declLookup)
-        //
-        // if (!hasSerialName) {
-        //     when (className) {
-        //         "EsParserConfig" -> {
-        //             builder.addAnnotation(
-        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-        //                     .addMember("%S", "ecmascript")
-        //                     .build()
-        //             )
-        //         }
-        //         "TsParserConfig" -> {
-        //             builder.addAnnotation(
-        //                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-        //                     .addMember("%S", "typescript")
-        //                     .build()
-        //             )
-        //         }
-        //         else -> {
-        //             if ((nodeDerived || implementsSealedInterface) && decl.modifier !is ClassModifier.Interface && decl.modifier !is ClassModifier.SealedInterface) {
-        //                 builder.addAnnotation(
-        //                     AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-        //                         .addMember("%S", className)
-        //                         .build()
-        //                 )
-        //             }
-        //         }
-        //     }
-        // }
 
         // 添加类型参数
         if (decl.typeParameters.isNotEmpty()) {
@@ -187,7 +195,7 @@ object KotlinPoetConverter {
                     builder, decl, nodeDerived, hasSpanDerived, configDerived, declLookup,
                     convertType = { convertType(it) },
                     convertProperty = { convertProperty(it) },
-                    downgradeOverride = { prop, parents, lookup -> ClassDeclarationConverter.downgradeOverrideIfNeeded(prop, parents, lookup) },
+                    downgradeOverride = { prop, parents, lookup -> ClassDeclarationConverter.adjustOverrideModifier(prop, parents, lookup) },
                     addUnionAnnotation = { owner, prop, type, propBuilder ->
                         addUnionWithAnnotationAndCollectForProperty(owner, prop, type, propBuilder)
                     }
@@ -209,7 +217,11 @@ object KotlinPoetConverter {
 
     /**
      * 转换属性声明为 PropertySpec
-     * 委托给 PropertyConverter
+     *
+     * 委托给 [PropertyConverter] 进行实际转换。
+     *
+     * @param prop 要转换的属性声明
+     * @return 对应的 PropertySpec，如果属性应该被跳过则返回 null
      */
     fun convertProperty(prop: KotlinDeclaration.PropertyDecl): PropertySpec? {
         val typeName = convertType(prop.type)
@@ -218,6 +230,17 @@ object KotlinPoetConverter {
 
     /**
      * 转换函数声明为 FunSpec
+     *
+     * 处理函数的以下方面：
+     * - 接收者类型（扩展函数）
+     * - 参数列表（包括注解和默认值）
+     * - 返回类型
+     * - 修饰符（override、abstract 等）
+     * - 注解
+     * - 文档注释
+     *
+     * @param func 要转换的函数声明
+     * @return 对应的 FunSpec
      */
     fun convertFunctionDeclaration(func: KotlinDeclaration.FunctionDecl): FunSpec {
         val builder = FunSpec.builder(func.name)
@@ -488,6 +511,14 @@ object KotlinPoetConverter {
 
     /**
      * 转换类型别名声明为 TypeAliasSpec
+     *
+     * 处理类型别名的以下方面：
+     * - 类型参数（包括协变和逆变）
+     * - 注解
+     * - 文档注释
+     *
+     * @param alias 要转换的类型别名声明
+     * @return 对应的 TypeAliasSpec
      */
     fun convertTypeAliasDeclaration(alias: KotlinDeclaration.TypeAliasDecl): TypeAliasSpec {
         val builder = TypeAliasSpec.builder(alias.name, convertType(alias.type))
@@ -515,8 +546,12 @@ object KotlinPoetConverter {
 
     /**
      * 转换注解为 AnnotationSpec
-     * 使用统一的缓存管理器
-     * 委托给 AnnotationConverter
+     *
+     * 委托给 [AnnotationConverter] 进行实际转换。
+     * 使用统一的缓存管理器以提高性能。
+     *
+     * @param annotation 要转换的注解
+     * @return 对应的 AnnotationSpec，如果注解不支持则返回 null
      */
     fun convertAnnotation(annotation: KotlinDeclaration.Annotation): AnnotationSpec? {
         return AnnotationConverter.convertAnnotation(annotation)

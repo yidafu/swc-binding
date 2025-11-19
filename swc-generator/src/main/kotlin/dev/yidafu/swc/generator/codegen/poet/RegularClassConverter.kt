@@ -14,6 +14,7 @@ import dev.yidafu.swc.generator.model.kotlin.Expression
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
 import dev.yidafu.swc.generator.model.kotlin.computeSerialName
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.NameUtils.clean
 
 /**
@@ -58,7 +59,7 @@ object RegularClassConverter {
             builder.addKdoc("conflict with @SerialName\nremove class property `override var syntax : String? = %S`", serialName)
         }
 
-        val existingPropNames = mutableSetOf<String>()
+        val existingPropNames = CollectionUtils.newStringSet()
 
         // 添加类自己的属性
         decl.properties.forEach { prop ->
@@ -275,10 +276,25 @@ object RegularClassConverter {
 
         if (needsCtxt && decl.properties.none { it.name == "ctxt" }) {
             // 检查父接口是否有 ctxt 属性，如果有则需要添加 override
-            // 使用 collectParentProperties 来递归收集所有父接口的属性
-            val parentProps = collectParentProperties(decl.parents, declLookup)
-            val hasCtxtInParent = parentProps.any { it.name == "ctxt" } ||
-                (interfaceName != null && declLookup[interfaceName]?.properties?.any { it.name == "ctxt" } == true)
+            // 1. 检查父接口的 properties 中是否有 ctxt（通过 parentHasProperty）
+            // 2. 检查父接口是否在配置中需要 ctxt（因为接口的 ctxt 是在代码生成时添加的抽象属性）
+            val hasCtxtInParentProperties = ClassDeclarationConverter.parentHasProperty("ctxt", decl.parents, declLookup)
+
+            // 检查父接口是否在配置中需要 ctxt
+            val hasCtxtInParentConfig = decl.parents.any { parentType ->
+                val parentName = when (parentType) {
+                    is KotlinType.Simple -> parentType.name.removeSurrounding("`")
+                    else -> null
+                }
+                parentName?.let { name ->
+                    CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(name) ||
+                        CodeGenerationRules.getReverseMappedName(name)?.let { originalName ->
+                            CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+                        } ?: false
+                } ?: false
+            }
+
+            val hasCtxtInParent = hasCtxtInParentProperties || hasCtxtInParentConfig
 
             val ctxtType = ClassName("kotlin", "Int")
             val ctxtPropBuilder = PropertySpec.builder("ctxt", ctxtType)
@@ -422,6 +438,7 @@ object RegularClassConverter {
 
     /**
      * 收集父接口链上的所有属性
+     * 包括接口的 properties 中定义的属性，以及通过配置添加的抽象属性（如 ctxt）
      */
     private fun collectParentProperties(
         parents: List<KotlinType>,
@@ -437,12 +454,33 @@ object RegularClassConverter {
             // 仅当父是接口/密封接口时才需要实现其抽象属性
             if (parentDecl.modifier is ClassModifier.Interface || parentDecl.modifier is ClassModifier.SealedInterface) {
                 out.addAll(parentDecl.properties)
+
+                // 检查接口是否在配置中需要 ctxt（因为 ctxt 是在代码生成时添加的抽象属性）
+                val interfaceName = name.removeSurrounding("`")
+                val needsCtxt = CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(interfaceName) ||
+                    CodeGenerationRules.getReverseMappedName(interfaceName)?.let { originalName ->
+                        CtxtFieldsConfig.CLASSES_WITH_CTXT.contains(originalName)
+                    } ?: false
+
+                // 如果接口需要 ctxt 但 properties 中没有，添加一个虚拟的 ctxt 属性
+                if (needsCtxt && !parentDecl.properties.any { it.name == "ctxt" }) {
+                    out.add(
+                        KotlinDeclaration.PropertyDecl(
+                            name = "ctxt",
+                            type = KotlinType.Int,
+                            modifier = dev.yidafu.swc.generator.model.kotlin.PropertyModifier.Var,
+                            defaultValue = null,
+                            annotations = emptyList(),
+                            kdoc = null
+                        )
+                    )
+                }
             }
             parentDecl.parents.forEach { p -> collectParentProps(p, seen, out) }
         }
 
         val parentProps = mutableListOf<KotlinDeclaration.PropertyDecl>()
-        val visited = mutableSetOf<String>()
+        val visited = CollectionUtils.newStringSet()
         parents.forEach { p -> collectParentProps(p, visited, parentProps) }
         return parentProps
     }

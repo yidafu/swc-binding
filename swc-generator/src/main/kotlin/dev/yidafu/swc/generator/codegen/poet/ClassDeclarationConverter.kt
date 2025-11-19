@@ -3,6 +3,8 @@ package dev.yidafu.swc.generator.codegen.poet
 import dev.yidafu.swc.generator.model.kotlin.ClassModifier
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.KotlinType
+import dev.yidafu.swc.generator.model.kotlin.PropertyModifier
+import dev.yidafu.swc.generator.util.CollectionUtils
 
 /**
  * 类声明转换器
@@ -28,7 +30,7 @@ object ClassDeclarationConverter {
             val parentDecl = declLookup[name] ?: return false
             return parentDecl.parents.any { p -> dfs(p, seen) }
         }
-        return parents.any { dfs(it, mutableSetOf()) }
+        return parents.any { dfs(it, CollectionUtils.newStringSet()) }
     }
 
     /**
@@ -50,7 +52,7 @@ object ClassDeclarationConverter {
             val parentDecl = declLookup[name] ?: return false
             return parentDecl.parents.any { p -> dfs(p, seen) }
         }
-        return parents.any { dfs(it, mutableSetOf()) }
+        return parents.any { dfs(it, CollectionUtils.newStringSet()) }
     }
 
     /**
@@ -75,34 +77,66 @@ object ClassDeclarationConverter {
             // 递归检查所有父类型
             return parentDecl.parents.any { p -> dfs(p, seen) }
         }
-        return parents.any { dfs(it, mutableSetOf()) }
+        return parents.any { dfs(it, CollectionUtils.newStringSet()) }
     }
 
     /**
-     * 如果父类型层级中不存在同名属性，则去掉 Override 修饰，避免生成无效的 override。
+     * 检查父类型层级中是否存在同名属性
+     * * @param propName 属性名称（可能包含反引号）
+     * @param parents 父类型列表
+     * @param declLookup 类声明查找表
+     * @return 如果父类型中有同名属性返回 true，否则返回 false
      */
-    fun downgradeOverrideIfNeeded(
-        prop: KotlinDeclaration.PropertyDecl,
+    fun parentHasProperty(
+        propName: String,
         parents: List<KotlinType>,
         declLookup: Map<String, KotlinDeclaration.ClassDecl>
-    ): KotlinDeclaration.PropertyDecl {
-        fun parentHasProperty(type: KotlinType, target: String, seen: MutableSet<String>): Boolean {
+    ): Boolean {
+        fun checkProperty(type: KotlinType, target: String, seen: MutableSet<String>): Boolean {
             val name = when (type) {
                 is KotlinType.Simple -> type.name
                 else -> return false
             }
             if (!seen.add(name)) return false
             val decl = declLookup[name] ?: return false
-            if (decl.properties.any { it.name == target }) return true
-            return decl.parents.any { parentHasProperty(it, target, seen) }
+            // 检查当前类是否有同名属性（支持带反引号的名称）
+            val cleanTarget = target.removeSurrounding("`")
+            if (decl.properties.any { it.name == target || it.name.removeSurrounding("`") == cleanTarget }) {
+                return true
+            }
+            // 递归检查所有父类型
+            return decl.parents.any { checkProperty(it, target, seen) }
         }
-        val has = parents.any { parentHasProperty(it, prop.name, mutableSetOf()) }
-        if (has) return prop
+        return parents.any { checkProperty(it, propName, CollectionUtils.newStringSet()) }
+    }
+
+    /**
+     * 如果父类型层级中不存在同名属性，则去掉 Override 修饰，避免生成无效的 override。
+     * 如果父类型层级中存在同名属性，则添加 Override 修饰。
+     */
+    fun adjustOverrideModifier(
+        prop: KotlinDeclaration.PropertyDecl,
+        parents: List<KotlinType>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
+    ): KotlinDeclaration.PropertyDecl {
+        val hasParentProperty = parentHasProperty(prop.name, parents, declLookup)
+
+        // 如果父类有同名属性，确保添加 override
+        if (hasParentProperty) {
+            val newModifier = when (prop.modifier) {
+                is PropertyModifier.Val -> PropertyModifier.OverrideVal
+                is PropertyModifier.Var -> PropertyModifier.OverrideVar
+                is PropertyModifier.OverrideVal,
+                is PropertyModifier.OverrideVar -> prop.modifier // 已经是 override，保持不变
+                else -> prop.modifier
+            }
+            return if (newModifier == prop.modifier) prop else prop.copy(modifier = newModifier)
+        }
+
+        // 如果父类没有同名属性，移除 override（如果存在）
         val newModifier = when (prop.modifier) {
-            dev.yidafu.swc.generator.model.kotlin.PropertyModifier.OverrideVal ->
-                dev.yidafu.swc.generator.model.kotlin.PropertyModifier.Val
-            dev.yidafu.swc.generator.model.kotlin.PropertyModifier.OverrideVar ->
-                dev.yidafu.swc.generator.model.kotlin.PropertyModifier.Var
+            is PropertyModifier.OverrideVal -> PropertyModifier.Val
+            is PropertyModifier.OverrideVar -> PropertyModifier.Var
             else -> prop.modifier
         }
         return if (newModifier == prop.modifier) prop else prop.copy(modifier = newModifier)

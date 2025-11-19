@@ -14,7 +14,16 @@ import java.io.File
 
 /**
  * 代码生成器
- * * 负责生成 types.kt、serializer.kt 和 DSL 文件
+ *
+ * 负责协调生成三种类型的 Kotlin 代码文件：
+ * 1. **types.kt** - 包含所有类型定义（接口、类、类型别名等）
+ * 2. **serializer.kt** - 包含序列化器定义
+ * 3. **DSL 文件** - 包含 DSL 扩展函数和创建函数
+ *
+ * 支持 dry-run 模式，可以在不实际写入文件的情况下预览生成操作。
+ *
+ * @param config 生成器配置，包含输出路径和 dry-run 设置
+ * @param generatorConfig SWC 生成器配置，包含类型转换规则等
  */
 class CodeEmitter(
     private val config: GeneratorConfig,
@@ -22,7 +31,15 @@ class CodeEmitter(
 ) {
 
     /**
-     * 生成代码文件
+     * 生成所有代码文件
+     *
+     * 按照以下顺序生成：
+     * 1. types.kt - 类型定义文件
+     * 2. serializer.kt - 序列化器文件
+     * 3. DSL 文件 - DSL 扩展函数文件
+     *
+     * @param transformResult 转换结果，包含所有需要生成的类声明和类型别名
+     * @return 生成结果，成功时返回 [GeneratorResult.success]，失败时返回包含错误信息的 [GeneratorResult.failure]
      */
     fun emit(transformResult: TransformResult): GeneratorResult<Unit> {
         return try {
@@ -56,6 +73,18 @@ class CodeEmitter(
 
     /**
      * 通用的生成函数，消除重复的 dry-run 检查和资源管理代码
+     *
+     * 此方法统一处理以下逻辑：
+     * - dry-run 模式下的日志输出
+     * - 实际生成时的资源管理（使用 `use` 确保资源正确关闭）
+     * - 错误处理和日志记录
+     *
+     * @param T 生成器类型，必须是 [AutoCloseable] 的子类
+     * @param operationName 操作名称，用于日志输出
+     * @param outputPath 输出路径，如果为 null 则跳过生成
+     * @param dryRunInfo 在 dry-run 模式下显示的额外信息
+     * @param generateAction 创建生成器的函数
+     * @param executeAction 执行生成操作的函数
      */
     private fun <T : AutoCloseable> generateWithDryRun(
         operationName: String,
@@ -80,7 +109,14 @@ class CodeEmitter(
     }
 
     /**
-     * 生成 types.kt
+     * 生成 types.kt 文件
+     *
+     * 生成包含所有类型定义的文件，包括：
+     * - 接口声明
+     * - 类声明（数据类、枚举类、普通类等）
+     * - 类型别名
+     *
+     * @param transformResult 转换结果，包含所有类声明和类型别名
      */
     private fun emitTypes(transformResult: TransformResult) {
         generateWithDryRun<TypesGenerator>(
@@ -106,7 +142,11 @@ class CodeEmitter(
     }
 
     /**
-     * 生成 serializer.kt
+     * 生成 serializer.kt 文件
+     *
+     * 生成包含所有序列化器定义的文件，用于 kotlinx.serialization。
+     *
+     * @param transformResult 转换结果，包含所有类声明
      */
     private fun emitSerializer(transformResult: TransformResult) {
         generateWithDryRun<SerializerGenerator>(
@@ -123,7 +163,13 @@ class CodeEmitter(
     }
 
     /**
-     * 生成 DSL
+     * 生成 DSL 扩展函数文件
+     *
+     * 为每个接收者类型生成一个 DSL 文件，包含：
+     * - 扩展函数（用于构建 AST 节点）
+     * - create 函数（用于创建可实例化的节点）
+     *
+     * @param transformResult 转换结果，包含所有类声明和属性映射
      */
     private fun emitDsl(transformResult: TransformResult) {
         generateWithDryRun<DslGenerator>(
@@ -143,7 +189,15 @@ class CodeEmitter(
     }
 
     /**
-     * 确保输出目录存在
+     * 确保所有输出目录存在
+     *
+     * 为以下路径创建目录：
+     * - types.kt 的父目录
+     * - serializer.kt 的父目录
+     * - DSL 文件的输出目录
+     *
+     * 如果路径指向文件（以 .kt 结尾），则创建其父目录；
+     * 如果路径指向目录，则创建目录本身。
      */
     private fun ensureOutputDirectories() {
         Logger.debug("创建输出目录...")
@@ -166,6 +220,13 @@ class CodeEmitter(
 
 /**
  * 生成器配置
+ *
+ * 包含代码生成器的所有配置选项，包括输出路径和运行模式。
+ *
+ * @param outputTypesPath types.kt 文件的输出路径，如果为 null 则跳过生成
+ * @param outputSerializerPath serializer.kt 文件的输出路径，如果为 null 则跳过生成
+ * @param outputDslDir DSL 文件的输出目录，如果为 null 则跳过生成
+ * @param dryRun 是否为 dry-run 模式，true 时只输出日志不实际生成文件
  */
 data class GeneratorConfig(
     val outputTypesPath: String? = null,

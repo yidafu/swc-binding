@@ -32,7 +32,35 @@ import java.nio.file.Paths
 import java.util.LinkedHashMap
 
 /**
- * types.kt 生成器（使用 KotlinPoet）
+ * types.kt 生成器
+ *
+ * 使用 KotlinPoet 生成包含所有类型定义的 Kotlin 文件。
+ *
+ * 生成的内容包括：
+ * - 类型别名（typealias）
+ * - 接口声明（interface）
+ * - 实现类（implementation classes）
+ * - 具体类（concrete classes）
+ *
+ * 生成过程通过管道（pipeline）执行，包含以下阶段：
+ * 1. [TypeAliasStage] - 生成类型别名
+ * 2. [InterfaceStage] - 生成接口
+ * 3. [ImplementationStage] - 生成实现类
+ * 4. [ConcreteClassStage] - 生成具体类
+ * 5. [CollectTypesFileStage] - 收集并后处理文件
+ * 6. [WriteFilesStage] - 写入文件
+ *
+ * @param classDecls 类声明列表
+ * @param typeAliases 类型别名列表，默认为空
+ * @param writer 文件写入器，默认为 [GeneratedFileWriter]
+ * @param interfaceRegistry 接口注册表，用于管理接口关系
+ * @param typeAliasEmitter 类型别名生成器
+ * @param interfaceEmitter 接口生成器
+ * @param concreteClassEmitter 具体类生成器
+ * @param implementationEmitter 实现类生成器
+ * @param postProcessor 后处理器，用于处理生成的文件
+ * @param poetGenerator KotlinPoet 生成器
+ * @param customStages 自定义阶段列表，如果为 null 则使用默认阶段
  */
 class TypesGenerator(
     private val classDecls: MutableList<KotlinDeclaration.ClassDecl>,
@@ -58,7 +86,11 @@ class TypesGenerator(
     private val pipeline = GenerationPipeline(generationStages + WriteFilesStage(writer))
 
     /**
-     * 添加 typealias（使用 ADT）
+     * 添加类型别名
+     *
+     * 将类型别名添加到生成列表中，将在生成 types.kt 时包含。
+     *
+     * @param typeAlias 要添加的类型别名声明
      */
     fun addTypeAlias(typeAlias: KotlinDeclaration.TypeAliasDecl) {
         typeAliases.add(typeAlias)
@@ -66,7 +98,12 @@ class TypesGenerator(
     }
 
     /**
-     * 添加类声明（可能是枚举类）
+     * 添加类声明
+     *
+     * 将类声明添加到生成列表中，并注册到接口注册表。
+     * 支持的类类型包括：接口、密封接口、数据类、枚举类、普通类等。
+     *
+     * @param classDecl 要添加的类声明
      */
     fun addClassDecl(classDecl: KotlinDeclaration.ClassDecl) {
         classDecls.add(classDecl)
@@ -80,6 +117,15 @@ class TypesGenerator(
 
     /**
      * 生成代码并写入文件
+     *
+     * 执行完整的生成流程：
+     * 1. 过滤需要跳过的类型（如 Identifier、BindingIdentifier 等）
+     * 2. 计算需要独立文件的接口
+     * 3. 创建生成上下文
+     * 4. 执行生成管道
+     * 5. 打印缓存统计信息
+     *
+     * @param outputPath 输出文件路径
      */
     fun writeToFile(outputPath: String) {
         PerformanceMonitor.measureTime("生成类型文件") {

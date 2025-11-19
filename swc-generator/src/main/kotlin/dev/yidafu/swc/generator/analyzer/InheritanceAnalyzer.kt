@@ -2,6 +2,7 @@ package dev.yidafu.swc.generator.analyzer
 
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
 import dev.yidafu.swc.generator.model.typescript.TypeScriptType
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 
 /**
@@ -130,8 +131,8 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
      */
     fun detectCycles(): List<List<String>> {
         val cycles = mutableListOf<List<String>>()
-        val visited = mutableSetOf<String>()
-        val recursionStack = mutableSetOf<String>()
+        val visited = CollectionUtils.newStringSet()
+        val recursionStack = CollectionUtils.newStringSet()
 
         declarations
             .filterIsInstance<TypeScriptDeclaration.InterfaceDeclaration>()
@@ -310,7 +311,7 @@ class InheritanceAnalyzer(private val declarations: List<TypeScriptDeclaration> 
 
         // 收集每个类型的所有祖先（包括自身）
         val ancestorSets = typeNames.map { typeName ->
-            val ancestors = mutableSetOf<String>()
+            val ancestors = CollectionUtils.newStringSet()
             ancestors.add(typeName) // 包括自身
             ancestors.addAll(findAllGrandParents(typeName)) // 包括所有祖先
             ancestors

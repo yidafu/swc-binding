@@ -12,7 +12,6 @@ import dev.yidafu.swc.generator.converter.declaration.TypeAliasConverter
 import dev.yidafu.swc.generator.converter.type.TypeConverter
 import dev.yidafu.swc.generator.extractor.TypeScriptADTExtractor
 import dev.yidafu.swc.generator.model.typescript.TypeScriptDeclaration
-import dev.yidafu.swc.generator.monitor.PerformanceMonitor
 import dev.yidafu.swc.generator.parser.TsAstVisitor
 import dev.yidafu.swc.generator.parser.TypeScriptParser
 import dev.yidafu.swc.generator.processor.KotlinADTProcessor
@@ -72,11 +71,6 @@ class DependencyContainer(
     // 解析器
     private val _typeScriptParser by lazy { TypeScriptParser(_swcNative, _swcGeneratorConfig) }
 
-    // 提取器 - 不在这里初始化，因为需要不同的visitor
-    // private val _typeScriptADTExtractor by lazy {
-    //     TypeScriptADTExtractor(null) // 将在使用时设置visitor
-    // }
-
     // 转换器
     private val _typeConverter by lazy { TypeConverter(configuration) }
 
@@ -90,10 +84,6 @@ class DependencyContainer(
 
     // 处理器
     private val _kotlinADTProcessor by lazy { KotlinADTProcessorFactory.createCombinedProcessor(_swcGeneratorConfig) }
-
-    // 性能监控器（已统一，保留此属性以保持兼容性）
-    @Deprecated("使用 PerformanceMonitor 直接访问", ReplaceWith("PerformanceMonitor"))
-    private val _performanceOptimizer by lazy { PerformanceMonitor }
 
     // 代码生成器
     private val _codeEmitter by lazy {
@@ -118,9 +108,6 @@ class DependencyContainer(
     val typeAliasConverter: TypeAliasConverter get() = _typeAliasConverter
     val typeScriptToKotlinConverter: TypeScriptToKotlinConverter get() = _typeScriptToKotlinConverter
     val kotlinADTProcessor: KotlinADTProcessor get() = _kotlinADTProcessor
-
-    @Deprecated("使用 PerformanceMonitor 直接访问", ReplaceWith("PerformanceMonitor"))
-    val performanceOptimizer: PerformanceMonitor get() = _performanceOptimizer
     val codeEmitter: CodeEmitter get() = _codeEmitter
 
     /**

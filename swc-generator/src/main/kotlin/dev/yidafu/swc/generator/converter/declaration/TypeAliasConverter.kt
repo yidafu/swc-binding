@@ -15,11 +15,22 @@ import dev.yidafu.swc.generator.model.typescript.Variance
 import dev.yidafu.swc.generator.result.ErrorCode
 import dev.yidafu.swc.generator.result.GeneratorResult
 import dev.yidafu.swc.generator.result.GeneratorResultFactory
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 
 /**
  * 类型别名转换器
- * 负责将 TypeScript 类型别名声明转换为 Kotlin 声明
+ * * 负责将 TypeScript 类型别名声明转换为 Kotlin 类型别名声明。
+ * 处理各种类型别名场景，包括：
+ * - 普通类型别名
+ * - 字面量联合类型（转换为枚举类）
+ * - 接口联合类型（转换为密封接口）
+ * - 类型字面量（转换为接口）
+ * - 交叉类型（特殊处理）
+ * * @param config 生成器配置
+ * @param inheritanceAnalyzer 继承关系分析器，用于分析类型关系
+ * @param unionParentRegistry 联合类型父类注册表，用于记录联合类型的父类关系
+ * @param nestedTypeRegistry 嵌套类型注册表，用于记录嵌套类型关系
  */
 class TypeAliasConverter(
     private val config: Configuration,
@@ -260,7 +271,7 @@ class TypeAliasConverter(
     }
 
     private fun createEnumEntries(values: List<LiteralValue>): List<KotlinDeclaration.EnumEntry> {
-        val usedNames = mutableSetOf<String>()
+        val usedNames = CollectionUtils.newStringSet()
         return values.map { value ->
             val serialValue = literalValueToString(value)
             val baseName = resolveEnumEntryName(serialValue)

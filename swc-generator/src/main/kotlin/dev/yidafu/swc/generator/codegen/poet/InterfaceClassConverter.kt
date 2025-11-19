@@ -4,9 +4,10 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import dev.yidafu.swc.generator.config.CtxtFieldsConfig
 import dev.yidafu.swc.generator.config.CodeGenerationRules
+import dev.yidafu.swc.generator.config.CtxtFieldsConfig
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
+import dev.yidafu.swc.generator.util.CollectionUtils
 
 /**
  * 接口类转换器
@@ -30,7 +31,7 @@ object InterfaceClassConverter {
             // 为 Node 接口添加注释说明 type 字段与 @SerialName 冲突
             builder.addKdoc("conflict with @SerialName\nremove class property `var type: String?`")
         }
-        val existingPropNames = mutableSetOf<String>()
+        val existingPropNames = CollectionUtils.newStringSet()
         decl.properties.forEach { prop ->
             // 所有接口都不生成 type 字段，使用 @SerialName + @JsonClassDiscriminator 代替
             // @JsonClassDiscriminator("type") 会自动处理 type 字段，不需要在接口中声明
@@ -48,11 +49,6 @@ object InterfaceClassConverter {
             // 注意：不再为 Node 接口的 type 属性添加 @Transient
             // 当使用 @JsonClassDiscriminator("type") 时，Kotlinx Serialization 会自动处理 type 字段
             // 如果添加 @Transient，会导致序列化时缺少 type 字段
-            // if (prop.name == "type" && decl.name == "Node") {
-            //     propBuilder.addAnnotation(
-            //         AnnotationSpec.builder(ClassName("kotlinx.serialization", "Transient")).build()
-            //     )
-            // }
             // 为 Union.Ux 或 Array<Union.Ux> 添加专属 with 注解并收集
             addUnionAnnotation(decl.name, prop.name, prop.type, propBuilder)
             // 文档

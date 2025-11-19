@@ -13,13 +13,33 @@ import dev.yidafu.swc.generator.codegen.poet.createFileBuilder
 import dev.yidafu.swc.generator.config.SerializerConfig
 import dev.yidafu.swc.generator.model.kotlin.KotlinDeclaration
 import dev.yidafu.swc.generator.model.kotlin.isInterface
+import dev.yidafu.swc.generator.util.CollectionUtils
 import dev.yidafu.swc.generator.util.Logger
 import java.nio.file.Path
 
+/**
+ * DSL 文件生成器
+ *
+ * 负责生成 DSL 扩展函数文件，包括：
+ * - 接收者类型的 DSL 文件（如 `Node.kt`、`Expression.kt` 等）
+ * - `create.kt` 文件（包含所有创建函数）
+ *
+ * @param modelContext DSL 模型上下文，包含类信息和继承关系
+ * @param poet KotlinPoet 生成器，用于生成代码
+ */
 class DslFileEmitter(
     private val modelContext: DslModelContext,
     private val poet: PoetGenerator
 ) {
+    /**
+     * 生成所有 DSL 文件
+     *
+     * 为每个接收者类型生成一个 DSL 文件，并生成一个 create.kt 文件。
+     *
+     * @param collection DSL 扩展函数集合，包含按接收者类型分组的扩展函数
+     * @param outputDir 输出目录
+     * @return 生成的文件列表
+     */
     fun emit(collection: DslExtensionCollection, outputDir: Path): List<GeneratedFile> {
         val files = mutableListOf<GeneratedFile>()
         collection.groups.forEach { (receiver, funList) ->
@@ -29,6 +49,16 @@ class DslFileEmitter(
         return files
     }
 
+    /**
+     * 生成接收者类型的 DSL 文件
+     *
+     * 为指定的接收者类型生成一个包含所有扩展函数的文件。
+     *
+     * @param outputDir 输出目录
+     * @param receiver 接收者类型名称（如 "Node"、"Expression"）
+     * @param funList 该接收者类型的所有扩展函数列表
+     * @return 生成的文件
+     */
     private fun emitReceiverDslFile(
         outputDir: Path,
         receiver: String,
@@ -54,6 +84,20 @@ class DslFileEmitter(
         return GeneratedFile(outputDir.resolve("$receiver.kt"), fileSpec = fileSpec)
     }
 
+    /**
+     * 生成 create.kt 文件
+     *
+     * 生成包含所有创建函数的文件。创建函数用于创建可实例化的 AST 节点。
+     *
+     * 生成规则：
+     * - 为 `nodeCreatableClasses` 中的每个类生成 `create{ClassName}` 函数
+     * - 为 `interfaceToImplMap` 中的接口生成 `create{InterfaceName}` 函数
+     * - 如果类名以 `Impl` 结尾，使用接口名作为函数名和返回类型
+     *
+     * @param outputDir 输出目录
+     * @param nodeCreatableClasses 可创建的节点类列表
+     * @return 生成的 create.kt 文件
+     */
     private fun emitCreateFile(
         outputDir: Path,
         nodeCreatableClasses: List<KotlinDeclaration.ClassDecl>
@@ -73,7 +117,7 @@ class DslFileEmitter(
 
         // 为 interfaceToImplMap 中的接口生成 create 函数（即使实现类不在 nodeCreatableClasses 中）
         val interfaceToImplMap = dev.yidafu.swc.generator.config.SerializerConfig.interfaceToImplMap
-        val processedInterfaces = mutableSetOf<String>()
+        val processedInterfaces = CollectionUtils.newStringSet()
 
         interfaceToImplMap.forEach { (interfaceName, implClassName) ->
             // 检查是否已经为这个接口生成了 create 函数
@@ -131,6 +175,19 @@ class DslFileEmitter(
         )
     }
 
+    /**
+     * 解析实现类名称
+     *
+     * 根据类型名称查找对应的具体实现类名称。
+     *
+     * 查找顺序：
+     * 1. 检查 `interfaceToImplMap` 配置
+     * 2. 如果类型本身是具体类，直接返回
+     * 3. 如果是接口，查找其具体类后代，优先选择 `${name}Impl` 命名的类
+     *
+     * @param typeName 类型名称
+     * @return 实现类名称，如果找不到则返回 null
+     */
     private fun resolveImplClassName(typeName: String): String? {
         val normalized = DslNamingRules.sanitizeTypeName(DslNamingRules.removeGenerics(typeName)).removeSurrounding("`")
 
@@ -156,6 +213,15 @@ class DslFileEmitter(
         }
     }
 
+    /**
+     * 创建 create 函数
+     *
+     * 为指定的类生成 `create{ClassName}` 函数。
+     * 函数接受一个 lambda 参数，用于配置类的属性。
+     *
+     * @param klass 要生成 create 函数的类
+     * @return 生成的函数规范
+     */
     private fun createCreateFunction(klass: KotlinDeclaration.ClassDecl): FunSpec {
         val className = klass.name.removeSurrounding("`")
 
