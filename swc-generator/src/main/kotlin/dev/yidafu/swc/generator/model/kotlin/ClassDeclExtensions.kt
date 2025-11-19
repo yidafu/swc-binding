@@ -1,0 +1,355 @@
+package dev.yidafu.swc.generator.model.kotlin
+
+import dev.yidafu.swc.generator.util.Logger
+
+private val parserSyntaxLiteral = mapOf(
+    "TsParserConfig" to "typescript",
+    "EsParserConfig" to "ecmascript"
+)
+
+/**
+ * ClassDecl的扩展函数
+ * 将KotlinClass的业务逻辑迁移到这里
+ */
+
+/**
+ * 包装保留字
+ */
+fun wrapReservedWord(typeName: String): String {
+    return if (KotlinIdentifierConstants.RESERVED_WORDS.contains(typeName.lowercase())) {
+        "`$typeName`"
+    } else {
+        typeName
+    }
+}
+
+/**
+ * 验证类型名称是否有效
+ */
+fun isValidKotlinTypeName(typeName: String): Boolean {
+    if (typeName.isBlank()) {
+        Logger.debug("类型名称为空: '$typeName'")
+        return false
+    }
+
+    // 检查是否包含泛型符号
+    if (typeName.contains("<") || typeName.contains(">")) {
+        Logger.debug("类型名称包含泛型符号: '$typeName'")
+        return false
+    }
+
+    // 检查是否包含空白字符
+    if (typeName.contains(" ") || typeName.contains("\n") || typeName.contains("\t")) {
+        Logger.debug("类型名称包含空白字符: '$typeName'")
+        return false
+    }
+
+    // 检查是否包含注释残留
+    if (typeName.contains("/*") || typeName.contains("*/")) {
+        Logger.debug("类型名称包含注释: '$typeName'")
+        return false
+    }
+
+    // 检查是否以小写字母开头（但保留字例外）
+    if (typeName.isNotEmpty() && typeName[0].isLowerCase() &&
+        !KotlinIdentifierConstants.RESERVED_WORDS.contains(typeName.lowercase())
+    ) {
+        Logger.debug("类型名称首字母小写: '$typeName'")
+        return false
+    }
+
+    // 检查是否包含连字符
+    if (typeName.contains("-")) {
+        Logger.debug("类型名称包含连字符: '$typeName'")
+        return false
+    }
+
+    // 检查是否符合 Kotlin 标识符规范
+    if (!typeName.matches(Regex("[A-Za-z][a-zA-Z0-9_]*"))) {
+        Logger.debug("类型名称不符合 Kotlin 标识符规范: '$typeName'")
+        return false
+    }
+
+    // 保留字可以用反引号包裹
+    if (KotlinIdentifierConstants.RESERVED_WORDS.contains(typeName.lowercase())) {
+        Logger.debug("类型名称是保留字，将用反引号包裹: '$typeName'")
+    }
+
+    return true
+}
+
+/**
+ * 为属性添加 SerialName 注解（如果不存在）
+ */
+private fun KotlinDeclaration.PropertyDecl.withSerialNameAnnotation(): KotlinDeclaration.PropertyDecl {
+    val serialName = getPropertySerialName()
+    if (annotations.any { it.name == "SerialName" }) return this
+    return copy(annotations = annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))))
+}
+
+/**
+ * 转换为 interface
+ */
+fun KotlinDeclaration.ClassDecl.toInterface(): KotlinDeclaration.ClassDecl {
+    return copy(
+        modifier = ClassModifier.Interface,
+        annotations = listOf(KotlinDeclaration.Annotation("SwcDslMarker")),
+        properties = properties.map { prop ->
+            prop.withNullableIfNeeded()
+                .withSerialNameAnnotation()
+                .copy(defaultValue = null)
+        }
+    )
+}
+
+/**
+ * 转换为 class
+ */
+fun KotlinDeclaration.ClassDecl.toClass(): KotlinDeclaration.ClassDecl {
+    val modifier = ClassModifier.FinalClass // 所有类都使用普通 class
+    return copy(
+        modifier = modifier,
+        properties = properties.map { prop ->
+            prop.withNullableIfNeeded()
+                .withSerialNameAnnotation()
+                .copy(defaultValue = Expression.NullLiteral)
+        }
+    )
+}
+
+/**
+ * 转换为实现类
+ */
+fun KotlinDeclaration.ClassDecl.toImplClass(): KotlinDeclaration.ClassDecl {
+    val discriminator = getDiscriminator()
+    val serialName = computeSerialName(discriminator)
+    val interfaceName = name // 保存接口名称
+
+    return copy(
+        name = wrapReservedWord("${name}Impl"),
+        modifier = ClassModifier.FinalClass,
+        parents = listOf(KotlinType.Simple(interfaceName)),
+        annotations = listOf(
+            KotlinDeclaration.Annotation("SwcDslMarker"),
+            KotlinDeclaration.Annotation("Serializable"),
+            KotlinDeclaration.Annotation("JsonClassDiscriminator", listOf(Expression.StringLiteral(discriminator))),
+            // 不再添加 @SerialName 注解
+            // KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName))),
+            KotlinDeclaration.Annotation("OptIn", listOf(Expression.ClassReference("ExperimentalSerializationApi")))
+        ),
+        properties = properties.map { prop ->
+            val serialName = prop.getPropertySerialName()
+            val existingSerialName = prop.annotations.find { it.name == "SerialName" }
+            val annotations = if (existingSerialName != null) {
+                prop.annotations
+            } else {
+                prop.annotations + KotlinDeclaration.Annotation("SerialName", listOf(Expression.StringLiteral(serialName)))
+            }
+            val updatedProp = prop.withNullableIfNeeded().copy(
+                modifier = PropertyModifier.OverrideVar,
+                annotations = annotations
+            )
+
+            // 如果是 type 属性，设置为不可空 String 类型
+            // 如果已经有默认值（从 TypeScript 接口的 type 字段提取的字面量值），保留它
+            // 否则设置为接口名称
+            if (prop.name.removeSurrounding("`") == "type") {
+                val innerType = when (updatedProp.type) {
+                    is KotlinType.Nullable -> updatedProp.type.innerType
+                    else -> updatedProp.type
+                }
+                if (innerType is KotlinType.StringType) {
+                    // type 属性应该是不可空的 String 类型
+                    // 如果已经有默认值（从 TypeScript 提取的字面量值），保留它；否则使用接口名称
+                    val finalDefaultValue = updatedProp.defaultValue ?: Expression.StringLiteral(interfaceName)
+                    updatedProp.copy(
+                        type = KotlinType.StringType,
+                        defaultValue = finalDefaultValue
+                    )
+                } else {
+                    updatedProp.copy(defaultValue = Expression.NullLiteral)
+                }
+            } else {
+                // 其他属性设置默认值为 null（如果还没有默认值）
+                updatedProp.copy(defaultValue = updatedProp.defaultValue ?: Expression.NullLiteral)
+            }
+        }
+    )
+}
+
+/**
+ * 获取判别器
+ */
+fun KotlinDeclaration.ClassDecl.getDiscriminator(): String {
+    val baseName = if (name.endsWith("Impl")) name.removeSuffix("Impl") else name
+    if (parserSyntaxLiteral.containsKey(baseName)) {
+        return "syntax"
+    }
+    return when {
+        name.endsWith("Impl") -> {
+            val baseName = name.removeSuffix("Impl")
+            when {
+                baseName.endsWith("Expr") -> "type"
+                baseName.endsWith("Stmt") -> "type"
+                baseName.endsWith("Pat") -> "type"
+                baseName.endsWith("Decl") -> "type"
+                baseName.endsWith("ModuleItem") -> "type"
+                else -> "type"
+            }
+        }
+        baseName.endsWith("Expr") -> "type"
+        baseName.endsWith("Stmt") -> "type"
+        baseName.endsWith("Pat") -> "type"
+        baseName.endsWith("Decl") -> "type"
+        baseName.endsWith("ModuleItem") -> "type"
+        else -> "type"
+    }
+}
+
+/**
+ * 计算SerialName
+ * 优先使用从 TypeScript 接口的 type 字段提取的字面量值
+ * 考虑 @SerialName 冲突情况（如 BindingIdentifier 和 Identifier）
+ */
+fun KotlinDeclaration.ClassDecl.computeSerialName(discriminator: String): String {
+    val cleanName = name.removeSurrounding("`")
+
+    // 首先尝试从 type 属性的默认值中提取字面量值
+    val typeProperty = properties.find { it.name.removeSurrounding("`") == "type" }
+    val typeFieldLiteralValue = typeProperty?.defaultValue?.let { defaultValue ->
+        when (defaultValue) {
+            is Expression.StringLiteral -> defaultValue.value
+            else -> null
+        }
+    } ?: dev.yidafu.swc.generator.config.CodeGenerationRules.getTypeFieldLiteralValue(cleanName)
+
+    // 特殊处理：检测已知的 @SerialName 冲突
+    // 1. BindingIdentifier 和 Identifier 有相同的 type 值 "Identifier"
+    // 2. TsTemplateLiteralType 和 TemplateLiteral 有相同的 type 值 "TemplateLiteral"
+    // 为了避免 @SerialName 冲突，这些类型使用接口名称
+    val hasSerialNameConflict = when {
+        cleanName == "BindingIdentifier" && typeFieldLiteralValue == "Identifier" -> true
+        cleanName == "TsTemplateLiteralType" && typeFieldLiteralValue == "TemplateLiteral" -> true
+        else -> false
+    }
+
+    // 如果检测到冲突，使用类名称
+    if (hasSerialNameConflict && discriminator == "type") {
+        return cleanName
+    }
+
+    // 如果找到了 type 字段的字面量值，优先使用它
+    if (typeFieldLiteralValue != null && discriminator == "type") {
+        return typeFieldLiteralValue
+    }
+
+    return when (discriminator) {
+        "type" -> {
+            when {
+                name.endsWith("Impl") -> {
+                    val baseName = name.removeSuffix("Impl")
+                    when {
+                        baseName.endsWith("Expr") -> baseName
+                        baseName.endsWith("Stmt") -> baseName
+                        baseName.endsWith("Pat") -> baseName
+                        baseName.endsWith("Decl") -> baseName
+                        baseName.endsWith("ModuleItem") -> baseName
+                        else -> baseName
+                    }
+                }
+                else -> name
+            }
+        }
+        "syntax" -> {
+            val baseName = if (name.endsWith("Impl")) name.removeSuffix("Impl") else name
+            parserSyntaxLiteral[baseName] ?: baseName
+        }
+        else -> name
+    }
+}
+
+/**
+ * 克隆ClassDecl
+ */
+fun KotlinDeclaration.ClassDecl.clone(): KotlinDeclaration.ClassDecl {
+    return copy(
+        properties = properties.map { it.copy() }
+    )
+}
+
+/**
+ * 获取所有属性（包括继承的）
+ */
+fun KotlinDeclaration.ClassDecl.getAllProperties(): List<KotlinDeclaration.PropertyDecl> {
+    val allProperties = mutableListOf<KotlinDeclaration.PropertyDecl>()
+
+    // 添加当前类的属性
+    allProperties.addAll(properties)
+
+    // 添加父类的属性
+    parents.forEach { parentName ->
+        // 这里需要从全局类映射中查找父类
+        // 暂时返回当前属性，实际实现需要访问全局类映射
+    }
+    return allProperties
+}
+
+/**
+ * 检查是否为接口
+ */
+fun KotlinDeclaration.ClassDecl.isInterface(): Boolean {
+    return modifier == ClassModifier.Interface
+}
+
+/**
+ * 检查是否为类
+ */
+fun KotlinDeclaration.ClassDecl.isClass(): Boolean {
+    return modifier == ClassModifier.FinalClass
+}
+
+/**
+ * 检查是否为实现类
+ */
+fun KotlinDeclaration.ClassDecl.isImplClass(): Boolean {
+    return name.endsWith("Impl")
+}
+
+/**
+ * 获取类名（不带反引号）
+ */
+fun KotlinDeclaration.ClassDecl.getClassName(): String {
+    return if (name.startsWith("`") && name.endsWith("`")) {
+        name.substring(1, name.length - 1)
+    } else {
+        name
+    }
+}
+
+/**
+ * 检查是否应该是 sealed 类型（有子类型）
+ * * @deprecated 此方法已废弃，始终返回 false。请使用 [InheritanceAnalyzer] 来获取准确的继承关系信息。
+ * 在 ADT 架构中，sealed 类型信息应从 TypeScript ADT 结构获取。
+ */
+fun KotlinDeclaration.ClassDecl.shouldBeSealed(allClasses: List<KotlinDeclaration.ClassDecl>): Boolean {
+    if (modifier != ClassModifier.Interface) return false
+    return false
+}
+
+/**
+ * 获取继承深度（距离根节点的距离）
+ * * @deprecated 此方法已废弃，始终返回 0。请使用 [InheritanceAnalyzer.getInheritanceDepth] 来获取准确的继承深度。
+ * 在 ADT 架构中，继承深度信息应从 TypeScript ADT 结构分析获取。
+ */
+fun KotlinDeclaration.ClassDecl.getInheritanceDepth(): Int {
+    return 0
+}
+
+/**
+ * 获取继承树根节点
+ * * @deprecated 此方法已废弃，始终返回类名本身。请使用 [InheritanceAnalyzer] 来获取准确的继承树根节点信息。
+ * 在 ADT 架构中，继承树根节点信息应从 TypeScript ADT 结构分析获取。
+ */
+fun KotlinDeclaration.ClassDecl.getInheritanceRoot(): String {
+    return name
+}

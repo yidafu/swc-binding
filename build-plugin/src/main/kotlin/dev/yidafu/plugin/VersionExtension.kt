@@ -23,4 +23,4 @@ fun Project.getVersion(name: String): Provider<PluginDependency> {
     return catalogs.getVersion(name)
 }
 
-//val Project.defaultVersionCatalog = versionC
+// val Project.defaultVersionCatalog = versionC

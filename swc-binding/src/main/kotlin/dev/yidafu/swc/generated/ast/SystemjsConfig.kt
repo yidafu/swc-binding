@@ -1,0 +1,22 @@
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.191558
+
+package dev.yidafu.swc.generated
+
+import dev.yidafu.swc.emptySpan
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.Nothing
+import kotlin.OptIn
+@Serializable
+@OptIn(ExperimentalSerializationApi::class)
+@JsonClassDiscriminator("type")
+@SerialName("systemjs")
+public class SystemjsConfig : ModuleConfig {
+    @EncodeDefault
+    public var allowTopLevelThis: Boolean? = null
+}

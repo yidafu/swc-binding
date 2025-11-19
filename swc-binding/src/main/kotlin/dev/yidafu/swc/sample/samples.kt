@@ -1,8 +1,10 @@
-package dev.yidafu.swc.sample // ktlint-disable filename
+@file:Suppress("ktlint:standard:filename")
+
+package dev.yidafu.swc.sample
 
 import dev.yidafu.swc.*
-import dev.yidafu.swc.dsl.*
-import dev.yidafu.swc.types.TsKeywordTypeKind
+import dev.yidafu.swc.generated.*
+import dev.yidafu.swc.generated.dsl.*
 
 fun parseSyncBasicUsage() {
     SwcNative().parseSync(
@@ -25,11 +27,11 @@ fun parseFileSyncBasicUsage() {
 fun parseSyncEsSample() {
     SwcNative().parseSync(
         """
-          const foo = "bar";
-          console.log(foo);
+        const foo = "bar";
+        console.log(foo);
         """.trimIndent(),
         esParseOptions {
-            target = "es5"
+            allowReturnOutsideFunction = true
         },
         "temp.js"
     )
@@ -38,13 +40,12 @@ fun parseSyncEsSample() {
 fun parseSyncJsxSample() {
     SwcNative().parseSync(
         """
-          function App() {
-            return <div>App</div>
-          }
+        function App() {
+          return <div>App</div>
+        }
         """.trimIndent(),
         esParseOptions {
             jsx = true
-            target = "es5"
         },
         "temp.js"
     )
@@ -53,11 +54,11 @@ fun parseSyncJsxSample() {
 fun parseSyncTsSample() {
     SwcNative().parseSync(
         """
-          const foo: string = "bar";
-          console.log(foo);
+        const foo: string = "bar";
+        console.log(foo);
         """.trimIndent(),
         tsParseOptions {
-            target = "es5"
+            tsx = true
         },
         "temp.js"
     )
@@ -67,48 +68,54 @@ fun parseFileSyncEsSample() {
     SwcNative().parseFileSync(
         "path/to/js/code.js",
         esParseOptions {
-            target = "es5"
+            dynamicImport = true
         }
     )
 }
 
 fun createExampleDsl() {
     module {
-        body = arrayOf(
-            importDeclaration {
-                specifiers = arrayOf(
-                    importDefaultSpecifier {
-                        local = createIdentifier {
-                            span = emptySpan()
-                            value = "x"
-                        }
-                    }
-                )
-                source = stringLiteral {
-                    value = "./test.js"
-                    raw = "./test.js"
-                    span = emptySpan()
-                }
-                typeOnly = false
-                span = emptySpan()
-            },
-
-            classDeclaration {
-                identifier = createIdentifier { }
-                span = emptySpan()
-                body = arrayOf(
-                    classProperty {
-                        span = emptySpan()
-                        typeAnnotation = tsTypeAnnotation {
-                            span = emptySpan()
-                            typeAnnotation = tsKeywordType {
-                                span = emptySpan()
-                                kind = TsKeywordTypeKind.STRING
+        body =
+            arrayOf<ModuleItem>(
+                importDeclaration {
+                    specifiers =
+                        arrayOf<ImportSpecifier>(
+                            importDefaultSpecifier {
+                                local =
+                                    identifier {
+                                        span = emptySpan()
+                                        value = "x"
+                                    }
                             }
+                        )
+                    source =
+                        stringLiteral {
+                            value = "./test.js"
+                            raw = "./test.js"
+                            span = emptySpan()
                         }
-                    }
-                )
-            }
-        )
+                    typeOnly = false
+                    span = emptySpan()
+                },
+                classDeclaration {
+                    identifier = identifier { }
+                    span = emptySpan()
+                    body =
+                        arrayOf<ClassMember>(
+                            classProperty {
+                                span = emptySpan()
+                                typeAnnotation =
+                                    tsTypeAnnotation {
+                                        span = emptySpan()
+                                        typeAnnotation =
+                                            tsKeywordType {
+                                                span = emptySpan()
+                                                kind = TsKeywordTypeKind.STRING
+                                            }
+                                    }
+                            }
+                        )
+                }
+            )
     }
 }

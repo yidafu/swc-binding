@@ -1,0 +1,21 @@
+# SWC Generator 配置文件
+# 仅包含常用配置项，其他使用默认值
+
+# 输入配置
+input:
+  inputPath: "node_modules/@swc/types/index.d.ts"
+
+# 输出配置
+output:
+  outputTypesPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/ast"
+  outputSerializerPath: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/serializer.kt"
+  outputDslDir: "../swc-binding/src/main/kotlin/dev/yidafu/swc/generated/dsl"
+#
+# 规则配置
+rules:
+  classModifiers:
+    # 将以下 TS 接口生成为 Kotlin 类
+    toKotlinClass:
+      - "EsParserConfig"
+      - "ForOfStatement"
+      - "ComputedPropName"

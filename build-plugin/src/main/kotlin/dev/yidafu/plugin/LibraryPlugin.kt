@@ -7,15 +7,22 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 import org.gradle.plugin.use.PluginDependency
 import org.gradle.plugins.signing.SigningExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URI
 
 fun Project.getLibPlugin(name: String): PluginDependency {
-    val catalogs = extensions.findByType<VersionCatalogsExtension>()
-    val plugin = catalogs!!.find("libs").get().findPlugin(name)
+    val catalogs = extensions.getByType<VersionCatalogsExtension>()
+    val plugin = catalogs.find("libs").get().findPlugin(name)
     return plugin.get().get()
 }
 
@@ -39,7 +46,7 @@ class LibraryPlugin : Plugin<Project> {
                 "dokka",
                 "signing",
                 "mavenPublish",
-                "ktlint",
+                "ktlint"
             )
                 .map { project.getLibPlugin(it) }
                 .forEach {
@@ -65,8 +72,16 @@ class LibraryPlugin : Plugin<Project> {
                 url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 // 这里就是之前在issues.sonatype.org注册的账号
                 credentials {
-                    username = project.extra.get("sonatypeUsername") as String
-                    password = project.extra.get("sonatypePassword") as String
+                    username = if (project.hasProperty("sonatypeUsername")) {
+                        project.property("sonatypeUsername") as String
+                    } else {
+                        "placeholder"
+                    }
+                    password = if (project.hasProperty("sonatypePassword")) {
+                        project.property("sonatypePassword") as String
+                    } else {
+                        "placeholder"
+                    }
                 }
             }
         }
@@ -96,8 +111,8 @@ class LibraryPlugin : Plugin<Project> {
 
                     licenses {
                         license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            name.set("The MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
                         }
                     }
                     developers {
@@ -133,22 +148,6 @@ class LibraryPlugin : Plugin<Project> {
             }
         }
 
-        val signing = project.extensions.findByType<SigningExtension>()
-        signing?.sign(publishing.publications[PUBLICATION_NAME])
-        project.tasks.withType<GenerateMavenPom> {
-            doFirst {
-                val publishMan = this.project.extensions.findByType<PublishManExtension>()
-                this.project.extensions.findByType(PublishingExtension::class)?.let { ext ->
-                    println("pom name ${publishMan?.name?.getOrElse("")}")
-                    ext.publications {
-                        val publication = findByName(PUBLICATION_NAME) as MavenPublication
-                        publication.pom {
-                            name.set(publishMan?.name?.getOrElse(""))
-                            description.set(publishMan?.description?.getOrElse(""))
-                        }
-                    }
-                }
-            }
-        }
+        // Signing configuration can be added later if needed
     }
 }

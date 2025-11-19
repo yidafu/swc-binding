@@ -4,10 +4,41 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
+/**
+ * Utility object for loading native SWC library files.
+ *
+ * This object handles platform detection and loading of the appropriate
+ * native library (DLL/dylib/so) for the current operating system and architecture.
+ *
+ * ## Supported Platforms
+ * - **Linux**: x64 (musl) and ARM64 (GNU)
+ * - **macOS**: x64 (Apple) and ARM64 (Apple)
+ * - **Windows**: x64 (GNU) and ARM64 (GNU)
+ *
+ * ## Usage
+ * The library is automatically loaded when [SwcNative] is instantiated.
+ * If the library is not found in the system path, it will be extracted
+ * from JAR resources to a temporary directory and loaded from there.
+ *
+ * @example
+ * ```kotlin
+ * // Library loading happens automatically
+ * val swc = SwcNative() // DllLoader is used internally
+ * ```
+ */
 object DllLoader {
+    /**
+     * Absolute path to the extracted native library file.
+     * This is cached after the first extraction to avoid repeated file operations.
+     */
     var outAbsPath: String = ""
 
     sealed class Platform {
+        /**
+         * Linux platform detection and resource path mapping.
+         * Uses musl static linking for better compatibility.
+         * Resource paths: linux-x64-musl/ or linux-arm64-musl/
+         */
         object Linux : Platform() {
             private val cpuArch: String by lazy {
                 System.getProperty("os.arch")
@@ -25,6 +56,11 @@ object DllLoader {
             }
         }
 
+        /**
+         * macOS platform detection and resource path mapping.
+         * Uses Apple native toolchain for optimal performance.
+         * Resource paths: darwin-x64-apple/ or darwin-arm64-apple/
+         */
         object Mac : Platform() {
             private val cpuBrand: String by lazy {
                 val pb = ProcessBuilder("sysctl", "-n", "machdep.cpu.brand_string")
@@ -45,7 +81,25 @@ object DllLoader {
                 return "Mac"
             }
         }
+
+        /**
+         * Windows platform detection and resource path mapping.
+         * Uses GNU toolchain for better cross-platform compatibility.
+         * Resource paths: windows-x64-gnu/ or windows-arm64-gnu/
+         */
         object Windows : Platform() {
+            private val cpuArch: String by lazy {
+                System.getProperty("os.arch")
+            }
+
+            fun isArm(): Boolean {
+                return cpuArch.contains("aarch64") || cpuArch.contains("arm64")
+            }
+
+            fun isIntel(): Boolean {
+                return cpuArch.startsWith("x") || cpuArch.contains("amd64")
+            }
+
             override fun toString(): String {
                 return "Windows"
             }
@@ -63,10 +117,15 @@ object DllLoader {
             }
         }
         companion object {
+            /**
+             * Detect the current platform and return the appropriate Platform instance.
+             * * Supported platforms and their resource directories:
+             * - Linux: linux-x64-musl/ or linux-arm64-gnu/
+             * - macOS: darwin-x64-apple/ or darwin-arm64-apple/
+             * - Windows: windows-x64-gnu/ or windows-arm64-gnu/
+             */
             val current by lazy {
-
                 val osName = System.getProperty("os.name")
-//                darwin-arm64   darwin-x64     lib            linux-x64-gnu  linux-x64-musl win32-x64-msvc
                 when {
                     osName.startsWith("Linux") -> Linux
                     osName.startsWith("Mac") || osName.startsWith("Darwin") -> Mac
@@ -79,11 +138,21 @@ object DllLoader {
         }
     }
 
+    /**
+     * Copy the native library to a temporary directory and return the absolute path.
+     * * Resource directory structure:
+     * - darwin-x64-apple/    - macOS Intel (Apple toolchain)
+     * - darwin-arm64-apple/  - macOS ARM64 (Apple toolchain)
+     * - linux-x64-musl/      - Linux x64 (musl static linking)
+     * - linux-arm64-gnu/     - Linux ARM64 (GNU toolchain)
+     * - windows-x64-gnu/     - Windows x64 (GNU toolchain)
+     * - windows-arm64-gnu/   - Windows ARM64 (GNU toolchain)
+     */
     fun copyDll2Temp(libName: String): String {
         val jarPath = when (val p = Platform.current) {
-            is Platform.Linux -> (if (p.isArm()) "linux-arm-gnueabihf" else "linux-x64-gnu") + "/lib$libName.so"
-            is Platform.Mac -> (if (p.isIntel()) "darwin-x64" else "darwin-arm64") + "/lib$libName.dylib"
-            is Platform.Windows -> "win32-x64-msvc/$libName.dll"
+            is Platform.Linux -> (if (p.isArm()) "linux-arm64-gnu" else "linux-x64-musl") + "/lib$libName.so"
+            is Platform.Mac -> (if (p.isIntel()) "darwin-x64-apple" else "darwin-arm64-apple") + "/lib$libName.dylib"
+            is Platform.Windows -> (if (p.isArm()) "windows-arm64-gnu" else "windows-x64-gnu") + "/$libName.dll"
 //            Platform.SOLARIS -> TODO()
 //            Platform.FREEBSD -> TODO()
 //            Platform.UNSPECIFIED -> TODO()

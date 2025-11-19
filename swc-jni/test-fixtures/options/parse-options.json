@@ -1,0 +1,7 @@
+{
+  "syntax": "ecmascript",
+  "comments": false,
+  "target": "es2020",
+  "isModule": true
+}
+

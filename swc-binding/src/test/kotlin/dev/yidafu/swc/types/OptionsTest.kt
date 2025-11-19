@@ -1,36 +1,41 @@
-package dev.yidafu.swc.types
+package dev.yidafu.swc.generated
 
-import dev.yidafu.swc.booleanable.Booleanable
-import dev.yidafu.swc.dsl.jscConfig
-import dev.yidafu.swc.dsl.matchPattern
-import dev.yidafu.swc.options
+import dev.yidafu.swc.Union
+import dev.yidafu.swc.generated.dsl.jscConfig
+import dev.yidafu.swc.generated.dsl.options
+import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class OptionsTest {
+class OptionsTest : AnnotationSpec() {
+    private val testJson = Json {
+        // Don't include null values - only serialize non-null fields
+        explicitNulls = false
+        // Include default values
+        encodeDefaults = true
+    }
+
     @Test
     fun `encode options`() {
         val opt = options {
             cwd = "/path/to/cwd"
-            configFile = Booleanable.ofFalse()
+            configFile = Union.U2<String, Boolean>(b = false)
             swcrc = true
-            isModule = Booleanable.ofTrue()
+            isModule = Union.U2<Boolean, String>(a = true)
             jsc = jscConfig {
                 loose = true
             }
 
-            swcrcRoots = Booleanable.ofValue(
-                arrayOf(
-                    matchPattern {
-                        MatchPattern()
-                    }
+            swcrcRoots = Union.U3<Boolean, MatchPattern, Array<MatchPattern>>(
+                c = arrayOf(
+                    MatchPattern()
                 )
             )
         }
 
-        val output = Json.encodeToString(opt)
+        val output = testJson.encodeToString(opt)
 
         assertEquals(
             output,

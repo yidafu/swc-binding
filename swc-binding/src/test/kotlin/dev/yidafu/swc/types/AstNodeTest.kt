@@ -1,46 +1,48 @@
-package dev.yidafu.swc.types
+package dev.yidafu.swc.generated
 
+import dev.yidafu.swc.astJson
+import dev.yidafu.swc.span
+import io.kotest.core.spec.style.AnnotationSpec
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 
-class AstNodeTest {
-    private val json = Json { encodeDefaults = true }
+class AstNodeTest : AnnotationSpec() {
 
     @Test
     fun `binary ast tree`() {
-        val expr = BinaryExpressionImpl().apply {
-            operator = BinaryOperator.UnaryPlus
-            left = NumericLiteralImpl().apply {
+        val expr = BinaryExpression().apply {
+            operator = BinaryOperator.Addition
+            left = NumericLiteral().apply {
                 value = 2.0
                 raw = "2"
-                span = Span().apply {
+                span = span().apply {
                     start = 1
                     end = 2
                     ctxt = 3
                 }
             }
 
-            right = NumericLiteralImpl().apply {
+            right = NumericLiteral().apply {
                 value = 2.0
                 raw = "2"
-                span = Span().apply {
+                span = span().apply {
                     start = 4
                     end = 5
                     ctxt = 6
                 }
             }
 
-            span = Span().apply {
+            span = span().apply {
                 start = 7
                 end = 8
                 ctxt = 9
             }
         }
 
-        val jsonStr = json.encodeToString(expr)
-        println(jsonStr)
-        val node = Json.decodeFromString<BinaryExpression>(jsonStr)
-//        assertEquals(node, "BinaryExpression")
+        val jsonStr = astJson.encodeToString(expr)
+        assertNotNull(jsonStr)
+        val node = astJson.decodeFromString<BinaryExpression>(jsonStr)
+        assertNotNull(node)
     }
 }

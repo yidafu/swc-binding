@@ -1,10 +1,18 @@
 [versions]
-kotlin = "1.9.21"
-jupyter = "0.12.0-91"
+kotlin = "2.2.10"
 ksp = "1.9.21-1.0.15"
 ktlint = "11.6.1"
 dokka = "1.8.20"
 publisher = "1.8.10-dev-43"
+kotlinxSerialization = "1.7.3"
+kotest = "5.9.1"
+coroutines = "1.7.3"
+swcBinding = "0.6.0"
+kotlinpoet = "1.15.3"
+kotlinxCli = "0.3.6"
+kaml = "0.55.0"
+kotlinReflect = "2.2.10"
+mockk = "1.13.9"
 
 [libraries]
 # gradle plugins
@@ -12,20 +20,30 @@ kotlin-test =  { module = "org.jetbrains.kotlin:kotlin-test", version.ref ="kotl
 kotlin-publish-plugin = { module = "org.jetbrains.kotlin:kotlin-libs-publisher", version = "1.8.10-dev-43" }
 
 kotlin_jvm_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-plugin-jupyter = { module = "org.jetbrains.kotlin:kotlin-jupyter-api-gradle-plugin", version.ref = "jupyter" }
 
 ksp_api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 
 dokka_plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.8.20"}
 ktlint_plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version = "11.6.1" }
-kotlin_serialization_json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.6.0"}
+kotlin_serialization_json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization"}
 slf4j_api = { module = "org.slf4j:slf4j-api", version = "2.0.9"}
-swc_binding = { module = "dev.yidafu.swc:swc-binding", version = "0.4.1" }
+swc_binding = { module = "dev.yidafu.swc:swc-binding", version.ref = "swcBinding" }
+kotlinx_coroutines_core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx_coroutines_test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotest_runner_junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest_assertions_core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest_property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
+kotest_framework_api = { module = "io.kotest:kotest-framework-api", version.ref = "kotest" }
+kotest_framework_engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotlinx_cli = { module = "org.jetbrains.kotlinx:kotlinx-cli", version.ref = "kotlinxCli" }
+kaml = { module = "com.charleskorn.kaml:kaml", version.ref = "kaml" }
+kotlin_reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinReflect" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 [bundles]
 allGradlePlugins = [
     "kotlin_jvm_plugin",
-#    "plugin-jupyter",
     "kotlin-publish-plugin",
     "dokka-plugin",
     "ktlint-plugin",
@@ -34,7 +52,6 @@ allGradlePlugins = [
 [plugins]
 jvm = { id= "org.jetbrains.kotlin.jvm", version.ref = "kotlin"}
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-jupyter = { id = "org.jetbrains.kotlin.jupyter.api", version.ref = "jupyter" }
 publisher = { id = "org.jetbrains.kotlin.libs.publisher", version.ref= "publisher"}
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka"}
 ktlint = {id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint"}
