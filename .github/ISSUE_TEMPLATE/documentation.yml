@@ -1,0 +1,66 @@
+name: 📚 Documentation
+description: Report documentation issues or suggest improvements
+title: "[Docs] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation!
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: What type of documentation issue is this?
+      options:
+        - Typo or grammar error
+        - Missing information
+        - Unclear or confusing
+        - Outdated information
+        - Broken link
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Where is the documentation issue? (file path, URL, section name)
+      placeholder: README.md, swc-binding/README.md, API docs, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the documentation issue or improvement
+      placeholder: The documentation says... but it should say...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Change
+      description: If you have a suggestion for how to fix it, please provide it here
+      placeholder: |
+        Change:
+        ```
+        Old text
+        ```
+        
+        To:
+        ```
+        New text
+        ```
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the documentation issue
+      placeholder: Add any other context here...
+
