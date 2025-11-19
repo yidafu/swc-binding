@@ -4,9 +4,9 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.yidafu.swc/swc-binding.svg)](https://search.maven.org/artifact/dev.yidafu.swc/swc-binding)
-[![Kotlin](https://img.shields.io/badge/kotlin-1.9.21-blue.svg)](https://kotlinlang.org/)
-[![SWC](https://img.shields.io/badge/SWC-43.0.0-green.svg)](https://github.com/swc-project/swc)
-[![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.10-blue.svg)](https://kotlinlang.org/)
+[![SWC](https://img.shields.io/badge/SWC-43.0.0-98D982?logo=swc&logoColor=white)](https://github.com/swc-project/swc)
+[![Rust](https://img.shields.io/badge/rust-1.70+-CE412B?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![JVM](https://img.shields.io/badge/JVM-17+-red.svg)](https://www.oracle.com/java/)
 
 [SWC](https://github.com/swc-project/swc) JVM binding in Kotlin.
@@ -39,7 +39,6 @@
     - [Boolean | T options](#boolean--t-options)
   - [Article](#article)
   - [License](#license)
-
 
 ## Installation
 
@@ -167,6 +166,7 @@ swc.parseAsync(
 #### Available Async Methods
 
 All synchronous methods have async counterparts:
+
 - `parseAsync()` - Asynchronously parse code
 - `parseFileAsync()` - Asynchronously parse file
 - `transformAsync()` - Asynchronously transform code
@@ -206,7 +206,6 @@ Native method
 @Throws(RuntimeException::class)
 fun parseSync(code: String, options: String, filename: String?): String
 ```
-
 
 ### parseFileSync
 

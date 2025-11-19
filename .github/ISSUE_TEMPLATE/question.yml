@@ -1,0 +1,59 @@
+name: ❓ Question
+description: Ask a question about the project
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+      placeholder: Your question here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context about your question
+      placeholder: |
+        I'm trying to...
+        I've looked at...
+        I'm using version...
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Example (if applicable)
+      description: If your question involves code, please share a minimal example
+      render: kotlin
+      placeholder: |
+        ```kotlin
+        // Your code here
+        ```
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Related Module
+      description: Which module is your question about?
+      options:
+        - swc-binding
+        - swc-generator
+        - swc-jni
+        - General
+        - Other
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other information that might help answer your question
+      placeholder: Add any other context here...
+
