@@ -42,6 +42,17 @@ object CodeGenerationRules {
         "JSXClosingElement"
     )
 
+    /**
+     * 需要强制添加 span 属性的类列表
+     * 这些类虽然继承自 Node，但可能没有实现 HasSpan 接口，需要特殊处理
+     * 注意：这里使用的是 Kotlin 类名
+     */
+    val classesRequiringSpanProperty: Set<String> = setOf(
+        "TsQualifiedName",
+        "JSXNamespacedName",
+        "JSXMemberExpression"
+    )
+
     // ==================== 特殊属性类型覆盖规则 ====================
 
     /**

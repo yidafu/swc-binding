@@ -86,7 +86,7 @@ object RegularClassConverter {
         }
 
         // 补充 span 属性（如果需要）
-        addSpanPropertyIfNeeded(builder, decl, hasSpanDerived, existingPropNames)
+        addSpanPropertyIfNeeded(builder, decl, hasSpanDerived, existingPropNames, declLookup)
 
         // 补充 ctxt 属性（如果需要）
         // 注意：这会在配置的类中添加 ctxt，但不会处理通过父接口继承的 ctxt
@@ -219,17 +219,35 @@ object RegularClassConverter {
         builder: TypeSpec.Builder,
         decl: KotlinDeclaration.ClassDecl,
         hasSpanDerived: Boolean,
-        existingPropNames: MutableSet<String>
+        existingPropNames: MutableSet<String>,
+        declLookup: Map<String, KotlinDeclaration.ClassDecl>
     ) {
-        if (hasSpanDerived && decl.properties.none { it.name == "span" }) {
+        val className = decl.name.removeSurrounding("`")
+        val requiresSpan = hasSpanDerived || CodeGenerationRules.classesRequiringSpanProperty.contains(className)
+
+        if (requiresSpan && decl.properties.none { it.name == "span" }) {
             val spanType = ClassName("dev.yidafu.swc.generated", "Span")
             val memberEmptySpan = MemberName("dev.yidafu.swc", "emptySpan")
-            val spanProp = PropertySpec.builder("span", spanType)
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+
+            // 检查父接口是否有 span 属性，如果有则需要添加 override
+            val hasSpanInParent = ClassDeclarationConverter.parentHasProperty("span", decl.parents, declLookup)
+
+            val spanPropBuilder = PropertySpec.builder("span", spanType)
+                .addModifiers(KModifier.PUBLIC)
                 .mutable(true)
                 .initializer("%M()", memberEmptySpan)
-                .build()
-            builder.addProperty(spanProp)
+
+            // 如果父接口有 span 属性，添加 override 修饰符
+            if (hasSpanInParent || hasSpanDerived) {
+                spanPropBuilder.addModifiers(KModifier.OVERRIDE)
+            }
+
+            // 添加 @EncodeDefault 注解
+            spanPropBuilder.addAnnotation(
+                AnnotationSpec.builder(AnnotationConfig.toClassName(AnnotationConfig.ENCODE_DEFAULT)).build()
+            )
+
+            builder.addProperty(spanPropBuilder.build())
             existingPropNames.add("span")
         }
     }

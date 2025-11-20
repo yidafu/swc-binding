@@ -345,7 +345,7 @@ class GeneratedFileWriterTest : ShouldSpec({
         }
     }
 
-    should("ignores comments when comparing content") {
+    should("only ignores header comment when comparing content") {
         val tempDir = Files.createTempDirectory("generated-writer-test")
         val targetPath = tempDir.resolve("WithComments.kt")
 
@@ -400,7 +400,50 @@ class GeneratedFileWriterTest : ShouldSpec({
 
         val secondWriteTime = Files.getLastModifiedTime(targetPath)
 
-        // 由于代码内容相同（忽略注释），应该跳过写入
+        // 由于只忽略开头注释，其他注释变化时应该写入文件
+        secondWriteTime.toInstant().isAfter(firstWriteTime.toInstant()) shouldBe true
+    }
+
+    should("ignores only header comment when content is same") {
+        val tempDir = Files.createTempDirectory("generated-writer-test")
+        val targetPath = tempDir.resolve("SameContent.kt")
+
+        val content = """
+            package dev.yidafu.sample
+            
+            /**
+             * KDoc comment
+             */
+            class Test {
+                // comment
+                fun method() {}
+            }
+        """.trimIndent()
+
+        // 第一次写入
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { content }
+            )
+            writer.write(listOf(file))
+        }
+
+        val firstWriteTime = Files.getLastModifiedTime(targetPath)
+        Thread.sleep(10)
+
+        // 第二次写入相同内容（只有开头注释的时间戳会不同）
+        GeneratedFileWriter(parallelism = 1).use { writer ->
+            val file = GeneratedFile(
+                outputPath = targetPath,
+                contentProducer = { content }
+            )
+            writer.write(listOf(file))
+        }
+
+        val secondWriteTime = Files.getLastModifiedTime(targetPath)
+
+        // 由于只忽略开头注释，内容相同时应该跳过写入
         secondWriteTime shouldBe firstWriteTime
     }
 
