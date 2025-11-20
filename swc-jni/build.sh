@@ -1,11 +1,5 @@
 #!/bin/bash
 rm -fr ../swc-binding/src/main/resources/*
-cargo zigbuild --release --target x86_64-apple-darwin
-cargo zigbuild --release --target aarch64-apple-darwin
-cargo zigbuild --release --target universal2-apple-darwin
-cargo zigbuild --release --target x86_64-unknown-linux-gnu
-cargo zigbuild --release --target aarch64-unknown-linux-gnu
-cargo xwin build --release --target x86_64-pc-windows-msvc
 
 # Create resource directories for all supported platforms
 # Format: {os}-{arch}-{toolchain}
@@ -18,12 +12,13 @@ mkdir -p ../swc-binding/src/main/resources/windows-x64-gnu      # Windows x64 (G
 mkdir -p ../swc-binding/src/main/resources/windows-arm64-gnu    # Windows ARM64 (GNU toolchain)
 
 ############################## Mac OS X ##############################
+# Use native cargo build for macOS targets (more reliable than zigbuild for macOS)
 # https://gist.github.com/surpher/bbf88e191e9d1f01ab2e2bbb85f9b528
-cargo zigbuild --release --target x86_64-apple-darwin
+cargo build --release --target x86_64-apple-darwin
 cp ./target/x86_64-apple-darwin/release/libswc_jni.dylib ../swc-binding/src/main/resources/darwin-x64-apple
-cargo zigbuild --release --target aarch64-apple-darwin
+cargo build --release --target aarch64-apple-darwin
 cp ./target/aarch64-apple-darwin/release/libswc_jni.dylib ../swc-binding/src/main/resources/darwin-arm64-apple
-# cargo zigbuild --release --target universal2-apple-darwin
+# cargo build --release --target universal2-apple-darwin
 # cp ./target/universal2-apple-darwin/release/libswc_jni.dylib  ../swc-binding/src/main/resources/darwin-universal
 ############################## Mac OS X ##############################
 

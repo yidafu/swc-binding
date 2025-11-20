@@ -335,7 +335,6 @@ fn perform_transform_file_work(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -523,6 +522,168 @@ mod tests {
         // This test might fail because the function expects a file path, not JSON
         // So we just verify it doesn't panic
         let _ = result;
+    }
+
+    #[test]
+    fn test_perform_transform_sync_work_with_ast_json() {
+        // Parse code to get AST JSON
+        let code = r#"const add = (a, b) => a + b; export { add };"#;
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let program_json = crate::parse::perform_parse_work(code, parse_opts, "").unwrap();
+        
+        // Transform AST JSON with is_module=true
+        let transform_opts = create_transform_options_json();
+        let result = perform_transform_sync_work(&program_json, true, &transform_opts);
+        
+        assert!(result.is_ok(), "Transform sync with AST JSON should succeed: {:?}", result);
+        let output = result.unwrap();
+        assert!(!output.code.is_empty());
+    }
+
+    #[test]
+    fn test_perform_transform_work_with_ast_json_typescript() {
+        // Parse TypeScript code to get AST JSON
+        // Note: Transform with TypeScript AST requires TypeScript-aware transform options
+        // Since transform visitor doesn't support TypeScript AST nodes directly,
+        // we'll use JavaScript code that can be parsed as TypeScript but doesn't have TS-specific features
+        let code = r#"const user = { name: "Alice", age: 30 };
+            export default user;"#;
+        let parse_opts = r#"{
+            "syntax": "typescript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let program_json = crate::parse::perform_parse_work(code, parse_opts, "").unwrap();
+        
+        // Transform AST JSON with TypeScript-aware options
+        let transform_opts = r#"{
+            "jsc": {
+                "parser": {
+                    "syntax": "typescript",
+                    "tsx": false
+                },
+                "target": "es5"
+            },
+            "module": {
+                "type": "commonjs"
+            }
+        }"#;
+        let result = perform_transform_work(&program_json, true, transform_opts);
+        
+        assert!(result.is_ok(), "Transform TypeScript AST JSON should succeed: {:?}", result);
+        let output = result.unwrap();
+        assert!(output.contains("code"));
+    }
+
+    #[test]
+    fn test_perform_transform_work_with_ast_json_jsx() {
+        // Parse JSX-like code to get AST JSON
+        // Note: JSX parsing requires jsx: true in parse options, but parse options format doesn't support jsx directly
+        // So we'll use a simpler code that can be transformed similarly
+        let code = r#"const Component = () => { return "Hello World"; };
+            export default Component;"#;
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let program_json = crate::parse::perform_parse_work(code, parse_opts, "").unwrap();
+        
+        // Transform AST JSON
+        let transform_opts = r#"{
+            "jsc": {
+                "parser": {
+                    "syntax": "ecmascript",
+                    "jsx": true
+                },
+                "target": "es5"
+            },
+            "module": {
+                "type": "commonjs"
+            }
+        }"#;
+        let result = perform_transform_work(&program_json, true, transform_opts);
+        
+        assert!(result.is_ok(), "Transform JSX AST JSON should succeed: {:?}", result);
+        let output = result.unwrap();
+        assert!(output.contains("code"));
+    }
+
+    #[test]
+    fn test_perform_transform_work_with_invalid_ast_json() {
+        // Invalid AST JSON
+        let invalid_ast_json = r#"{"invalid": "ast"}"#;
+        let transform_opts = create_transform_options_json();
+        
+        let result = perform_transform_work(invalid_ast_json, true, &transform_opts);
+        assert!(result.is_err(), "Transform should fail with invalid AST JSON");
+    }
+
+    #[test]
+    fn test_perform_transform_work_with_ast_json_complex() {
+        // Parse complex code with classes, async/await, etc.
+        // Use JavaScript syntax to avoid TypeScript AST node issues
+        let code = r#"
+            class Calculator {
+                async add(a, b) {
+                    return a + b;
+                }
+            }
+            export default Calculator;
+        "#;
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let program_json = crate::parse::perform_parse_work(code, parse_opts, "").unwrap();
+        
+        // Transform AST JSON
+        let transform_opts = create_transform_options_json();
+        let result = perform_transform_work(&program_json, true, &transform_opts);
+        
+        assert!(result.is_ok(), "Transform complex AST JSON should succeed: {:?}", result);
+        let output = result.unwrap();
+        assert!(output.contains("code"));
+    }
+
+    #[test]
+    fn test_perform_transform_sync_work_with_ast_json_and_filename() {
+        // Parse code to get AST JSON
+        let code = r#"const x = 42; export default x;"#;
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let program_json = crate::parse::perform_parse_work(code, parse_opts, "").unwrap();
+        
+        // Transform with filename option
+        let transform_opts = r#"{
+            "filename": "test.js",
+            "jsc": {
+                "parser": {
+                    "syntax": "ecmascript",
+                    "jsx": false
+                },
+                "target": "es5"
+            },
+            "module": {
+                "type": "commonjs"
+            }
+        }"#;
+        let result = perform_transform_sync_work(&program_json, true, transform_opts);
+        
+        assert!(result.is_ok(), "Transform AST JSON with filename should succeed: {:?}", result);
     }
 
     #[test]

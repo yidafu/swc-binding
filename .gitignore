@@ -224,3 +224,5 @@ swc-jni/build.sh
 test-outputs/
 swc-binding/bin/
 build-plugin/bin
+.idea/misc.xml
+swc-generator/bin/
