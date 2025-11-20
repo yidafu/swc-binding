@@ -160,7 +160,7 @@ class SwcNative {
     ): Program {
         val optStr = configJson.encodeToString<ParserConfig>(options)
         val output = parseSync(code, optStr, filename)
-        println("parseSync ==> $output")
+//        println("parseSync ==> $output")
         return parseAstTree(output)
     }
 
@@ -216,7 +216,11 @@ class SwcNative {
      * External native method for synchronous code transformation.
      * Prefer using the overloaded method with [Options] parameter.
      *
-     * @param code Source code to transform
+     * **Important**: The behavior of `code` parameter depends on `isModule`:
+     * - When `isModule = false`: `code` should be source code string
+     * - When `isModule = true`: `code` should be a JSON string representing a Program AST
+     *
+     * @param code Source code to transform (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the code should be treated as a module
      * @param options Transform options as JSON string
      * @return Transform output as JSON string
@@ -233,7 +237,11 @@ class SwcNative {
      * External native method for synchronous file transformation.
      * Prefer using the overloaded method with [Options] parameter.
      *
-     * @param filepath Path to source file
+     * **Important**: The behavior of `filepath` parameter depends on `isModule`:
+     * - When `isModule = false`: `filepath` should be a path to source file
+     * - When `isModule = true`: `filepath` should be a JSON string representing a Program AST
+     *
+     * @param filepath Path to source file (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the file should be treated as a module
      * @param options Transform options as JSON string
      * @return Transform output as JSON string
@@ -252,15 +260,20 @@ class SwcNative {
      * This method can transpile code (e.g., ES6+ to ES5), apply transformations,
      * and perform other code modifications based on the provided options.
      *
+     * **Important**: The behavior of `code` parameter depends on `isModule`:
+     * - When `isModule = false`: `code` should be source code string (default behavior)
+     * - When `isModule = true`: `code` should be a JSON string representing a Program AST
+     *   (obtained from [parseSync] or [parseAsync])
+     *
      * @sample dev.yidafu.swc.sample.transformSyncSample
      *
-     * @param code Source code to transform
+     * @param code Source code to transform (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the code should be treated as a module (affects parsing)
      * @param options Transform configuration (target, plugins, etc.)
      * @return Transform output containing the transformed code
      * @throws RuntimeException if transformation fails
      *
-     * @example
+     * @example Transform source code (isModule=false)
      * ```kotlin
      * val swc = SwcNative()
      * val output = swc.transformSync(
@@ -277,6 +290,27 @@ class SwcNative {
      * )
      * println(output.code) // "function arrow() { return 42; }"
      * ```
+     *
+     * @example Transform Program AST (isModule=true)
+     * ```kotlin
+     * val swc = SwcNative()
+     * // First parse to get Program JSON
+     * val programJson = swc.parseSync(
+     *     code = "const x = 42; export default x;",
+     *     options = esParseOptions { isModule = true },
+     *     filename = "test.js"
+     * )
+     * // Then transform the Program AST
+     * val output = swc.transformSync(
+     *     code = programJson,
+     *     isModule = true,
+     *     options = options {
+     *         jsc {
+     *             target = JscTarget.ES5
+     *         }
+     *     }
+     * )
+     * ```
      */
     @Throws(RuntimeException::class)
     fun transformSync(
@@ -284,7 +318,29 @@ class SwcNative {
         isModule: Boolean,
         options: Options
     ): TransformOutput {
-        val optionStr = configJson.encodeToString(options)
+        // Set isModule in options if not already set
+        // Directly modify the options object (it's a class, not a data class, so this is safe)
+        if (options.isModule == null) {
+            options.isModule = Union.U2.ofA(isModule)
+        }
+        
+        val optionStr = try {
+            configJson.encodeToString(options)
+        } catch (e: Exception) {
+            throw IllegalArgumentException(
+                "Failed to serialize transform options: ${e.message}",
+                e
+            )
+        }
+        
+        // Validate that options JSON is not empty
+        if (optionStr.isBlank()) {
+            throw IllegalArgumentException(
+                "transformSync options parameter cannot be empty after serialization. " +
+                "This may indicate a serialization error."
+            )
+        }
+        
         val res = transformSync(code, isModule, optionStr)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
@@ -292,18 +348,22 @@ class SwcNative {
     /**
      * Transform a JavaScript/TypeScript file synchronously.
      *
-     * @param filepath Path to source file
+     * **Important**: The behavior of `filepath` parameter depends on `isModule`:
+     * - When `isModule = false`: `filepath` should be a path to source file (default behavior)
+     * - When `isModule = true`: `filepath` should be a JSON string representing a Program AST
+     *
+     * @param filepath Path to source file (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the file should be treated as a module
      * @param options Transform configuration
      * @return Transform output containing the transformed code
      * @throws RuntimeException if transformation fails
      *
-     * @example
+     * @example Transform file (isModule=false)
      * ```kotlin
      * val swc = SwcNative()
      * val output = swc.transformFileSync(
      *     filepath = "src/index.ts",
-     *     isModule = true,
+     *     isModule = false,
      *     options = options {
      *         jsc {
      *             target = JscTarget.ES2020
@@ -346,12 +406,18 @@ class SwcNative {
      * This method takes a parsed AST and generates the corresponding source code.
      * Useful for code generation, AST manipulation, and round-trip transformations.
      *
+     * The print options support:
+     * - **target**: Code generation target (ES version) via `options.jsc.target`
+     * - **minify**: Whether to minify the output via `options.minify` or `options.jsc.minify`
+     * - **sourceMaps**: Source map generation configuration
+     * - **filename**: Source file name for better error messages and source maps
+     *
      * @param program Parsed AST program
      * @param options Print configuration (target, minify, source maps, etc.)
      * @return Transform output containing the generated code
      * @throws RuntimeException if printing fails
      *
-     * @example
+     * @example Basic usage:
      * ```kotlin
      * val swc = SwcNative()
      * // Parse code to AST
@@ -361,6 +427,36 @@ class SwcNative {
      * val output = swc.printSync(ast, options { })
      * println(output.code) // "const x = 42;"
      * ```
+     *
+     * @example With target and minify options:
+     * ```kotlin
+     * val swc = SwcNative()
+     * val ast = swc.parseSync("const arrow = (x) => x * 2;", esParseOptions { }, "test.js")
+     * 
+     * // Print with ES2020 target and minification
+     * val output = swc.printSync(ast, options {
+     *     jsc = JscConfig().apply {
+     *         target = JscTarget.ES2020
+     *     }
+     *     minify = true
+     * })
+     * println(output.code) // Minified code with ES2020 syntax
+     * ```
+     *
+     * @example With source maps:
+     * ```kotlin
+     * val swc = SwcNative()
+     * val ast = swc.parseSync("function test() {}", esParseOptions { }, "test.js")
+     * 
+     * val output = swc.printSync(ast, options {
+     *     sourceMaps = Union.U2<Boolean, String>(b = true)
+     *     jsc = JscConfig().apply {
+     *         target = JscTarget.ES5
+     *     }
+     * })
+     * println(output.code) // Generated code
+     * println(output.map) // Source map (if enabled)
+     * ```
      */
     @Throws(RuntimeException::class)
     fun printSync(
@@ -369,6 +465,15 @@ class SwcNative {
     ): TransformOutput {
         val pStr = astJson.encodeToString<Program>(program)
         val oStr = configJson.encodeToString(options)
+        
+        // Validate that options JSON is not empty
+        if (oStr.isBlank()) {
+            throw IllegalArgumentException(
+                "printSync options parameter cannot be empty. " +
+                "Use 'options { }' to create default options."
+            )
+        }
+        
         val res = printSync(pStr, oStr)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
@@ -490,10 +595,14 @@ class SwcNative {
      * This method returns immediately and executes transformation in a background thread.
      * The callback will be invoked when transformation completes or fails.
      *
+     * **Important**: The behavior of `code` parameter depends on `isModule`:
+     * - When `isModule = false`: `code` should be source code string
+     * - When `isModule = true`: `code` should be a JSON string representing a Program AST
+     *
      * **Note**: This method is primarily for internal use. Use the Kotlin-friendly
      * overloads with [Options] or suspend functions for better type safety.
      *
-     * @param code Source code to transform (as string, not AST JSON)
+     * @param code Source code to transform (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the code should be treated as a module
      * @param options Transform options as JSON string (see [Options])
      * @param callback Callback interface to receive results
@@ -743,7 +852,12 @@ class SwcNative {
      * **For Kotlin code, prefer using the suspend function [transformAsync] instead**,
      * which provides better integration with coroutines and structured concurrency.
      *
-     * @param code Source code to transform
+     * **Important**: The behavior of `code` parameter depends on `isModule`:
+     * - When `isModule = false`: `code` should be source code string (default behavior)
+     * - When `isModule = true`: `code` should be a JSON string representing a Program AST
+     *   (obtained from [parseSync] or [parseAsync])
+     *
+     * @param code Source code to transform (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the code should be treated as a module (affects parsing behavior)
      * @param options Transform configuration (use [options] DSL to create)
      * @param onSuccess Lambda called with [TransformOutput] containing transformed code when successful
@@ -822,7 +936,11 @@ class SwcNative {
      * **For Kotlin code, prefer using the suspend function [transformFileAsync] instead**,
      * which provides better integration with coroutines and structured concurrency.
      *
-     * @param filepath Absolute or relative path to the source file
+     * **Important**: The behavior of `filepath` parameter depends on `isModule`:
+     * - When `isModule = false`: `filepath` should be a path to source file (default behavior)
+     * - When `isModule = true`: `filepath` should be a JSON string representing a Program AST
+     *
+     * @param filepath Path to source file (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the file should be treated as a module (affects parsing behavior)
      * @param options Transform configuration (use [options] DSL to create)
      * @param onSuccess Lambda called with [TransformOutput] containing transformed code when successful
@@ -942,6 +1060,15 @@ class SwcNative {
         try {
             val pStr = astJson.encodeToString<Program>(program)
             val oStr = configJson.encodeToString(options)
+            
+            // Validate that options JSON is not empty
+            if (oStr.isBlank()) {
+                onError(
+                    "printSync options parameter cannot be empty. " +
+                    "Use 'options { }' to create default options."
+                )
+                return
+            }
 
             printAsync(
                 pStr,
@@ -1158,13 +1285,18 @@ class SwcNative {
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [transformAsync] method instead.
      *
-     * @param code Source code to transform
+     * **Important**: The behavior of `code` parameter depends on `isModule`:
+     * - When `isModule = false`: `code` should be source code string (default behavior)
+     * - When `isModule = true`: `code` should be a JSON string representing a Program AST
+     *   (obtained from [parseSync] or [parseAsync])
+     *
+     * @param code Source code to transform (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the code should be treated as a module (affects parsing behavior)
      * @param options Transform configuration (use [options] DSL to create)
      * @return [TransformOutput] containing the transformed code
      * @throws RuntimeException if transformation fails
      *
-     * @example
+     * @example Transform source code (isModule=false)
      * ```kotlin
      * import kotlinx.coroutines.*
      *
@@ -1215,13 +1347,17 @@ class SwcNative {
      * **Note**: This method cannot be called directly from Java.
      * Java code should use the callback-based [transformFileAsync] method instead.
      *
-     * @param filepath Absolute or relative path to the source file
+     * **Important**: The behavior of `filepath` parameter depends on `isModule`:
+     * - When `isModule = false`: `filepath` should be a path to source file (default behavior)
+     * - When `isModule = true`: `filepath` should be a JSON string representing a Program AST
+     *
+     * @param filepath Path to source file (when isModule=false) or Program JSON (when isModule=true)
      * @param isModule Whether the file should be treated as a module (affects parsing behavior)
      * @param options Transform configuration (use [options] DSL to create)
      * @return [TransformOutput] containing the transformed code
      * @throws RuntimeException if transformation fails or file cannot be read
      *
-     * @example
+     * @example Transform file (isModule=false)
      * ```kotlin
      * import kotlinx.coroutines.*
      *
@@ -1229,7 +1365,7 @@ class SwcNative {
      *     val swc = SwcNative()
      *     val output = swc.transformFileAsync(
      *         filepath = "src/index.ts",
-     *         isModule = true,
+     *         isModule = false,
      *         options = options {
      *             jsc {
      *                 target = JscTarget.ES2020

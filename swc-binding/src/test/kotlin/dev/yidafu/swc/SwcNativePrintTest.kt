@@ -331,6 +331,79 @@ class SwcNativePrintTest : ShouldSpec({
         assertTrue(output.code.isNotEmpty())
     }
 
+    should("printSync with target option") {
+        val code = """
+            const arrow = (x, y) => x + y;
+            const spread = [...[1, 2, 3]];
+        """.trimIndent()
+
+        val program = swcNative.parseSync(code, esParseOptions { }, "test.js")
+        
+        // Test with ES2020 target
+        val outputEs2020 = swcNative.printSync(program, options {
+            jsc = JscConfig().apply {
+                target = JscTarget.ES2020
+            }
+        })
+        assertNotNull(outputEs2020.code)
+        assertTrue(outputEs2020.code.isNotEmpty())
+        
+        // Test with ES5 target
+        val outputEs5 = swcNative.printSync(program, options {
+            jsc = JscConfig().apply {
+                target = JscTarget.ES5
+            }
+        })
+        assertNotNull(outputEs5.code)
+        assertTrue(outputEs5.code.isNotEmpty())
+    }
+
+    should("printSync with minify option") {
+        val code = """
+            function add(a, b) {
+                return a + b;
+            }
+            const result = add(1, 2);
+        """.trimIndent()
+
+        val program = swcNative.parseSync(code, esParseOptions { }, "test.js")
+        
+        // Test without minification
+        val outputNormal = swcNative.printSync(program, options { })
+        assertNotNull(outputNormal.code)
+        assertTrue(outputNormal.code.contains("function"))
+        assertTrue(outputNormal.code.contains(" "))
+        
+        // Test with minification
+        val outputMinified = swcNative.printSync(program, options {
+            minify = true
+        })
+        assertNotNull(outputMinified.code)
+        assertTrue(outputMinified.code.isNotEmpty())
+        // Minified code should be shorter or equal length
+        assertTrue(outputMinified.code.length <= outputNormal.code.length)
+    }
+
+    should("printSync with target and minify options combined") {
+        val code = """
+            const arrow = (x) => x * 2;
+            const arr = [1, 2, 3];
+            const doubled = arr.map(arrow);
+        """.trimIndent()
+
+        val program = swcNative.parseSync(code, esParseOptions { }, "test.js")
+        
+        val output = swcNative.printSync(program, options {
+            jsc = JscConfig().apply {
+                target = JscTarget.ES2020
+            }
+            minify = true
+        })
+        
+        assertNotNull(output.code)
+        assertTrue(output.code.isNotEmpty())
+    }
+
     // ==================== Async Print Tests ====================
 
     should("printAsync with lambda callback") {

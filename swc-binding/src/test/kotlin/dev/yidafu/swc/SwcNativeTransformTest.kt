@@ -378,4 +378,69 @@ class SwcNativeTransformTest : ShouldSpec({
         assertTrue(!output.code.contains("interface"), "Transformed code should not contain TypeScript syntax")
         assertTrue(!output.code.contains("<"), "Transformed code should not contain JSX syntax")
     }
+
+    should("transform React component with useState hook") {
+        val output = swcNative.transformSync(
+            """
+            import { useState } from "react";
+
+            function Counter() {
+                const [count, setCount] = useState(0);
+                return (
+                    <div>
+                        <button onClick={() => setCount(count + 1)}>Increment</button>
+                        <span>Count: {count}</span>
+                    </div>
+                );
+            }
+            """.trimIndent(),
+            true, // isModule = true because of import statement
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions {
+                        jsx = true
+                    }
+                    transform = transformConfig {
+                        react = reactConfig {
+                            runtime = "automatic"
+                        }
+                    }
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(output.code.isNotEmpty(), "Transformed code should not be empty")
+        assertTrue(!output.code.contains("<"), "Transformed code should not contain JSX syntax")
+        assertTrue(output.code.contains("useState") || output.code.contains("_useState"), "Transformed code should contain useState reference")
+    }
+
+    should("transform React component with named imports and default export") {
+        val output = swcNative.transformSync(
+            """
+            import { foo, bar } from "@jupyter";
+
+            export default function App() {
+                return <div>{foo}</div>
+            }
+            """.trimIndent(),
+            true, // isModule = true because of import and export statements
+            options {
+                jsc = jscConfig {
+                    parser = esParseOptions {
+                        jsx = true
+                    }
+                    transform = transformConfig {
+                        react = reactConfig {
+                            runtime = "automatic"
+                        }
+                    }
+                }
+            }
+        )
+        assertNotNull(output.code)
+        assertTrue(output.code.isNotEmpty(), "Transformed code should not be empty")
+        assertTrue(!output.code.contains("<"), "Transformed code should not contain JSX syntax")
+        assertTrue(output.code.contains("foo") || output.code.contains("@jupyter"), "Transformed code should contain imported variable reference")
+        assertTrue(output.code.contains("export") || output.code.contains("default"), "Transformed code should contain export statement")
+    }
 })
