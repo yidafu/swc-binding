@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.221386
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.215371
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,6 @@ import kotlin.OptIn
 public class BreakStatement : Node, HasSpan, Statement {
     @EncodeDefault
     public var label: Identifier? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

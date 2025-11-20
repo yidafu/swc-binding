@@ -7,8 +7,8 @@ import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import dev.yidafu.swc.util.JsonComparator
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
-import java.io.InputStream
 import kotlinx.serialization.encodeToString
+import java.io.InputStream
 
 /**
  * E2E tests for parse method - comparing AST JSON from Kotlin and @swc/core
@@ -28,7 +28,7 @@ class AstJsonParseE2ETest : ShouldSpec({
         val inputStream: InputStream = AstJsonParseE2ETest::class.java.classLoader
             .getResourceAsStream(resourcePath)
             ?: throw IllegalStateException("Cannot find resource: $resourcePath")
-        
+
         return inputStream.bufferedReader().use { it.readText() }
     }
 

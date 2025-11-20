@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.203192
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.19588
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class SuperPropExpression : ExpressionBase, Expression {
     public var obj: JsSuper? = null
     @EncodeDefault
     public var `property`: Node? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

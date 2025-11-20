@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.213498
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.207845
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class ExportAllDeclaration : Node, HasSpan, ModuleDeclaration {
     public var source: StringLiteral? = null
     @EncodeDefault
     public var asserts: ObjectExpression? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

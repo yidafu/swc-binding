@@ -317,7 +317,6 @@ class SwcNative {
         code: String,
         options: Options
     ): TransformOutput {
-        
         val optionStr = try {
             configJson.encodeToString(options)
         } catch (e: Exception) {
@@ -326,15 +325,15 @@ class SwcNative {
                 e
             )
         }
-        
+
         // Validate that options JSON is not empty
         if (optionStr.isBlank()) {
             throw IllegalArgumentException(
                 "transformSync options parameter cannot be empty after serialization. " +
-                "This may indicate a serialization error."
+                    "This may indicate a serialization error."
             )
         }
-        
+
         val res = transformSync(code, false, optionStr)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
@@ -363,7 +362,7 @@ class SwcNative {
                 e
             )
         }
-        
+
         // Serialize the transform options to JSON string
         // This converts the Kotlin Options object to a JSON configuration string
         val optionStr = try {
@@ -383,16 +382,17 @@ class SwcNative {
                     "This may indicate a serialization error."
             )
         }
-        
+
         // Call native transform function with:
         // - codeStr: JSON string representation of the Program AST
         // - true: isModule flag indicating the input is AST JSON, not source code
         // - optionStr: JSON string representation of transform options
         val res = transformSync(codeStr, true, optionStr)
-        
+
         // Deserialize the result JSON string back to TransformOutput object
-        return outputJson.decodeFromString<TransformOutput>(res)  
+        return outputJson.decodeFromString<TransformOutput>(res)
     }
+
     /**
      * Transform a JavaScript/TypeScript file synchronously.
      *
@@ -480,8 +480,7 @@ class SwcNative {
      * ```kotlin
      * val swc = SwcNative()
      * val ast = swc.parseSync("const arrow = (x) => x * 2;", esParseOptions { }, "test.js")
-     * 
-     * // Print with ES2020 target and minification
+     * * // Print with ES2020 target and minification
      * val output = swc.printSync(ast, options {
      *     jsc = JscConfig().apply {
      *         target = JscTarget.ES2020
@@ -495,8 +494,7 @@ class SwcNative {
      * ```kotlin
      * val swc = SwcNative()
      * val ast = swc.parseSync("function test() {}", esParseOptions { }, "test.js")
-     * 
-     * val output = swc.printSync(ast, options {
+     * * val output = swc.printSync(ast, options {
      *     sourceMaps = Union.U2<Boolean, String>(b = true)
      *     jsc = JscConfig().apply {
      *         target = JscTarget.ES5
@@ -513,15 +511,15 @@ class SwcNative {
     ): TransformOutput {
         val pStr = astJson.encodeToString<Program>(program)
         val oStr = configJson.encodeToString(options)
-        
+
         // Validate that options JSON is not empty
         if (oStr.isBlank()) {
             throw IllegalArgumentException(
                 "printSync options parameter cannot be empty. " +
-                "Use 'options { }' to create default options."
+                    "Use 'options { }' to create default options."
             )
         }
-        
+
         val res = printSync(pStr, oStr)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
@@ -1148,12 +1146,12 @@ class SwcNative {
         try {
             val pStr = astJson.encodeToString<Program>(program)
             val oStr = configJson.encodeToString(options)
-            
+
             // Validate that options JSON is not empty
             if (oStr.isBlank()) {
                 onError(
                     "printSync options parameter cannot be empty. " +
-                    "Use 'options { }' to create default options."
+                        "Use 'options { }' to create default options."
                 )
                 return
             }

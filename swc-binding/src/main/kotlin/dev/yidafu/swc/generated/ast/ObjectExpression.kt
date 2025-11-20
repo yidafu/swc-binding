@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.200028
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.191392
 
 package dev.yidafu.swc.generated
 
@@ -25,6 +25,6 @@ import kotlin.OptIn
 public class ObjectExpression : ExpressionBase, Expression {
     @EncodeDefault
     public var properties: Array<Node>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

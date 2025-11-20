@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.213035
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.204143
 
 package dev.yidafu.swc.generated
 
@@ -29,6 +29,6 @@ public class JSXElement : Node, HasSpan, Expression, JSXAttrValue, JSXElementChi
     public var children: Array<JSXElementChild>? = null
     @EncodeDefault
     public var closing: JSXClosingElement? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

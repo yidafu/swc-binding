@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.228619
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.223353
 
 package dev.yidafu.swc.generated
 
@@ -33,6 +33,6 @@ public class TsSetterSignature : Node, HasSpan, TsTypeElement {
     public var optional: Boolean? = null
     @EncodeDefault
     public var `param`: TsFnParameter? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.230431
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.225716
 
 package dev.yidafu.swc.generated
 
@@ -32,6 +32,6 @@ public class TsConstructorType : Node, HasSpan, TsFnOrConstructorType {
     public var typeAnnotation: TsTypeAnnotation? = null
     @EncodeDefault
     public var isAbstract: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

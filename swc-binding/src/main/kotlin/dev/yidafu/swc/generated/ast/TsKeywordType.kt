@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.228878
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.222757
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,6 @@ import kotlin.OptIn
 public class TsKeywordType : Node, HasSpan, TsType {
     @EncodeDefault
     public var kind: TsKeywordTypeKind? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

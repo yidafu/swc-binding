@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.216191
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.211756
 
 package dev.yidafu.swc.generated
 
@@ -26,7 +26,7 @@ import kotlin.String
 public class Module : Node, HasSpan, HasInterpreter, Program {
     @EncodeDefault
     public var body: Array<ModuleItem>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var interpreter: String? = null

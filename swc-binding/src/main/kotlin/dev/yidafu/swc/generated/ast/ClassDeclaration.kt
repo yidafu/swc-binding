@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:08:41.2158
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.190937
 
 package dev.yidafu.swc.generated
 
@@ -28,7 +28,7 @@ public class ClassDeclaration : JsClass, Node, Declaration {
     public var identifier: Identifier? = null
     @EncodeDefault
     public var declare: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var body: Array<ClassMember>? = null

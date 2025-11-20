@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.210117
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.197914
 
 package dev.yidafu.swc.generated
 
@@ -28,7 +28,7 @@ public class TaggedTemplateExpression : ExpressionBase, Expression {
     public var typeParameters: TsTypeParameterInstantiation? = null
     @EncodeDefault
     public var template: TemplateLiteral? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
     public var ctxt: Int = 0

@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.198369
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.190183
 
 package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.emptySpan
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,5 +22,6 @@ import kotlin.OptIn
 @SerialName("ThisExpression")
 @SwcDslMarker
 public class ThisExpression : ExpressionBase, Expression {
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

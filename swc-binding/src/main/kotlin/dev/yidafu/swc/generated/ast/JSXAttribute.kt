@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.208662
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.203314
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class JSXAttribute : Node, HasSpan, JSXAttributeOrSpread {
     public var name: JSXAttributeName? = null
     @EncodeDefault
     public var `value`: JSXAttrValue? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

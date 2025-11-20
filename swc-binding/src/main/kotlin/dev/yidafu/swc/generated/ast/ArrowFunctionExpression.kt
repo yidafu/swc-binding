@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.205912
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.19921
 
 package dev.yidafu.swc.generated
 
@@ -36,7 +36,7 @@ public class ArrowFunctionExpression : ExpressionBase, Expression {
     public var typeParameters: TsTypeParameterDeclaration? = null
     @EncodeDefault
     public var returnType: TsTypeAnnotation? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
     public var ctxt: Int = 0

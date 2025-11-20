@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.217861
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.219359
 
 package dev.yidafu.swc.generated
 
@@ -28,7 +28,7 @@ public class ArrayPattern : PatternBase, Pattern, TsFnParameter {
     public var elements: Array<Pattern?>? = null
     @EncodeDefault
     public var optional: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var typeAnnotation: TsTypeAnnotation? = null

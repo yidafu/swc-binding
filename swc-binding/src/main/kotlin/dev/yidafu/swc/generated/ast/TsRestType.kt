@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.232617
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.22754
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,6 @@ import kotlin.OptIn
 public class TsRestType : Node, HasSpan, TsType {
     @EncodeDefault
     public var typeAnnotation: TsType? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

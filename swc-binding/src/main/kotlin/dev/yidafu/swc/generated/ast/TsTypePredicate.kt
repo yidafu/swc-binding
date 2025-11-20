@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.230984
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.22566
 
 package dev.yidafu.swc.generated
 
@@ -29,6 +29,6 @@ public class TsTypePredicate : Node, HasSpan, TsType {
     public var paramName: TsThisTypeOrIdent? = null
     @EncodeDefault
     public var typeAnnotation: TsTypeAnnotation? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

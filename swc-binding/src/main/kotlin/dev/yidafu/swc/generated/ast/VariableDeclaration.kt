@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.202633
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.19404
 
 package dev.yidafu.swc.generated
 
@@ -30,7 +30,7 @@ public class VariableDeclaration : Node, HasSpan, Declaration {
     public var declare: Boolean? = null
     @EncodeDefault
     public var declarations: Array<VariableDeclarator>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
     public var ctxt: Int = 0

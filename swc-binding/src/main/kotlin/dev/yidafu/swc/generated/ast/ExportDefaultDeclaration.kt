@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.21435
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.208175
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,6 @@ import kotlin.OptIn
 public class ExportDefaultDeclaration : Node, HasSpan, ModuleDeclaration {
     @EncodeDefault
     public var decl: DefaultDecl? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

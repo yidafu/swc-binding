@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.242272
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.232746
 
 package dev.yidafu.swc.generated
 
@@ -31,6 +31,6 @@ public class TsNamespaceDeclaration : Node, HasSpan, TsNamespaceBody {
     public var id: Identifier? = null
     @EncodeDefault
     public var body: TsNamespaceBody? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

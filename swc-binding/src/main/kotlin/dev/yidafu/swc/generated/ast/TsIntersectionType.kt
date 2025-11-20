@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.2368
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.227627
 
 package dev.yidafu.swc.generated
 
@@ -25,6 +25,6 @@ import kotlin.OptIn
 public class TsIntersectionType : Node, HasSpan, TsUnionOrIntersectionType {
     @EncodeDefault
     public var types: Array<TsType>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.240627
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.235343
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class TsTypeAssertion : ExpressionBase, Expression {
     public var expression: Expression? = null
     @EncodeDefault
     public var typeAnnotation: TsType? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

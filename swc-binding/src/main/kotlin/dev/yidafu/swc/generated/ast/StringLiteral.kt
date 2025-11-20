@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.21467
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.204314
 
 package dev.yidafu.swc.generated
 
@@ -28,6 +28,6 @@ public class StringLiteral : Node, HasSpan, Literal, ModuleExportName, PropertyN
     public var `value`: String? = null
     @EncodeDefault
     public var raw: String? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

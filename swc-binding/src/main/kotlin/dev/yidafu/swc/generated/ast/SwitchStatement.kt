@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.222437
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.216637
 
 package dev.yidafu.swc.generated
 
@@ -27,6 +27,6 @@ public class SwitchStatement : Node, HasSpan, Statement {
     public var discriminant: Expression? = null
     @EncodeDefault
     public var cases: Array<SwitchCase>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.218561
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.211068
 
 package dev.yidafu.swc.generated
 
@@ -26,7 +26,7 @@ public class AssignmentPattern : PatternBase, Pattern, TsParameterPropertyParame
     public var left: Pattern? = null
     @EncodeDefault
     public var right: Expression? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var typeAnnotation: TsTypeAnnotation? = null

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.232432
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.227096
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class TsTupleElement : Node, HasSpan {
     public var label: Pattern? = null
     @EncodeDefault
     public var ty: TsType? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

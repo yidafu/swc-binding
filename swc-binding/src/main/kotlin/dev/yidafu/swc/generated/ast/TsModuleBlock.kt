@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.238537
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.231964
 
 package dev.yidafu.swc.generated
 
@@ -25,6 +25,6 @@ import kotlin.OptIn
 public class TsModuleBlock : Node, HasSpan, TsNamespaceBody {
     @EncodeDefault
     public var body: Array<ModuleItem>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

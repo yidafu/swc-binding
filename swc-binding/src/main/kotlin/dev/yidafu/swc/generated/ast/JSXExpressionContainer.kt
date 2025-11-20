@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.208295
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.201327
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,6 @@ import kotlin.OptIn
 public class JSXExpressionContainer : Node, HasSpan, JSXAttrValue, JSXElementChild {
     @EncodeDefault
     public var expression: JSXExpression? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.231432
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.225588
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class TsTypeQuery : Node, HasSpan, TsType {
     public var exprName: TsTypeQueryExpr? = null
     @EncodeDefault
     public var typeArguments: TsTypeParameterInstantiation? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

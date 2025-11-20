@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.201886
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.193582
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class MemberExpression : ExpressionBase, Expression {
     public var `object`: Expression? = null
     @EncodeDefault
     public var `property`: Node? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

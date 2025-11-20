@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.196788
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.189172
 
 package dev.yidafu.swc.generated
 
@@ -25,7 +25,7 @@ import kotlin.OptIn
 public class PrivateMethod : ClassMethodBase, ClassMember {
     @EncodeDefault
     public var key: PrivateName? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var function: Fn? = null

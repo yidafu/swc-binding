@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.198373
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.192597
 
 package dev.yidafu.swc.generated
 
@@ -22,7 +22,7 @@ public class FunctionDeclaration : Fn, Declaration {
     public var identifier: Identifier? = null
     @EncodeDefault
     public var declare: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
     public var ctxt: Int = 0

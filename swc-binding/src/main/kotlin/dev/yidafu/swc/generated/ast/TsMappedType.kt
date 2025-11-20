@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.234782
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.230547
 
 package dev.yidafu.swc.generated
 
@@ -32,6 +32,6 @@ public class TsMappedType : Node, HasSpan, TsType {
     public var optional: TruePlusMinus? = null
     @EncodeDefault
     public var typeAnnotation: TsType? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

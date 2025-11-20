@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.229739
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.232864
 
 package dev.yidafu.swc.generated
 
@@ -21,11 +21,11 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("TsQualifiedName")
 @SwcDslMarker
-public class TsQualifiedName : Node, HasSpan, TsEntityName {
+public class TsQualifiedName : Node, TsEntityName {
     @EncodeDefault
     public var left: TsEntityName? = null
     @EncodeDefault
     public var right: Identifier? = null
     @EncodeDefault
-    public override var span: Span = emptySpan()
+    public var span: Span = emptySpan()
 }

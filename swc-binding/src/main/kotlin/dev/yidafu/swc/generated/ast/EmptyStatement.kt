@@ -1,8 +1,9 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.220059
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.213491
 
 package dev.yidafu.swc.generated
 
 import dev.yidafu.swc.emptySpan
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,5 +22,6 @@ import kotlin.OptIn
 @SerialName("EmptyStatement")
 @SwcDslMarker
 public class EmptyStatement : Node, HasSpan, ClassMember, Statement {
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

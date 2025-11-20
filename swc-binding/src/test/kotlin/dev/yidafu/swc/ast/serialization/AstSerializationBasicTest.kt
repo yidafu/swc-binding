@@ -2,11 +2,11 @@ package dev.yidafu.swc.ast.serialization
 
 import dev.yidafu.swc.astJson
 import dev.yidafu.swc.emptySpan
-import dev.yidafu.swc.span
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
 import dev.yidafu.swc.generated.dsl.createBindingIdentifier
 import dev.yidafu.swc.generated.dsl.createIdentifier
+import dev.yidafu.swc.span
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

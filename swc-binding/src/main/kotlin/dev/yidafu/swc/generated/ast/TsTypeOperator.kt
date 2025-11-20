@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.233892
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.229694
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class TsTypeOperator : Node, HasSpan, TsType {
     public var op: TsTypeOperatorOp? = null
     @EncodeDefault
     public var typeAnnotation: TsType? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

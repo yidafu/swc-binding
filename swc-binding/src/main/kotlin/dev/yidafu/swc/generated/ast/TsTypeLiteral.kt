@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.236238
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.225653
 
 package dev.yidafu.swc.generated
 
@@ -25,6 +25,6 @@ import kotlin.OptIn
 public class TsTypeLiteral : Node, HasSpan, TsType {
     @EncodeDefault
     public var members: Array<TsTypeElement>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

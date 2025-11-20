@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.208652
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.198858
 
 package dev.yidafu.swc.generated
 
@@ -30,6 +30,6 @@ public class TemplateElement : ExpressionBase {
     public var cooked: String? = null
     @EncodeDefault
     public var raw: String? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

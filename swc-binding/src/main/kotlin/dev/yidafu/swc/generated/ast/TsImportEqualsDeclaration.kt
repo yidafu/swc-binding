@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.243307
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.234082
 
 package dev.yidafu.swc.generated
 
@@ -33,6 +33,6 @@ public class TsImportEqualsDeclaration : Node, HasSpan, ModuleDeclaration {
     public var id: Identifier? = null
     @EncodeDefault
     public var moduleRef: TsModuleReference? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

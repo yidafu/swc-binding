@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.226207
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.222169
 
 package dev.yidafu.swc.generated
 
@@ -32,7 +32,7 @@ public class TsParameterProperty : Node, HasSpan, HasDecorator {
     public var readonly: Boolean? = null
     @EncodeDefault
     public var `param`: TsParameterPropertyParameter? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var decorators: Array<Decorator>? = null

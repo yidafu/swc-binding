@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.232822
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.223096
 
 package dev.yidafu.swc.generated
 
@@ -32,6 +32,6 @@ public class TsIndexSignature : Node, HasSpan, ClassMember, TsTypeElement {
     public var readonly: Boolean? = null
     @EncodeDefault
     public var static: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

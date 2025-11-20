@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.222044
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.215014
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class LabeledStatement : Node, HasSpan, Statement {
     public var label: Identifier? = null
     @EncodeDefault
     public var body: Statement? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

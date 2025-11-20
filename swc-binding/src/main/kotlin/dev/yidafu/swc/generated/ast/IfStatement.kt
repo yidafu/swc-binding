@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.222533
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.216465
 
 package dev.yidafu.swc.generated
 
@@ -28,6 +28,6 @@ public class IfStatement : Node, HasSpan, Statement {
     public var consequent: Statement? = null
     @EncodeDefault
     public var alternate: Statement? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

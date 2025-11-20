@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.203012
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.195265
 
 package dev.yidafu.swc.generated
 
@@ -26,7 +26,7 @@ import kotlin.OptIn
 public class FunctionExpression : Fn, ExpressionBase, Expression, DefaultDecl {
     @EncodeDefault
     public var identifier: Identifier? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var params: Array<Param>? = null

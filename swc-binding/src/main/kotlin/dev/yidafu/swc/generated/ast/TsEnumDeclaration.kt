@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.238542
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.232278
 
 package dev.yidafu.swc.generated
 
@@ -32,6 +32,6 @@ public class TsEnumDeclaration : Node, HasSpan, Declaration {
     public var id: Identifier? = null
     @EncodeDefault
     public var members: Array<TsEnumMember>? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

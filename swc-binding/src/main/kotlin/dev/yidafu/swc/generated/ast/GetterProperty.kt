@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.219323
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.213262
 
 package dev.yidafu.swc.generated
 
@@ -26,7 +26,7 @@ public class GetterProperty : PropBase, HasSpan, Property {
     public var typeAnnotation: TsTypeAnnotation? = null
     @EncodeDefault
     public var body: BlockStatement? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 
     public override var key: PropertyName? = null

@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.238842
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.232473
 
 package dev.yidafu.swc.generated
 
@@ -31,6 +31,6 @@ public class TsModuleDeclaration : Node, HasSpan, Declaration {
     public var id: TsModuleName? = null
     @EncodeDefault
     public var body: TsNamespaceBody? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

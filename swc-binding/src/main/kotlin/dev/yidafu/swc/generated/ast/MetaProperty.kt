@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.204963
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.197451
 
 package dev.yidafu.swc.generated
 
@@ -25,6 +25,6 @@ import kotlin.String
 public class MetaProperty : Node, HasSpan, Expression {
     @EncodeDefault
     public var kind: String? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

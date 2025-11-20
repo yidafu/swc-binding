@@ -4,7 +4,6 @@ import dev.yidafu.swc.SwcNative
 import dev.yidafu.swc.Union
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import java.io.InputStream
@@ -37,7 +36,7 @@ class AstJsonTransformE2ETest : ShouldSpec({
         val inputStream: InputStream = AstJsonTransformE2ETest::class.java.classLoader
             .getResourceAsStream(resourcePath)
             ?: throw IllegalStateException("Cannot find resource: $resourcePath")
-        
+
         return inputStream.bufferedReader().use { it.readText() }
     }
 
@@ -50,15 +49,15 @@ class AstJsonTransformE2ETest : ShouldSpec({
             .find { it.contains("const x =") && it.contains("_async_to_generator") }
             ?: throw IllegalStateException("Key part not found in code: const x = ... _async_to_generator")
     }
-    
+
     /**
      * Normalize key part: remove format differences, unify comparison
      */
     fun normalizeKeyPart(part: String): String {
         return part
-            .replace(Regex("\\s+"), " ")  // Unify whitespace characters
-            .replace("_async_to_generator._", "_async_to_generator")  // Unify function call style
-            .replace("_async_to_generator(", "_async_to_generator(")  // Ensure consistent format
+            .replace(Regex("\\s+"), " ") // Unify whitespace characters
+            .replace("_async_to_generator._", "_async_to_generator") // Unify function call style
+            .replace("_async_to_generator(", "_async_to_generator(") // Ensure consistent format
             .trim()
     }
 
@@ -95,7 +94,6 @@ class AstJsonTransformE2ETest : ShouldSpec({
                 parser = tsParseOptions { }
                 externalHelpers = false
             }
-            
         }
 
         val kotlinOutput = swcNative.transformSync(code, options)
@@ -129,7 +127,7 @@ class AstJsonTransformE2ETest : ShouldSpec({
         // Extract and compare key part: const x = ()=>_async_to_generator(...)
         val kotlinKeyPart = normalizeKeyPart(extractKeyPart(kotlinCode))
         val swcKeyPart = normalizeKeyPart(extractKeyPart(swcCode))
-        
+
         kotlinKeyPart shouldBe swcKeyPart
     }
 

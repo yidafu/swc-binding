@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.204957
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.198543
 
 package dev.yidafu.swc.generated
 
@@ -29,7 +29,7 @@ public class CallExpression : ExpressionBase, Expression {
     public var arguments: Array<Argument>? = null
     @EncodeDefault
     public var typeArguments: TsTypeParameterInstantiation? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
     @EncodeDefault
     public var ctxt: Int = 0

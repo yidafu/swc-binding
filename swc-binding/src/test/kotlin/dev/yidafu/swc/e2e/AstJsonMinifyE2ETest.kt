@@ -38,7 +38,7 @@ class AstJsonMinifyE2ETest : ShouldSpec({
         val inputStream: InputStream = AstJsonMinifyE2ETest::class.java.classLoader
             .getResourceAsStream(resourcePath)
             ?: throw IllegalStateException("Cannot find resource: $resourcePath")
-        
+
         return inputStream.bufferedReader().use { it.readText() }
     }
 
@@ -101,14 +101,17 @@ class AstJsonMinifyE2ETest : ShouldSpec({
             compress = Union.U2(a = TerserCompressOptions())
             mangle = Union.U2(b = true)
         }
-        val res = swcNative.transformSync(code, options { 
-            jsc = jscConfig {
-                parser = tsParserConfig { 
-                    tsx = false
+        val res = swcNative.transformSync(
+            code,
+            options {
+                jsc = jscConfig {
+                    parser = tsParserConfig {
+                        tsx = false
+                    }
+                    target = JscTarget.ES2020
                 }
-                target = JscTarget.ES2020
             }
-        })
+        )
         // Note: TypeScript code needs to be converted to JavaScript first before minify
         // Here directly use TypeScript code, minify will convert first
         val kotlinOutput = swcNative.minifySync(res.code, minifyOptions)

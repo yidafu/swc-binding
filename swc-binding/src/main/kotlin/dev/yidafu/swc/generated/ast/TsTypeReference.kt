@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.230445
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.225708
 
 package dev.yidafu.swc.generated
 
@@ -26,6 +26,6 @@ public class TsTypeReference : Node, HasSpan, TsType {
     public var typeName: TsEntityName? = null
     @EncodeDefault
     public var typeParams: TsTypeParameterInstantiation? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }

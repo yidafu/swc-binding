@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.215924
+// Auto-generated file. Do not edit. Generated at: 2025-11-20T23:40:25.207695
 
 package dev.yidafu.swc.generated
 
@@ -29,6 +29,6 @@ public class NamedImportSpecifier : Node, HasSpan, ImportSpecifier {
     public var imported: ModuleExportName? = null
     @EncodeDefault
     public var isTypeOnly: Boolean? = null
-
+    @EncodeDefault
     public override var span: Span = emptySpan()
 }
