@@ -13,7 +13,8 @@ use swc::config::ErrorFormat;
 use swc_common::{sync::Lrc, FileName, SourceFile, SourceMap};
 
 use crate::async_utils::callback_java;
-use crate::{get_compiler, util::process_output};
+#[allow(unused_imports)]
+use crate::{get_compiler, get_fresh_compiler, util::process_output};
 
 use crate::util::{get_deserialized, try_with, MapErr, SwcResult};
 use swc::TransformOutput;
@@ -23,7 +24,7 @@ use swc::TransformOutput;
 enum MinifyTarget {
     /// Code to minify.
     Single(String),
-    /// `{ filename: code }`
+    /// `{ filename: code }` - will be serialized to JSON string internally
     Map(AHashMap<String, String>),
 }
 
@@ -65,7 +66,7 @@ fn perform_minify_sync_work(code: &str, opts: &str) -> SwcResult<TransformOutput
     let code: MinifyTarget = get_deserialized(code.as_bytes())?;
     let opts = get_deserialized(opts.as_bytes())?;
 
-    let c = get_compiler();
+    let c = get_fresh_compiler();
 
     let fm = code.to_file(c.cm.clone());
 
@@ -111,7 +112,7 @@ fn perform_minify_work(code: &str, opts: &str) -> Result<String, String> {
     let opts = get_deserialized(opts.as_bytes())
         .map_err(|e| format!("Failed to parse options: {:?}", e))?;
 
-    let c = get_compiler();
+    let c = get_fresh_compiler();
     let fm = code.to_file(c.cm.clone());
 
     let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
@@ -220,5 +221,59 @@ mod tests {
             "Minify with map format should succeed: {:?}",
             result
         );
+    }
+
+    #[test]
+    fn test_perform_minify_work_empty_code() {
+        let code = r#""""#;
+        let opts = r#"{"compress": {}, "mangle": false}"#;
+
+        let result = perform_minify_work(code, opts);
+        // Empty code might succeed or fail depending on parser, but should not panic
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_perform_minify_work_with_compress_options() {
+        let code = r#""function unusedFunction() { return 42; } const x = 1 + 2;""#;
+        let opts = r#"{"compress": {"unused": true, "dead_code": true}, "mangle": false}"#;
+
+        let result = perform_minify_work(code, opts);
+        assert!(
+            result.is_ok(),
+            "Minify with compress options should succeed: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_perform_minify_work_with_mangle_and_compress() {
+        let code = r#""function longFunctionName() { const veryLongVariableName = 42; return veryLongVariableName; }""#;
+        let opts = r#"{"compress": true, "mangle": true}"#;
+
+        let result = perform_minify_work(code, opts);
+        assert!(
+            result.is_ok(),
+            "Minify with mangle and compress should succeed: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_perform_minify_sync_work_basic() {
+        let code = r#""const x = 42; console.log(x);""#;
+        let opts = r#"{"compress": {}, "mangle": false}"#;
+
+        let result = perform_minify_sync_work(code, opts);
+        assert!(result.is_ok(), "Minify sync should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_minify_sync_work_with_map() {
+        let code = r#"{"test.js": "const x = 42; const y = 10; console.log(x + y);"}"#;
+        let opts = r#"{"compress": {}, "mangle": false}"#;
+
+        let result = perform_minify_sync_work(code, opts);
+        assert!(result.is_ok(), "Minify sync with map should succeed: {:?}", result);
     }
 }

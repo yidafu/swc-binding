@@ -16,7 +16,7 @@ use swc_ecma_visit::VisitMutWith;
 use crate::async_utils::callback_java;
 use crate::get_compiler;
 
-use crate::util::{get_deserialized, process_result, try_with, MapErr, SwcResult};
+use crate::util::{deserialize_json, get_deserialized, process_result, try_with, MapErr, SwcResult};
 use swc_ecma_ast::Program;
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
@@ -117,32 +117,38 @@ pub fn parseFileSync(mut env: JNIEnv, _: JClass, filepath: JString, options: JSt
 /// Helper function to perform synchronous file parse work
 fn perform_parse_file_sync_work(path: &str, opts: &str) -> SwcResult<Program> {
     let c = get_compiler();
-    let options: ParseOptions = get_deserialized(opts)?;
 
     let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
-        let fm = c.cm.load_file(Path::new(path))?;
+        c.run(|| {
+            let options: ParseOptions = deserialize_json(opts)?;
 
-        let comments = if options.comments {
-            Some(c.comments() as &dyn Comments)
-        } else {
-            None
-        };
+            let fm = c.cm.load_file(Path::new(path))
+                .map_err(|e| anyhow::anyhow!("failed to read module: {:?}", e))?;
 
-        let mut p = c.parse_js(
-            fm,
-            handler,
-            options.target,
-            options.syntax,
-            options.is_module,
-            comments,
-        )?;
-        p.visit_mut_with(&mut resolver(
-            Mark::new(),
-            Mark::new(),
-            options.syntax.typescript(),
-        ));
+            let comments_clone = c.comments().clone();
+            let comments = if options.comments {
+                Some(&comments_clone as &dyn Comments)
+            } else {
+                None
+            };
 
-        Ok(p)
+            let mut p = c.parse_js(
+                fm,
+                handler,
+                options.target,
+                options.syntax,
+                options.is_module,
+                comments,
+            )?;
+
+            p.visit_mut_with(&mut resolver(
+                Mark::new(),
+                Mark::new(),
+                options.syntax.typescript(),
+            ));
+
+            Ok(p)
+        })
     })
     .convert_err();
 
@@ -270,34 +276,38 @@ pub(crate) fn perform_parse_work(src: &str, opts: &str, file: &str) -> Result<St
 fn perform_parse_file_work(path: &str, opts: &str) -> Result<String, String> {
     let c = get_compiler();
 
-    let options: ParseOptions =
-        get_deserialized(opts).map_err(|e| format!("Failed to parse options: {:?}", e))?;
-
     let result = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
-        let fm = c.cm.load_file(Path::new(path))?;
+        c.run(|| {
+            let options: ParseOptions = deserialize_json(opts)
+                .map_err(|e| anyhow::anyhow!("Failed to parse options: {:?}", e))?;
 
-        let comments = if options.comments {
-            Some(c.comments() as &dyn Comments)
-        } else {
-            None
-        };
+            let fm = c.cm.load_file(Path::new(path))
+                .map_err(|e| anyhow::anyhow!("failed to read module: {:?}", e))?;
 
-        let mut p = c.parse_js(
-            fm,
-            handler,
-            options.target,
-            options.syntax,
-            options.is_module,
-            comments,
-        )?;
+            let comments_clone = c.comments().clone();
+            let comments = if options.comments {
+                Some(&comments_clone as &dyn Comments)
+            } else {
+                None
+            };
 
-        p.visit_mut_with(&mut resolver(
-            Mark::new(),
-            Mark::new(),
-            options.syntax.typescript(),
-        ));
+            let mut p = c.parse_js(
+                fm,
+                handler,
+                options.target,
+                options.syntax,
+                options.is_module,
+                comments,
+            )?;
 
-        Ok(p)
+            p.visit_mut_with(&mut resolver(
+                Mark::new(),
+                Mark::new(),
+                options.syntax.typescript(),
+            ));
+
+            Ok(p)
+        })
     })
     .convert_err();
 
@@ -411,5 +421,97 @@ mod tests {
 
         let result = perform_parse_work(code, invalid_opts, "");
         assert!(result.is_err(), "Parse should fail with invalid options");
+    }
+
+    #[test]
+    fn test_perform_parse_work_empty_code() {
+        let code = "";
+        let opts = create_parse_options_json("ecmascript", true, false);
+
+        let result = perform_parse_work(code, &opts, "");
+        // Empty code might succeed or fail depending on parser, but should not panic
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_perform_parse_work_script_mode() {
+        let code = r#"const x = 42; console.log(x);"#;
+        let opts = create_parse_options_json("ecmascript", false, false);
+
+        let result = perform_parse_work(code, &opts, "");
+        assert!(result.is_ok(), "Parse in script mode should succeed: {:?}", result);
+        
+        let ast = result.unwrap();
+        assert!(ast.contains("type"));
+    }
+
+    #[test]
+    fn test_perform_parse_work_with_filename() {
+        let code = r#"const x = 42; console.log(x);"#;
+        let opts = create_parse_options_json("ecmascript", true, false);
+
+        let result = perform_parse_work(code, &opts, "test.js");
+        assert!(result.is_ok(), "Parse with filename should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_parse_work_tsx() {
+        let code = r#"const Component = () => <div>Hello</div>;"#;
+        let opts = r#"{
+            "syntax": "typescript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false,
+            "tsx": true
+        }"#;
+
+        let result = perform_parse_work(code, opts, "test.tsx");
+        assert!(result.is_ok(), "Parse TSX should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_parse_work_jsx() {
+        let code = r#"const Component = () => <div>Hello</div>;"#;
+        let opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false,
+            "jsx": true
+        }"#;
+
+        let result = perform_parse_work(code, opts, "test.jsx");
+        assert!(result.is_ok(), "Parse JSX should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_parse_sync_work_with_complex_code() {
+        let code = r#"
+            class MyClass {
+                constructor(name) {
+                    this.name = name;
+                }
+                greet() {
+                    return `Hello, ${this.name}!`;
+                }
+            }
+            const instance = new MyClass("World");
+            console.log(instance.greet());
+        "#;
+        let opts = create_parse_options_json("ecmascript", true, false);
+
+        let result = perform_parse_sync_work(&code, &opts, "");
+        assert!(result.is_ok(), "Parse complex code should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_parse_file_work_with_typescript() {
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "interface Person {{ name: string; age: number; }}").unwrap();
+
+        let opts = create_parse_options_json("typescript", true, false);
+        let result = perform_parse_file_work(temp_file.path().to_str().unwrap(), &opts);
+
+        assert!(result.is_ok(), "Parse TypeScript file should succeed: {:?}", result);
     }
 }

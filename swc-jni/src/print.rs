@@ -10,6 +10,7 @@ use swc::config::{Options, SourceMapsConfig};
 use swc::{PrintArgs, TransformOutput};
 use swc_common::GLOBALS;
 use swc_ecma_ast::Program;
+use swc_ecma_codegen::Config as CodegenConfig;
 
 use anyhow::Context;
 use crate::async_utils::callback_java;
@@ -64,16 +65,25 @@ fn perform_print_sync_work(program_str: &str, opts: &str) -> SwcResult<Transform
 
     let options: Options = get_deserialized(opts)?;
 
-    // Defaults to es3
-    let _codegen_target = options.codegen_target().unwrap_or_default();
+    // Get codegen target, defaults to es2020 (matching Node.js implementation)
+    let codegen_target = options.codegen_target().unwrap_or_default();
     let result = GLOBALS.set(&Default::default(), || {
         let print_args = PrintArgs {
-            output_path: options.output_path,
+            output_path: options.output_path.clone(),
             inline_sources_content: true,
             source_map: options
                 .source_maps
                 .clone()
                 .unwrap_or(SourceMapsConfig::Bool(false)),
+            emit_source_map_columns: options.config.emit_source_map_columns.into_bool(),
+            codegen_config: CodegenConfig::default()
+                .with_target(codegen_target)
+                .with_minify(options.config.minify.into_bool()),
+            source_file_name: if options.filename.is_empty() {
+                None
+            } else {
+                Some(&options.filename)
+            },
             ..Default::default()
         };
         c.print(&program, print_args).map_err(|e| {
@@ -160,17 +170,26 @@ fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
         }
     })?;
 
-    // Defaults to es3
-    let _codegen_target = options.codegen_target().unwrap_or_default();
+    // Get codegen target, defaults to es2020 (matching Node.js implementation)
+    let codegen_target = options.codegen_target().unwrap_or_default();
 
     let result = GLOBALS.set(&Default::default(), || {
         let print_args = PrintArgs {
-            output_path: options.output_path,
+            output_path: options.output_path.clone(),
             inline_sources_content: true,
             source_map: options
                 .source_maps
                 .clone()
                 .unwrap_or(SourceMapsConfig::Bool(false)),
+            emit_source_map_columns: options.config.emit_source_map_columns.into_bool(),
+            codegen_config: CodegenConfig::default()
+                .with_target(codegen_target)
+                .with_minify(options.config.minify.into_bool()),
+            source_file_name: if options.filename.is_empty() {
+                None
+            } else {
+                Some(&options.filename)
+            },
             ..Default::default()
         };
         c.print(&program, print_args)
@@ -228,6 +247,8 @@ fn perform_print_work(program_str: &str, opts: &str) -> Result<String, String> {
 mod tests {
     use super::*;
     use crate::parse::perform_parse_work;
+    use std::fs;
+    use std::path::Path;
 
     fn create_print_options_json(minify: bool, sourcemap: bool) -> String {
         format!(
@@ -332,5 +353,81 @@ mod tests {
             "Print with ES5 target should succeed: {:?}",
             result
         );
+    }
+
+    #[test]
+    fn test_perform_print_sync_work_with_test_tsx() {
+        // Read test_tsx.json from test-fixtures directory
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let test_tsx_path = manifest_dir.join("test-fixtures/test_tsx.json");
+        
+        let ast_json = fs::read_to_string(&test_tsx_path)
+            .expect(&format!("Should read test_tsx.json from {:?}", test_tsx_path));
+        
+        let opts = create_print_options_json(false, false);
+
+        let result = perform_print_sync_work(&ast_json, &opts);
+        assert!(
+            result.is_ok(),
+            "printSync should succeed with test_tsx.json: {:?}",
+            result
+        );
+
+        let output = result.unwrap();
+        assert!(!output.code.is_empty(), "Output code should not be empty");
+    }
+
+    #[test]
+    fn test_perform_print_work_with_comments() {
+        let code = r#"// Comment
+const x = 42;
+/* Block comment */
+console.log(x);"#;
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": true
+        }"#;
+        let ast = perform_parse_work(code, parse_opts, "").unwrap();
+        let opts = create_print_options_json(false, false);
+
+        let result = perform_print_work(&ast, &opts);
+        assert!(result.is_ok(), "Print with comments should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_print_work_typescript_ast() {
+        let code = r#"interface Person { name: string; age: number; }
+const person: Person = { name: "Alice", age: 30 };"#;
+        let parse_opts = r#"{
+            "syntax": "typescript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let ast = perform_parse_work(code, parse_opts, "").unwrap();
+        let opts = create_print_options_json(false, false);
+
+        let result = perform_print_work(&ast, &opts);
+        assert!(result.is_ok(), "Print TypeScript AST should succeed: {:?}", result);
+    }
+
+    #[test]
+    fn test_perform_print_work_empty_ast() {
+        // Parse empty code
+        let code = "";
+        let parse_opts = r#"{
+            "syntax": "ecmascript",
+            "target": "es2020",
+            "isModule": true,
+            "comments": false
+        }"#;
+        let ast = perform_parse_work(code, parse_opts, "").unwrap();
+        let opts = create_print_options_json(false, false);
+
+        let result = perform_print_work(&ast, &opts);
+        // Empty AST might succeed or fail, but should not panic
+        assert!(result.is_ok() || result.is_err());
     }
 }

@@ -303,4 +303,53 @@ mod tests {
         assert!(converted.is_ok());
         assert_eq!(converted.unwrap(), 42);
     }
+
+    #[test]
+    fn test_deserialize_json_invalid() {
+        let invalid_json = r#"{"name": "test", "value": }"#;
+        let result: Result<TestStruct, _> = deserialize_json(invalid_json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_json_empty_string() {
+        let empty_json = "";
+        let result: Result<TestStruct, _> = deserialize_json(empty_json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_json_missing_fields() {
+        let incomplete_json = r#"{"name": "test"}"#;
+        let result: Result<TestStruct, _> = deserialize_json(incomplete_json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_deserialized_empty_buffer() {
+        let empty_buffer = b"";
+        let result: SwcResult<TestStruct> = get_deserialized(empty_buffer);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_deserialized_malformed_json() {
+        let malformed = b"{name: test}";
+        let result: SwcResult<TestStruct> = get_deserialized(malformed);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_map_err_with_context() {
+        let error_result: Result<i32, anyhow::Error> = Err(anyhow!("original error").context("additional context"));
+        let converted = error_result.convert_err();
+        assert!(converted.is_err());
+        match converted {
+            Err(SwcException::SwcAnyException { msg }) => {
+                assert!(msg.contains("original error"));
+                assert!(msg.contains("additional context"));
+            }
+            _ => panic!("Expected SwcAnyException"),
+        }
+    }
 }

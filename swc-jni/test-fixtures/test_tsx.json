@@ -1,0 +1,407 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 1,
+    "end": 221
+  },
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "span": {
+        "start": 1,
+        "end": 37
+      },
+      "specifiers": [
+        {
+          "type": "ImportSpecifier",
+          "span": {
+            "start": 10,
+            "end": 13
+          },
+          "local": {
+            "type": "Identifier",
+            "span": {
+              "start": 10,
+              "end": 13
+            },
+            "ctxt": 2,
+            "value": "foo",
+            "optional": false
+          },
+          "imported": null,
+          "isTypeOnly": false
+        },
+        {
+          "type": "ImportSpecifier",
+          "span": {
+            "start": 15,
+            "end": 18
+          },
+          "local": {
+            "type": "Identifier",
+            "span": {
+              "start": 15,
+              "end": 18
+            },
+            "ctxt": 2,
+            "value": "bar",
+            "optional": false
+          },
+          "imported": null,
+          "isTypeOnly": false
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "span": {
+          "start": 26,
+          "end": 36
+        },
+        "value": "@jupyter",
+        "raw": "\"@jupyter\""
+      },
+      "typeOnly": false,
+      "with": null,
+      "phase": "evaluation"
+    },
+    {
+      "type": "TsInterfaceDeclaration",
+      "span": {
+        "start": 38,
+        "end": 81
+      },
+      "id": {
+        "type": "Identifier",
+        "span": {
+          "start": 48,
+          "end": 59
+        },
+        "ctxt": 2,
+        "value": "IChildProps",
+        "optional": false
+      },
+      "declare": false,
+      "typeParams": null,
+      "extends": [],
+      "body": {
+        "type": "TsInterfaceBody",
+        "span": {
+          "start": 60,
+          "end": 81
+        },
+        "body": [
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 66,
+              "end": 79
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 66,
+                "end": 70
+              },
+              "ctxt": 0,
+              "value": "text",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 70,
+                "end": 78
+              },
+              "typeAnnotation": {
+                "type": "TsKeywordType",
+                "span": {
+                  "start": 72,
+                  "end": 78
+                },
+                "kind": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "FunctionDeclaration",
+      "identifier": {
+        "type": "Identifier",
+        "span": {
+          "start": 91,
+          "end": 96
+        },
+        "ctxt": 2,
+        "value": "Child",
+        "optional": false
+      },
+      "declare": false,
+      "params": [
+        {
+          "type": "Parameter",
+          "span": {
+            "start": 97,
+            "end": 115
+          },
+          "decorators": [],
+          "pat": {
+            "type": "Identifier",
+            "span": {
+              "start": 97,
+              "end": 102
+            },
+            "ctxt": 3,
+            "value": "props",
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 102,
+                "end": 115
+              },
+              "typeAnnotation": {
+                "type": "TsTypeReference",
+                "span": {
+                  "start": 104,
+                  "end": 115
+                },
+                "typeName": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 104,
+                    "end": 115
+                  },
+                  "ctxt": 2,
+                  "value": "IChildProps",
+                  "optional": false
+                },
+                "typeParams": null
+              }
+            }
+          }
+        }
+      ],
+      "decorators": [],
+      "span": {
+        "start": 82,
+        "end": 155
+      },
+      "ctxt": 3,
+      "body": {
+        "type": "BlockStatement",
+        "span": {
+          "start": 117,
+          "end": 155
+        },
+        "ctxt": 3,
+        "stmts": [
+          {
+            "type": "ReturnStatement",
+            "span": {
+              "start": 123,
+              "end": 153
+            },
+            "argument": {
+              "type": "JSXElement",
+              "span": {
+                "start": 130,
+                "end": 153
+              },
+              "opening": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 131,
+                    "end": 134
+                  },
+                  "ctxt": 1,
+                  "value": "div",
+                  "optional": false
+                },
+                "span": {
+                  "start": 130,
+                  "end": 135
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "typeArguments": null
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "span": {
+                    "start": 135,
+                    "end": 147
+                  },
+                  "expression": {
+                    "type": "MemberExpression",
+                    "span": {
+                      "start": 136,
+                      "end": 146
+                    },
+                    "object": {
+                      "type": "Identifier",
+                      "span": {
+                        "start": 136,
+                        "end": 141
+                      },
+                      "ctxt": 3,
+                      "value": "props",
+                      "optional": false
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "span": {
+                        "start": 142,
+                        "end": 146
+                      },
+                      "value": "text"
+                    }
+                  }
+                }
+              ],
+              "closing": {
+                "type": "JSXClosingElement",
+                "span": {
+                  "start": 147,
+                  "end": 153
+                },
+                "name": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 149,
+                    "end": 152
+                  },
+                  "ctxt": 1,
+                  "value": "div",
+                  "optional": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "typeParameters": null,
+      "returnType": null
+    },
+    {
+      "type": "ExportDefaultDeclaration",
+      "span": {
+        "start": 156,
+        "end": 221
+      },
+      "decl": {
+        "type": "FunctionExpression",
+        "identifier": {
+          "type": "Identifier",
+          "span": {
+            "start": 180,
+            "end": 183
+          },
+          "ctxt": 2,
+          "value": "App",
+          "optional": false
+        },
+        "params": [],
+        "decorators": [],
+        "span": {
+          "start": 171,
+          "end": 221
+        },
+        "ctxt": 4,
+        "body": {
+          "type": "BlockStatement",
+          "span": {
+            "start": 186,
+            "end": 221
+          },
+          "ctxt": 4,
+          "stmts": [
+            {
+              "type": "ReturnStatement",
+              "span": {
+                "start": 192,
+                "end": 219
+              },
+              "argument": {
+                "type": "JSXElement",
+                "span": {
+                  "start": 199,
+                  "end": 219
+                },
+                "opening": {
+                  "type": "JSXOpeningElement",
+                  "name": {
+                    "type": "Identifier",
+                    "span": {
+                      "start": 200,
+                      "end": 205
+                    },
+                    "ctxt": 2,
+                    "value": "Child",
+                    "optional": false
+                  },
+                  "span": {
+                    "start": 199,
+                    "end": 219
+                  },
+                  "attributes": [
+                    {
+                      "type": "JSXAttribute",
+                      "span": {
+                        "start": 206,
+                        "end": 216
+                      },
+                      "name": {
+                        "type": "Identifier",
+                        "span": {
+                          "start": 206,
+                          "end": 210
+                        },
+                        "value": "text"
+                      },
+                      "value": {
+                        "type": "JSXExpressionContainer",
+                        "span": {
+                          "start": 211,
+                          "end": 216
+                        },
+                        "expression": {
+                          "type": "Identifier",
+                          "span": {
+                            "start": 212,
+                            "end": 215
+                          },
+                          "ctxt": 2,
+                          "value": "foo",
+                          "optional": false
+                        }
+                      }
+                    }
+                  ],
+                  "selfClosing": true,
+                  "typeArguments": null
+                },
+                "children": [],
+                "closing": null
+              }
+            }
+          ]
+        },
+        "generator": false,
+        "async": false,
+        "typeParameters": null,
+        "returnType": null
+      }
+    }
+  ],
+  "interpreter": null
+}

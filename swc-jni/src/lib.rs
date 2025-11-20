@@ -20,6 +20,11 @@ fn get_compiler() -> Arc<Compiler> {
     COMPILER.clone()
 }
 
+fn get_fresh_compiler() -> Arc<Compiler> {
+    let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
+    Arc::new(Compiler::new(cm))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,5 +45,19 @@ mod tests {
         let compiler1 = get_compiler();
         let compiler2 = get_compiler();
         assert!(Arc::ptr_eq(&compiler1, &compiler2));
+    }
+
+    #[test]
+    fn test_get_fresh_compiler_creates_new_instance() {
+        let compiler1 = get_fresh_compiler();
+        let compiler2 = get_fresh_compiler();
+        assert!(!Arc::ptr_eq(&compiler1, &compiler2), "get_fresh_compiler should create new instances");
+    }
+
+    #[test]
+    fn test_get_fresh_compiler_different_from_singleton() {
+        let singleton = get_compiler();
+        let fresh = get_fresh_compiler();
+        assert!(!Arc::ptr_eq(&singleton, &fresh), "get_fresh_compiler should create a different instance from singleton");
     }
 }
