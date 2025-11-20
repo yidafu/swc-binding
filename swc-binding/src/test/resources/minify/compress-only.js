@@ -1,0 +1,1 @@
+function unused(){return 42}function used(){return 100}used();

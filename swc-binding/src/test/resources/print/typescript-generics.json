@@ -1,0 +1,214 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 354,
+    "end": 446
+  },
+  "body": [
+    {
+      "type": "TsInterfaceDeclaration",
+      "span": {
+        "start": 354,
+        "end": 394
+      },
+      "id": {
+        "type": "Identifier",
+        "span": {
+          "start": 364,
+          "end": 373
+        },
+        "ctxt": 2,
+        "value": "Container",
+        "optional": false
+      },
+      "declare": false,
+      "typeParams": {
+        "type": "TsTypeParameterDeclaration",
+        "span": {
+          "start": 373,
+          "end": 376
+        },
+        "parameters": [
+          {
+            "type": "TsTypeParameter",
+            "span": {
+              "start": 374,
+              "end": 375
+            },
+            "name": {
+              "type": "Identifier",
+              "span": {
+                "start": 374,
+                "end": 375
+              },
+              "ctxt": 3,
+              "value": "T",
+              "optional": false
+            },
+            "in": false,
+            "out": false,
+            "const": false,
+            "constraint": null,
+            "default": null
+          }
+        ]
+      },
+      "extends": [],
+      "body": {
+        "type": "TsInterfaceBody",
+        "span": {
+          "start": 377,
+          "end": 394
+        },
+        "body": [
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 383,
+              "end": 392
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 383,
+                "end": 388
+              },
+              "ctxt": 0,
+              "value": "value",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 388,
+                "end": 391
+              },
+              "typeAnnotation": {
+                "type": "TsTypeReference",
+                "span": {
+                  "start": 390,
+                  "end": 391
+                },
+                "typeName": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 390,
+                    "end": 391
+                  },
+                  "ctxt": 3,
+                  "value": "T",
+                  "optional": false
+                },
+                "typeParams": null
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "VariableDeclaration",
+      "span": {
+        "start": 395,
+        "end": 446
+      },
+      "ctxt": 0,
+      "kind": "const",
+      "declare": false,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "span": {
+            "start": 401,
+            "end": 445
+          },
+          "id": {
+            "type": "Identifier",
+            "span": {
+              "start": 401,
+              "end": 410
+            },
+            "ctxt": 2,
+            "value": "container",
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 410,
+                "end": 429
+              },
+              "typeAnnotation": {
+                "type": "TsTypeReference",
+                "span": {
+                  "start": 412,
+                  "end": 429
+                },
+                "typeName": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 412,
+                    "end": 421
+                  },
+                  "ctxt": 2,
+                  "value": "Container",
+                  "optional": false
+                },
+                "typeParams": {
+                  "type": "TsTypeParameterInstantiation",
+                  "span": {
+                    "start": 421,
+                    "end": 429
+                  },
+                  "params": [
+                    {
+                      "type": "TsKeywordType",
+                      "span": {
+                        "start": 422,
+                        "end": 428
+                      },
+                      "kind": "number"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "init": {
+            "type": "ObjectExpression",
+            "span": {
+              "start": 432,
+              "end": 445
+            },
+            "properties": [
+              {
+                "type": "KeyValueProperty",
+                "key": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 434,
+                    "end": 439
+                  },
+                  "value": "value"
+                },
+                "value": {
+                  "type": "NumericLiteral",
+                  "span": {
+                    "start": 441,
+                    "end": 443
+                  },
+                  "value": 42,
+                  "raw": "42"
+                }
+              }
+            ]
+          },
+          "definite": false
+        }
+      ]
+    }
+  ],
+  "interpreter": null
+}

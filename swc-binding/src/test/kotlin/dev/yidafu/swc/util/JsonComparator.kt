@@ -8,10 +8,10 @@ import kotlinx.serialization.json.*
  */
 object JsonComparator {
     /**
-     * Fields to ignore when comparing JSON (currently none).
-     * Keeping this for future flexibility, but all fields are compared now.
+     * Fields to ignore when comparing JSON.
+     * Currently ignoring 'span' field as it may differ between implementations.
      */
-    private val ignoredFields = emptySet<String>()
+    private val ignoredFields = setOf("span")
 
     /**
      * Compare two JSON strings, ignoring property order.

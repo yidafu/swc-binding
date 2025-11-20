@@ -26,4 +26,6 @@ public class JSXNamespacedName : Node, Expression, JSXElementName, JSXAttributeN
     public var namespace: Identifier? = null
     @EncodeDefault
     public var name: Identifier? = null
+    @EncodeDefault
+    public var span: Span = emptySpan()
 }

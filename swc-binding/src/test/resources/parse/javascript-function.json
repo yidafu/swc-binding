@@ -1,0 +1,119 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 15,
+    "end": 55
+  },
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "identifier": {
+        "type": "Identifier",
+        "span": {
+          "start": 24,
+          "end": 27
+        },
+        "ctxt": 2,
+        "value": "add",
+        "optional": false
+      },
+      "declare": false,
+      "params": [
+        {
+          "type": "Parameter",
+          "span": {
+            "start": 28,
+            "end": 29
+          },
+          "decorators": [],
+          "pat": {
+            "type": "Identifier",
+            "span": {
+              "start": 28,
+              "end": 29
+            },
+            "ctxt": 3,
+            "value": "a",
+            "optional": false,
+            "typeAnnotation": null
+          }
+        },
+        {
+          "type": "Parameter",
+          "span": {
+            "start": 31,
+            "end": 32
+          },
+          "decorators": [],
+          "pat": {
+            "type": "Identifier",
+            "span": {
+              "start": 31,
+              "end": 32
+            },
+            "ctxt": 3,
+            "value": "b",
+            "optional": false,
+            "typeAnnotation": null
+          }
+        }
+      ],
+      "decorators": [],
+      "span": {
+        "start": 15,
+        "end": 55
+      },
+      "ctxt": 3,
+      "body": {
+        "type": "BlockStatement",
+        "span": {
+          "start": 34,
+          "end": 55
+        },
+        "ctxt": 3,
+        "stmts": [
+          {
+            "type": "ReturnStatement",
+            "span": {
+              "start": 40,
+              "end": 53
+            },
+            "argument": {
+              "type": "BinaryExpression",
+              "span": {
+                "start": 47,
+                "end": 52
+              },
+              "operator": "+",
+              "left": {
+                "type": "Identifier",
+                "span": {
+                  "start": 47,
+                  "end": 48
+                },
+                "ctxt": 3,
+                "value": "a",
+                "optional": false
+              },
+              "right": {
+                "type": "Identifier",
+                "span": {
+                  "start": 51,
+                  "end": 52
+                },
+                "ctxt": 3,
+                "value": "b",
+                "optional": false
+              }
+            }
+          }
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "typeParameters": null,
+      "returnType": null
+    }
+  ],
+  "interpreter": null
+}

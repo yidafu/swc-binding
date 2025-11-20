@@ -1,0 +1,93 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 226,
+    "end": 253
+  },
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "span": {
+        "start": 226,
+        "end": 253
+      },
+      "ctxt": 0,
+      "kind": "const",
+      "declare": false,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "span": {
+            "start": 232,
+            "end": 252
+          },
+          "id": {
+            "type": "Identifier",
+            "span": {
+              "start": 232,
+              "end": 237
+            },
+            "ctxt": 2,
+            "value": "arrow",
+            "optional": false,
+            "typeAnnotation": null
+          },
+          "init": {
+            "type": "ArrowFunctionExpression",
+            "span": {
+              "start": 240,
+              "end": 252
+            },
+            "ctxt": 0,
+            "params": [
+              {
+                "type": "Identifier",
+                "span": {
+                  "start": 241,
+                  "end": 242
+                },
+                "ctxt": 3,
+                "value": "x",
+                "optional": false,
+                "typeAnnotation": null
+              }
+            ],
+            "body": {
+              "type": "BinaryExpression",
+              "span": {
+                "start": 247,
+                "end": 252
+              },
+              "operator": "*",
+              "left": {
+                "type": "Identifier",
+                "span": {
+                  "start": 247,
+                  "end": 248
+                },
+                "ctxt": 3,
+                "value": "x",
+                "optional": false
+              },
+              "right": {
+                "type": "NumericLiteral",
+                "span": {
+                  "start": 251,
+                  "end": 252
+                },
+                "value": 2,
+                "raw": "2"
+              }
+            },
+            "async": false,
+            "generator": false,
+            "typeParameters": null,
+            "returnType": null
+          },
+          "definite": false
+        }
+      ]
+    }
+  ],
+  "interpreter": null
+}

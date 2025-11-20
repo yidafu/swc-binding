@@ -1,0 +1,213 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 254,
+    "end": 353
+  },
+  "body": [
+    {
+      "type": "TsInterfaceDeclaration",
+      "span": {
+        "start": 254,
+        "end": 307
+      },
+      "id": {
+        "type": "Identifier",
+        "span": {
+          "start": 264,
+          "end": 268
+        },
+        "ctxt": 2,
+        "value": "User",
+        "optional": false
+      },
+      "declare": false,
+      "typeParams": null,
+      "extends": [],
+      "body": {
+        "type": "TsInterfaceBody",
+        "span": {
+          "start": 269,
+          "end": 307
+        },
+        "body": [
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 275,
+              "end": 288
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 275,
+                "end": 279
+              },
+              "ctxt": 0,
+              "value": "name",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 279,
+                "end": 287
+              },
+              "typeAnnotation": {
+                "type": "TsKeywordType",
+                "span": {
+                  "start": 281,
+                  "end": 287
+                },
+                "kind": "string"
+              }
+            }
+          },
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 293,
+              "end": 305
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 293,
+                "end": 296
+              },
+              "ctxt": 0,
+              "value": "age",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 296,
+                "end": 304
+              },
+              "typeAnnotation": {
+                "type": "TsKeywordType",
+                "span": {
+                  "start": 298,
+                  "end": 304
+                },
+                "kind": "number"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "VariableDeclaration",
+      "span": {
+        "start": 308,
+        "end": 353
+      },
+      "ctxt": 0,
+      "kind": "const",
+      "declare": false,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "span": {
+            "start": 314,
+            "end": 352
+          },
+          "id": {
+            "type": "Identifier",
+            "span": {
+              "start": 314,
+              "end": 318
+            },
+            "ctxt": 2,
+            "value": "user",
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 318,
+                "end": 324
+              },
+              "typeAnnotation": {
+                "type": "TsTypeReference",
+                "span": {
+                  "start": 320,
+                  "end": 324
+                },
+                "typeName": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 320,
+                    "end": 324
+                  },
+                  "ctxt": 2,
+                  "value": "User",
+                  "optional": false
+                },
+                "typeParams": null
+              }
+            }
+          },
+          "init": {
+            "type": "ObjectExpression",
+            "span": {
+              "start": 327,
+              "end": 352
+            },
+            "properties": [
+              {
+                "type": "KeyValueProperty",
+                "key": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 329,
+                    "end": 333
+                  },
+                  "value": "name"
+                },
+                "value": {
+                  "type": "StringLiteral",
+                  "span": {
+                    "start": 335,
+                    "end": 341
+                  },
+                  "value": "John",
+                  "raw": "\"John\""
+                }
+              },
+              {
+                "type": "KeyValueProperty",
+                "key": {
+                  "type": "Identifier",
+                  "span": {
+                    "start": 343,
+                    "end": 346
+                  },
+                  "value": "age"
+                },
+                "value": {
+                  "type": "NumericLiteral",
+                  "span": {
+                    "start": 348,
+                    "end": 350
+                  },
+                  "value": 30,
+                  "raw": "30"
+                }
+              }
+            ]
+          },
+          "definite": false
+        }
+      ]
+    }
+  ],
+  "interpreter": null
+}

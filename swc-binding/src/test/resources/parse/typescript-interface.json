@@ -1,0 +1,109 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 56,
+    "end": 109
+  },
+  "body": [
+    {
+      "type": "TsInterfaceDeclaration",
+      "span": {
+        "start": 56,
+        "end": 109
+      },
+      "id": {
+        "type": "Identifier",
+        "span": {
+          "start": 66,
+          "end": 70
+        },
+        "ctxt": 2,
+        "value": "User",
+        "optional": false
+      },
+      "declare": false,
+      "typeParams": null,
+      "extends": [],
+      "body": {
+        "type": "TsInterfaceBody",
+        "span": {
+          "start": 71,
+          "end": 109
+        },
+        "body": [
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 77,
+              "end": 90
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 77,
+                "end": 81
+              },
+              "ctxt": 0,
+              "value": "name",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 81,
+                "end": 89
+              },
+              "typeAnnotation": {
+                "type": "TsKeywordType",
+                "span": {
+                  "start": 83,
+                  "end": 89
+                },
+                "kind": "string"
+              }
+            }
+          },
+          {
+            "type": "TsPropertySignature",
+            "span": {
+              "start": 95,
+              "end": 107
+            },
+            "readonly": false,
+            "key": {
+              "type": "Identifier",
+              "span": {
+                "start": 95,
+                "end": 98
+              },
+              "ctxt": 0,
+              "value": "age",
+              "optional": false
+            },
+            "computed": false,
+            "optional": false,
+            "typeAnnotation": {
+              "type": "TsTypeAnnotation",
+              "span": {
+                "start": 98,
+                "end": 106
+              },
+              "typeAnnotation": {
+                "type": "TsKeywordType",
+                "span": {
+                  "start": 100,
+                  "end": 106
+                },
+                "kind": "number"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "interpreter": null
+}

@@ -26,4 +26,6 @@ public class JSXMemberExpression : Node, Expression, JSXObject, JSXElementName {
     public var `object`: JSXObject? = null
     @EncodeDefault
     public var `property`: Identifier? = null
+    @EncodeDefault
+    public var span: Span = emptySpan()
 }

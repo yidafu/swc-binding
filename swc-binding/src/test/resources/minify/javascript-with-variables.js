@@ -1,0 +1,1 @@
+const x=42,y=100,result=142;

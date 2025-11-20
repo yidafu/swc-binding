@@ -315,14 +315,8 @@ class SwcNative {
     @Throws(RuntimeException::class)
     fun transformSync(
         code: String,
-        isModule: Boolean,
         options: Options
     ): TransformOutput {
-        // Set isModule in options if not already set
-        // Directly modify the options object (it's a class, not a data class, so this is safe)
-        if (options.isModule == null) {
-            options.isModule = Union.U2.ofA(isModule)
-        }
         
         val optionStr = try {
             configJson.encodeToString(options)
@@ -341,10 +335,64 @@ class SwcNative {
             )
         }
         
-        val res = transformSync(code, isModule, optionStr)
+        val res = transformSync(code, false, optionStr)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
 
+    /**
+     * Transform a Program AST synchronously.
+     *
+     * This method accepts a parsed AST (Program) and transforms it according to the provided options.
+     * The Program AST is serialized to JSON and passed to the native transform function with
+     * `isModule = true` to indicate that the input is an AST JSON string, not source code.
+     *
+     * @param program The parsed Program AST to transform
+     * @param options Transform configuration options
+     * @return Transform output containing the transformed code
+     * @throws IllegalArgumentException if serialization fails or options are invalid
+     * @throws RuntimeException if transformation fails
+     */
+    fun transformSync(program: Program, options: Options): TransformOutput {
+        // Serialize the Program AST to JSON string
+        // This converts the Kotlin Program object to a JSON representation that the native code can process
+        var codeStr = try {
+            astJson.encodeToString<Program>(program)
+        } catch (e: Exception) {
+            throw IllegalArgumentException(
+                "Failed to serialize program: ${e.message}",
+                e
+            )
+        }
+        
+        // Serialize the transform options to JSON string
+        // This converts the Kotlin Options object to a JSON configuration string
+        val optionStr = try {
+            configJson.encodeToString(options)
+        } catch (e: Exception) {
+            throw IllegalArgumentException(
+                "Failed to serialize transform options: ${e.message}",
+                e
+            )
+        }
+
+        // Validate that options JSON is not empty
+        // Empty options may indicate a serialization error or invalid configuration
+        if (optionStr.isBlank()) {
+            throw IllegalArgumentException(
+                "transformSync options parameter cannot be empty after serialization. " +
+                    "This may indicate a serialization error."
+            )
+        }
+        
+        // Call native transform function with:
+        // - codeStr: JSON string representation of the Program AST
+        // - true: isModule flag indicating the input is AST JSON, not source code
+        // - optionStr: JSON string representation of transform options
+        val res = transformSync(codeStr, true, optionStr)
+        
+        // Deserialize the result JSON string back to TransformOutput object
+        return outputJson.decodeFromString<TransformOutput>(res)  
+    }
     /**
      * Transform a JavaScript/TypeScript file synchronously.
      *
@@ -484,13 +532,16 @@ class SwcNative {
      *
      * @param program Code or program as JSON string
      * @param options Minify options as JSON string
+     * @param isJson If true, program is a JSON string representing `{ filename: code }` map.
+     *               If false, program is a single code string.
      * @return Minified code as JSON string
      * @throws RuntimeException if minification fails
      */
     @Throws(RuntimeException::class)
     external fun minifySync(
         program: String,
-        options: String
+        options: String,
+        isJson: Boolean
     ): String
 
     /**
@@ -526,11 +577,45 @@ class SwcNative {
         src: String,
         options: JsMinifyOptions = JsMinifyOptions()
     ): TransformOutput {
-        // Minify expects MinifyTarget::Single(String), so wrap in quotes
-        val codeStr = configJson.encodeToString(src)
         // Serialize JsMinifyOptions to JSON
         val oStr = configJson.encodeToString(options)
-        val res = minifySync(codeStr, oStr)
+        // isJson = false means src is a single code string, not JSON format
+        val res = minifySync(src, oStr, false)
+        return outputJson.decodeFromString<TransformOutput>(res)
+    }
+
+    /**
+     * Minify JavaScript/TypeScript code synchronously with JSON format input.
+     *
+     * This method accepts code in JSON format: `{ "filename": "code" }`.
+     * Useful when you need to specify a filename for the code being minified.
+     *
+     * @param codeMap Map of filename to code string (e.g., `{"app.js": "const x = 1;"}`)
+     * @param options Optional minify configuration (compress, mangle, etc.)
+     * @return Transform output containing the minified code
+     * @throws RuntimeException if minification fails
+     *
+     * @example
+     * ```kotlin
+     * val swc = SwcNative()
+     * val output = swc.minifySync(
+     *     codeMap = mapOf("app.js" to "function hello() { console.log('Hello'); }"),
+     *     options = JsMinifyOptions()
+     * )
+     * println(output.code) // Minified code
+     * ```
+     */
+    @Throws(RuntimeException::class)
+    fun minifySync(
+        codeMap: Map<String, String>,
+        options: JsMinifyOptions = JsMinifyOptions()
+    ): TransformOutput {
+        // Serialize codeMap to JSON string
+        val codeStr = configJson.encodeToString(codeMap)
+        // Serialize JsMinifyOptions to JSON
+        val oStr = configJson.encodeToString(options)
+        // isJson = true means codeStr is a JSON format string
+        val res = minifySync(codeStr, oStr, true)
         return outputJson.decodeFromString<TransformOutput>(res)
     }
 
@@ -683,6 +768,8 @@ class SwcNative {
      *
      * @param program Source code as JSON string (wrapped string, not AST)
      * @param options Minify options as JSON string (see [JsMinifyOptions])
+     * @param isJson If true, program is a JSON string representing `{ filename: code }` map.
+     *               If false, program is a single code string.
      * @param callback Callback interface to receive results
      * @see minifyAsync for Kotlin-friendly version with [JsMinifyOptions]
      * @see minifyAsync for coroutine-based suspend function version
@@ -690,6 +777,7 @@ class SwcNative {
     external fun minifyAsync(
         program: String,
         options: String,
+        isJson: Boolean,
         callback: SwcCallback
     )
 
@@ -1146,14 +1234,71 @@ class SwcNative {
         onError: (String) -> Unit
     ) {
         try {
-            // Minify expects MinifyTarget::Single(String), so wrap in quotes
-            val codeStr = configJson.encodeToString(src)
             // Serialize JsMinifyOptions to JSON
             val oStr = configJson.encodeToString(options)
+            // isJson = false means src is a single code string, not JSON format
+            minifyAsync(
+                src,
+                oStr,
+                false,
+                object : SwcCallback {
+                    override fun onSuccess(result: String) {
+                        try {
+                            val output = outputJson.decodeFromString<TransformOutput>(result)
+                            onSuccess(output)
+                        } catch (e: Exception) {
+                            onError("Failed to parse result: ${e.message}")
+                        }
+                    }
 
+                    override fun onError(error: String) {
+                        onError(error)
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            onError("Failed to serialize code: ${e.message}")
+        }
+    }
+
+    /**
+     * Kotlin-friendly async minify with JSON format input (lambda callbacks).
+     *
+     * This method minifies JavaScript/TypeScript code asynchronously using JSON format input.
+     * The code should be provided as a map of filename to code string.
+     *
+     * @param codeMap Map of filename to code string (e.g., `{"app.js": "const x = 1;"}`)
+     * @param options Minify configuration (compress, mangle, etc.)
+     * @param onSuccess Lambda called with [TransformOutput] containing minified code when successful
+     * @param onError Lambda called with error message string when minification fails
+     *
+     * @example Kotlin usage:
+     * ```kotlin
+     * val swc = SwcNative()
+     * swc.minifyAsync(
+     *     codeMap = mapOf("app.js" to "function hello() { console.log('Hello'); }"),
+     *     options = JsMinifyOptions(),
+     *     onSuccess = { output -> println(output.code) },
+     *     onError = { error -> println("Error: $error") }
+     * )
+     * ```
+     */
+    fun minifyAsync(
+        codeMap: Map<String, String>,
+        options: JsMinifyOptions = JsMinifyOptions(),
+        onSuccess: (TransformOutput) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        try {
+            // Serialize codeMap to JSON string
+            val codeStr = configJson.encodeToString(codeMap)
+            // Serialize JsMinifyOptions to JSON
+            val oStr = configJson.encodeToString(options)
+            // isJson = true means codeStr is a JSON format string
             minifyAsync(
                 codeStr,
                 oStr,
+                true,
                 object : SwcCallback {
                     override fun onSuccess(result: String) {
                         try {

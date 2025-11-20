@@ -21,9 +21,11 @@ import kotlin.OptIn
 @JsonClassDiscriminator("type")
 @SerialName("TsQualifiedName")
 @SwcDslMarker
-public class TsQualifiedName : Node, TsEntityName {
+public class TsQualifiedName : Node, HasSpan, TsEntityName {
     @EncodeDefault
     public var left: TsEntityName? = null
     @EncodeDefault
     public var right: Identifier? = null
+    @EncodeDefault
+    public override var span: Span = emptySpan()
 }

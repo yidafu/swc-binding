@@ -109,4 +109,22 @@ object NodeJsHelper {
     fun minifyCode(code: String, options: String): String {
         return executeScript("minify", code, options)
     }
+
+    /**
+     * Execute transform-ast mode: transform code then parse the transformed code to get AST JSON.
+     * This is used for E2E tests to compare transform results.
+     */
+    fun transformCodeToAstJson(code: String, options: String): String {
+        return executeScript("transform-ast", code, options)
+    }
+
+    /**
+     * Execute print mode: convert AST JSON to code using @swc/core print method.
+     * @param astJson AST JSON string
+     * @param options Print options as JSON string
+     * @return Generated code string
+     */
+    fun printCode(astJson: String, options: String): String {
+        return executeScript("print", astJson, options)
+    }
 }

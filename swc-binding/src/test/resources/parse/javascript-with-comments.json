@@ -1,0 +1,50 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 230,
+    "end": 243
+  },
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "span": {
+        "start": 230,
+        "end": 243
+      },
+      "ctxt": 0,
+      "kind": "const",
+      "declare": false,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "span": {
+            "start": 236,
+            "end": 242
+          },
+          "id": {
+            "type": "Identifier",
+            "span": {
+              "start": 236,
+              "end": 237
+            },
+            "ctxt": 2,
+            "value": "x",
+            "optional": false,
+            "typeAnnotation": null
+          },
+          "init": {
+            "type": "NumericLiteral",
+            "span": {
+              "start": 240,
+              "end": 242
+            },
+            "value": 42,
+            "raw": "42"
+          },
+          "definite": false
+        }
+      ]
+    }
+  ],
+  "interpreter": null
+}
