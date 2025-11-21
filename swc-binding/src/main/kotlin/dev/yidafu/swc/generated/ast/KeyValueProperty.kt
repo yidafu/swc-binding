@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.217858
+// Auto-generated file. Do not edit. Generated at: 2025-11-21T00:00:07.345723
 
 package dev.yidafu.swc.generated
 
@@ -24,6 +24,8 @@ import kotlin.OptIn
 public class KeyValueProperty : PropBase, Property {
     @EncodeDefault
     public var `value`: Expression? = null
+    @EncodeDefault
+    public var span: Span = emptySpan()
 
     public override var key: PropertyName? = null
 }

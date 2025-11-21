@@ -1,9 +1,9 @@
 package dev.yidafu.swc.e2e
 
 import dev.yidafu.swc.SwcNative
+import dev.yidafu.swc.SwcJson
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
-import dev.yidafu.swc.parseAstTree
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import java.io.InputStream
@@ -72,7 +72,7 @@ class AstJsonPrintE2ETest : ShouldSpec({
         val astJsonStr = readAstJson(resourceName)
 
         // 2. Parse AST JSON to Program object
-        val program = parseAstTree(astJsonStr)
+        val program = SwcJson.parseAstTree(astJsonStr)
 
         // 3. Use Kotlin SwcNative#printSync to print AST JSON to code
         val kotlinPrintedOutput = swcNative.printSync(program, printOptions)
@@ -167,6 +167,30 @@ class AstJsonPrintE2ETest : ShouldSpec({
                 }
             },
             testName = "JavaScript print with ES2020 target"
+        )
+    }
+
+    should("printSync module with imports") {
+        testPrint(
+            resourceName = "module-with-imports",
+            printOptions = options { },
+            testName = "Module with imports print"
+        )
+    }
+
+    should("printSync JavaScript with simple import") {
+        testPrint(
+            resourceName = "javascript-simple-import",
+            printOptions = options { },
+            testName = "JavaScript simple import print"
+        )
+    }
+
+    should("printSync compiled module code") {
+        testPrint(
+            resourceName = "javascript-compiled-module",
+            printOptions = options { },
+            testName = "JavaScript compiled module print"
         )
     }
 })

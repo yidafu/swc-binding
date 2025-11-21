@@ -1,0 +1,118 @@
+{
+  "type": "Module",
+  "span": {
+    "start": 648,
+    "end": 711
+  },
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "span": {
+        "start": 648,
+        "end": 681
+      },
+      "specifiers": [
+        {
+          "type": "ImportSpecifier",
+          "span": {
+            "start": 657,
+            "end": 660
+          },
+          "local": {
+            "type": "Identifier",
+            "span": {
+              "start": 657,
+              "end": 660
+            },
+            "ctxt": 2,
+            "value": "bar",
+            "optional": false
+          },
+          "imported": null,
+          "isTypeOnly": false
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "span": {
+          "start": 668,
+          "end": 680
+        },
+        "value": "./local.js",
+        "raw": "'./local.js'"
+      },
+      "typeOnly": false,
+      "with": null,
+      "phase": "evaluation"
+    },
+    {
+      "type": "ExpressionStatement",
+      "span": {
+        "start": 683,
+        "end": 711
+      },
+      "expression": {
+        "type": "CallExpression",
+        "span": {
+          "start": 683,
+          "end": 710
+        },
+        "ctxt": 0,
+        "callee": {
+          "type": "MemberExpression",
+          "span": {
+            "start": 683,
+            "end": 694
+          },
+          "object": {
+            "type": "Identifier",
+            "span": {
+              "start": 683,
+              "end": 690
+            },
+            "ctxt": 1,
+            "value": "console",
+            "optional": false
+          },
+          "property": {
+            "type": "Identifier",
+            "span": {
+              "start": 691,
+              "end": 694
+            },
+            "value": "log"
+          }
+        },
+        "arguments": [
+          {
+            "spread": null,
+            "expression": {
+              "type": "StringLiteral",
+              "span": {
+                "start": 695,
+                "end": 704
+              },
+              "value": "main.js",
+              "raw": "'main.js'"
+            }
+          },
+          {
+            "spread": null,
+            "expression": {
+              "type": "Identifier",
+              "span": {
+                "start": 706,
+                "end": 709
+              },
+              "ctxt": 2,
+              "value": "bar",
+              "optional": false
+            }
+          }
+        ],
+        "typeArguments": null
+      }
+    }
+  ],
+  "interpreter": null
+}

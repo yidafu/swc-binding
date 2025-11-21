@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.200042
+// Auto-generated file. Do not edit. Generated at: 2025-11-21T00:00:07.326611
 
 package dev.yidafu.swc.generated
 
@@ -26,4 +26,6 @@ public class SpreadElement : Node, JSXAttributeOrSpread {
     public var spread: Span? = null
     @EncodeDefault
     public var arguments: Expression? = null
+    @EncodeDefault
+    public var span: Span = emptySpan()
 }
