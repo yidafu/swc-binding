@@ -7,17 +7,17 @@ use jni::{
     JNIEnv,
 };
 use jni_fn::jni_fn;
-use swc::config::{ErrorFormat, ParseOptions};
-use swc_common::{comments::Comments, FileName, Mark};
-use swc_ecma_transforms_base::resolver;
+use swc_core::base::config::{ErrorFormat, ParseOptions};
+use swc_core::common::{comments::Comments, FileName, Mark};
+use swc_core::ecma::transforms::base::resolver;
 
-use swc_ecma_visit::VisitMutWith;
+use swc_core::ecma::visit::VisitMutWith;
 
 use crate::async_utils::callback_java;
 use crate::get_compiler;
 
 use crate::util::{deserialize_json, get_deserialized, process_result, try_with, MapErr, SwcResult};
-use swc_ecma_ast::Program;
+use swc_core::ecma::ast::Program;
 
 #[jni_fn("dev.yidafu.swc.SwcNative")]
 pub fn parseSync(
@@ -346,8 +346,10 @@ mod tests {
         assert!(result.is_ok(), "Parse should succeed: {:?}", result);
 
         let ast = result.unwrap();
+        println!("AST JSON: {}", ast);
         assert!(ast.contains("type"));
         assert!(ast.contains("Module") || ast.contains("Script"));
+        assert!(ast.contains("ctxt"), "AST should contain ctxt field");
     }
 
     #[test]

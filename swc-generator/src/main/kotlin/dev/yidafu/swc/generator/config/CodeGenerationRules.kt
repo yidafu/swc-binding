@@ -48,9 +48,13 @@ object CodeGenerationRules {
      * 注意：这里使用的是 Kotlin 类名
      */
     val classesRequiringSpanProperty: Set<String> = setOf(
-        "TsQualifiedName",
+        "SpreadElement",
+        "JSXMemberExpression",
         "JSXNamespacedName",
-        "JSXMemberExpression"
+        "KeyValuePatternProperty",
+        "AssignmentProperty",
+        "TsQualifiedName",
+        "KeyValueProperty",
     )
 
     // ==================== 特殊属性类型覆盖规则 ====================
@@ -448,17 +452,22 @@ object TypesImplementationRules {
         )
     }
 
-    fun implementationAnnotations(rule: InterfaceRule, interfaceDecl: KotlinDeclaration.ClassDecl? = null): List<KotlinDeclaration.Annotation> {
+    fun implementationAnnotations(
+        rule: InterfaceRule,
+        interfaceDecl: KotlinDeclaration.ClassDecl? = null
+    ): List<KotlinDeclaration.Annotation> {
         // 尝试从接口的 type 属性中提取字面量值（如果属性有默认值）
-        val typeFieldLiteralValueFromProperty = interfaceDecl?.properties?.find { it.name.removeSurrounding("`") == "type" }?.defaultValue?.let { defaultValue ->
-            when (defaultValue) {
-                is Expression.StringLiteral -> defaultValue.value
-                else -> null
+        val typeFieldLiteralValueFromProperty =
+            interfaceDecl?.properties?.find { it.name.removeSurrounding("`") == "type" }?.defaultValue?.let { defaultValue ->
+                when (defaultValue) {
+                    is Expression.StringLiteral -> defaultValue.value
+                    else -> null
+                }
             }
-        }
 
         // 如果没有从属性中获取到，尝试从全局映射表中获取（接口属性没有默认值，但字面量值已存储在映射表中）
-        val typeFieldLiteralValue = typeFieldLiteralValueFromProperty ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
+        val typeFieldLiteralValue =
+            typeFieldLiteralValueFromProperty ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
 
         // 特殊处理：检测已知的 @SerialName 冲突
         // 1. BindingIdentifier 和 Identifier 有相同的 type 值 "Identifier"
@@ -552,8 +561,10 @@ object TypesImplementationRules {
         val defaultValue = when {
             // 如果是 type 属性，优先使用从 TypeScript 提取的字面量值，否则使用接口名称
             // 如果属性没有默认值（接口属性被清除了），尝试从全局映射表中获取
-            isTypeProperty -> prop.defaultValue ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)?.let { literalValue -> Expression.StringLiteral(literalValue) }
-                ?: Expression.StringLiteral(rule.interfaceCleanName)
+            isTypeProperty -> prop.defaultValue ?: CodeGenerationRules.getTypeFieldLiteralValue(rule.interfaceCleanName)
+                ?.let { literalValue -> Expression.StringLiteral(literalValue) }
+            ?: Expression.StringLiteral(rule.interfaceCleanName)
+
             isSyntaxProperty -> Expression.StringLiteral(rule.syntaxLiteral!!)
             // 对于 span 属性，使用 emptySpan() 函数调用，确保包含 ctxt 字段
             isSpanProperty -> Expression.FunctionCall("emptySpan")

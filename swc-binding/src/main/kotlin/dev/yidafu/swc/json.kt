@@ -1,12 +1,21 @@
 package dev.yidafu.swc
 
+import dev.yidafu.swc.generated.Node
 import dev.yidafu.swc.generated.Program
 import dev.yidafu.swc.generated.TruePlusMinus
+import dev.yidafu.swc.generated.dsl.module
 import dev.yidafu.swc.generated.swcConfigSerializersModule
 import dev.yidafu.swc.generated.swcSerializersModule
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlin.jvm.JvmStatic
@@ -73,7 +82,7 @@ private val extendedSwcConfigSerializersModule: SerializersModule = SerializersM
  *
  * **Usage:**
  * This instance is primarily used internally. For parsing JSON strings manually, use
- * [parseAstTree] or [SwcJson.parseAstTree] instead.
+ * [SwcJson.parseAstTree] instead.
  *
  * @example Internal usage:
  * ```kotlin
@@ -82,11 +91,11 @@ private val extendedSwcConfigSerializersModule: SerializersModule = SerializersM
  * val deserialized = astJson.decodeFromString<Program>(json) // Convert JSON back to AST
  * ```
  *
- * @see parseAstTree for public API to parse JSON strings
- * @see SwcJson.parseAstTree for Java-friendly static method
+ * @see SwcJson.parseAstTree for public API to parse JSON strings
+ * @hide
  */
 @OptIn(ExperimentalSerializationApi::class)
-internal val astJson = Json {
+val astJson = Json {
     // 需要 classDiscriminator 配置，与 @JsonClassDiscriminator("type") 配合使用
     // @JsonClassDiscriminator 指定使用 type 属性作为 discriminator
     // classDiscriminator 指定 JSON 中的字段名为 "type"
@@ -177,6 +186,7 @@ internal val outputJson = Json {
     encodeDefaults = false
 }
 
+
 /**
  * Utility object for JSON parsing operations.
  *
@@ -194,7 +204,7 @@ object SwcJson {
      *
      * @example Java usage:
      * ```java
-     * String json = "{\"type\":\"Module\",\"body\":[],\"span\":{\"start\":0,\"end\":0,\"ctxt\":0}}";
+     * String json = "{\"type\":\"Module\",\"body\":[],\"span\":{\"start\":0,\"end\":0}}";
      * Program program = SwcJson.parseAstTree(json);
      * ```
      */
@@ -202,26 +212,77 @@ object SwcJson {
     fun parseAstTree(jsonStr: String): Program {
         return astJson.decodeFromString<Program>(jsonStr)
     }
-}
-
-/**
- * Parse a JSON string into a Program AST node.
- *
- * This is a convenience function that uses [astJson] to deserialize
- * a JSON string representation of an AST into a [Program] object.
- *
- * This is a Kotlin extension function. For Java, use [SwcJson.parseAstTree] instead.
- *
- * @param jsonStr JSON string representation of the AST
- * @return Parsed Program AST node
- * @throws SerializationException if the JSON is invalid or doesn't match the AST structure
- *
- * @example
- * ```kotlin
- * val json = """{"type":"Module","body":[],"span":{"start":0,"end":0,"ctxt":0}}"""
- * val program = parseAstTree(json)
- * ```
- */
-fun parseAstTree(jsonStr: String): Program {
-    return SwcJson.parseAstTree(jsonStr)
+    
+    /**
+     * Fix missing `ctxt` fields in span objects and Node subclasses within JsonElement.
+     * 
+     * This function addresses the issue where Rust's serde skips serializing default values (ctxt = 0),
+     * which causes deserialization failures in polymorphic scenarios where `coerceInputValues` doesn't work.
+     * 
+     * The function recursively traverses the JsonElement tree and:
+     * 1. Finds all span objects that have "start" and "end" fields but are missing the "ctxt" field
+     * 2. Finds all Node subclasses (objects with "type" and "span" fields) that are missing the "ctxt" field
+     * 
+     * @param element The JsonElement to fix
+     * @return The fixed JsonElement with all span objects and Node subclasses containing the ctxt field
+     */
+    internal fun fixMissingCtxtFieldsInJsonElement(element: JsonElement): JsonElement {
+        return when (element) {
+            is JsonObject -> {
+                val fixedEntries = element.entries.map { (key, value) ->
+                    if (key == "span" && value is JsonObject) {
+                        // This is a span object, check if it needs fixing
+                        val spanObj = value
+                        val hasStart = spanObj.containsKey("start")
+                        val hasEnd = spanObj.containsKey("end")
+                        val hasCtxt = spanObj.containsKey("ctxt")
+                        
+                        if (hasStart && hasEnd && !hasCtxt) {
+                            // Add ctxt field with value 0
+                            key to buildJsonObject {
+                                spanObj.forEach { (k, v) ->
+                                    put(k, v)
+                                }
+                                put("ctxt", kotlinx.serialization.json.JsonPrimitive(0))
+                            }
+                        } else {
+                            // Recursively fix nested elements
+                            key to fixMissingCtxtFieldsInJsonElement(value)
+                        }
+                    } else {
+                        // Recursively fix nested elements first
+                        key to fixMissingCtxtFieldsInJsonElement(value)
+                    }
+                }
+                
+                // After fixing nested elements, check if this object itself is a Node subclass
+                // that needs ctxt field (has "type" and "span" but no "ctxt")
+                val hasType = element.containsKey("type")
+                val hasSpan = element.containsKey("span")
+                val hasCtxt = element.containsKey("ctxt")
+                
+                if (hasType && hasSpan && !hasCtxt) {
+                    // This is a Node subclass missing ctxt, add it
+                    buildJsonObject {
+                        fixedEntries.forEach { (k, v) ->
+                            put(k, v)
+                        }
+                        put("ctxt", kotlinx.serialization.json.JsonPrimitive(0))
+                    }
+                } else {
+                    JsonObject(fixedEntries.toMap())
+                }
+            }
+            is JsonArray -> {
+                JsonArray(
+                    element.map { fixMissingCtxtFieldsInJsonElement(it) }
+                )
+            }
+            else -> element
+        }
+    }
+    
+     inline fun <reified T : Node> astTreeToString(program: T) : String {
+        return astJson.encodeToString(program)
+    }
 }

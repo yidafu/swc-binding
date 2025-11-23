@@ -1,4 +1,4 @@
-// Auto-generated file. Do not edit. Generated at: 2025-11-20T00:07:52.218138
+// Auto-generated file. Do not edit. Generated at: 2025-11-21T00:00:07.345504
 
 package dev.yidafu.swc.generated
 
@@ -26,4 +26,6 @@ public class AssignmentProperty : Node, Property {
     public var key: Identifier? = null
     @EncodeDefault
     public var `value`: Expression? = null
+    @EncodeDefault
+    public var span: Span = emptySpan()
 }

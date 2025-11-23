@@ -387,12 +387,13 @@ class SwcNativeTransformTest : ShouldSpec({
             options {
                 jsc = jscConfig {
                     parser = esParseOptions {
+                        target = JscTarget.ES2020
                         jsx = true
                     }
+                    target = JscTarget.ES2020
+                    
                     transform = transformConfig {
-                        react = reactConfig {
-                            runtime = "automatic"
-                        }
+                       target = JscTarget.ES2020
                     }
                 }
             }

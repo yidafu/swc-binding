@@ -148,6 +148,65 @@ const Component: React.FC<Props> = ({ name }) => {
             jsx: true
         },
         printOptions: {}
+    },
+    // Module with simple import
+    {
+        name: 'javascript-simple-import',
+        code: `import { bar } from './local.js';
+
+console.log('main.js', bar);`,
+        parseOptions: {
+            syntax: 'ecmascript',
+            target: 'es5',
+            isModule: true,
+            comments: false,
+            script: false
+        },
+        printOptions: {}
+    },
+    // Module with imports (complex scenario)
+    {
+        name: 'module-with-imports',
+        code: `import { bar } from './local.js';
+
+console.log('main.js', bar);`,
+        parseOptions: {
+            syntax: 'ecmascript',
+            target: 'es5',
+            isModule: true,
+            comments: false,
+            script: false
+        },
+        printOptions: {}
+    },
+    // Compiled module code with bundler output
+    {
+        name: 'javascript-compiled-module',
+        code: `const global_Li9sb2NhbC5qcw = (function (exports = {}) {
+  const inline_Li9sb2NhbC0yLmpz = global_Li9sb2NhbC0yLmpz;
+  const bar = inline_Li9sb2NhbC0yLmpz.bar;
+  console.log('local.js', bar);
+  const foo = "foo";
+  exports.bar = bar;
+  exports.foo = foo;
+  return exports;
+})();
+const global_Li9sb2NhbC0yLmpz = (function (exports = {}) {
+  const bar = "bar";
+  exports.bar = bar;
+  return exports;
+})();
+const inline_Li9sb2NhbC5qcw = global_Li9sb2NhbC5qcw;
+const bar = inline_Li9sb2NhbC5qcw.bar;
+console.log('main.js', bar);`,
+        parseOptions: {
+            syntax: 'ecmascript',
+            target: 'es5',
+            isModule: true,
+            comments: false,
+            script: false
+        },
+        printOptions: {}
     }
 ];
 

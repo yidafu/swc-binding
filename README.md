@@ -28,16 +28,16 @@
       - [Available Async Methods](#available-async-methods)
       - [Threading Model](#threading-model)
   - [API](#api)
-    - [parseSync](#parsesync)
-    - [parseFileSync](#parsefilesync)
-    - [transformSync](#transformsync)
-    - [transformFileSync](#transformfilesync)
-    - [printSync](#printsync)
-    - [minifySync](#minifysync)
+  - [Development](#development)
+    - [Building](#building)
+    - [Testing](#testing)
+    - [Publishing](#publishing)
   - [AST DSL](#ast-dsl)
     - [Build AST segment](#build-ast-segment)
     - [Boolean | T options](#boolean--t-options)
   - [Article](#article)
+  - [Known Issues](#known-issues)
+    - [externalHelpers Configuration](#externalhelpers-configuration)
   - [License](#license)
 
 ## Installation
@@ -55,7 +55,8 @@ implementation("dev.yidafu.swc:swc-binding:0.7.0")
 
 ## Documentation
 
-[SWC Binding - Kotlin Doc](https://yidafu.github.io/swc-binding/docs/)
+- [API Documentation - Kotlin Doc](https://yidafu.github.io/swc-binding/docs/)
+- [Project Wiki - Complete Guide](docs/wiki.md) - Auto-generated from repo wiki, includes architecture, usage guides, and detailed explanations
 
 ## Quick Start
 
@@ -307,6 +308,91 @@ Native method
 fun minifySync(program: String, options: String): String
 ```
 
+## Development
+
+### Building
+
+To build the entire project:
+
+```bash
+./gradlew build
+```
+
+### Testing
+
+Run all tests:
+
+```bash
+./gradlew test
+```
+
+Run tests for a specific module:
+
+```bash
+./gradlew :swc-binding:test
+```
+
+### Publishing
+
+This project uses the NMCP (New Maven Central Publisher) plugin for publishing to Maven Central.
+
+#### Prerequisites
+
+1. **Maven Central Account**: Create an account at [Maven Central Portal](https://central.sonatype.com/)
+2. **Namespace Verification**: Verify your namespace (`dev.yidafu.swc`) in the portal
+3. **GPG Key**: Set up a GPG key for signing artifacts
+
+#### Configuration
+
+Create a `local.properties` file in the project root:
+
+```properties
+# Maven Central Portal credentials
+centralUsername=your-portal-username
+centralPassword=your-portal-password
+
+# GPG signing credentials
+signing.key=your-gpg-private-key
+signing.password=your-gpg-password
+```
+
+Or use environment variables:
+
+```bash
+export CENTRAL_USERNAME=your-portal-username
+export CENTRAL_PASSWORD=your-portal-password
+export SIGNING_KEY=your-gpg-private-key
+export SIGNING_PASSWORD=your-gpg-password
+```
+
+#### Publishing to Maven Central
+
+To publish to Maven Central Portal:
+
+```bash
+./gradlew :swc-binding:publishSonatypePublicationToCentralPortal
+```
+
+Or publish all publications:
+
+```bash
+./gradlew :swc-binding:publishAllPublicationsToCentralPortal
+```
+
+#### Publishing to Local Repository
+
+For testing, you can publish to your local Maven repository:
+
+```bash
+./gradlew :swc-binding:publishToMavenLocal
+```
+
+#### Important Notes
+
+- **Version Requirements**: Central Portal does NOT support SNAPSHOT versions. Only release versions are allowed
+- **Publication Type**: Currently configured as `USER_MANAGED`, which requires manual approval in the Central Portal UI
+- **Namespace**: Make sure your namespace (`dev.yidafu.swc`) is verified in the Central Portal before publishing
+
 ## AST DSL
 
 ```js
@@ -412,6 +498,25 @@ options {
 ## Article
 
 [How to implement SWC JVM binding -- English translation](docs/how-to-implement-swc-jvm-binding.md) -- [中文原文](docs/how-to-implement-swc-jvm-binding.zh-CN.md)
+
+## Known Issues
+
+### externalHelpers Configuration
+
+When using `externalHelpers = false`, SWC should inline helper functions directly into the output code instead of importing them from `@swc/helpers`. However, the current Rust implementation of SWC used in this project does not respect this configuration correctly.
+
+**Current Behavior:**
+- With `externalHelpers = false`: SWC still generates imports from `@swc/helpers`
+- With `externalHelpers = true`: SWC generates imports from `@swc/helpers`
+
+**Expected Behavior:**
+- With `externalHelpers = false`: SWC should inline helper functions (no imports from `@swc/helpers`)
+- With `externalHelpers = true`: SWC should generate imports from `@swc/helpers`
+
+This is a known difference between the Rust and Node.js versions of SWC. The configuration is correctly parsed and passed to SWC, but the Rust implementation does not inline helpers even when `external_helpers` is set to `false`.
+
+**Workaround:**
+For now, tests have been updated to match the actual Rust behavior rather than the expected behavior. This issue may be addressed in a future update when the Rust implementation is fixed or when a workaround is identified.
 
 ## License
 

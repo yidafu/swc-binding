@@ -19,6 +19,7 @@ import org.gradle.plugin.use.PluginDependency
 import org.gradle.plugins.signing.SigningExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URI
+import java.util.Properties
 
 fun Project.getLibPlugin(name: String): PluginDependency {
     val catalogs = extensions.getByType<VersionCatalogsExtension>()
@@ -46,7 +47,8 @@ class LibraryPlugin : Plugin<Project> {
                 "dokka",
                 "signing",
                 "mavenPublish",
-                "ktlint"
+                "ktlint",
+                "nmcp"
             )
                 .map { project.getLibPlugin(it) }
                 .forEach {
@@ -56,98 +58,5 @@ class LibraryPlugin : Plugin<Project> {
         project.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
             disabledRules.set(setOf("final-newline", "no-wildcard-imports", "filename"))
         }
-        project.extensions.create("publishMan", PublishManExtension::class)
-
-        val dokkaJavadoc = project.tasks.findByName("dokkaJavadoc") as DokkaTask
-        val dokkaJavadocJar = project.tasks.register<Jar>("dokkaJavadocJar") {
-            dependsOn(dokkaJavadoc.path)
-            from(dokkaJavadoc.outputDirectory)
-            archiveClassifier.set("javadoc")
-        }
-        val kotlinSourcesJar = project.tasks.findByName("kotlinSourcesJar") as Jar
-
-        val publishing = project.extensions.getByType<PublishingExtension>()
-        publishing.repositories {
-            maven {
-                url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                // 这里就是之前在issues.sonatype.org注册的账号
-                credentials {
-                    username = if (project.hasProperty("sonatypeUsername")) {
-                        project.property("sonatypeUsername") as String
-                    } else {
-                        "placeholder"
-                    }
-                    password = if (project.hasProperty("sonatypePassword")) {
-                        project.property("sonatypePassword") as String
-                    } else {
-                        "placeholder"
-                    }
-                }
-            }
-        }
-
-        publishing.publications {
-            create<MavenPublication>(PUBLICATION_NAME) {
-                pom {
-//                    artifactId = "jupyter-js"
-                    from(project.components["java"])
-                    artifact(kotlinSourcesJar)
-                    artifact(dokkaJavadocJar)
-
-                    versionMapping {
-                        usage("java-api") {
-                            fromResolutionOf("runtimeClasspath")
-                        }
-                        usage("java-runtime") {
-                            fromResolutionResult()
-                        }
-                    }
-
-                    url.set("https://github.com/yidafu/kotlin-jupyter-js/")
-//                properties.set(mapOf(
-//                    "myProp" to "value",
-//                    "prop.with.dots" to "anotherValue"
-//                ))
-
-                    licenses {
-                        license {
-                            name.set("The MIT License")
-                            url.set("https://opensource.org/licenses/MIT")
-                        }
-                    }
-                    developers {
-                        developer {
-                            id.set("dovyih")
-                            name.set("Dov Yih")
-                            email.set("me@yidafu.dev")
-                        }
-                    }
-                    scm {
-                        connection.set("scm:git:git://github.com:yidafu/kotlin-jupyter-js.git")
-                        developerConnection.set("scm:git:ssh://github.com:yidafu/kotlin-jupyter-js.git")
-                        url.set("https://github.com:yidafu/kotlin-jupyter-js/")
-                    }
-                }
-//                pom.withXml {
-//                    val configurationNames = arrayOf("implementation", "api")
-//                    val deps = configurationNames.map { configurationName ->
-//                        project.configurations[configurationName].allDependencies.toList()
-//                    }.flatten()
-//                    if (deps.isNotEmpty()) {
-//                        val dependenciesNode = asNode().appendNode("dependencies")
-//                        deps.forEach {
-//                            if (it.group != null) {
-//                                val dependencyNode = dependenciesNode.appendNode("dependency")
-//                                dependencyNode.appendNode("groupId", it.group)
-//                                dependencyNode.appendNode("artifactId", it.name)
-//                                dependencyNode.appendNode("version", it.version)
-//                            }
-//                        }
-//                    }
-//                }
-            }
-        }
-
-        // Signing configuration can be added later if needed
     }
 }

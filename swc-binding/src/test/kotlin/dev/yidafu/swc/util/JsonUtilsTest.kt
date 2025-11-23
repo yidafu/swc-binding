@@ -1,9 +1,9 @@
 package dev.yidafu.swc.util
 
 import dev.yidafu.swc.SwcNative
+import dev.yidafu.swc.SwcJson
 import dev.yidafu.swc.astJson
 import dev.yidafu.swc.configJson
-import dev.yidafu.swc.parseAstTree
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.*
 import io.kotest.assertions.throwables.shouldThrow
@@ -48,7 +48,7 @@ class JsonUtilsTest : ShouldSpec({
         println("Total 'span' occurrences: $spanCount")
         println("Total 'ctxt' occurrences: $ctxtCount")
 
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
 
         assertNotNull(program)
         program.shouldBeInstanceOf<Module>()
@@ -67,7 +67,7 @@ class JsonUtilsTest : ShouldSpec({
             "test.js"
         )
 
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
 
         assertNotNull(program)
         program.shouldBeInstanceOf<Module>()
@@ -90,7 +90,7 @@ class JsonUtilsTest : ShouldSpec({
             "test.ts"
         )
 
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
 
         assertNotNull(program)
         program.shouldBeInstanceOf<Module>()
@@ -108,7 +108,7 @@ class JsonUtilsTest : ShouldSpec({
             "test.js"
         )
 
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
 
         assertNotNull(program)
         // Could be Module or Script depending on configuration
@@ -119,13 +119,13 @@ class JsonUtilsTest : ShouldSpec({
         val invalidJson = "{ invalid json }"
 
         shouldThrow<Exception> {
-            parseAstTree(invalidJson)
+            SwcJson.parseAstTree(invalidJson)
         }
     }
 
     should("parseAstTree error handling with empty string") {
         shouldThrow<Exception> {
-            parseAstTree("")
+            SwcJson.parseAstTree("")
         }
     }
 
@@ -133,7 +133,7 @@ class JsonUtilsTest : ShouldSpec({
         val malformedJson = """{"type":"Module","span":{""" // Incomplete JSON
 
         shouldThrow<Exception> {
-            parseAstTree(malformedJson)
+            SwcJson.parseAstTree(malformedJson)
         }
     }
 
@@ -142,7 +142,7 @@ class JsonUtilsTest : ShouldSpec({
 
         // This might throw or return null depending on implementation
         try {
-            val result = parseAstTree(wrongTypeJson)
+            val result = SwcJson.parseAstTree(wrongTypeJson)
             // If it doesn't throw, result might be null or invalid
         } catch (e: Exception) {
             // Expected behavior for invalid type
@@ -252,9 +252,9 @@ class JsonUtilsTest : ShouldSpec({
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(originalCode, optStr, "test.js")
 
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
         val serialized = astJson.encodeToString<Program>(program)
-        val deserialized = parseAstTree(serialized)
+        val deserialized = SwcJson.parseAstTree(serialized)
 
         assertNotNull(deserialized)
         deserialized.shouldBeInstanceOf<Module>()
@@ -270,7 +270,7 @@ class JsonUtilsTest : ShouldSpec({
 
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(code, optStr, "test.js")
-        val program = parseAstTree(jsonStr) as Module
+        val program = SwcJson.parseAstTree(jsonStr) as Module
 
         assertNotNull(program.body)
         assertTrue(program.body!!.size >= 2)
@@ -281,7 +281,7 @@ class JsonUtilsTest : ShouldSpec({
     should("parseAstTree with empty Module") {
         val emptyModuleJson = """{"type":"Module","span":{"start":0,"end":0,"ctxt":0},"body":[],"interpreter":null}"""
 
-        val program = parseAstTree(emptyModuleJson)
+        val program = SwcJson.parseAstTree(emptyModuleJson)
 
         assertNotNull(program)
         program.shouldBeInstanceOf<Module>()
@@ -299,7 +299,7 @@ class JsonUtilsTest : ShouldSpec({
 
         val optStr = configJson.encodeToString<ParserConfig>(esParseOptions { })
         val jsonStr = swc.parseSync(largeCode, optStr, "large.js")
-        val program = parseAstTree(jsonStr)
+        val program = SwcJson.parseAstTree(jsonStr)
 
         assertNotNull(program)
         program.shouldBeInstanceOf<Module>()

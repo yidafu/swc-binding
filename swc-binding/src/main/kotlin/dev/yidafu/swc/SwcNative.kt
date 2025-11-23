@@ -2,6 +2,8 @@ package dev.yidafu.swc
 
 import dev.yidafu.swc.generated.* // ktlint-disable no-wildcard-imports
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -161,7 +163,7 @@ class SwcNative {
         val optStr = configJson.encodeToString<ParserConfig>(options)
         val output = parseSync(code, optStr, filename)
 //        println("parseSync ==> $output")
-        return parseAstTree(output)
+        return SwcJson.parseAstTree(output)
     }
 
     /**
@@ -201,7 +203,7 @@ class SwcNative {
     ): Program {
         val optStr = configJson.encodeToString<ParserConfig>(options)
         val output = parseFileSync(filepath, optStr)
-        return parseAstTree(output)
+        return SwcJson.parseAstTree(output)
     }
 
 //    fun parseFileSync(
@@ -509,7 +511,14 @@ class SwcNative {
         program: Program,
         options: Options
     ): TransformOutput {
-        val pStr = astJson.encodeToString<Program>(program)
+        // Serialize Program to JSON string
+        val pStrJson = astJson.encodeToString<Program>(program)
+        // Parse to JsonElement and fix missing ctxt fields
+        val jsonElement = Json.parseToJsonElement(pStrJson)
+        val fixedJsonElement = SwcJson.fixMissingCtxtFieldsInJsonElement(jsonElement)
+        // Serialize back to JSON string (use Json.default to avoid serializer issues)
+        val pStr = Json.encodeToString(JsonElement.serializer(), fixedJsonElement)
+        
         val oStr = configJson.encodeToString(options)
 
         // Validate that options JSON is not empty
@@ -840,7 +849,7 @@ class SwcNative {
             object : SwcCallback {
                 override fun onSuccess(result: String) {
                     try {
-                        val ast = parseAstTree(result)
+                        val ast = SwcJson.parseAstTree(result)
                         onSuccess(ast)
                     } catch (e: Exception) {
                         onError("Failed to parse result: ${e.message}")
@@ -908,7 +917,7 @@ class SwcNative {
             object : SwcCallback {
                 override fun onSuccess(result: String) {
                     try {
-                        val ast = parseAstTree(result)
+                        val ast = SwcJson.parseAstTree(result)
                         onSuccess(ast)
                     } catch (e: Exception) {
                         onError("Failed to parse result: ${e.message}")
@@ -1144,7 +1153,14 @@ class SwcNative {
         onError: (String) -> Unit
     ) {
         try {
-            val pStr = astJson.encodeToString<Program>(program)
+            // Serialize Program to JSON string
+            val pStrJson = astJson.encodeToString<Program>(program)
+            // Parse to JsonElement and fix missing ctxt fields
+            val jsonElement = Json.parseToJsonElement(pStrJson)
+            val fixedJsonElement = SwcJson.fixMissingCtxtFieldsInJsonElement(jsonElement)
+            // Serialize back to JSON string (use Json.default to avoid serializer issues)
+            val pStr = Json.encodeToString(JsonElement.serializer(), fixedJsonElement)
+            
             val oStr = configJson.encodeToString(options)
 
             // Validate that options JSON is not empty
