@@ -4,9 +4,10 @@ use std::{
     any::type_name,
     panic::{catch_unwind, AssertUnwindSafe},
 };
-use swc::{config::ErrorFormat, try_with_handler, HandlerOpts, TransformOutput};
-use swc_common::{errors::Handler, sync::Lrc, SourceMap, GLOBALS};
-use swc_ecma_ast::Program;
+use swc_core::base::config::ErrorFormat;
+use swc_core::base::{try_with_handler, HandlerOpts, TransformOutput};
+use swc_core::common::{errors::Handler, sync::Lrc, SourceMap, GLOBALS};
+use swc_core::ecma::ast::Program;
 use thiserror::Error;
 
 use anyhow::{anyhow, Error};

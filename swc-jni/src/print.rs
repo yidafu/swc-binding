@@ -6,11 +6,11 @@ use jni::sys::jstring;
 use jni::JNIEnv;
 use jni_fn::jni_fn;
 
-use swc::config::{Options, SourceMapsConfig};
-use swc::{PrintArgs, TransformOutput};
-use swc_common::GLOBALS;
-use swc_ecma_ast::Program;
-use swc_ecma_codegen::Config as CodegenConfig;
+use swc_core::base::config::{Options, SourceMapsConfig};
+use swc_core::base::{PrintArgs, TransformOutput};
+use swc_core::common::GLOBALS;
+use swc_core::ecma::ast::Program;
+use swc_core::ecma::codegen::Config as CodegenConfig;
 
 use anyhow::Context;
 use crate::async_utils::callback_java;

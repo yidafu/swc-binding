@@ -9,15 +9,15 @@ use jni_fn::jni_fn;
 use serde_json;
 
 use std::collections::HashMap as AHashMap;
-use swc::config::ErrorFormat;
-use swc_common::{sync::Lrc, FileName, SourceFile, SourceMap};
+use swc_core::base::config::ErrorFormat;
+use swc_core::common::{sync::Lrc, FileName, SourceFile, SourceMap};
 
 use crate::async_utils::callback_java;
 #[allow(unused_imports)]
 use crate::{get_compiler, get_fresh_compiler, util::process_output};
 
 use crate::util::{get_deserialized, try_with, MapErr, SwcResult};
-use swc::TransformOutput;
+use swc_core::base::TransformOutput;
 
 enum MinifyTarget {
     /// Code to minify.

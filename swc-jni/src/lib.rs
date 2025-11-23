@@ -7,8 +7,8 @@ mod util;
 
 use std::sync::Arc;
 
-use swc::Compiler;
-use swc_common::{sync::Lazy, FilePathMapping, SourceMap};
+use swc_core::base::Compiler;
+use swc_core::common::{sync::Lazy, FilePathMapping, SourceMap};
 
 static COMPILER: Lazy<Arc<Compiler>> = Lazy::new(|| {
     let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));

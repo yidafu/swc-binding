@@ -10,14 +10,17 @@ homepage = "https://github.com/yidafu/swc-binding"
 documentation = "https://github.com/yidafu/swc-binding"
 repository = "https://github.com/yidafu/swc-binding"
 readme = "README.md"
+exclude = ["target/", "*.log"]
 
 [features]
-# default = ["serde-impl"]
-# plugin = [
-#   "swc_core/plugin_transform_host_native",
-#   "swc_core/plugin_transform_host_native_filesystem_cache",
-# ]
-# swc_v1 = ["swc_core/bundler_node_v1"]
+default = ["swc_v1", "plugin"]
+plugin = [
+  "swc_core/plugin_backend_wasmer",
+  "swc_core/plugin_transform_host_native",
+  "swc_core/plugin_transform_host_native_filesystem_cache",
+]
+swc_v1 = ["swc_core/bundler_node_v1"]
+swc_v2 = ["swc_core/bundler_node_v2"]
 
 [dependencies]
 anyhow = "1.0.100"
@@ -26,15 +29,31 @@ jni_fn = "0.1.2"
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = { version = "1.0.115", features = ["unbounded_depth"] }
 serde_json_path_to_error = "0.1.1"
-swc = "43.0.0"
-swc_common = "15.0.0"
-swc_ecma_ast = { version = "16.0.0", features = ["serde-impl"] }
-swc_ecma_transforms = "36.0.0"
-swc_ecma_transforms_base = "28.0.0"
-swc_ecma_visit = "16.0.0"
-tracing = "0.1.41"
-swc_ecma_codegen = "18.0.0"
+tracing = { version = "0.1.41", features = ["release_max_level_info"] }
+tracing-chrome = "0.7"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+backtrace = "0.3"
+path-clean = "1.0"
+rustc-hash = "2.1.1"
+par-core = { version = "2.0.0", features = ["chili"] }
 thiserror = "2.0.17"
+
+# Use swc_core instead of individual swc packages
+swc_core = { version = "48.0.4", features = [
+  "allocator_node",
+  "ecma_ast",
+  "ecma_minifier",
+  "ecma_codegen",
+  "ecma_ast_serde",
+  "common_concurrent",
+  "bundler",
+  "ecma_loader",
+  "ecma_helpers_inline",
+  "ecma_transforms",
+  "ecma_visit",
+  "base_node",
+  "base_concurrent",
+] }
 
 [dev-dependencies]
 tempfile = "3.23.0"
