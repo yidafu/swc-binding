@@ -84,7 +84,7 @@ publishing {
             pom {
                 name.set("swc-binding")
                 description.set(
-                    "Swc Jvm Bdinding",
+                    "SWC (Speedy Web Compiler) JVM bindings for high-performance TypeScript/JavaScript compilation",
                 )
                 url.set("https://github.com/yidafu/swc-binding")
 

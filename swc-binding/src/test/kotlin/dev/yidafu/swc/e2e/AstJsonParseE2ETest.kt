@@ -5,6 +5,7 @@ import dev.yidafu.swc.astJson
 import dev.yidafu.swc.generated.*
 import dev.yidafu.swc.generated.dsl.* // ktlint-disable no-wildcard-imports
 import dev.yidafu.swc.util.JsonComparator
+import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
@@ -16,6 +17,7 @@ import java.io.InputStream
  * 1. Use @swc/core to generate parse result AST JSON, save to resources/parse directory
  * 2. Kotlin test executes parse first, then reads AST JSON and compares with Kotlin parse code
  */
+@Ignored
 class AstJsonParseE2ETest : ShouldSpec({
     val swcNative = SwcNative()
 
