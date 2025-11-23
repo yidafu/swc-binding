@@ -46,3 +46,20 @@ ktlint {
         }
     }
 }
+
+// NMCP Plugin Configuration - credentials loaded by LibraryPlugin
+afterEvaluate {
+    nmcp {
+        publishAllPublications {
+            if (project.extensions.extraProperties.has("nmcp.username")) {
+                username.set(project.extensions.extraProperties.get("nmcp.username") as String?)
+            }
+            if (project.extensions.extraProperties.has("nmcp.password")) {
+                password.set(project.extensions.extraProperties.get("nmcp.password") as String?)
+            }
+            if (project.extensions.extraProperties.has("nmcp.publicationType")) {
+                publicationType.set(project.extensions.extraProperties.get("nmcp.publicationType") as String)
+            }
+        }
+    }
+}

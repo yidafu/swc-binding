@@ -19,6 +19,7 @@ import org.gradle.plugin.use.PluginDependency
 import org.gradle.plugins.signing.SigningExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URI
+import java.util.Properties
 
 fun Project.getLibPlugin(name: String): PluginDependency {
     val catalogs = extensions.getByType<VersionCatalogsExtension>()
@@ -46,7 +47,8 @@ class LibraryPlugin : Plugin<Project> {
                 "dokka",
                 "signing",
                 "mavenPublish",
-                "ktlint"
+                "ktlint",
+                "nmcp"
             )
                 .map { project.getLibPlugin(it) }
                 .forEach {
@@ -58,6 +60,13 @@ class LibraryPlugin : Plugin<Project> {
         }
         project.extensions.create("publishMan", PublishManExtension::class)
 
+        // Load local.properties
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        val localProperties = Properties()
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+
         val dokkaJavadoc = project.tasks.findByName("dokkaJavadoc") as DokkaTask
         val dokkaJavadocJar = project.tasks.register<Jar>("dokkaJavadocJar") {
             dependsOn(dokkaJavadoc.path)
@@ -67,87 +76,82 @@ class LibraryPlugin : Plugin<Project> {
         val kotlinSourcesJar = project.tasks.findByName("kotlinSourcesJar") as Jar
 
         val publishing = project.extensions.getByType<PublishingExtension>()
-        publishing.repositories {
-            maven {
-                url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                // 这里就是之前在issues.sonatype.org注册的账号
-                credentials {
-                    username = if (project.hasProperty("sonatypeUsername")) {
-                        project.property("sonatypeUsername") as String
-                    } else {
-                        "placeholder"
-                    }
-                    password = if (project.hasProperty("sonatypePassword")) {
-                        project.property("sonatypePassword") as String
-                    } else {
-                        "placeholder"
-                    }
-                }
-            }
-        }
+        // NMCP plugin handles repository configuration
 
         publishing.publications {
             create<MavenPublication>(PUBLICATION_NAME) {
-                pom {
-//                    artifactId = "jupyter-js"
-                    from(project.components["java"])
-                    artifact(kotlinSourcesJar)
-                    artifact(dokkaJavadocJar)
+                from(project.components["java"])
+                artifact(kotlinSourcesJar)
+                artifact(dokkaJavadocJar)
 
-                    versionMapping {
-                        usage("java-api") {
-                            fromResolutionOf("runtimeClasspath")
-                        }
-                        usage("java-runtime") {
-                            fromResolutionResult()
-                        }
+                versionMapping {
+                    usage("java-api") {
+                        fromResolutionOf("runtimeClasspath")
                     }
+                    usage("java-runtime") {
+                        fromResolutionResult()
+                    }
+                }
 
-                    url.set("https://github.com/yidafu/kotlin-jupyter-js/")
-//                properties.set(mapOf(
-//                    "myProp" to "value",
-//                    "prop.with.dots" to "anotherValue"
-//                ))
+                pom {
+                    // These will be set by publishMan extension
+                    name.set(project.extensions.getByType<PublishManExtension>().name)
+                    description.set(project.extensions.getByType<PublishManExtension>().description)
+                    url.set("https://github.com/yidafu/swc-binding")
 
                     licenses {
                         license {
-                            name.set("The MIT License")
+                            name.set("MIT License")
                             url.set("https://opensource.org/licenses/MIT")
                         }
                     }
                     developers {
                         developer {
-                            id.set("dovyih")
-                            name.set("Dov Yih")
-                            email.set("me@yidafu.dev")
+                            id.set("yidafu")
+                            name.set("YidaFu")
+                            email.set("yidafu90@qq.com")
                         }
                     }
                     scm {
-                        connection.set("scm:git:git://github.com:yidafu/kotlin-jupyter-js.git")
-                        developerConnection.set("scm:git:ssh://github.com:yidafu/kotlin-jupyter-js.git")
-                        url.set("https://github.com:yidafu/kotlin-jupyter-js/")
+                        connection.set("scm:git:git://github.com/yidafu/swc-binding.git")
+                        developerConnection.set("scm:git:ssh://github.com/yidafu/swc-binding.git")
+                        url.set("https://github.com/yidafu/swc-binding")
                     }
                 }
-//                pom.withXml {
-//                    val configurationNames = arrayOf("implementation", "api")
-//                    val deps = configurationNames.map { configurationName ->
-//                        project.configurations[configurationName].allDependencies.toList()
-//                    }.flatten()
-//                    if (deps.isNotEmpty()) {
-//                        val dependenciesNode = asNode().appendNode("dependencies")
-//                        deps.forEach {
-//                            if (it.group != null) {
-//                                val dependencyNode = dependenciesNode.appendNode("dependency")
-//                                dependencyNode.appendNode("groupId", it.group)
-//                                dependencyNode.appendNode("artifactId", it.name)
-//                                dependencyNode.appendNode("version", it.version)
-//                            }
-//                        }
-//                    }
-//                }
             }
         }
 
-        // Signing configuration can be added later if needed
+        // NMCP Plugin Configuration for Maven Central Publishing
+        // Note: The actual configuration is done in build.gradle.kts due to type safety
+        // Store credentials in project properties for nmcp plugin to use
+        project.afterEvaluate {
+            val username = localProperties.getProperty("centralUsername")
+                ?: project.findProperty("centralUsername") as String?
+                ?: System.getenv("CENTRAL_USERNAME")
+            val password = localProperties.getProperty("centralPassword")
+                ?: project.findProperty("centralPassword") as String?
+                ?: System.getenv("CENTRAL_PASSWORD")
+            
+            if (username != null) {
+                project.extensions.extraProperties.set("nmcp.username", username)
+            }
+            if (password != null) {
+                project.extensions.extraProperties.set("nmcp.password", password)
+            }
+            project.extensions.extraProperties.set("nmcp.publicationType", "USER_MANAGED")
+        }
+
+        // Signing configuration for Maven Central
+        project.extensions.configure<SigningExtension>("signing") {
+            val signingKey = localProperties.getProperty("signing.key")
+                ?: System.getenv("SIGNING_KEY")
+            val signingPassword = localProperties.getProperty("signing.password")
+                ?: System.getenv("SIGNING_PASSWORD")
+
+            if (signingKey != null && signingPassword != null) {
+                useInMemoryPgpKeys(signingKey, signingPassword)
+                sign(publishing.publications)
+            }
+        }
     }
 }
