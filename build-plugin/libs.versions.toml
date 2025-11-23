@@ -2,7 +2,7 @@
 kotlin = "2.2.10"
 ksp = "1.9.21-1.0.15"
 ktlint = "11.6.1"
-dokka = "1.8.20"
+dokka = "2.1.0"
 publisher = "1.8.10-dev-43"
 nmcp = "0.0.8"
 kotlinxSerialization = "1.7.3"
