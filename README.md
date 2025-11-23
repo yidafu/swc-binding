@@ -28,10 +28,21 @@
       - [Available Async Methods](#available-async-methods)
       - [Threading Model](#threading-model)
   - [API](#api)
+    - [parseSync](#parsesync)
+    - [parseFileSync](#parsefilesync)
+    - [transformSync](#transformsync)
+    - [transformFileSync](#transformfilesync)
+    - [printSync](#printsync)
+    - [minifySync](#minifysync)
   - [Development](#development)
     - [Building](#building)
     - [Testing](#testing)
     - [Publishing](#publishing)
+      - [Prerequisites](#prerequisites)
+      - [Configuration](#configuration)
+      - [Publishing to Maven Central](#publishing-to-maven-central)
+      - [Publishing to Local Repository](#publishing-to-local-repository)
+      - [Important Notes](#important-notes)
   - [AST DSL](#ast-dsl)
     - [Build AST segment](#build-ast-segment)
     - [Boolean | T options](#boolean--t-options)
@@ -50,9 +61,9 @@ implementation("dev.yidafu.swc:swc-binding:0.8.0")
 
 | swc-binding | Rust SWC | @swc/types | Notes |
 |-------------|----------|------------|-------|
-| 0.8.0       | 43.0.0   | 0.1.25     | Latest stable release with full async support |
+| 0.8.0       | swc_core 48.0.4   | 0.1.25     | Latest stable release with swc_core migration |
 | 0.7.0       | 43.0.0   | 0.1.25     | Previous stable release |
-| 0.6.0       | 0.270.25   | 0.1.5     |  |
+| 0.6.0       | 0.270.25   | 0.1.5     | Legacy version with individual swc crates |
 
 ## Documentation
 
