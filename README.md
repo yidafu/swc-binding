@@ -43,14 +43,15 @@
 ## Installation
 
 ```kotlin
-implementation("dev.yidafu.swc:swc-binding:0.7.0")
+implementation("dev.yidafu.swc:swc-binding:0.8.0")
 ```
 
 ## Version Compatibility
 
 | swc-binding | Rust SWC | @swc/types | Notes |
 |-------------|----------|------------|-------|
-| 0.7.0       | 43.0.0   | 0.1.25     | Latest stable release with full async support |
+| 0.8.0       | 43.0.0   | 0.1.25     | Latest stable release with full async support |
+| 0.7.0       | 43.0.0   | 0.1.25     | Previous stable release |
 | 0.6.0       | 0.270.25   | 0.1.5     |  |
 
 ## Documentation
